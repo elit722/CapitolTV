@@ -7,7 +7,12 @@ import com.google.gson.JsonObject;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import fr.capitoltv.CapitolTV;
 import fr.capitoltv.net.CtvSocket;
+import fr.capitoltv.net.CamAccessPayload;
 import fr.capitoltv.net.SpecPayload;
+import com.mojang.authlib.GameProfile;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import net.minecraft.command.argument.GameProfileArgumentType;
+import net.minecraft.server.command.ServerCommandSource;
 import fr.capitoltv.net.TpPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import java.util.Set;
@@ -50,6 +55,7 @@ public final class ServerBridge {
         public int intervalTicks = 20;
         public boolean tpForSpectators = true;
         public boolean tpForOps = true;
+        /** caméras ajoutées en jeu par un admin : /capitoltv camera add <joueur> */
         public List<String> camNames = new ArrayList<>();
         public boolean reportEffects = true;
         /** les caméras (déclarées sur Capitol TV) passent automatiquement en spectateur */
@@ -81,9 +87,67 @@ public final class ServerBridge {
         if (!(t.equals("hello") || t.equals("cams")) || !m.has("names")) return;
         remoteCams.clear();
         for (var e : m.getAsJsonArray("names")) remoteCams.add(e.getAsString());
+        if (t.equals("hello")) reportLocalCams();
         MinecraftServer s = server;
-        if (s == null || !cfg.autoSpectator) return;
-        s.execute(() -> { for (ServerPlayerEntity p : s.getPlayerManager().getPlayerList()) if (isCam(p.getGameProfile().getName())) setSpectator(s, p, true); });
+        if (s == null) return;
+        s.execute(() -> refreshAccess(s));
+    }
+
+    /** Envoie à chaque joueur son droit au mode caméra et met les caméras en spectateur. */
+    private static void refreshAccess(MinecraftServer s) {
+        for (ServerPlayerEntity p : s.getPlayerManager().getPlayerList()) {
+            boolean cam = isCam(p.getGameProfile().getName());
+            if (ServerPlayNetworking.canSend(p, CamAccessPayload.ID)) ServerPlayNetworking.send(p, new CamAccessPayload(cam));
+            if (cam && cfg.autoSpectator) setSpectator(s, p, true);
+        }
+    }
+
+    /** Signale au site les caméras ajoutées en jeu (pour les afficher côté régie). */
+    private static void reportLocalCams() {
+        if (sock == null || !sock.online()) return;
+        JsonObject o = new JsonObject();
+        o.addProperty("t", "srvCams");
+        JsonArray a = new JsonArray();
+        for (String n : cfg.camNames) a.add(n);
+        o.add("names", a);
+        sock.send(o);
+    }
+
+    private static void saveConfig() {
+        try { Files.writeString(path(), GSON.toJson(cfg), StandardCharsets.UTF_8); }
+        catch (Exception e) { CapitolTV.LOG.warn("Capitol TV : configuration serveur non enregistrée ({})", e.toString()); }
+    }
+
+    private static LiteralArgumentBuilder<ServerCommandSource> cameraCmd() {
+        return CommandManager.literal("camera").requires(src -> src.hasPermissionLevel(3))
+                .then(CommandManager.literal("add").then(CommandManager.argument("joueurs", GameProfileArgumentType.gameProfile()).executes(c -> {
+                    int n = 0;
+                    for (GameProfile gp : GameProfileArgumentType.getProfileArgument(c, "joueurs")) {
+                        String name = gp.getName();
+                        if (cfg.camNames.stream().noneMatch(x -> x.equalsIgnoreCase(name))) { cfg.camNames.add(name); n++; }
+                    }
+                    saveConfig(); reportLocalCams(); refreshAccess(c.getSource().getServer());
+                    final int added = n;
+                    c.getSource().sendFeedback(() -> Text.literal("§6[Capitol TV]§r " + added + " caméra(s) ajoutée(s) : spectateur automatique et mode caméra (F6) autorisé."), true);
+                    return added;
+                })))
+                .then(CommandManager.literal("remove").then(CommandManager.argument("nom", StringArgumentType.word())
+                        .suggests((c, b) -> { for (String n : cfg.camNames) b.suggest(n); return b.buildFuture(); })
+                        .executes(c -> {
+                            String name = StringArgumentType.getString(c, "nom");
+                            boolean ok = cfg.camNames.removeIf(x -> x.equalsIgnoreCase(name));
+                            saveConfig(); reportLocalCams(); refreshAccess(c.getSource().getServer());
+                            boolean still = isCam(name);
+                            c.getSource().sendFeedback(() -> Text.literal("§6[Capitol TV]§r " + (ok ? name + " n'est plus caméra (liste du serveur)." : name + " n'était pas dans la liste du serveur.")
+                                    + (still ? " Il reste caméra via son compte Capitol TV (à retirer sur le site)." : "")), true);
+                            return ok ? 1 : 0;
+                        })))
+                .then(CommandManager.literal("list").executes(c -> {
+                    List<String> site = new ArrayList<>(remoteCams);
+                    c.getSource().sendFeedback(() -> Text.literal("§6[Capitol TV]§r Caméras ajoutées en jeu : " + (cfg.camNames.isEmpty() ? "aucune" : String.join(", ", cfg.camNames))), false);
+                    c.getSource().sendFeedback(() -> Text.literal("§6[Capitol TV]§r Caméras du site (comptes Minecraft liés) : " + (site.isEmpty() ? "aucune" : String.join(", ", site))), false);
+                    return 1;
+                }));
     }
 
     private ServerBridge() { }
@@ -110,7 +174,11 @@ public final class ServerBridge {
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, s) -> {
             ServerPlayerEntity p = handler.getPlayer();
-            if (cfg.autoSpectator && isCam(p.getGameProfile().getName())) s.execute(() -> setSpectator(s, p, true));
+            boolean cam = isCam(p.getGameProfile().getName());
+            s.execute(() -> {
+                if (ServerPlayNetworking.canSend(p, CamAccessPayload.ID)) ServerPlayNetworking.send(p, new CamAccessPayload(cam));
+                if (cam && cfg.autoSpectator) setSpectator(s, p, true);
+            });
         });
         ServerPlayNetworking.registerGlobalReceiver(SpecPayload.ID, (payload, ctx) -> {
             ServerPlayerEntity p = ctx.player();
@@ -118,7 +186,7 @@ public final class ServerBridge {
             if (s == null) return;
             String n = p.getGameProfile().getName();
             if (!isCam(n) && !s.getPlayerManager().isOperator(p.getGameProfile())) {
-                p.sendMessage(Text.literal("§6[Capitol TV]§r " + n + " n'est pas déclaré comme caméra sur Capitol TV (rôle Caméra + mod connecté)."), false);
+                p.sendMessage(Text.literal("§6[Capitol TV]§r " + n + " n'est pas une caméra : un admin doit faire /capitoltv camera add " + n + " ou lier ce compte Minecraft à un membre Caméra sur le site."), false);
                 return;
             }
             setSpectator(s, p, payload.on());
@@ -144,8 +212,13 @@ public final class ServerBridge {
             s.getCommandManager().executeWithPrefix(s.getCommandSource(), cmd);
         });
 
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(
-                CommandManager.literal("capitol").requires(src -> src.hasPermissionLevel(2))
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            for (String rootName : new String[]{"capitoltv", "capitol"}) dispatcher.register(root(rootName));
+        });
+    }
+
+    private static LiteralArgumentBuilder<ServerCommandSource> root(String rootName) {
+        return CommandManager.literal(rootName).requires(src -> src.hasPermissionLevel(2))
                         .then(CommandManager.literal("annonce").then(CommandManager.argument("texte", StringArgumentType.greedyString()).executes(c -> {
                             JsonObject e = new JsonObject();
                             e.addProperty("k", "special");
@@ -164,7 +237,8 @@ public final class ServerBridge {
                             loadConfig(); connect();
                             c.getSource().sendFeedback(() -> Text.literal("§6[Capitol TV]§r Configuration rechargée."), false);
                             return 1;
-                        }))));
+                        }))
+                .then(cameraCmd());
     }
 
     private static boolean mayTeleport(MinecraftServer s, ServerPlayerEntity p) {

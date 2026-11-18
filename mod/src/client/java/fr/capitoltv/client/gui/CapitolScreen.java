@@ -11,7 +11,9 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.OrderedText;
+import net.minecraft.util.Formatting;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 
@@ -24,9 +26,9 @@ import java.util.Locale;
 /** Menu caméra Capitol TV (touche K par défaut). */
 public class CapitolScreen extends Screen {
     enum Tab {
-        ACTIONS("Actions"), FEED("Annonces"), MAP("Carte"), SIGNAL("Signaler"), COMMS("Comms"), TEAM("Équipe"), REQS("Demandes"), ROLES("Rôles"), SETTINGS("Réglages");
-        final String label;
-        Tab(String l) { label = l; }
+        ACTIONS("Actions", "⚑"), FEED("Annonces", "≡"), MAP("Carte", "◎"), SIGNAL("Signaler", "✚"), COMMS("Comms", "✉"), TEAM("Équipe", "☺"), REQS("Demandes", "☰"), ROLES("Rôles", "★"), SETTINGS("Réglages", "⚙");
+        final String label, icon;
+        Tab(String l, String i) { label = l; icon = i; }
     }
 
     static final String[] TYPES = {"Combat", "Alliance", "Trahison", "Mort imminente", "Cadeau sponsor", "Moment drôle", "Révélation", "Autre"};
@@ -76,6 +78,8 @@ public class CapitolScreen extends Screen {
     private boolean dragging, pressedOnMap;
 
     private record Row(String id, String l1, int c1, String r1, String l2, int c2) { }
+    private final List<TextFieldWidget> fields = new ArrayList<>();
+    static final int SIDE = 96, HEAD = 26, RH = 26;
 
     public CapitolScreen() { super(Text.literal("Capitol TV")); }
 
@@ -89,21 +93,25 @@ public class CapitolScreen extends Screen {
     /* ====================================================================== */
     @Override
     protected void init() {
-        px = 8; py = 8; pw = width - 16; ph = height - 16;
-        cx = px + 80; cy = py + 22; cw = pw - 86; ch = ph - 26;
-        barY = py + ph - 20;
-        listY = cy + 2; listBottom = barY - 4;
+        int m = width > 520 ? 14 : 6;
+        px = m; py = m; pw = width - 2 * m; ph = height - 2 * m;
+        cx = px + SIDE + 8; cy = py + HEAD + 8; cw = pw - SIDE - 16; ch = ph - HEAD - 14;
+        barY = py + ph - 22;
+        listY = cy; listBottom = barY - 6;
         detailField = msgField = reqField = tokenField = urlField = null;
+        fields.clear();
 
-        int ty = cy;
+        int ty = py + HEAD + 8;
+        int th = height < 300 ? 17 : 19;
         if (tab == Tab.ROLES && !Data.can("roles")) tab = Tab.ACTIONS;
         for (Tab t : Tab.values()) {
             if (t == Tab.ROLES && !Data.can("roles")) continue;
-            ButtonWidget b = btn(px + 4, ty, 72, (t == tab ? "▶ " : "") + t.label, () -> { tab = t; scroll = 0; selId = ""; clearAndInit(); });
-            b.active = t != tab;
-            ty += 18;
+            CtvButton b = new CtvButton(px + 1, ty, SIDE - 1, th - 1, t.label, () -> { tab = t; scroll = 0; selId = ""; clearAndInit(); }).kind(CtvButton.Kind.TAB);
+            b.icon = t.icon; b.selected = t == tab;
+            addDrawableChild(b);
+            ty += th;
         }
-        btn(px + 4, py + ph - 20, 72, "Fermer", this::close);
+        btn(px + 6, py + ph - 22, SIDE - 12, "Fermer  (Échap)", this::close);
 
         switch (tab) {
             case ACTIONS -> initActions();
@@ -118,10 +126,16 @@ public class CapitolScreen extends Screen {
         }
     }
 
-    private ButtonWidget btn(int x, int y, int w, String label, Runnable r) {
-        ButtonWidget b = ButtonWidget.builder(Text.literal(label), x0 -> r.run()).dimensions(x, y, w, 16).build();
+    private CtvButton btn(int x, int y, int w, String label, Runnable r) {
+        CtvButton b = new CtvButton(x, y, w, 16, label, r);
+        if (label.startsWith("Envoyer") || label.equals("Connecter") || label.equals("Créer") || label.startsWith("Enregistrer")) b.kind = CtvButton.Kind.PRIMARY;
+        else if (label.equals("BUZZ") || label.equals("Buzz") || label.equals("Déconnecter")) b.kind = CtvButton.Kind.DANGER;
         addDrawableChild(b);
         return b;
+    }
+
+    private static CtvButton chip(ButtonWidget b, boolean sel) {
+        CtvButton c = (CtvButton) b; c.kind = CtvButton.Kind.CHIP; c.selected = sel; c.active = true; return c;
     }
 
     /** Une rangée de boutons répartis sur toute la largeur du contenu. */
@@ -135,7 +149,9 @@ public class CapitolScreen extends Screen {
     }
 
     private TextFieldWidget field(int x, int y, int w, String value, String placeholder, int max, java.util.function.Consumer<String> onChange) {
-        TextFieldWidget f = new TextFieldWidget(textRenderer, x, y, w, 16, Text.literal(placeholder));
+        TextFieldWidget f = new TextFieldWidget(textRenderer, x + 5, y + 4, w - 10, 12, Text.literal(placeholder));
+        f.setDrawsBackground(false);
+        fields.add(f);
         f.setMaxLength(max);
         f.setText(value == null ? "" : value);
         f.setPlaceholder(Text.literal(placeholder));
@@ -151,8 +167,8 @@ public class CapitolScreen extends Screen {
     private void initActions() {
         Data.Alert a = selAlert();
         bar(barY,
-                pendingOnly ? "Filtre : en attente" : "Filtre : toutes", (Runnable) () -> { pendingOnly = !pendingOnly; scroll = 0; clearAndInit(); },
-                "TP au tribut", (Runnable) () -> { Data.Alert x = selAlert(); say(x == null ? "Sélectionne une action" : Teleport.toTribute(alertTrib(x))); },
+                pendingOnly ? "En attente" : "Toutes", (Runnable) () -> { pendingOnly = !pendingOnly; scroll = 0; clearAndInit(); },
+                "TP tribut", (Runnable) () -> { Data.Alert x = selAlert(); say(x == null ? "Sélectionne une action" : Teleport.toTribute(alertTrib(x))); },
                 "Je filme", (Runnable) () -> {
                     Data.Alert x = selAlert(); Data.Trib t = alertTrib(x);
                     if (t == null) { say("Sélectionne une action"); return; }
@@ -403,14 +419,13 @@ public class CapitolScreen extends Screen {
         int cols = 4, gap = 3, w = (cw - gap * (cols - 1)) / cols;
         for (int i = 0; i < TYPES.length; i++) {
             final int k = i;
-            ButtonWidget b = btn(cx + (i % cols) * (w + gap), y + (i / cols) * 18, w, (i == sigType ? "● " : "") + TYPES[i], () -> { sigType = k; clearAndInit(); });
-            b.active = i != sigType;
+            chip(btn(cx + (i % cols) * (w + gap), y + (i / cols) * 18, w, TYPES[i], () -> { sigType = k; clearAndInit(); }), i == sigType);
         }
-        y += 40;
+        y += 42;
         bar(y,
                 "Urgent : " + (sigUrgent ? "OUI" : "non"), (Runnable) () -> { sigUrgent = !sigUrgent; clearAndInit(); },
                 "Je filme cette action : " + (sigRec ? "oui" : "non"), (Runnable) () -> { sigRec = !sigRec; clearAndInit(); });
-        y += 30;
+        y += 36;
         detailField = field(cx, y, cw, sigDetail, "Détails pour la régie et le réacteur (facultatif)", 300, s -> sigDetail = s);
         y += 22;
         bar(y, "Envoyer le signalement", (Runnable) this::sendSignal);
@@ -443,10 +458,10 @@ public class CapitolScreen extends Screen {
                 "BUZZ", (Runnable) () -> { if (dmTo.isEmpty()) return; CapitolClient.buzz(dmTo, msgDraft.isBlank() ? "La régie a besoin de toi !" : msgDraft.trim()); say("Buzz envoyé à " + Data.memberName(dmTo)); })
                 : bar(cy, "Staff", (Runnable) () -> setCh("all"), "Caméras", (Runnable) () -> setCh("cams"), "Privé", (Runnable) () -> setCh("dm"),
                 "À : " + dmName + " ▶", (Runnable) () -> { dmTo = cycleMember(targets, dmTo); commsCh = "dm"; clearAndInit(); }));
-        top.get(0).active = !commsCh.equals("all");
-        top.get(1).active = !commsCh.equals("cams");
-        top.get(2).active = !commsCh.equals("dm");
-        listY = cy + 20;
+        chip(top.get(0), commsCh.equals("all"));
+        chip(top.get(1), commsCh.equals("cams"));
+        chip(top.get(2), commsCh.equals("dm"));
+        listY = cy + 22;
         listBottom = barY - 44;
         msgField = field(cx, barY - 40, cw - 74, msgDraft, commsCh.equals("dm") ? "Message à " + dmName : commsCh.equals("cams") ? "Message aux caméras" : "Message à tout le staff", 400, s -> msgDraft = s);
         btn(cx + cw - 70, barY - 40, 70, "Envoyer", this::sendMsg);
@@ -480,18 +495,21 @@ public class CapitolScreen extends Screen {
         List<OrderedText> lines = new ArrayList<>();
         List<Integer> cols = new ArrayList<>();
         for (Data.Msg m : list) {
-            String head = hhmm(m.ts) + " " + m.name + (m.k.equals("buzz") ? " [BUZZ]" : "") + " : ";
-            int c = m.from.equals(Data.meId) ? Hud.DIM : m.sup ? Hud.GOLD : Hud.BLUE;
-            for (OrderedText ot : textRenderer.wrapLines(Text.literal(head + m.text), cw - 8)) { lines.add(ot); cols.add(c); }
+            int c = m.from.equals(Data.meId) ? Ui.GOLD_HI : m.sup ? Hud.GOLD : Hud.BLUE;
+            MutableText t = Text.literal(hhmm(m.ts) + "  ").withColor(Ui.MUTE & 0xFFFFFF)
+                    .append(Text.literal(m.name).withColor(c & 0xFFFFFF).formatted(Formatting.BOLD))
+                    .append(Text.literal(m.k.equals("buzz") ? "  BUZZ" : "").withColor(Ui.RED & 0xFFFFFF))
+                    .append(Text.literal("  " + m.text).withColor(Ui.INK & 0xFFFFFF));
+            for (OrderedText ot : textRenderer.wrapLines(t, cw - 14)) { lines.add(ot); cols.add(Ui.INK); }
         }
         int lh = 10, vis = Math.max(1, (listBottom - listY - 4) / lh);
         int maxScroll = Math.max(0, lines.size() - vis);
         scroll = Math.min(scroll, maxScroll);
         int start = Math.max(0, lines.size() - vis - scroll);
-        ctx.fill(cx, listY, cx + cw, listBottom, 0x60000000);
-        for (int i = start, y = listY + 3; i < lines.size() && y + lh <= listBottom; i++, y += lh)
-            ctx.drawText(textRenderer, lines.get(i), cx + 4, y, cols.get(i), false);
-        if (lines.isEmpty()) ctx.drawText(textRenderer, "Aucun message pour l'instant.", cx + 6, listY + 6, Hud.DIM, false);
+        Ui.box(ctx, cx, listY, cx + cw, listBottom, Ui.BG0, Ui.LINE);
+        for (int i = start, y = listY + 4; i < lines.size() && y + lh <= listBottom; i++, y += lh)
+            ctx.drawText(textRenderer, lines.get(i), cx + 7, y, cols.get(i), false);
+        if (lines.isEmpty()) ctx.drawText(textRenderer, "Aucun message pour l'instant.", cx + 8, listY + 8, Ui.DIM, false);
     }
 
     /* ---------------------------------------------------------------- équipe */
@@ -685,7 +703,11 @@ public class CapitolScreen extends Screen {
         btn(x, y, colW, "Envoi de ce que je vois : " + (c.autoReport ? "oui" : "non"), () -> { c.autoReport = !c.autoReport; ClientConfig.save(); clearAndInit(); }); y += step;
         String[] tal = {"visible", "discret", "cache"};
         String[] talL = {"visible", "discret (point)", "caché"};
-        btn(x, y, colW, "Mode caméra (F6) : " + (c.cameraMode ? "oui" : "non"), () -> { c.cameraMode = !c.cameraMode; ClientConfig.save(); clearAndInit(); }); y += step;
+        boolean camOk = fr.capitoltv.client.CamMode.allowed();
+        btn(x, y, colW, "Mode caméra (F6) : " + (!camOk ? "réservé" : c.cameraMode ? "oui" : "non"), () -> {
+            if (!fr.capitoltv.client.CamMode.allowed()) { say("Réservé aux caméras désignées par un admin"); return; }
+            c.cameraMode = !c.cameraMode; ClientConfig.save(); clearAndInit();
+        }).active = camOk; y += step;
         btn(x, y, colW, "Flux propre à l'antenne : " + (c.cleanOnAir ? "oui" : "non"), () -> { c.cleanOnAir = !c.cleanOnAir; ClientConfig.save(); clearAndInit(); }); y += step;
         btn(x, y, colW, "Voyant d'antenne : " + talL[idx(tal, c.tally)], () -> { c.tally = next(tal, c.tally); ClientConfig.save(); clearAndInit(); }); y += step;
         btn(x, y, colW, "Spectateur auto : " + (c.autoSpectator ? "oui" : "non"), () -> { c.autoSpectator = !c.autoSpectator; ClientConfig.save(); if (c.autoSpectator) { fr.capitoltv.client.CamMode.resetSpectatorTries(); fr.capitoltv.client.CamMode.ensureSpectator(MinecraftClient.getInstance(), true); } clearAndInit(); });
@@ -712,8 +734,8 @@ public class CapitolScreen extends Screen {
     private void renderSettings(DrawContext ctx) {
         ClientConfig c = ClientConfig.get();
         int colW = Math.min(200, (cw - 10) / 2), x2 = cx + colW + 10, w2 = cw - colW - 10;
-        ctx.drawText(textRenderer, "Préférences", cx, cy + 2, Hud.GOLD, false);
-        ctx.drawText(textRenderer, "Liaison avec le site", x2, cy + 2, Hud.GOLD, false);
+        Ui.section(ctx, "Préférences", cx, cy + 2, colW);
+        Ui.section(ctx, "Liaison avec le site", x2, cy + 2, w2);
         ctx.drawText(textRenderer, "Jeton du mod :", x2, cy + 14, Hud.DIM, false);
         ctx.drawText(textRenderer, "Adresse du site :", x2, cy + 70, Hud.DIM, false);
         int y = cy + 104;
@@ -785,33 +807,61 @@ public class CapitolScreen extends Screen {
     /* ====================================================================== */
     @Override
     public void renderBackground(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        ctx.fill(0, 0, width, height, 0x90000000);
-        ctx.fill(px, py, px + pw, py + ph, 0xF0101014);
-        border(ctx, px, py, px + pw, py + ph, 0xFF3A3630);
-        ctx.fill(px, py, px + pw, py + 18, 0xFF17161A);
-        ctx.fill(px, py + 18, px + pw, py + 19, 0xFFD4AF37);
-        ctx.fill(px + 78, py + 19, px + 79, py + ph, 0xFF2A2724);
+        ctx.fillGradient(0, 0, width, height, 0xB0050506, 0xD0050506);
+        int x1 = px + pw, y1 = py + ph;
+        // ombre portée + panneau
+        ctx.fill(px + 3, py + 3, x1 + 3, y1 + 3, 0x60000000);
+        Ui.box(ctx, px, py, x1, y1, Ui.BG1, Ui.LINE);
+        ctx.fillGradient(px + 1, py + 1, x1 - 1, py + HEAD, 0xFF1E1B16, 0xFF141317);
+        ctx.fill(px + 1, py + HEAD, x1 - 1, py + HEAD + 1, Ui.GOLD);
+        ctx.fill(px + 1, py + HEAD + 1, x1 - 1, py + HEAD + 2, 0x40D4AF37);
+        // colonne des onglets
+        ctx.fill(px + 1, py + HEAD + 2, px + SIDE, y1 - 1, Ui.BG0);
+        ctx.fill(px + SIDE, py + HEAD + 2, px + SIDE + 1, y1 - 1, Ui.LINE);
+        // champs de saisie
+        for (TextFieldWidget f : fields) {
+            boolean foc = f.isFocused();
+            Ui.box(ctx, f.getX() - 5, f.getY() - 4, f.getX() + f.getWidth() + 5, f.getY() + 12, 0xFF0D0D10, foc ? Ui.GOLD : Ui.LINE_HI);
+        }
     }
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
         super.render(ctx, mouseX, mouseY, delta);
-        // en-tête
-        ctx.drawText(textRenderer, "CAPITOL TV", px + 6, py + 5, Hud.GOLD, true);
-        ctx.drawText(textRenderer, "· " + tab.label, px + 6 + textRenderer.getWidth("CAPITOL TV "), py + 5, Hud.INK, false);
-        String right = (CapitolClient.online() && Data.ready ? "● " + Data.meName + " · " + Hud.stateLabel(ClientConfig.get().state) : "○ " + CapitolClient.stateText())
-                + (Data.delay > 0 ? " · différé " + Data.delay / 60 + ":" + String.format(Locale.ROOT, "%02d", Data.delay % 60) : " · direct");
-        right = textRenderer.trimToWidth(right, pw / 2);
-        ctx.drawText(textRenderer, right, px + pw - 6 - textRenderer.getWidth(right), py + 5, CapitolClient.online() ? Hud.stateColor(ClientConfig.get().state) : Hud.ORANGE, false);
+        // en-tête : emblème, titre, onglet
+        Ui.emblem(ctx, px + 7, py + 5, 16);
+        Text title = Text.literal("CAPITOL TV").formatted(Formatting.BOLD);
+        ctx.drawText(textRenderer, title, px + 28, py + 5, Ui.GOLD, true);
+        ctx.drawText(textRenderer, tab.label.toUpperCase(), px + 28, py + 15, Ui.DIM, false);
+        // à droite : compte, état, différé
+        int rx = px + pw - 8;
+        String delayTxt = Data.delay > 0 ? "DIFFÉRÉ " + Data.delay / 60 + ":" + String.format(Locale.ROOT, "%02d", Data.delay % 60) : "DIRECT";
+        rx -= textRenderer.getWidth(delayTxt) + 8;
+        Ui.pill(ctx, delayTxt, rx, py + 7, 0xFF2A2620, Ui.GOLD_HI);
+        String who = CapitolClient.online() && Data.ready ? Data.meName + " · " + Hud.stateLabel(ClientConfig.get().state) : CapitolClient.stateText();
+        who = textRenderer.trimToWidth(who, pw / 3);
+        int col = CapitolClient.online() ? Hud.stateColor(ClientConfig.get().state) : Hud.ORANGE;
+        int ww = textRenderer.getWidth(who) + 20;
+        rx -= ww + 4;
+        Ui.box(ctx, rx, py + 7, rx + ww, py + 19, 0xFF141317, Ui.alpha(col, 0x90));
+        ctx.fill(rx + 6, py + 11, rx + 10, py + 15, col);
+        ctx.drawText(textRenderer, who, rx + 14, py + 9, Ui.INK, false);
 
         if (Data.onAir()) {
-            String w = "● À L'ANTENNE : ce menu est visible dans ton stream";
-            int ww = textRenderer.getWidth(w) + 8, wx = px + (pw - ww) / 2;
-            ctx.fill(wx, py + 2, wx + ww, py + 15, 0xE0B0182C);
-            ctx.drawText(textRenderer, w, wx + 4, py + 5, 0xFFFFFFFF, false);
+            String w = "● À L'ANTENNE · ce menu est visible dans ton stream";
+            int w2 = textRenderer.getWidth(w) + 12, wx = cx + (cw - w2) / 2;
+            Ui.box(ctx, wx, py + HEAD - 8, wx + w2, py + HEAD + 6, 0xF0B0182C, Ui.RED);
+            ctx.drawText(textRenderer, w, wx + 6, py + HEAD - 5, 0xFFFFFFFF, false);
+        }
+        if (fr.capitoltv.client.CamMode.denied()) {
+            String w = "Mode caméra réservé aux caméras désignées par la régie";
+            ctx.drawText(textRenderer, textRenderer.trimToWidth(w, SIDE - 8), px + 6, py + ph - 36, Ui.MUTE, false);
         }
         if (!CapitolClient.online() && tab != Tab.SETTINGS && tab != Tab.MAP) {
-            ctx.drawText(textRenderer, "Pas connecté au site Capitol TV — onglet Réglages pour coller ton jeton.", cx, listBottom - 10, Hud.ORANGE, false);
+            String w = "Pas connecté au site Capitol TV · onglet Réglages pour coller ton jeton";
+            int w2 = Math.min(cw, textRenderer.getWidth(w) + 12);
+            Ui.box(ctx, cx, listBottom - 16, cx + w2, listBottom - 2, 0xE0301C0C, Hud.ORANGE);
+            ctx.drawText(textRenderer, textRenderer.trimToWidth(w, w2 - 10), cx + 6, listBottom - 13, Hud.ORANGE, false);
         }
 
         switch (tab) {
@@ -824,19 +874,19 @@ public class CapitolScreen extends Screen {
         if (listTab()) renderList(ctx, mouseX, mouseY);
 
         if (!status.isEmpty() && System.currentTimeMillis() - statusAt < 6000) {
-            String s = textRenderer.trimToWidth(status, cw);
-            int w = textRenderer.getWidth(s) + 8, x = cx + cw - w, y = barY - 14;
-            if (tab == Tab.MAP) y = mapY0() + 2;
-            ctx.fill(x, y, x + w, y + 12, 0xE0202026);
-            ctx.drawText(textRenderer, s, x + 4, y + 2, Hud.GOLD, false);
+            String s = textRenderer.trimToWidth(status, cw - 20);
+            int w = textRenderer.getWidth(s) + 16, x = cx + cw - w, y = barY - 20;
+            if (tab == Tab.MAP) y = mapY0() + 4;
+            Ui.box(ctx, x, y, x + w, y + 14, 0xF0201C14, Ui.GOLD);
+            ctx.drawText(textRenderer, s, x + 8, y + 3, Ui.GOLD_HI, false);
         }
     }
 
     private void renderSignal(DrawContext ctx) {
-        ctx.drawText(textRenderer, "Tribut concerné", cx, cy + 2, Hud.GOLD, false);
-        ctx.drawText(textRenderer, "Type d'action", cx, cy + 36, Hud.GOLD, false);
-        ctx.drawText(textRenderer, "Détails", cx, cy + 144, Hud.DIM, false);
-        int y = cy + 200;
+        Ui.section(ctx, "Tribut concerné", cx, cy + 2, cw);
+        Ui.section(ctx, "Type d'action", cx, cy + 34, cw);
+        Ui.section(ctx, "Détails", cx, cy + 112, cw);
+        int y = cy + 170;
         List<String> info = new ArrayList<>();
         if (Data.delay > 0) {
             long at = Data.now() + Data.delay * 1000L;
@@ -857,20 +907,22 @@ public class CapitolScreen extends Screen {
             case ROLES -> rowsRoles();
             default -> { }
         }
-        int rh = 22, vis = Math.max(1, (listBottom - listY) / rh);
+        int rh = RH, vis = Math.max(1, (listBottom - listY) / rh);
         scroll = Math.max(0, Math.min(scroll, Math.max(0, rows.size() - vis)));
-        ctx.fill(cx, listY, cx + cw, listBottom, 0x60000000);
+        int iw = cw - (rows.size() > vis ? 6 : 0);
         ctx.enableScissor(cx, listY, cx + cw, listBottom);
         for (int i = scroll, y = listY; i < rows.size() && y < listBottom; i++, y += rh) {
             Row r = rows.get(i);
-            boolean sel = r.id.equals(selId), hov = mouseX >= cx && mouseX < cx + cw && mouseY >= y && mouseY < y + rh;
-            if (sel) ctx.fill(cx, y, cx + cw, y + rh, 0x50D4AF37);
-            else if (hov) ctx.fill(cx, y, cx + cw, y + rh, 0x20FFFFFF);
-            ctx.fill(cx, y + rh - 1, cx + cw, y + rh, 0x30FFFFFF);
-            int rw = r.r1 == null || r.r1.isEmpty() ? 0 : textRenderer.getWidth(r.r1) + 8;
-            ctx.drawText(textRenderer, textRenderer.trimToWidth(r.l1, cw - 8 - rw), cx + 4, y + 2, r.c1, false);
-            if (rw > 0) ctx.drawText(textRenderer, r.r1, cx + cw - rw + 4, y + 2, r.r1.startsWith("écran") ? Hud.GOLD : Hud.DIM, false);
-            ctx.drawText(textRenderer, textRenderer.trimToWidth(r.l2, cw - 8), cx + 4, y + 12, r.c2, false);
+            boolean sel = r.id.equals(selId), hov = mouseX >= cx && mouseX < cx + iw && mouseY >= y && mouseY < y + rh - 2;
+            Ui.box(ctx, cx, y, cx + iw, y + rh - 2, sel ? 0xFF2A2416 : hov ? Ui.BG3 : Ui.BG2, sel ? Ui.GOLD : hov ? Ui.LINE_HI : Ui.LINE);
+            ctx.fill(cx + 1, y + 2, cx + 3, y + rh - 4, r.c1);
+            int rw = r.r1 == null || r.r1.isEmpty() ? 0 : textRenderer.getWidth(r.r1) + 10;
+            ctx.drawText(textRenderer, textRenderer.trimToWidth(r.l1, iw - 14 - rw), cx + 8, y + 3, r.c1, false);
+            if (rw > 0) {
+                boolean air = r.r1.contains("écran");
+                ctx.drawText(textRenderer, r.r1, cx + iw - rw + 2, y + 3, air ? Ui.GOLD_HI : Ui.DIM, false);
+            }
+            ctx.drawText(textRenderer, textRenderer.trimToWidth(r.l2, iw - 14), cx + 8, y + 13, r.c2, false);
         }
         ctx.disableScissor();
         if (rows.isEmpty()) {
@@ -881,12 +933,15 @@ public class CapitolScreen extends Screen {
                 case ROLES -> "Aucun membre.";
                 default -> "Aucune demande.";
             };
-            ctx.drawText(textRenderer, e, cx + 6, listY + 6, Hud.DIM, false);
+            Ui.box(ctx, cx, listY, cx + cw, listY + 40, Ui.BG0, Ui.LINE);
+            Ui.emblem(ctx, cx + 10, listY + 8, 24);
+            ctx.drawText(textRenderer, textRenderer.trimToWidth(e, cw - 50), cx + 42, listY + 16, Ui.DIM, false);
         }
         if (rows.size() > vis) {
             int track = listBottom - listY, th = Math.max(10, track * vis / rows.size());
             int ty = listY + (track - th) * scroll / Math.max(1, rows.size() - vis);
-            ctx.fill(cx + cw - 2, ty, cx + cw, ty + th, 0x80D4AF37);
+            ctx.fill(cx + cw - 3, listY, cx + cw - 1, listBottom, 0x30FFFFFF);
+            ctx.fill(cx + cw - 3, ty, cx + cw - 1, ty + th, Ui.GOLD);
         }
     }
 
@@ -896,7 +951,7 @@ public class CapitolScreen extends Screen {
         if (super.mouseClicked(mx, my, button)) return true;
         if (inMap(mx, my)) { pressX = mx; pressY = my; dragging = false; pressedOnMap = true; return true; }
         if (listTab() && mx >= cx && mx < cx + cw && my >= listY && my < listBottom) {
-            int i = (int) ((my - listY) / 22) + scroll;
+            int i = (int) ((my - listY) / RH) + scroll;
             if (i >= 0 && i < rows.size()) {
                 String id = rows.get(i).id;
                 selId = id.equals(selId) ? "" : id;

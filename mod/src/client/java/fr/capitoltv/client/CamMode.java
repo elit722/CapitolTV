@@ -31,14 +31,20 @@ public final class CamMode {
     private static final int[] ZOOMS = {0, 50, 30};
     private static int specTry;
 
-    public static boolean active() { return ClientConfig.get().cameraMode; }
+    /** le serveur (mod serveur) dit que ce joueur est une caméra */
+    public static volatile boolean serverCam;
+
+    /** Mode caméra autorisé : caméra désignée en jeu (/capitoltv camera add) ou rôle Caméra sur le site. */
+    public static boolean allowed() { return serverCam || Data.can("cam") || Data.can("chef"); }
+    public static boolean denied() { return !allowed(); }
+    public static boolean active() { return ClientConfig.get().cameraMode && allowed(); }
     public static boolean peek() { return CapitolClient.peekKey != null && CapitolClient.peekKey.isPressed(); }
 
     /** Plus rien à l'écran (sauf le voyant d'antenne) : la caméra est à l'antenne ou en mode propre. */
     public static boolean clean() {
         ClientConfig c = ClientConfig.get();
-        if (!c.cameraMode || peek()) return false;
-        return c.cleanAlways || (c.cleanOnAir && Data.onAir());
+        if (!active() || peek()) return false;
+        return c.cleanAlways || (c.cleanOnAir && (Data.onAir() || Data.onPrep()));
     }
 
     /** Masque tous les éléments du HUD vanilla quand le mode caméra est actif. */
@@ -128,7 +134,7 @@ public final class CamMode {
     /** Passage automatique en spectateur pour les caméras. */
     public static void ensureSpectator(MinecraftClient mc, boolean force) {
         if (mc.player == null || mc.getNetworkHandler() == null || !ClientConfig.get().autoSpectator) return;
-        if (Data.meCam.isEmpty() || mc.player.isSpectator()) { specTry = 0; return; }
+        if (!allowed() || mc.player.isSpectator()) { specTry = 0; return; }
         if (!force && specTry >= 2) return;
         specTry++;
         if (ClientPlayNetworking.canSend(SpecPayload.ID)) ClientPlayNetworking.send(new SpecPayload(true));
@@ -140,23 +146,39 @@ public final class CamMode {
     /* ---------- rendu ---------- */
     public static void renderToolbar(DrawContext ctx, TextRenderer tr, int sw, int sh) {
         String[] l = labels();
-        int n = l.length, slotW = Math.min(52, (sw - 20) / n), h = 24, x0 = (sw - slotW * n) / 2, y = sh - h - 4;
-        ctx.fill(x0 - 3, y - 3, x0 + slotW * n + 3, y + h + 3, 0xB0101014);
+        int n = l.length, slotW = Math.min(54, (sw - 24) / n), h = 26, x0 = (sw - slotW * n) / 2, y = sh - h - 6;
+        int x1 = x0 + slotW * n;
+        ctx.fill(x0 - 3, y - 3, x1 + 3, y + h + 3, 0x50000000);
+        fr.capitoltv.client.gui.Ui.box(ctx, x0 - 2, y - 2, x1 + 2, y + h + 2, 0xD80E0E12, 0xFF3A3630);
+        ctx.fill(x0, y - 2, x1, y - 1, 0xFFD4AF37);
         for (int i = 0; i < n; i++) {
             int x = x0 + i * slotW;
             boolean on = (i == 4 && "rec".equals(ClientConfig.get().state)) || (i == 5 && MinecraftClient.getInstance().options.smoothCameraEnabled)
                     || (i == 6 && zoom != 0) || (i == 8 && ClientConfig.get().cleanAlways);
-            ctx.fill(x + 1, y, x + slotW - 1, y + h, on ? 0xC0352B12 : 0xC01A1A20);
-            ctx.fill(x + 1, y, x + slotW - 1, y + 1, on ? Hud.GOLD : 0xFF3A3630);
-            ctx.drawText(tr, String.valueOf(i + 1), x + 4, y + 3, Hud.DIM, false);
+            boolean rec = i == 4 && on;
+            if (on) fr.capitoltv.client.gui.Ui.box(ctx, x + 1, y + 1, x + slotW - 1, y + h - 1, rec ? 0xC0451418 : 0xC0352B12, rec ? 0xFFE0514A : 0xFFD4AF37);
+            if (i > 0) ctx.fill(x, y + 5, x + 1, y + h - 5, 0x30FFFFFF);
+            ctx.drawText(tr, String.valueOf(i + 1), x + 4, y + 3, on ? (rec ? 0xFFFFB0B0 : 0xFFF2D27A) : 0xFF6A655C, false);
             String s = tr.trimToWidth(l[i], slotW - 6);
-            ctx.drawText(tr, s, x + (slotW - tr.getWidth(s)) / 2, y + 13, i == 4 && on ? Hud.RED : on ? Hud.GOLD : Hud.INK, false);
+            ctx.drawText(tr, s, x + (slotW - tr.getWidth(s)) / 2, y + 14, rec ? Hud.RED : on ? Hud.GOLD : Hud.INK, false);
         }
+        String hint = Data.onPrep() && !Data.onAir() ? "EN PRÉPARATION · flux propre" : "MODE CAMÉRA · F6";
+        int hw = tr.getWidth(hint);
+        ctx.drawText(tr, hint, (sw - hw) / 2, y - 13, Data.onPrep() && !Data.onAir() ? Hud.ORANGE : 0xFF9A9284, true);
     }
 
     public static void renderTally(DrawContext ctx, TextRenderer tr, int sw) {
         String mode = ClientConfig.get().tally;
-        if (!Data.onAir() || "cache".equals(mode)) return;
+        if ("cache".equals(mode)) return;
+        if (!Data.onAir()) {
+            if (!Data.onPrep() || !active()) return;
+            if ("discret".equals(mode)) { ctx.fill(sw - 7, 3, sw - 3, 7, 0xFFE89A3C); return; }
+            String s = "● PRÊT";
+            int w = tr.getWidth(s) + 10;
+            ctx.fill(sw - w - 4, 4, sw - 4, 18, 0xE0704010);
+            ctx.drawText(tr, s, sw - w + 1, 7, 0xFFFFE0B0, false);
+            return;
+        }
         boolean blink = (System.currentTimeMillis() / 600) % 2 == 0;
         if ("discret".equals(mode)) {
             ctx.fill(sw - 7, 3, sw - 3, 7, blink ? 0xFFE0514A : 0xFF8A2A26);

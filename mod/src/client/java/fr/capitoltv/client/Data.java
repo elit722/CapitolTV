@@ -36,6 +36,9 @@ public final class Data {
     /** ids des caméras actuellement à l'antenne (émission de la régie) */
     public static final List<String> onAirIds = new ArrayList<>();
     public static boolean onAir() { return onAirIds.contains(meId); }
+    /** caméras du plan préparé par la régie (passent en flux propre avant la prise d'antenne, à cause du différé) */
+    public static final List<String> prepIds = new ArrayList<>();
+    public static boolean onPrep() { return prepIds.contains(meId); }
     public static boolean can(String perm) { return "admin".equals(mePerm) || mePerms.contains(perm) || mePerms.contains("admin"); }
     public static Role role(String id) { for (Role r : roles) if (r.id.equals(id)) return r; return null; }
     public static int delay;
@@ -195,6 +198,7 @@ public final class Data {
         }
     }
     static void setOnAir(JsonArray a) { onAirIds.clear(); for (JsonElement e : a) onAirIds.add(e.getAsString()); }
+    static void setPrep(JsonArray a) { prepIds.clear(); if (a != null) for (JsonElement e : a) prepIds.add(e.getAsString()); }
     static void mergePos(JsonObject p) {
         for (Map.Entry<String, JsonElement> en : p.entrySet()) {
             if (en.getValue().isJsonObject()) pos.put(en.getKey(), posOf(en.getValue().getAsJsonObject()));

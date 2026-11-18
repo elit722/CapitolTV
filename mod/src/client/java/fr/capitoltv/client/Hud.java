@@ -36,7 +36,7 @@ public final class Hud {
     public static void sound(boolean strong) {
         if (!ClientConfig.get().sound) return;
         // à l'antenne, les sons du jeu partent dans le stream : on se tait
-        if (Data.onAir() && ClientConfig.get().cleanOnAir && ClientConfig.get().cameraMode) return;
+        if ((Data.onAir() || Data.onPrep()) && ClientConfig.get().cleanOnAir && CamMode.active()) return;
         MinecraftClient mc = MinecraftClient.getInstance();
         mc.getSoundManager().play(PositionedSoundInstance.master(strong ? SoundEvents.BLOCK_NOTE_BLOCK_BELL : SoundEvents.BLOCK_NOTE_BLOCK_PLING, strong ? 1.2f : 1.6f));
     }

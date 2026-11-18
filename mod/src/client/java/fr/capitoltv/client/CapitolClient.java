@@ -38,6 +38,12 @@ public class CapitolClient implements ClientModInitializer {
         try { CamMode.install(); } catch (Throwable t) { fr.capitoltv.CapitolTV.LOG.warn("Capitol TV : HUD vanilla non géré ({})", t.toString()); }
         ClientTickEvents.START_CLIENT_TICK.register(CamMode::startTick);
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((h, sender, client) -> { CamMode.resetSpectatorTries(); stDirty = true; });
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((h, client) -> CamMode.serverCam = false);
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(fr.capitoltv.net.CamAccessPayload.ID, (payload, ctx) -> {
+            boolean was = CamMode.serverCam;
+            CamMode.serverCam = payload.on();
+            if (payload.on() && !was) Hud.toast("Capitol TV", "Tu es caméra sur ce serveur : F6 pour le mode caméra.", Hud.GOLD, 6);
+        });
 
         sock = new CtvSocket(m -> MinecraftClient.getInstance().execute(() -> onMessage(m)), st -> MinecraftClient.getInstance().execute(() -> {
             if (st != CtvSocket.State.ONLINE) Data.ready = false;
@@ -175,6 +181,10 @@ public class CapitolClient implements ClientModInitializer {
         }
         while (cameraKey.wasPressed()) {
             ClientConfig c = ClientConfig.get();
+            if (!c.cameraMode && CamMode.denied()) {
+                Hud.toast("Mode caméra", "Réservé aux caméras : un admin doit faire /capitoltv camera add " + (mc.player == null ? "<pseudo>" : mc.player.getGameProfile().getName()) + " ou lier ton compte Minecraft sur le site.", Hud.ORANGE, 6);
+                continue;
+            }
             c.cameraMode = !c.cameraMode;
             ClientConfig.save();
             Hud.toast("Mode caméra", c.cameraMode ? "activé : HUD du jeu masqué, barre caméra (touches 1 à 9)" : "désactivé", Hud.GOLD, 4);
@@ -245,8 +255,10 @@ public class CapitolClient implements ClientModInitializer {
             case "cams" -> Data.setCams(Data.arr(m, "cams"));
             case "roles" -> Data.setRoles(Data.arr(m, "roles"));
             case "onair" -> {
-                boolean was = Data.onAir();
+                boolean was = Data.onAir(), wasPrep = Data.onPrep();
                 Data.setOnAir(Data.arr(m, "ids"));
+                Data.setPrep(m.has("prep") ? Data.arr(m, "prep") : null);
+                if (!wasPrep && Data.onPrep() && !Data.onAir() && CamMode.active()) Hud.toast("EN PRÉPARATION", "La régie prépare un plan avec ta caméra : flux propre dès maintenant (différé).", Hud.ORANGE, 6);
                 if (!was && Data.onAir()) Hud.toast("À L'ANTENNE", "La régie affiche ta caméra" + (ClientConfig.get().cameraMode && ClientConfig.get().cleanOnAir ? " : flux propre (Alt gauche pour voir l'interface)" : ""), Hud.RED, 6);
                 else if (was && !Data.onAir()) Hud.toast("Hors antenne", "Ta caméra n'est plus affichée", Hud.DIM, 4);
             }
