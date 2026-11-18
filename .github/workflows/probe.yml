@@ -1,0 +1,28 @@
+name: Sonde API webrtc-java
+on:
+  push:
+    paths: ['.github/workflows/probe.yml']
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - name: Téléchargement et javap
+        run: |
+          mkdir -p probe && cd probe
+          V=1.0.1
+          curl -sSLO https://repo1.maven.org/maven2/dev/onvoid/webrtc/webrtc-java/$V/webrtc-java-$V.jar
+          curl -sSLO https://repo1.maven.org/maven2/dev/onvoid/webrtc/webrtc-java/$V/webrtc-java-$V-linux-x86_64.jar
+          unzip -l webrtc-java-$V-linux-x86_64.jar > natives.txt
+          unzip -l webrtc-java-$V.jar | grep class | awk '{print $4}' > classes.txt
+          for c in dev.onvoid.webrtc.PeerConnectionFactory dev.onvoid.webrtc.RTCPeerConnection dev.onvoid.webrtc.PeerConnectionObserver dev.onvoid.webrtc.RTCConfiguration dev.onvoid.webrtc.RTCIceServer dev.onvoid.webrtc.RTCSessionDescription dev.onvoid.webrtc.RTCSdpType dev.onvoid.webrtc.CreateSessionDescriptionObserver dev.onvoid.webrtc.SetSessionDescriptionObserver dev.onvoid.webrtc.RTCOfferOptions dev.onvoid.webrtc.RTCIceGatheringState dev.onvoid.webrtc.RTCPeerConnectionState dev.onvoid.webrtc.RTCRtpTransceiverInit dev.onvoid.webrtc.RTCRtpTransceiverDirection dev.onvoid.webrtc.RTCRtpTransceiver dev.onvoid.webrtc.RTCRtpSender dev.onvoid.webrtc.RTCRtpSendParameters dev.onvoid.webrtc.RTCRtpEncodingParameters dev.onvoid.webrtc.media.video.CustomVideoSource dev.onvoid.webrtc.media.video.VideoFrame dev.onvoid.webrtc.media.video.NativeI420Buffer dev.onvoid.webrtc.media.video.I420Buffer dev.onvoid.webrtc.media.video.VideoBufferConverter dev.onvoid.webrtc.media.FourCC dev.onvoid.webrtc.media.video.VideoTrack dev.onvoid.webrtc.media.audio.CustomAudioSource dev.onvoid.webrtc.media.audio.AudioOptions dev.onvoid.webrtc.media.audio.AudioTrackSource dev.onvoid.webrtc.media.audio.AudioDeviceModule dev.onvoid.webrtc.media.audio.AudioLayer; do
+            echo "=== $c" >> api.txt; javap -cp webrtc-java-$V.jar -public $c >> api.txt 2>&1 || true
+          done
+      - name: Publication
+        run: |
+          git config user.name ci; git config user.email ci@users.noreply.github.com
+          git add probe && git commit -m "sonde [skip ci]" && git pull --rebase && git push
