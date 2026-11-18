@@ -42,7 +42,7 @@ public class CapitolClientGameTest implements FabricClientGameTest {
                  "pos":{"a":{"x":12,"y":64,"z":8,"d":"minecraft:overworld","hp":13,"ts":NOW,"src":"serveur"},
                         "b":{"x":30,"y":64,"z":20,"d":"minecraft:overworld","hp":15,"ts":NOW,"src":"serveur"},
                         "c":{"x":-40,"y":63,"z":-30,"d":"minecraft:overworld","hp":0,"ts":NOW,"src":"serveur"}}}
-                """.replace("NOW", String.valueOf(now)).replace("\\"ME\\"", "\\"" + me + "\\"");
+                """.replace("NOW", String.valueOf(now)).replace("\"ME\"", "\"" + me + "\"");
                 Data.loadDemo(JsonParser.parseString(demo).getAsJsonObject());
                 CapitolClient.demo = true;
                 CapitolClient.setFollow("a");
