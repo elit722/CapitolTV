@@ -63,7 +63,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           rm -rf dist/screens && mkdir -p dist/screens
-          find mod -path "*screenshots*" -name "ctv-*.png" -exec cp {} dist/screens/ \; || true
+          find mod -name "*ctv-*.png" -not -path "*/src/*" -exec cp {} dist/screens/ \; || true
+          find mod -name "*.png" -path "*run*" | head -20 || true
           ls dist/screens || true
           git add -A dist
           git diff --cached --quiet || (git commit -m "Mod caméra : .jar compilé [skip ci]" && git pull --rebase -q && git push)
