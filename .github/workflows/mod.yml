@@ -3,8 +3,11 @@ name: Mod caméra (Fabric 1.21.8)
 on:
   push:
     branches: [main]
-    paths: ["mod/**", ".github/workflows/mod.yml"]
+    paths: ["mod/**", ".github/workflows/mod.yml", "!dist/**"]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -44,3 +47,13 @@ jobs:
           grep -q "Done (" server.log
           ! grep -qiE "Mixin apply failed|capitoltv.*(error|exception)" server.log
           test -f run/config/capitoltv-server.json && cat run/config/capitoltv-server.json
+      - name: Publication du .jar dans dist/
+        working-directory: .
+        run: |
+          mkdir -p dist
+          cp mod/build/libs/capitoltv-cam-*.jar dist/capitoltv-cam.jar
+          rm -f dist/capitoltv-cam-sources.jar
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist/capitoltv-cam.jar
+          git diff --cached --quiet || (git commit -m "Mod caméra : .jar compilé [skip ci]" && git push)
