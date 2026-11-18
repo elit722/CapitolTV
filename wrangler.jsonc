@@ -27,7 +27,7 @@
     // Facultatif : réserver le site aux membres d'un serveur Discord (ID du serveur)
     "DISCORD_GUILD_ID": "",
     // Ton ID Discord (et ceux des co-organisateurs), séparés par des virgules : toujours admin de la régie
-    "OWNER_DISCORD_IDS": "994523972135829504,348537039022718986",
+    "OWNER_DISCORD_IDS": "994523972135829504","348537039022718986",
     // Facultatif : statut en direct des tributs (dev.twitch.tv/console > Client ID)
     "TWITCH_CLIENT_ID": ""
   }
