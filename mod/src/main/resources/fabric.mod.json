@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "capitoltv",
+  "version": "${version}",
+  "name": "Capitol TV — Caméras",
+  "description": "Outil des caméramans de Capitol TV : actions en cours, actes annonciateurs, carte des tributs avec TP, signalements, communication avec la régie et le réacteur. Peut aussi s'installer sur le serveur pour des données complètes.",
+  "authors": ["Capitol TV"],
+  "license": "MIT",
+  "icon": "assets/capitoltv/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["fr.capitoltv.CapitolTV"],
+    "client": ["fr.capitoltv.client.CapitolClient"]
+  },
+  "mixins": [
+    "capitoltv.mixins.json",
+    { "config": "capitoltv.client.mixins.json", "environment": "client" }
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.6",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
