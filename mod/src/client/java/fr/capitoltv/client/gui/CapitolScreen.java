@@ -34,7 +34,8 @@ public class CapitolScreen extends Screen {
     static final String[] TYPES = {"Combat", "Alliance", "Trahison", "Mort imminente", "Cadeau sponsor", "Moment drôle", "Révélation", "Autre"};
     static final String[] FEED_KINDS = {"", "hit", "death", "effect", "meet", "special"};
     static final String[] FEED_LABELS = {"Tout", "Combats & dégâts", "Morts", "Effets", "Rencontres", "Spécial"};
-    static final String[] QUICK = {"Reçu ✔", "J'y vais", "Besoin d'aide", "Action terminée", "Je change de tribut", "Je fais une pause"};
+    static final String[] QUICK = {"Reçu ✔", "J'y vais", "Besoin d'aide", "Terminé", "Je change", "Pause"};
+    public static int setPage;
 
     /* état conservé entre deux ouvertures du menu */
     static Tab tab = Tab.ACTIONS;
@@ -111,7 +112,7 @@ public class CapitolScreen extends Screen {
             addDrawableChild(b);
             ty += th;
         }
-        btn(px + 6, py + ph - 22, SIDE - 12, "Fermer  (Échap)", this::close);
+        btn(px + 6, py + ph - 22, SIDE - 12, "Fermer", this::close);
 
         switch (tab) {
             case ACTIONS -> initActions();
@@ -685,22 +686,29 @@ public class CapitolScreen extends Screen {
     /* ---------------------------------------------------------------- réglages */
     private void initSettings() {
         ClientConfig c = ClientConfig.get();
-        int colW = Math.min(200, (cw - 10) / 2), x = cx, y = cy + 12;
+        int colW = Math.min(200, (cw - 10) / 2), x = cx, y = cy;
         int step = height < 300 ? 17 : 18;
+        int cwid = (colW - 6) / 3;
+        String[] pages = {"Général", "Bulles", "Caméra"};
+        for (int i = 0; i < 3; i++) { final int k = i; chip(btn(x + i * (cwid + 3), y, cwid, pages[i], () -> { setPage = k; clearAndInit(); }), setPage == i); }
+        y += 22;
         String[] states = {"actif", "rec", "pause", "inactif"};
         String[] notifs = {"all", "sup", "none"};
         String[] notifL = {"toutes", "supérieurs seulement", "aucune"};
         String[] hpos = {"tl", "tr", "bl"};
         String[] hposL = {"haut gauche", "haut droite", "bas gauche"};
+        if (setPage == 0) {
         btn(x, y, colW, "État : " + Hud.stateLabel(c.state), () -> { c.state = next(states, c.state); CapitolClient.setState(c.state); clearAndInit(); }); y += step;
         btn(x, y, colW, "Notifications : " + notifL[idx(notifs, c.notif)], () -> { c.notif = next(notifs, c.notif); ClientConfig.save(); CapitolClient.setState(c.state); clearAndInit(); }); y += step;
         btn(x, y, colW, "Sons : " + (c.sound ? "oui" : "non"), () -> { c.sound = !c.sound; ClientConfig.save(); clearAndInit(); }); y += step;
-        btn(x, y, colW, "Bulles à l'écran : " + (c.toasts ? "oui" : "non"), () -> { c.toasts = !c.toasts; ClientConfig.save(); clearAndInit(); }); y += step;
-        btn(x, y, colW, "Bulles des actions : " + (c.alertsToasts ? "oui" : "non"), () -> { c.alertsToasts = !c.alertsToasts; ClientConfig.save(); clearAndInit(); }); y += step;
-        btn(x, y, colW, "Bulles des actes : " + (c.feedToasts ? "tous" : "mon tribut"), () -> { c.feedToasts = !c.feedToasts; ClientConfig.save(); clearAndInit(); }); y += step;
         btn(x, y, colW, "Encart HUD : " + (c.hud ? "oui" : "non"), () -> { c.hud = !c.hud; ClientConfig.save(); clearAndInit(); }); y += step;
         btn(x, y, colW, "Position HUD : " + hposL[idx(hpos, c.hudPos)], () -> { c.hudPos = next(hpos, c.hudPos); ClientConfig.save(); clearAndInit(); }); y += step;
         btn(x, y, colW, "Envoi de ce que je vois : " + (c.autoReport ? "oui" : "non"), () -> { c.autoReport = !c.autoReport; ClientConfig.save(); clearAndInit(); }); y += step;
+        } else if (setPage == 1) {
+        btn(x, y, colW, "Bulles à l'écran : " + (c.toasts ? "oui" : "non"), () -> { c.toasts = !c.toasts; ClientConfig.save(); clearAndInit(); }); y += step;
+        btn(x, y, colW, "Bulles des actions : " + (c.alertsToasts ? "oui" : "non"), () -> { c.alertsToasts = !c.alertsToasts; ClientConfig.save(); clearAndInit(); }); y += step;
+        btn(x, y, colW, "Bulles des actes : " + (c.feedToasts ? "tous" : "mon tribut"), () -> { c.feedToasts = !c.feedToasts; ClientConfig.save(); clearAndInit(); }); y += step;
+        } else {
         String[] tal = {"visible", "discret", "cache"};
         String[] talL = {"visible", "discret (point)", "caché"};
         boolean camOk = fr.capitoltv.client.CamMode.allowed();
@@ -711,21 +719,22 @@ public class CapitolScreen extends Screen {
         btn(x, y, colW, "Flux propre à l'antenne : " + (c.cleanOnAir ? "oui" : "non"), () -> { c.cleanOnAir = !c.cleanOnAir; ClientConfig.save(); clearAndInit(); }); y += step;
         btn(x, y, colW, "Voyant d'antenne : " + talL[idx(tal, c.tally)], () -> { c.tally = next(tal, c.tally); ClientConfig.save(); clearAndInit(); }); y += step;
         btn(x, y, colW, "Spectateur auto : " + (c.autoSpectator ? "oui" : "non"), () -> { c.autoSpectator = !c.autoSpectator; ClientConfig.save(); if (c.autoSpectator) { fr.capitoltv.client.CamMode.resetSpectatorTries(); fr.capitoltv.client.CamMode.ensureSpectator(MinecraftClient.getInstance(), true); } clearAndInit(); });
+        }
 
         int x2 = cx + colW + 10, w2 = cw - colW - 10, y2 = cy + 24;
         if (tokenDraft == null) tokenDraft = c.token;
         if (urlDraft == null) urlDraft = c.url;
-        tokenField = field(x2, y2, w2, tokenDraft, "Colle ici ton jeton (site › Mon compte › Mod caméra)", 2000, s -> tokenDraft = s);
+        tokenField = field(x2, y2, w2, tokenDraft, "Colle ton jeton ici", 2000, s -> tokenDraft = s);
         y2 += 20;
-        int bw = (w2 - 6) / 3;
+        int bw = (w2 - 6) / 4, bw2 = w2 - 6 - 2 * bw;
         btn(x2, y2, bw, "Coller", () -> { String s = MinecraftClient.getInstance().keyboard.getClipboard(); if (s != null) { tokenDraft = s.trim(); clearAndInit(); } });
-        btn(x2 + bw + 3, y2, bw, "Connecter", () -> {
+        btn(x2 + bw + 3, y2, bw2, "Connecter", () -> {
             c.token = tokenDraft == null ? "" : tokenDraft.trim(); c.url = urlDraft == null || urlDraft.isBlank() ? c.url : urlDraft.trim();
             ClientConfig.save(); CapitolClient.reconnect(); say("Connexion…");
         });
-        btn(x2 + 2 * (bw + 3), y2, bw, "Déconnecter", () -> { CapitolClient.disconnect(); say("Déconnecté"); });
+        btn(x2 + bw + 3 + bw2 + 3, y2, bw, "Couper", () -> { CapitolClient.disconnect(); say("Déconnecté"); }).kind = CtvButton.Kind.DANGER;
         y2 += 34;
-        urlField = field(x2, y2, w2, urlDraft, "Adresse du site Capitol TV", 300, s -> urlDraft = s);
+        urlField = field(x2, y2, w2, urlDraft, "Adresse du site", 300, s -> urlDraft = s);
     }
 
     static int idx(String[] a, String v) { for (int i = 0; i < a.length; i++) if (a[i].equals(v)) return i; return 0; }
@@ -734,8 +743,14 @@ public class CapitolScreen extends Screen {
     private void renderSettings(DrawContext ctx) {
         ClientConfig c = ClientConfig.get();
         int colW = Math.min(200, (cw - 10) / 2), x2 = cx + colW + 10, w2 = cw - colW - 10;
-        Ui.section(ctx, "Préférences", cx, cy + 2, colW);
         Ui.section(ctx, "Liaison avec le site", x2, cy + 2, w2);
+        if (setPage == 2) {
+            int hy = cy + 22 + 5 * (height < 300 ? 17 : 18) + 4;
+            String h = fr.capitoltv.client.CamMode.allowed()
+                    ? "Flux propre : quand la régie prépare ou passe ta caméra à l'antenne, plus rien ne s'affiche à l'écran (à cause du différé, ça commence dès la préparation)."
+                    : "Mode caméra réservé : un admin doit faire /capitoltv camera add <pseudo>, ou lier ton compte Minecraft à un membre Caméra sur le site.";
+            for (OrderedText ot : textRenderer.wrapLines(Text.literal(h), colW)) { if (hy > barY - 4) break; ctx.drawText(textRenderer, ot, cx, hy, Ui.DIM, false); hy += 10; }
+        }
         ctx.drawText(textRenderer, "Jeton du mod :", x2, cy + 14, Hud.DIM, false);
         ctx.drawText(textRenderer, "Adresse du site :", x2, cy + 70, Hud.DIM, false);
         int y = cy + 104;
@@ -750,11 +765,11 @@ public class CapitolScreen extends Screen {
         String help = "Touches : " + CapitolClient.menuKeyName() + " menu · " + CapitolClient.signalKey.getBoundKeyLocalizedText().getString()
                 + " signal rapide · " + CapitolClient.cameraKey.getBoundKeyLocalizedText().getString() + " mode caméra (barre 1 à 9) · "
                 + CapitolClient.peekKey.getBoundKeyLocalizedText().getString() + " maintenu : voir l'interface à l'antenne. Les sons sont coupés à l'antenne (ils partiraient dans ton stream).";
-        for (OrderedText ot : textRenderer.wrapLines(Text.literal(help), w2)) { ctx.drawText(textRenderer, ot, x2, y, Hud.DIM, false); y += 10; }
+        for (OrderedText ot : textRenderer.wrapLines(Text.literal(help), w2)) { if (y > py + ph - 12) break; ctx.drawText(textRenderer, ot, x2, y, Hud.DIM, false); y += 10; }
         if (c.token.isEmpty()) {
             y += 4;
             for (OrderedText ot : textRenderer.wrapLines(Text.literal("Pour obtenir un jeton : connecte-toi sur le site Capitol TV, ouvre « Mon compte » puis « Mod caméra ». La régie doit t'avoir donné le rôle Caméra dans l'équipe."), w2)) {
-                ctx.drawText(textRenderer, ot, x2, y, Hud.GOLD, false); y += 10;
+                if (y > py + ph - 12) break; ctx.drawText(textRenderer, ot, x2, y, Hud.GOLD, false); y += 10;
             }
         }
     }
@@ -894,7 +909,7 @@ public class CapitolScreen extends Screen {
         } else info.add("Pas de différé : la régie et le réacteur voient l'action en direct.");
         if (!sigInfo.isEmpty()) info.add(sigInfo + (Data.lastReportTs > 0 && Data.delay > 0 ? " — " + Data.airLabel(Data.lastReportTs) : ""));
         info.add("Astuce : la touche " + CapitolClient.signalKey.getBoundKeyLocalizedText().getString() + " envoie un signal rapide sur le tribut suivi (ou le plus proche), sans ouvrir le menu.");
-        for (String s : info) for (OrderedText ot : textRenderer.wrapLines(Text.literal(s), cw)) { ctx.drawText(textRenderer, ot, cx, y, Hud.INK, false); y += 10; }
+        for (String s : info) for (OrderedText ot : textRenderer.wrapLines(Text.literal(s), cw)) { if (y > py + ph - 12) return; ctx.drawText(textRenderer, ot, cx, y, Ui.DIM, false); y += 10; }
     }
 
     private void renderList(DrawContext ctx, int mouseX, int mouseY) {
