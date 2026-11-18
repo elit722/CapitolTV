@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capitol TV — Connexion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060607;--surface:#111114;--hair:rgba(255,255,255,.08);--gold:#d6b261;--gold-hi:#f6e2a6;--gold-lo:#8f6c2b;--ink:#f3f0e9;--ink2:#bdb8ad;--mute:#77736b;--red:#ff5d74}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Manrope',system-ui,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;
+  background:radial-gradient(900px 500px at 50% -10%,rgba(214,178,97,.12),transparent 65%),radial-gradient(700px 400px at 50% 120%,rgba(208,34,63,.10),transparent 60%),var(--bg)}
+.card{width:min(420px,100%);text-align:center;padding:40px 32px 32px;border:1px solid var(--hair);border-radius:20px;background:rgba(17,17,20,.8);backdrop-filter:blur(8px);box-shadow:0 40px 100px -30px #000}
+.mark{display:flex;justify-content:center;margin-bottom:18px;min-height:96px}
+.mark img{width:96px;height:96px;object-fit:contain;mix-blend-mode:screen;-webkit-mask-image:radial-gradient(closest-side,#000 84%,transparent);mask-image:radial-gradient(closest-side,#000 84%,transparent)}
+h1{margin:0;font-family:'Cinzel',serif;font-weight:700;font-size:26px;letter-spacing:.28em;background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,var(--gold-lo));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{margin:8px 0 28px;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute);font-weight:700}
+p{color:var(--ink2);line-height:1.6;font-size:14px;margin:0 0 24px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;height:48px;border-radius:12px;background:#5865F2;color:#fff;font-weight:700;font-size:15px;text-decoration:none;transition:filter .15s}
+.btn:hover{filter:brightness(1.1)}
+.btn svg{width:22px;height:22px}
+.err{margin:0 0 20px;padding:10px 14px;border-radius:10px;background:rgba(208,34,63,.12);border:1px solid rgba(208,34,63,.35);color:#ffd2d9;font-size:13px;line-height:1.5}
+.foot{margin-top:22px;font-size:12px;color:var(--mute);line-height:1.5}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="mark" id="mark"></div>
+  <h1>CAPITOL TV</h1>
+  <div class="sub">Couverture officielle des Jeux</div>
+  <div class="err" id="err" hidden></div>
+  <p>Connecte-toi avec ton compte Discord pour suivre tous les tributs en direct, signaler les actions à la régie et soutenir l'association grâce aux sponsors.</p>
+  <a class="btn" href="/auth/login">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.3 4.4A19.6 19.6 0 0 0 15.4 3l-.6 1.3a18 18 0 0 0-5.6 0L8.6 3a19.5 19.5 0 0 0-4.9 1.5C.6 9.1-.3 13.7.1 18.2a19.7 19.7 0 0 0 6 3l1.3-2.1a12.7 12.7 0 0 1-2-1l.5-.4a14 14 0 0 0 12.2 0l.5.4c-.6.4-1.3.7-2 1l1.3 2.1a19.6 19.6 0 0 0 6-3c.5-5.2-.9-9.8-3.6-13.8ZM8 15.5c-1.2 0-2.2-1.1-2.2-2.4S6.8 10.7 8 10.7s2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Zm8 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Z"/></svg>
+    Se connecter avec Discord
+  </a>
+  <div class="foot">Seuls ton pseudo et ton avatar Discord sont utilisés, pour afficher qui est en ligne.</div>
+</main>
+<script>
+  const img = new Image();
+  img.onload = () => document.getElementById('mark').appendChild(img);
+  img.src = '/logo.png'; img.alt = '';
+  const e = new URLSearchParams(location.search).get('e');
+  const msg = { guild: "Ce site est réservé aux membres du serveur Discord de l'event. Rejoins le serveur puis réessaie.",
+    denied: "Connexion annulée.", state: "La connexion a expiré, réessaie.", token: "Discord n'a pas validé la connexion, réessaie." }[e];
+  if (msg) { const el = document.getElementById('err'); el.textContent = msg; el.hidden = false; }
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+# Déploiement automatique sur Cloudflare à chaque push sur main.
+# À activer une seule fois : GitHub › Settings › Secrets and variables › Actions ›
+# « New repository secret » nommé CLOUDFLARE_API_TOKEN (jeton Cloudflare avec le modèle « Edit Cloudflare Workers »).
+name: Déploiement Cloudflare
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.repository == 'elit722/CapitolTV' || github.repository == 'elit722/capitoltv' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Vérifier la présence du jeton
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then echo "::warning::Secret CLOUDFLARE_API_TOKEN absent : déploiement ignoré."; exit 0; fi
+      - uses: cloudflare/wrangler-action@v3
+        if: ${{ env.HAS_TOKEN != '' }}
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: deploy

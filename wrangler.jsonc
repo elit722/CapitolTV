@@ -1,0 +1,34 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "capitol-tv",
+  "account_id": "796668a45123ff44842a776424d79fe6",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-11-01",
+
+  // Le site (public/) passe toujours par le Worker : connexion Discord obligatoire.
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+
+  // Un seul Durable Object gère l'état des Jeux, les alertes, l'équipe et la présence en temps réel.
+  "durable_objects": {
+    "bindings": [{ "name": "GAME", "class_name": "Game" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Game"] }],
+
+  "observability": { "enabled": true },
+
+  // Variables publiques (les valeurs secrètes se règlent avec `npx wrangler secret put …`, voir README)
+  "vars": {
+    // ID de l'application Discord (Developer Portal > OAuth2 > Client ID)
+    "DISCORD_CLIENT_ID": "",
+    // Facultatif : réserver le site aux membres d'un serveur Discord (ID du serveur)
+    "DISCORD_GUILD_ID": "",
+    // Ton ID Discord (et ceux des co-organisateurs), séparés par des virgules : toujours admin de la régie
+    "OWNER_DISCORD_IDS": "",
+    // Facultatif : statut en direct des tributs (dev.twitch.tv/console > Client ID)
+    "TWITCH_CLIENT_ID": ""
+  }
+}
