@@ -6,14 +6,14 @@
 <title>Capitol TV — Couverture des Jeux</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Barlow+Condensed:wght@500;600;700&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
 <script>
 /* =====================================================================
    CONFIGURATION — la seule partie à modifier
    ===================================================================== */
 const CONFIG = {
   // Logo : image "logo.png" placée dans le dossier public/ (sinon emblème par défaut)
-  logo: "emblem.png", logoFull: "logo.png",
+  logo: "emblem.png", logoFull: "emblem.png",
   // Bouton de dons par défaut (modifiable ensuite depuis la régie)
   don: { label: "Sponsoriser", url: "" }
 };
@@ -26,7 +26,7 @@ const CONFIG = {
   --gold:#d6b261; --gold-hi:#f6e2a6; --gold-lo:#8f6c2b; --gold-a:rgba(214,178,97,.10); --gold-b:rgba(214,178,97,.24);
   --red:#d0223f; --red-hi:#ff5d74; --red-a:rgba(208,34,63,.10); --red-b:rgba(208,34,63,.30);
   --ink:#f3f0e9; --ink2:#bdb8ad; --mute:#77736b; --ok:#5fbf8a; --warn:#e8a54b;
-  --serif:'Cinzel',Georgia,serif; --sans:'Manrope',system-ui,-apple-system,sans-serif;
+  --serif:'Barlow Condensed','Arial Narrow',sans-serif; --sans:'Barlow',system-ui,-apple-system,sans-serif; --brand:'Cinzel',Georgia,serif;
   --r:12px;
 }
 *{box-sizing:border-box}
@@ -119,6 +119,76 @@ audio.em-md{display:none}
 .em-aud i{display:inline-block;width:6px;height:18px;margin:0 2px;background:#d4af37;border-radius:2px;animation:emEq 1s ease-in-out infinite}
 .em-aud i:nth-of-type(2){animation-delay:.15s}.em-aud i:nth-of-type(3){animation-delay:.3s}.em-aud i:nth-of-type(4){animation-delay:.45s}.em-aud i:nth-of-type(5){animation-delay:.6s}
 @keyframes emEq{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1.4)}}
+
+/* ---- vidéo Capitol TV ---- */
+.dp{position:absolute;inset:0;background:#000}
+.dp video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.dp-st{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.7);color:var(--ink2);font:600 13px var(--sans);padding:6px 12px;border-radius:6px;letter-spacing:.04em}
+.slot-frame .dp{position:absolute;inset:0}
+.src .th.ctv{display:grid;place-items:center;background:linear-gradient(135deg,#2a0e12,#0d0c10)} .src .th.ctv span{font:700 13px var(--serif);letter-spacing:.18em;color:#ff8a8a}
+.ci .mdi.ctv{font:700 22px var(--serif);letter-spacing:.2em;color:rgba(255,138,138,.8)}
+/* ---- habillages de l'antenne ---- */
+.em-gfx{position:absolute;inset:0;z-index:60;pointer-events:none;font-family:var(--serif)}
+.gx-alive{position:absolute;left:2.2%;top:3.5%;display:flex;align-items:baseline;gap:.35em;background:linear-gradient(90deg,rgba(10,9,8,.92),rgba(10,9,8,.7));border-left:.3em solid var(--gold);padding:.35em .9em .3em .7em;font-size:clamp(12px,1.7vw,30px);color:#fff;animation:gxIn .5s ease both}
+.gx-alive b{font-size:1.6em;color:var(--gold-hi);line-height:1} .gx-alive span{opacity:.75} .gx-alive i{font-style:normal;letter-spacing:.2em;font-size:.6em;color:var(--gold)}
+.gx-lower{position:absolute;left:3%;bottom:13%;min-width:28%;max-width:60%;background:linear-gradient(90deg,rgba(12,11,10,.95),rgba(12,11,10,.78));border-left:.35em solid var(--gold);padding:.45em 1.2em .55em .9em;color:#fff;font-size:clamp(12px,1.6vw,28px);animation:gxSlide .6s cubic-bezier(.2,.8,.2,1) both}
+.gx-lower .n{font-weight:700;font-size:1.45em;letter-spacing:.06em;text-transform:uppercase;line-height:1.05}
+.gx-lower .n em{font-style:normal;color:var(--gold-hi);margin-right:.4em}
+.gx-lower .s{font-family:var(--sans);font-weight:600;font-size:.72em;color:#e8dcc2;letter-spacing:.04em;margin-top:.2em}
+.gx-lower .x{font-family:var(--sans);font-size:.7em;margin-top:.25em;color:#fff;opacity:.9}
+.gx-lower.dead{border-left-color:#8a8a8a} .gx-lower.dead .n{color:#ccc}
+.gx-break{position:absolute;left:0;right:0;bottom:3.2%;display:flex;align-items:stretch;height:clamp(22px,3.6vw,60px);font-size:clamp(11px,1.6vw,28px);animation:gxIn .4s ease both}
+.gx-break b{flex:none;display:flex;align-items:center;padding:0 1em;background:#c2121f;color:#fff;letter-spacing:.14em;font-weight:700;box-shadow:.4em 0 1em rgba(0,0,0,.4);z-index:1}
+.gx-break .tk{flex:1;overflow:hidden;background:rgba(255,255,255,.95);color:#111;display:flex;align-items:center;white-space:nowrap;font-family:var(--sans);font-weight:700}
+.gx-break .tk span{display:inline-block;padding-left:100%;animation:gxTick 18s linear infinite} .gx-break .tk span+span{display:none}
+.gx-poll,.gx-bets{position:absolute;right:2.2%;top:16%;width:min(34%,520px);background:rgba(10,9,8,.9);border-top:.25em solid var(--gold);padding:.6em .9em .8em;color:#fff;font-size:clamp(10px,1.25vw,22px);animation:gxIn .5s ease both}
+.gx-bets{top:auto;bottom:22%}
+.gx-poll h5,.gx-bets h5{margin:0 0 .3em;font-size:.72em;letter-spacing:.2em;color:var(--gold)} .gx-poll>b{display:block;font-family:var(--sans);font-size:1.05em;margin-bottom:.4em}
+.gx-poll .op,.gx-bets .op{position:relative;display:flex;justify-content:space-between;padding:.25em .5em;margin-top:.25em;background:rgba(255,255,255,.06);font-family:var(--sans);font-weight:600;overflow:hidden}
+.gx-poll .op i,.gx-bets .op i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,rgba(212,175,55,.55),rgba(212,175,55,.25));z-index:0;transition:width .8s} .gx-poll .op span,.gx-poll .op em,.gx-bets .op span,.gx-bets .op em{position:relative;z-index:1;font-style:normal}
+.gx-map{position:absolute;right:2.2%;bottom:12%;width:min(22%,300px);height:auto;aspect-ratio:1;animation:gxIn .5s ease both}
+@keyframes gxIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes gxSlide{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:none}}
+@keyframes gxTick{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+.em-replay{position:absolute;inset:0;z-index:55;background:#000;animation:gxIn .3s ease both} .em-replay.gone{opacity:0;transition:opacity .5s}
+.em-replay video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.rp-tag{position:absolute;left:2.2%;top:3.5%;display:flex;align-items:center;gap:.6em;font-family:var(--serif);font-size:clamp(14px,2vw,36px);color:#fff}
+.rp-tag b{background:var(--gold);color:#111;padding:.1em .6em;letter-spacing:.2em;animation:rpBlink 1.2s ease-in-out infinite} .rp-tag span{background:rgba(0,0,0,.7);padding:.1em .6em;font-family:var(--sans);font-size:.6em;font-weight:600}
+@keyframes rpBlink{50%{opacity:.6}}
+/* ---- panneaux de la réalisation ---- */
+.rg-panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.rg-p{margin:0} .rg-p h4{margin-top:0}
+.gx-row{display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap} .gx-row .inp,.gx-row .mini-sel{flex:1;min-width:0;height:30px}
+.btn.live{background:var(--red,#b0182c);border-color:var(--red-hi,#e0514a);color:#fff}
+.qlist{margin:0 0 4px;padding-left:20px} .qlist li{display:flex;align-items:center;gap:6px;padding:2px 0} .qlist li span:first-child{flex:1}
+.qlist li.on span:first-child{color:var(--red-hi);font-weight:700} .qlist .inp{width:70px;height:26px;flex:none}
+/* ---- jeux ---- */
+.gm-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px} @media(max-width:900px){.gm-grid{grid-template-columns:1fr}}
+.gm-q{font-size:18px;font-weight:700;margin-bottom:8px}
+.gm-opt{position:relative;display:flex;justify-content:space-between;width:100%;padding:10px 12px;margin-top:6px;border:1px solid var(--hair2);border-radius:8px;background:var(--surface);color:var(--ink);font:600 14px var(--sans);cursor:pointer;overflow:hidden;text-align:left}
+.gm-opt i{position:absolute;left:0;top:0;bottom:0;background:var(--gold-a);transition:width .6s} .gm-opt span,.gm-opt em{position:relative;font-style:normal} .gm-opt.mine{border-color:var(--gold)} .gm-opt:disabled{cursor:default}
+.gm-trib{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.gm-t{border:1px solid var(--hair);border-radius:8px;padding:8px 10px;background:var(--surface)} .gm-t.mine{border-color:var(--gold)} .gm-t.dead{opacity:.45}
+.gm-t .n{font-weight:700} .gm-t .n em{font:700 12px var(--serif);color:var(--gold);font-style:normal} .gm-t small{display:block;color:var(--mute);font-weight:500;font-size:11.5px}
+.gm-t .o{font-size:12px;color:var(--ink2);margin:4px 0} .gm-t .a{display:flex;gap:4px}
+.gm-lb{margin:0;padding-left:22px} .gm-lb li{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--hair)} .gm-lb b{color:var(--gold-hi);font-family:var(--serif)}
+.gm-win{background:var(--gold-a);border:1px solid var(--gold);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:15px}
+/* ---- mémorial ---- */
+.mem-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.mem-c{display:flex;gap:12px;padding:12px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.2));border:1px solid var(--hair);cursor:pointer}
+.mem-c .ph{position:relative;flex:0 0 84px;height:110px;border-radius:6px;overflow:hidden;background:#111;filter:grayscale(1) contrast(1.05)} .mem-c .ph img{width:100%;height:100%;object-fit:cover}
+.mem-c .pl{font:700 22px var(--serif);color:var(--gold)} .mem-c .pl sup{font-size:.55em}
+.mem-c .n{font-weight:800;font-size:16px;text-transform:uppercase;letter-spacing:.04em} .mem-c .d,.mem-c .w{font-size:12px;color:var(--mute)} .mem-c .c{font-size:12.5px;margin-top:4px;color:var(--ink2)} .mem-c .k{font-size:12px;color:var(--gold-hi);margin-top:4px}
+/* ---- alliances ---- */
+.al-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.al-c{border:1px solid var(--hair);border-radius:12px;padding:12px;background:var(--surface)} .al-c.out{opacity:.55}
+.al-h{display:flex;justify-content:space-between;align-items:baseline} .al-h b{font:700 18px var(--serif);letter-spacing:.08em;text-transform:uppercase;color:var(--gold-hi)} .al-h span{font-size:12px;color:var(--mute)}
+.al-ring{position:relative;height:230px;margin-top:8px}
+.al-m{position:absolute;left:50%;top:50%;width:64px;text-align:center;transform:translate(-50%,-50%) rotate(calc(var(--i) * 360deg / var(--n))) translateY(-82px) rotate(calc(var(--i) * -360deg / var(--n)));cursor:pointer}
+.al-m .ph{width:48px;height:48px;margin:0 auto;border-radius:50%;overflow:hidden;border:2px solid #5fbf6a;background:#111} .al-m .ph img{width:100%;height:100%;object-fit:cover}
+.al-m.injured .ph{border-color:#e89a3c} .al-m.dead .ph{border-color:#555;filter:grayscale(1)} .al-m.dead span{text-decoration:line-through;opacity:.6}
+.al-m span{display:block;font-size:11px;font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.al-core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font:700 22px var(--serif);color:var(--gold-hi);background:radial-gradient(circle,rgba(212,175,55,.25),transparent 70%)}
 .rg-main{display:flex;flex-direction:column;min-height:0;overflow:auto;padding:12px 16px 16px;gap:12px}
 .rg-mons{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;align-items:start}
 .mon h4{margin:0 0 6px;font-size:11px;letter-spacing:.16em;color:var(--mute);display:flex;gap:8px;align-items:center}
@@ -203,7 +273,7 @@ img.logo{object-fit:contain;display:block;filter:drop-shadow(0 0 8px rgba(214,17
 header.top{display:flex;align-items:center;gap:20px;padding:0 18px;border-bottom:1px solid var(--hair);position:relative;z-index:3;min-width:0}
 header.top::after{content:"";position:absolute;left:20%;right:20%;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-b),transparent)}
 .brand{display:flex;align-items:center;gap:12px;user-select:none;flex:none}
-.word{font-family:var(--serif);font-weight:700;font-size:17px;letter-spacing:.26em;line-height:1;white-space:nowrap;
+.word{font-family:var(--brand);font-weight:700;font-size:17px;letter-spacing:.26em;line-height:1;white-space:nowrap;
   background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,var(--gold-lo));-webkit-background-clip:text;background-clip:text;color:transparent}
 .brand small{display:block;margin-top:5px;font-size:10.5px;letter-spacing:.14em;color:var(--mute);text-transform:uppercase;font-weight:600;white-space:nowrap}
 .live{display:inline-flex;align-items:center;gap:7px;height:24px;padding:0 10px;border-radius:99px;background:var(--red-a);border:1px solid var(--red-b);
@@ -708,6 +778,9 @@ body.overlay #flashLayer{top:40px}
     <button data-page="tributs" title="Les tributs (U)"><span data-ic="users"></span><span class="lbl-txt">Tributs</span></button>
     <button data-page="sponsors" title="Sponsors (S)"><span data-ic="gift"></span><span class="lbl-txt">Sponsors</span></button>
     <button data-page="equipe" title="L'équipe (E)"><span data-ic="crown"></span><span class="lbl-txt">Équipe</span></button>
+    <button data-page="jeux" title="Pronostics et sondages"><span data-ic="crown"></span><span class="lbl-txt">Jeux</span><i class="onair-dot hide" id="navPoll"></i></button>
+    <button data-page="memorial" title="Mémorial des tributs tombés"><span data-ic="fall"></span><span class="lbl-txt">Mémorial</span></button>
+    <button data-page="alliances" title="Carte des alliances"><span data-ic="users"></span><span class="lbl-txt">Alliances</span></button>
     <button data-page="carte" class="map-only" title="Carte de l'arène"><span data-ic="map"></span><span class="lbl-txt">Carte</span></button>
     <button data-page="direct" class="nolock" title="L'émission en direct, réalisée par la régie"><span data-ic="live"></span><span class="lbl-txt">Direct</span><i class="onair-dot hide" id="navOnAir"></i></button>
     <button data-page="regie" class="prog-only" title="Réalisation de l'émission (multi-caméras)"><span data-ic="grid"></span><span class="lbl-txt">Réalisation</span></button>
@@ -1105,7 +1178,7 @@ const hasPerm = k => !!S.me && !IS_OVERLAY && (S.me.perm === 'admin' || (S.me.pe
 const PERM_INFO = { admin: ['Régie complète', 'Tout gérer (tributs, différé, accès, rôles…)'], mod: ['Modération', 'Alertes et bannissements'], program: ['Réalisation', 'Composer et lancer l\'émission multi-caméras'], roles: ['Gérer les rôles', 'Créer les rôles et les attribuer'], chef: ['Responsable caméra', 'Assigner et « buzzer » les caméras'], cam: ['Caméra en jeu', 'Utiliser le mod en caméraman'], special: ['Annonces spéciales', 'Publier une annonce à toutes les caméras'] };
 const roleOf = m => (S.roles || []).find(r => r.id === m.rid) || null;
 const isSup = () => isCrew() && !!S.me.sup;
-const canMap = () => { if (!S.me || IS_OVERLAY || isLocked()) return false; if (isCrew()) return true; const mt = S.me.tribute && byId(S.me.tribute); if (mt && !isDead(mt)) return false; return !!(S.board.map && S.board.map.on && !S.board.map.staffOnly); };
+const canMap = () => { if (S.me && IS_OVERLAY) return !!(PROG.pub && PROG.pub.gfx && PROG.pub.gfx.map && PROG.pub.gfx.map.on); if (!S.me || IS_OVERLAY || isLocked()) return false; if (isCrew()) return true; const mt = S.me.tribute && byId(S.me.tribute); if (mt && !isDead(mt)) return false; return !!(S.board.map && S.board.map.on && !S.board.map.staffOnly); };
 const nowS = () => Date.now() + (S.skew || 0);
 const wOf = l => ((S.presence && S.presence.counts) || {})[l] || 0;
 const fmtDelay = s => !s ? 'direct' : s % 60 === 0 ? (s / 60) + ' min' : s < 60 ? s + ' s' : Math.floor(s / 60) + ' min ' + (s % 60) + ' s';
@@ -1130,6 +1203,7 @@ function normTribute(t) {
     statusAt: t.statusAt || 0, prevStatus: String(t.prevStatus || ''),
     discordId: String(t.discordId || '').replace(/\D/g, '').slice(0, 20),
     mc: String(t.mc || '').replace(/[^A-Za-z0-9_]/g, '').slice(0, 16),
+    vsrc: ['auto', 'ctv', 'twitch'].includes(t.vsrc) ? t.vsrc : 'auto',
     age: String(t.age || '').slice(0, 20), weapon: String(t.weapon || '').slice(0, 60), skills: String(t.skills || '').slice(0, 200),
     bio: String(t.bio || '').slice(0, 1500), img: /^https:\/\//i.test(t.img || '') ? String(t.img).slice(0, 400) : '',
     sponsorUrl: /^https?:\/\//i.test(t.sponsorUrl || '') ? String(t.sponsorUrl).slice(0, 400) : '',
@@ -1267,6 +1341,9 @@ const NET = {
       case 'team': S.team = m.team || []; if (m.roles) S.roles = m.roles; renderTeam(); renderOnline(); refreshSettings('access'); refreshSettings('roles'); PROG.renderSources(); CAM.renderComms(); break;
       case 'prog': case 'progEd': case 'onair': case 'media': PROG.onMsg(m); break;
       case 'srvCams': S.srvCams = m.names || []; refreshSettings('cams'); break;
+      case 'pubs': RTC.onPubs(m.pubs); break;
+      case 'skeys': RTC.keys = m.keys || {}; break;
+      case 'poll': case 'bets': GAMES.onMsg(m); break;
       case 'banned': S.banned = m.list || {}; refreshSettings('access'); break;
       case 'kicked': this.kicked = true; break;
       case 'auth': this.auth = true; break;
@@ -1357,7 +1434,7 @@ function applyRole() {
 function onHello(m) {
   S.me = m.me; S.skew = (m.now || Date.now()) - Date.now();
   S.team = m.team || []; S.banned = m.banned || {}; S.roles = m.roles || [];
-  CAM.onHello(m); PROG.onHello(m); S.srvCams = m.srvCams || [];
+  RTC.onHello(m); CAM.onHello(m); PROG.onHello(m); S.srvCams = m.srvCams || []; GAMES.onHello(m);
   S.alertsReady = false; S.seen = new Set(); S.alerts = {};
   if (m.alerts) onAlerts(m.alerts);
   onPresence(m.presence || { n: 0, counts: {}, team: {} });
@@ -1424,7 +1501,7 @@ function setPage(p) {
   if (p !== 'antenne') closeWall();
   renderPage();
 }
-function renderPage() { if (S.page === 'equipe') renderTeam(); else if (S.page === 'tributs') renderTributesPage(); else if (S.page === 'sponsors') renderSponsors(); else if (S.page === 'carte') CAM.renderMap(); else if (S.page === 'direct') PROG.renderDirect(); else if (S.page === 'regie') PROG.renderEditor(); CAM.mapSub(S.page === 'carte'); PROG.leave(); }
+function renderPage() { $('#pageView').onclick = null; if (S.page === 'equipe') renderTeam(); else if (S.page === 'tributs') renderTributesPage(); else if (S.page === 'sponsors') renderSponsors(); else if (S.page === 'carte') CAM.renderMap(); else if (S.page === 'direct') PROG.renderDirect(); else if (S.page === 'regie') PROG.renderEditor(); else if (S.page === 'jeux') GAMES.render(); else if (S.page === 'memorial') renderMemorial(); else if (S.page === 'alliances') renderAlliances(); CAM.mapSub(S.page === 'carte' || (S.page === 'direct' && PROG.wantsMap())); PROG.leave(); }
 function openTeam() { S.page = ''; setPage('equipe'); }
 function closeTeam() { S.page = ''; setPage('antenne'); }
 
@@ -1504,6 +1581,7 @@ function openTributeEdit(t) {
       <div class="row">
         <label class="f"><span class="lbl2">Pseudo Twitch</span><input class="inp" id="tLogin" value="${esc(t.login)}" placeholder="pseudo ou lien twitch.tv/…"></label>
         <label class="f" style="flex:0 0 170px"><span class="lbl2">Pseudo Minecraft <em>carte & mod</em></span><input class="inp" id="tMc" maxlength="16" value="${esc(t.mc)}" placeholder="Pseudo en jeu"></label>
+        <label class="f" style="flex:0 0 200px"><span class="lbl2">Source vidéo du POV</span>${vsrcSelect('tVs', t.vsrc)}</label>
         <label class="f"><span class="lbl2">Compte Discord du joueur <em>pour le blocage des flux</em></span><input class="inp" id="tDis" value="${esc(t.discordId)}" list="dlUsers" placeholder="ID Discord (ou choisis une personne en ligne)">
           <datalist id="dlUsers">${users.map(u => `<option value="${esc(u.id)}">${esc(u.name)}</option>`).join('')}</datalist></label>
       </div>
@@ -1518,11 +1596,13 @@ function openTributeEdit(t) {
         <label class="f"><span class="lbl2">Portrait <em>lien https vers une image</em></span><input class="inp" id="tImg" value="${esc(t.img)}" placeholder="https://… (sinon : aperçu du stream)"></label>
         <label class="f"><span class="lbl2">Lien sponsor dédié <em>facultatif</em></span><input class="inp" id="tSp" value="${esc(t.sponsorUrl)}" placeholder="sinon : lien général des Sponsors"></label>
       </div>
+      ${!isNew ? keyBox('t:' + t.id) : ''}
       <div class="note" id="tMsg" style="min-height:18px"></div>
     </div>
     <div class="modal-f">${!isNew ? `<button type="button" class="btn ghost" id="tDel" style="margin-right:auto;color:var(--red-hi)">${ic('trash')}Supprimer</button>` : ''}
       <button type="button" class="btn ghost" data-close>Annuler</button><button type="submit" class="btn primary">Enregistrer</button></div></form>`);
   m.style.width = 'min(860px,100%)';
+  bindKeyBox(m);
   m.querySelector('#tBio').oninput = e => $('#tBioN').textContent = e.target.value.length + ' / 1500';
   m.querySelector('#fTr').addEventListener('submit', e => {
     e.preventDefault();
@@ -1534,7 +1614,7 @@ function openTributeEdit(t) {
     const st = $('#tSt').value;
     const x = cur || normTribute({ login });
     if (cur && cur.login !== login) { S.slots = S.slots.map(s => s === cur.login ? login : s); persistSlots(); }
-    Object.assign(x, normTribute({ ...x, login, num: num || x.num, district: $('#tD').value, name: $('#tName').value.trim() || login, alliance: $('#tAl').value, discordId: $('#tDis').value, mc: $('#tMc').value.trim(),
+    Object.assign(x, normTribute({ ...x, login, num: num || x.num, district: $('#tD').value, name: $('#tName').value.trim() || login, alliance: $('#tAl').value, discordId: $('#tDis').value, mc: $('#tMc').value.trim(), vsrc: $('#tVs').value,
       age: $('#tAge').value.trim(), weapon: $('#tWep').value.trim(), skills: $('#tSk').value.trim(), bio: $('#tBio').value.trim(), img: $('#tImg').value.trim(), sponsorUrl: $('#tSp').value.trim(), status: x.status }));
     if (st !== x.status) setStatus(x, st, true);
     if (isNew) { if (!num) x.num = 0; S.board.tributes.push(x); fixNums(S.board.tributes); }
@@ -1633,9 +1713,11 @@ function openMember(m, preset) {
       </div>
       <div class="row">
         <label class="f" style="flex:0 0 220px"><span class="lbl2">Compte Minecraft <em>pseudo en jeu</em></span><input class="inp" id="mMc" maxlength="16" value="${esc(m.mc || '')}" placeholder="pseudo Minecraft"></label>
+        <label class="f" style="flex:0 0 200px"><span class="lbl2">Source vidéo de la caméra</span>${vsrcSelect('mVs', m.vsrc)}</label>
         <p class="note" style="flex:1;margin:22px 0 0">Avec un rôle Caméra, ce compte Minecraft a le <b style="color:var(--ink2)">mode caméra</b> du mod et passe en spectateur sur le serveur. En jeu, un admin peut aussi faire <code>/capitoltv camera add pseudo</code>.</p>
       </div>
       <p class="note" id="mRidInfo" style="margin-top:0"></p>
+      ${!isNew && m.id ? keyBox('c:' + m.id) : ''}
       <label class="f"><span class="lbl2">Petite présentation <em>facultatif</em></span><input class="inp" id="mBio" maxlength="200" value="${esc(m.bio)}"></label>
       <div class="note" id="mMsg" style="min-height:18px"></div>
     </div>
@@ -1643,10 +1725,10 @@ function openMember(m, preset) {
       <button type="button" class="btn ghost" data-close>Annuler</button><button type="submit" class="btn primary">Enregistrer</button></div></form>`);
   const save = list => NET.req({ t: 'team', team: list }).then(() => closeModal(), e => { $('#mMsg').innerHTML = '<span class="ko">' + esc(e.message) + '</span>'; });
   const ridInfo = () => { const r = (S.roles || []).find(x => x.id === $('#mRid').value); $('#mRidInfo').innerHTML = r ? (r.perms.length ? 'Permissions : ' + r.perms.map(p => '<b style="color:var(--ink2)">' + esc(PERM_INFO[p][0]) + '</b>').join(', ') : 'Aucune permission particulière (comms du staff, carte).') : ''; };
-  box.querySelector('#mRid').onchange = ridInfo; ridInfo();
+  box.querySelector('#mRid').onchange = ridInfo; ridInfo(); bindKeyBox(box);
   box.querySelector('#fMem').addEventListener('submit', e => {
     e.preventDefault();
-    const x = { ...m, role: $('#mRole').value.trim(), rid: $('#mRid').value, twitch: normTribute({ login: $('#mTw').value }).login, mc: $('#mMc').value.replace(/[^A-Za-z0-9_]/g, '').slice(0, 16), bio: $('#mBio').value.trim() };
+    const x = { ...m, role: $('#mRole').value.trim(), rid: $('#mRid').value, twitch: normTribute({ login: $('#mTw').value }).login, mc: $('#mMc').value.replace(/[^A-Za-z0-9_]/g, '').slice(0, 16), vsrc: $('#mVs').value, bio: $('#mBio').value.trim() };
     if (isNew && !preset) { x.id = $('#mId').value.replace(/\D/g, ''); x.name = $('#mName').value.trim() || 'Membre'; if (x.id.length < 15) { $('#mId').classList.add('bad'); return; } }
     if (isNew && S.team.find(t => t.id === x.id)) { $('#mMsg').innerHTML = '<span class="ko">Déjà dans l\'équipe.</span>'; return; }
     save(isNew ? [...S.team, x] : S.team.map(t => t.id === m.id ? x : t));
@@ -1656,6 +1738,28 @@ function openMember(m, preset) {
 }
 
 /* Mon compte */
+/* source vidéo : Auto (Capitol TV si le flux est en ligne, sinon Twitch), forcé Capitol TV, forcé Twitch */
+function vsrcSelect(id, v) {
+  v = v || 'auto';
+  return `<select class="inp" id="${id}"><option value="auto" ${v === 'auto' ? 'selected' : ''}>Auto : Capitol TV sinon Twitch</option><option value="ctv" ${v === 'ctv' ? 'selected' : ''}>Capitol TV seulement (mod ou OBS)</option><option value="twitch" ${v === 'twitch' ? 'selected' : ''}>Twitch seulement</option></select>`;
+}
+function keyBox(src, own) {
+  const key = (own ? RTC.mykeys : RTC.keys)[src];
+  if (!key) return '';
+  const live = RTC.pubs[src];
+  return `<div class="sect keybox" data-src="${esc(src)}" style="margin:6px 0 10px"><h4 style="margin-top:0">${ic('live')} Diffusion vers Capitol TV ${live ? `<span class="tag" style="background:var(--red-a,rgba(224,81,74,.2));color:var(--red-hi)">● EN LIGNE · ${esc(live.via)}</span>` : '<span class="note">hors ligne</span>'}</h4>
+    <div class="row" style="align-items:center"><input class="inp" readonly value="${esc(key)}" style="font-family:ui-monospace,monospace;font-size:12px"><button type="button" class="btn sm" data-kc="${esc(key)}" style="flex:none">${ic('copy')}Clé</button><button type="button" class="btn sm" data-kc="${esc(RTC.whipURL(key))}" style="flex:none">${ic('copy')}Lien OBS</button>${own ? '' : `<button type="button" class="btn sm ghost" data-kn style="flex:none" title="Coupe le flux en cours">Nouvelle clé</button>`}</div>
+    <p class="note" style="margin-bottom:0"><b>Mod Minecraft</b> : touche K › Réglages › Diffusion, colle la clé. <b>OBS</b> : Paramètres › Stream › Service <b>WHIP</b>, Serveur = le lien OBS, sans jeton. Le différé est ajouté par le site.</p></div>`;
+}
+function bindKeyBox(box) {
+  box.addEventListener('click', e => {
+    const c = e.target.closest('[data-kc]'); if (c) { copy(c.dataset.kc, c); return; }
+    const n = e.target.closest('[data-kn]'); if (!n) return;
+    const kb = n.closest('.keybox');
+    if (!n.dataset.sure) { n.dataset.sure = 1; n.textContent = 'Sûr ?'; return; }
+    NET.req({ t: 'skeyNew', src: kb.dataset.src }).then(r => { RTC.keys[kb.dataset.src] = r.key; kb.outerHTML = keyBox(kb.dataset.src); toastInfo('Nouvelle clé de diffusion', 'L\'ancienne ne marche plus.'); });
+  });
+}
 function openMe() {
   const m = modal(`${modalHead('Mon compte', 'Connecté avec Discord')}
     <div class="modal-b">
@@ -1664,9 +1768,11 @@ function openMe() {
       ${isCrew() ? `<div class="sect" style="margin-bottom:14px"><h4 style="margin-top:0">${ic('cam')} Mod caméra Minecraft</h4>
         <p class="note" style="margin-top:0">Le mod (Fabric 1.21.8) relie ton jeu à Capitol TV : actions en cours, actes annonciateurs, carte avec TP, signalements et comms. Génère ton jeton, puis dans le jeu : touche <b>K</b> › Réglages › Coller › Connecter. Le jeton est personnel (valable 60 jours).</p>
         <div id="tokBox"><button class="btn primary" id="tokBtn">${ic('cam')}Générer mon jeton</button></div></div>` : ''}
+      ${Object.keys(RTC.mykeys).length ? `<div class="sect" style="margin-bottom:14px"><h4 style="margin-top:0">${ic('live')} Diffuser ton image</h4><p class="note" style="margin-top:0">Ton jeu envoie lui-même son image à Capitol TV (mod Minecraft, sans OBS), ou passe par OBS. Twitch reste possible si la régie le choisit.</p>${Object.keys(RTC.mykeys).map(k => keyBox(k, true)).join('')}</div>` : ''}
       ${isStaff() ? `<label class="switch"><input type="checkbox" id="presIn" ${S.presenter ? 'checked' : ''}> <span><b style="color:var(--ink)">Mode présentateur</b> — voir l'antenne avec le différé, comme les spectateurs (idéal pour réagir en live sans te spoiler). L'édition est désactivée, les alertes restent visibles.</span></label>` : ''}
     </div>
     <div class="modal-f"><a class="btn ghost" href="/auth/logout" style="margin-right:auto">${ic('logout')}Se déconnecter</a><button class="btn primary" data-close>Fermer</button></div>`);
+  bindKeyBox(m);
   const tb = m.querySelector('#tokBtn');
   if (tb) tb.onclick = () => NET.req({ t: 'modToken' }).then(r => {
     $('#tokBox').innerHTML = `<textarea class="inp tok" readonly id="tokTxt">${esc(r.token)}</textarea><div class="row" style="margin-top:8px"><button class="btn primary" id="tokCopy">${ic('copy')}Copier le jeton</button><span class="note">Ne le partage pas : il permet d'agir en ton nom dans le mod.</span></div>`;
@@ -1688,6 +1794,20 @@ const thumbImg = login => `<img loading="lazy" alt="" src="${thumbURL(login)}" o
 const slotObjs = [];
 function slotSetContent(i, login, muted) {
   const o = slotObjs[i];
+  const tr = login ? byLogin(login) : null, src = tr ? 't:' + tr.id : '', md = tr ? RTC.mode(src, tr.vsrc || 'auto', login) : '';
+  if (md === 'rtc' || md === 'off') {
+    const key = md + ':' + src + ':' + (S.board.delay || 0);
+    if (o.key !== key) {
+      if (o.dp) { o.dp.destroy(); o.dp = null; }
+      o.key = key; o.player = null; o.login = login;
+      o.frame.innerHTML = '';
+      if (md === 'rtc') { o.dp = new DelayPlayer(src, { delay: isCrew() && !S.presenter ? 0 : (S.board.delay || 0) }); o.frame.appendChild(o.dp.el); }
+      else o.frame.innerHTML = `<div class="slot-empty"><div class="mark">${logo(64)}</div><h3>FLUX HORS LIGNE</h3><p>Ce tribut diffuse via Capitol TV (mod ou OBS) : son image apparaîtra dès qu'il sera en ligne.</p></div>`;
+    }
+    if (o.dp) o.dp.setMuted(muted);
+    return;
+  }
+  if (o.dp) { o.dp.destroy(); o.dp = null; o.key = null; }
   if (!login || !HOST) {
     const key = 'empty:' + (login || '') + ':' + (S.board.tributes.length ? 1 : 0) + ':' + LOGO_OK + ':' + S.layout;
     if (o.key === key) return;
@@ -2820,7 +2940,7 @@ const CAM = {
       case 'reqDel': delete this.reqs[m.id]; this.renderTerrain(); break;
       case 'cams': this.cams = m.cams || []; this.renderTerrain(); if (S.page === 'carte') this.draw(); break;
       case 'srv': this.srv = !!m.on; S.cam = { srv: this.srv }; this.renderTerrain(); refreshSettings('cams'); break;
-      case 'pos': this.onPos(m.p || {}); if (m.cams) this.cams = m.cams; break;
+      case 'pos': this.onPos(m.p || {}); if (m.cams) this.cams = m.cams; PROG.posHist.push({ ts: Date.now(), p: JSON.parse(JSON.stringify(this.pos)) }); while (PROG.posHist.length > 2 && PROG.posHist[0].ts < Date.now() - (S.board.delay || 0) * 1000 - 30000) PROG.posHist.shift(); break;
       case 'map': if (S.me) { S.board.map = m.map; } break;
       case 'commsClear': this.feed = []; this.comms = []; this.reqs = {}; this.renderAllPanels(); break;
     }
@@ -3150,6 +3270,273 @@ setInterval(() => { CAM.tickAir(); if (S.page === 'carte' && $('#mapList')) CAM.
 /* =====================================================================
    Émission en direct : réalisation multi-caméras + page « Direct »
    ===================================================================== */
+/* =====================================================================
+   Vidéo native : flux envoyés par le mod Minecraft ou OBS (Cloudflare Realtime)
+   Le différé est créé ici, dans le navigateur : la vidéo est enregistrée
+   en petits segments et rejouée avec le retard choisi par la régie.
+   ===================================================================== */
+const RTC = {
+  pubs: {}, on: false, pub: false, conns: new Map(), keys: {}, mykeys: {},
+  onHello(m) {
+    this.pubs = m.pubs || {}; this.on = !!(m.rtc && m.rtc.on); this.pub = !!(m.rtc && m.rtc.pub);
+    if (m.skeys) this.keys = m.skeys; this.mykeys = m.mykeys || {};
+    this.prune();
+  },
+  onPubs(p) { this.pubs = p || {}; this.prune(); renderStage(); if (S.page === 'direct') PROG.layout(); if (S.page === 'regie') { PROG.renderSources(); PROG.renderCanvas(); PROG.renderPgm(); } },
+  prune() { for (const [src, c] of this.conns) if (!this.pubs[src]) this.close(src); },
+  live(src) { return !!(src && this.pubs[src]); },
+  allowed() { return this.on && !isLocked() && (isCrew() || IS_OVERLAY || this.pub); },
+  /* source à afficher : 'rtc' (Capitol TV), 'twitch' ou '' (rien) */
+  mode(src, vsrc, login) {
+    if (vsrc !== 'twitch' && this.allowed() && this.live(src)) return 'rtc';
+    if (vsrc === 'ctv') return 'off';
+    return login ? 'twitch' : '';
+  },
+  whipURL(key) { return location.origin + '/whip/' + key; },
+  /* flux partagé par source (une seule connexion même si plusieurs lecteurs) */
+  stream(src) {
+    let c = this.conns.get(src);
+    if (!c) { c = { src, ms: new MediaStream(), users: 0, pc: null, state: 'new', subs: new Set() }; this.conns.set(src, c); this.connect(c); }
+    c.users++;
+    return c;
+  },
+  release(c) { if (!c) return; c.users--; if (c.users <= 0) setTimeout(() => { if (c.users <= 0) this.close(c.src); }, 4000); },
+  close(src) { const c = this.conns.get(src); if (!c) return; this.conns.delete(src); c.dead = true; try { c.pc && c.pc.close(); } catch (e) {} },
+  async connect(c) {
+    if (c.dead) return;
+    try {
+      c.state = 'connexion';
+      const pc = c.pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.cloudflare.com:3478' }], bundlePolicy: 'max-bundle' });
+      pc.ontrack = e => { c.ms.getTracks().filter(t => t.kind === e.track.kind).forEach(t => c.ms.removeTrack(t)); c.ms.addTrack(e.track); c.subs.forEach(f => f()); };
+      pc.onconnectionstatechange = () => {
+        c.state = pc.connectionState;
+        if (['failed', 'closed'].includes(pc.connectionState) || (pc.connectionState === 'disconnected')) {
+          clearTimeout(c.retryT);
+          c.retryT = setTimeout(() => { if (!c.dead && pc === c.pc && pc.connectionState !== 'connected' && this.live(c.src)) { try { pc.close(); } catch (x) {} this.connect(c); } }, 3000);
+        }
+      };
+      const r = await fetch('/api/rtc/pull', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ src: c.src }) });
+      const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.msg || 'refusé');
+      await pc.setRemoteDescription(j.offer);
+      await pc.setLocalDescription(await pc.createAnswer());
+      await new Promise(res => { if (pc.iceGatheringState === 'complete') return res(); const t = setTimeout(res, 2500); pc.addEventListener('icegatheringstatechange', () => { if (pc.iceGatheringState === 'complete') { clearTimeout(t); res(); } }); });
+      const a = await fetch('/api/rtc/answer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sid: j.sid, sdp: pc.localDescription.sdp }) });
+      if (!a.ok) throw new Error((await a.json().catch(() => ({}))).msg || 'réponse refusée');
+    } catch (e) {
+      c.state = 'erreur'; c.err = e.message;
+      clearTimeout(c.retryT);
+      if (!c.dead && this.live(c.src)) c.retryT = setTimeout(() => this.connect(c), 5000);
+    }
+  }
+};
+
+/* Lecteur avec différé : segments WebM (MediaRecorder) rejoués via MediaSource */
+class DelayPlayer {
+  constructor(src, { delay = 0, record = false } = {}) {
+    this.src = src; this.delay = Math.max(0, delay); this.record = record || this.delay > 0;
+    this.el = document.createElement('div'); this.el.className = 'dp';
+    this.video = document.createElement('video'); this.video.playsInline = true; this.video.autoplay = true; this.video.muted = true;
+    this.el.appendChild(this.video);
+    this.badge = document.createElement('div'); this.badge.className = 'dp-st'; this.el.appendChild(this.badge);
+    this.segs = []; this.next = 0; this.muted = true;
+    this.conn = RTC.stream(src);
+    this.onTracks = () => this.begin();
+    this.conn.subs.add(this.onTracks);
+    if (this.conn.ms.getTracks().length) this.begin();
+    this.tick = setInterval(() => this.loop(), 250);
+    this.status();
+  }
+  status() {
+    const c = this.conn, waiting = this.delay > 0 && this.started && !this.appended;
+    const left = waiting ? Math.max(0, Math.ceil((this.started + this.delay * 1000 - Date.now()) / 1000)) : 0;
+    const txt = !c.ms.getTracks().length ? (c.state === 'erreur' ? 'Flux indisponible · nouvel essai…' : 'Connexion au flux…') : waiting ? 'Différé : image dans ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0') : '';
+    this.badge.textContent = txt; this.badge.classList.toggle('hide', !txt);
+  }
+  setMuted(m) { this.muted = m; this.video.muted = m; }
+  mime() {
+    const audio = this.conn.ms.getAudioTracks().length > 0;
+    const c = audio ? ['video/webm;codecs=vp8,opus', 'video/webm;codecs=vp9,opus', 'video/webm'] : ['video/webm;codecs=vp8', 'video/webm;codecs=vp9', 'video/webm'];
+    return c.find(x => window.MediaRecorder && MediaRecorder.isTypeSupported(x)) || '';
+  }
+  begin() {
+    if (this.dead) return;
+    if (!this.record) { this.video.srcObject = this.conn.ms; this.video.muted = this.muted; this.video.play().catch(() => {}); this.status(); return; }
+    if (this.recT) return;
+    const mt = this.mime(); if (!mt) { this.video.srcObject = this.conn.ms; this.record = false; return; }
+    this.mt = mt; this.started = Date.now();
+    const seg = () => {
+      if (this.dead) return;
+      const rec = new MediaRecorder(this.conn.ms, { mimeType: mt, videoBitsPerSecond: 3500000 });
+      const parts = [], t0 = Date.now();
+      rec.ondataavailable = e => { if (e.data && e.data.size) parts.push(e.data); };
+      rec.onstop = () => { if (parts.length) this.segs.push({ t: t0, end: Date.now(), blob: new Blob(parts, { type: mt }) }); this.trim(); };
+      try { rec.start(); } catch (e) { return; }
+      const old = this.rec; this.rec = rec;
+      if (old && old.state !== 'inactive') try { old.stop(); } catch (e) {}
+    };
+    seg(); this.recT = setInterval(seg, 3000);
+    if (this.delay > 0) this.initMse();
+    else { this.video.srcObject = this.conn.ms; this.video.play().catch(() => {}); }
+  }
+  trim() { const keep = Date.now() - this.delay * 1000 - 70000; while (this.segs.length > 2 && this.segs[0].end < keep) { this.segs.shift(); this.next = Math.max(0, this.next - 1); } }
+  initMse() {
+    this.ms = new MediaSource();
+    this.video.src = URL.createObjectURL(this.ms);
+    this.ms.addEventListener('sourceopen', () => {
+      try { this.sb = this.ms.addSourceBuffer(this.mt.replace(';codecs=', '; codecs="') + (this.mt.includes('codecs') ? '"' : '')); this.sb.mode = 'sequence'; } catch (e) { this.sb = null; }
+    }, { once: true });
+  }
+  async loop() {
+    this.status();
+    if (this.dead || !this.sb || this.busy || this.delay <= 0) return;
+    const due = Date.now() - this.delay * 1000;
+    const s = this.segs[this.next];
+    if (!s || s.t > due) { this.keepEdge(); return; }
+    this.busy = true;
+    try {
+      const buf = await s.blob.arrayBuffer();
+      await new Promise((res, rej) => { this.sb.addEventListener('updateend', res, { once: true }); this.sb.addEventListener('error', rej, { once: true }); this.sb.appendBuffer(buf); });
+      this.next++; this.appended = true;
+      if (this.video.paused) this.video.play().catch(() => {});
+      // on libère ce qui est déjà passé
+      const b = this.sb.buffered;
+      if (b.length && this.video.currentTime - b.start(0) > 40 && !this.sb.updating) await new Promise(res => { this.sb.addEventListener('updateend', res, { once: true }); this.sb.remove(b.start(0), this.video.currentTime - 20); });
+    } catch (e) { /* segment illisible : on passe au suivant */ this.next++; }
+    this.busy = false;
+    this.keepEdge();
+  }
+  keepEdge() {
+    const b = this.video.buffered; if (!b.length) return;
+    const end = b.end(b.length - 1);
+    if (end - this.video.currentTime > 4) this.video.currentTime = end - 1;
+  }
+  /* rejoue les dernières secondes affichées, au ralenti */
+  replay(sec, rate) {
+    const showNow = Date.now() - this.delay * 1000, from = showNow - sec * 1000;
+    const list = this.segs.filter(s => s.end > from && s.t <= showNow);
+    if (!list.length || !this.mt) return null;
+    const v = document.createElement('video'); v.playsInline = true; v.muted = true; v.className = 'dp-replay';
+    const ms = new MediaSource(); v.src = URL.createObjectURL(ms);
+    ms.addEventListener('sourceopen', async () => {
+      try {
+        const sb = ms.addSourceBuffer(this.mt.replace(';codecs=', '; codecs="') + (this.mt.includes('codecs') ? '"' : '')); sb.mode = 'sequence';
+        for (const s of list) { const buf = await s.blob.arrayBuffer(); await new Promise(r => { sb.addEventListener('updateend', r, { once: true }); sb.appendBuffer(buf); }); }
+        const skip = Math.max(0, (from - list[0].t) / 1000);
+        v.currentTime = skip; v.playbackRate = rate; v.play().catch(() => {});
+      } catch (e) {}
+    }, { once: true });
+    return v;
+  }
+  destroy() {
+    this.dead = true; clearInterval(this.tick); clearInterval(this.recT);
+    try { this.rec && this.rec.state !== 'inactive' && this.rec.stop(); } catch (e) {}
+    this.conn.subs.delete(this.onTracks); RTC.release(this.conn);
+    this.video.pause(); this.video.removeAttribute('src'); this.video.srcObject = null; this.el.remove();
+  }
+}
+
+/* =====================================================================
+   Jeux des spectateurs : pronostics « qui va gagner ? » et sondages
+   ===================================================================== */
+const GAMES = {
+  poll: null, bets: null,
+  onHello(m) { this.poll = m.poll || null; this.bets = m.bets || null; this.mark(); },
+  onMsg(m) {
+    if (m.t === 'poll') this.poll = m.poll;
+    if (m.t === 'bets') this.bets = m.bets;
+    this.mark();
+    if (S.page === 'jeux') this.render();
+    if (S.page === 'direct' || IS_OVERLAY) PROG.renderGfx();
+  },
+  mark() { const d = $('#navPoll'); if (d) d.classList.toggle('hide', !(this.poll && !this.poll.closed && this.poll.mine == null)); },
+  /* tributs préférés du public, en % des points misés */
+  favs(n) {
+    const pool = (this.bets && this.bets.pool) || {}, tot = Object.values(pool).reduce((a, b) => a + b, 0);
+    if (!tot) return [];
+    return Object.entries(pool).map(([id, v]) => [byId(id), Math.round(v / tot * 100)]).filter(x => x[0]).sort((a, b) => b[1] - a[1]).slice(0, n);
+  },
+  odds(tid) {
+    const pool = (this.bets && this.bets.pool) || {}, tot = Object.values(pool).reduce((a, b) => a + b, 0), on = pool[tid] || 0;
+    return on ? Math.max(1.01, tot / on) : 0;
+  },
+  render() {
+    const P = $('#pageView'); if (!P) return;
+    const prog = hasPerm('program') || isAdmin();
+    const p = this.poll, b = this.bets || { open: false, top: [], pool: {} }, me = b.me;
+    const canPlay = S.me && !IS_OVERLAY && !isLocked();
+    const pollHtml = p ? `<div class="sect gm-poll"><h4>${p.closed ? 'Résultats du sondage' : 'Sondage en cours'}${p.end && !p.closed ? ` <span class="note">· fin à ${new Date(p.end - (S.skew || 0)).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>` : ''}</h4>
+        <div class="gm-q">${esc(p.q)}</div>
+        ${p.opts.map((o, i) => { const pc = p.total ? Math.round(p.counts[i] / p.total * 100) : 0; return `<button class="gm-opt ${p.mine === i ? 'mine' : ''}" data-vote="${i}" ${p.closed || !canPlay ? 'disabled' : ''}><span>${esc(o)}</span><em>${p.mine != null || p.closed ? pc + '%' : ''}</em><i style="width:${p.mine != null || p.closed ? pc : 0}%"></i></button>`; }).join('')}
+        <p class="note" style="margin-bottom:0">${p.total} vote${p.total > 1 ? 's' : ''}${p.mine != null && !p.closed ? ' · tu peux changer d\'avis jusqu\'à la fin' : ''}</p></div>`
+      : '<div class="sect gm-poll"><h4>Sondage</h4><p class="note" style="margin:0">Pas de sondage en ce moment. La régie en lance pendant l\'émission.</p></div>';
+    const alive = sortedByNum();
+    const win = b.winner && byId(b.winner);
+    const betHtml = `<div class="sect"><h4>Qui va gagner les Jeux ? ${b.open ? '<span class="tag" style="background:var(--gold-a);color:var(--gold-hi)">pronostics ouverts</span>' : '<span class="note">pronostics fermés</span>'}</h4>
+      ${win ? `<div class="gm-win">${ic('crown')} <b>${esc(win.name)}</b> remporte les Jeux. Les points sont distribués.</div>` : ''}
+      ${canPlay ? `<p class="note" style="margin-top:0">Tu as <b style="color:var(--gold-hi)">${me ? me.pts : 1000}</b> points fictifs. Mise sur un ou plusieurs tributs : si ton tribut gagne, tu te partages toute la cagnotte avec les autres qui l'ont choisi.${me && me.rank ? ' Classement : ' + me.rank + 'e.' : ''}</p>` : '<p class="note">Connecte-toi pour participer.</p>'}
+      <div class="gm-trib">${alive.map(t => { const mine = me && me.b && me.b[t.id] || 0, od = this.odds(t.id); return `<div class="gm-t ${isDead(t) ? 'dead' : ''} ${mine ? 'mine' : ''}">
+          <div class="n"><em>${pad3(t.num)}</em> ${esc(t.name)}<small>${esc(distLabel(t.district))}${isDead(t) ? ' · tombé' : ''}</small></div>
+          <div class="o">${od ? 'cote ' + od.toFixed(1).replace('.', ',') : 'aucune mise'}${mine ? ` · <b>${mine} pts misés</b>` : ''}</div>
+          ${canPlay && b.open && !isDead(t) ? `<div class="a"><button class="btn sm" data-bet="${esc(t.id)}" data-amt="50">+50</button><button class="btn sm" data-bet="${esc(t.id)}" data-amt="200">+200</button>${mine ? `<button class="btn sm ghost" data-bet="${esc(t.id)}" data-amt="${-mine}">Retirer</button>` : ''}</div>` : ''}</div>`; }).join('') || '<p class="note">Les tributs ne sont pas encore annoncés.</p>'}</div></div>`;
+    const lb = `<div class="sect"><h4>Classement des pronostiqueurs <span class="note">${b.players || 0} joueur${b.players > 1 ? 's' : ''}</span></h4>
+      ${(b.top || []).length ? `<ol class="gm-lb">${b.top.map(r => `<li><span>${esc(r.n)}</span><b>${r.pts + (win ? 0 : r.stake)}</b></li>`).join('')}</ol>` : '<p class="note" style="margin:0">Personne n\'a encore misé.</p>'}</div>`;
+    const admin = prog ? `<div class="sect"><h4>${ic('gear')} Régie</h4>
+      <div class="row"><label class="f"><span class="lbl2">Question du sondage</span><input class="inp" id="gpQ" maxlength="140" placeholder="Qui va trahir son alliance en premier ?"></label>
+        <label class="f" style="flex:0 0 120px"><span class="lbl2">Durée <em>min (0 = libre)</em></span><input class="inp" id="gpD" type="number" min="0" max="60" value="3"></label></div>
+      <label class="f"><span class="lbl2">Réponses <em>une par ligne, 2 à 6</em></span><textarea class="inp" id="gpO" style="min-height:70px" placeholder="Oui&#10;Non"></textarea></label>
+      <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn primary" id="gpGo">Lancer le sondage</button>${p ? `<button class="btn" id="gpEnd">${p.closed ? 'Retirer le sondage' : 'Clore le sondage'}</button>` : ''}
+        <span style="flex:1"></span><button class="btn" id="gbOpen">${b.open ? 'Fermer les pronostics' : 'Ouvrir les pronostics'}</button>${isAdmin() ? '<button class="btn ghost" id="gbReset" style="color:var(--red-hi)">Remettre à zéro</button>' : ''}</div>
+      <p class="note" style="margin-bottom:0">Pour l'afficher à l'antenne : Réalisation › Habillage › Sondage / Favoris. Les points sont distribués quand la régie annonce le vainqueur (après le différé).</p></div>` : '';
+    P.innerHTML = `<div class="team-in gm"><div class="team-h"><h2>Jeux des spectateurs</h2><button class="btn ghost" data-tp="close">${ic('x')}Fermer</button></div>
+      <div class="gm-grid"><div>${pollHtml}${betHtml}</div><div>${lb}${admin}</div></div></div>`;
+    P.onclick = e => {
+      const v = e.target.closest('[data-vote]'); if (v && this.poll) { NET.req({ t: 'vote', id: this.poll.id, i: +v.dataset.vote }).catch(x => toastInfo('Sondage', x.message, true)); return; }
+      const bt = e.target.closest('[data-bet]'); if (bt) { NET.req({ t: 'bet', tid: bt.dataset.bet, amt: +bt.dataset.amt }).catch(x => toastInfo('Pronostic', x.message, true)); return; }
+      const id = e.target.id;
+      if (id === 'gpGo') NET.req({ t: 'pollStart', q: $('#gpQ').value, opts: $('#gpO').value.split('\n'), dur: (+$('#gpD').value || 0) * 60 }).then(() => toastInfo('Sondage lancé'), x => toastInfo('Sondage', x.message, true));
+      if (id === 'gpEnd') NET.req({ t: 'pollEnd', clear: !!(this.poll && this.poll.closed) });
+      if (id === 'gbOpen') NET.req({ t: 'betsOpen', on: !(this.bets && this.bets.open) });
+      if (id === 'gbReset') { const x = e.target; if (!x.dataset.sure) { x.dataset.sure = 1; x.textContent = 'Sûr ? tout est effacé'; return; } NET.req({ t: 'betsReset' }); }
+    };
+  }
+};
+
+/* =====================================================================
+   Mémorial des tributs tombés
+   ===================================================================== */
+function renderMemorial() {
+  const P = $('#pageView'); if (!P) return;
+  const dead = S.board.tributes.filter(isDead).sort((a, b) => (b.diedAt || 0) - (a.diedAt || 0));
+  const all = S.board.tributes.length;
+  P.innerHTML = `<div class="team-in mem"><div class="team-h"><h2>Mémorial</h2><span class="note">${dead.length} tribut${dead.length > 1 ? 's' : ''} tombé${dead.length > 1 ? 's' : ''} sur ${all}</span><span style="flex:1"></span><button class="btn ghost" data-tp="close">${ic('x')}Fermer</button></div>
+    ${dead.length ? `<div class="mem-grid">${dead.map(t => `<div class="mem-c" data-tid="${esc(t.id)}">
+        <div class="ph">${pic(t)}</div>
+        <div class="tx"><div class="pl">${t.place ? t.place + '<sup>e</sup>' : '†'}</div><div class="n">${esc(t.name)}</div><div class="d">${esc(distLabel(t.district))}${t.alliance ? ' · ' + esc(t.alliance) : ''}</div>
+          <div class="c">${killerName(t) ? 'Tombé face à <b>' + esc(killerName(t)) + '</b>' : 'Tombé dans l\'arène'}${t.cause ? ' · ' + esc(t.cause) : ''}</div>
+          ${t.diedAt ? `<div class="w">${new Date(t.diedAt).toLocaleString('fr-FR', { weekday: 'long', hour: '2-digit', minute: '2-digit' })}</div>` : ''}
+          ${killsOf(t) ? `<div class="k">${ic('sword')} ${killsOf(t)} élimination${killsOf(t) > 1 ? 's' : ''}</div>` : ''}</div></div>`).join('')}</div>`
+      : `<div class="empty" style="padding:60px 20px;text-align:center"><div style="opacity:.5">${logo(90)}</div><p>Aucun tribut n'est tombé pour l'instant.</p></div>`}</div>`;
+}
+
+/* =====================================================================
+   Carte des alliances
+   ===================================================================== */
+function renderAlliances() {
+  const P = $('#pageView'); if (!P) return;
+  const groups = new Map();
+  for (const t of sortedByNum()) { const k = (t.alliance || '').trim(); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(t); }
+  const named = [...groups.entries()].filter(([k]) => k).sort((a, b) => b[1].filter(t => !isDead(t)).length - a[1].filter(t => !isDead(t)).length);
+  const solo = groups.get('') || [];
+  const card = (name, list) => {
+    const alive = list.filter(t => !isDead(t)).length, kills = list.reduce((n, t) => n + killsOf(t), 0);
+    return `<div class="al-c ${alive ? '' : 'out'}"><div class="al-h"><b>${esc(name)}</b><span>${alive}/${list.length} en vie${kills ? ' · ' + kills + ' élim.' : ''}</span></div>
+      <div class="al-ring" style="--n:${list.length}">${list.map((t, i) => `<div class="al-m ${isDead(t) ? 'dead' : t.status}" style="--i:${i}" data-tid="${esc(t.id)}" title="${esc(t.name)}"><div class="ph">${pic(t)}</div><span>${esc(t.name)}</span></div>`).join('')}<div class="al-core">${alive ? alive : '†'}</div></div></div>`;
+  };
+  P.innerHTML = `<div class="team-in al"><div class="team-h"><h2>Alliances</h2><span class="note">${named.length} alliance${named.length > 1 ? 's' : ''} · ${solo.length} solitaire${solo.length > 1 ? 's' : ''}</span><span style="flex:1"></span><button class="btn ghost" data-tp="close">${ic('x')}Fermer</button></div>
+    ${named.length || solo.length ? `<div class="al-grid">${named.map(([k, l]) => card(k, l)).join('')}${solo.length ? card('Solitaires', solo) : ''}</div>` : '<p class="note">Les tributs ne sont pas encore annoncés.</p>'}
+    ${isAdmin() ? '<p class="note">Les alliances se règlent dans la fiche de chaque tribut (champ « Alliance »).</p>' : ''}</div>`;
+}
+
 const PROG = {
   pub: null, ed: null, lastSeq: -1, sound: IS_OVERLAY, players: new Map(), saveT: null, dirty: 0,
   sel: '', drag: null, wasFull: false, media: [], air: { ids: [], prep: [], since: {}, delay: 0 }, ups: {}, listen: null, sfxEl: null,
@@ -3174,13 +3561,15 @@ const PROG = {
     clearInterval(this.tickT); this.tickT = setInterval(() => this.tick(), 1000);
     if (/direct|emission/i.test(H0) && !isLocked()) setTimeout(() => { setPage('direct'); this.fullscreen(true); }, 0);
   },
+  wantsMap() { return !!(this.pub && this.pub.gfx && this.pub.gfx.map && this.pub.gfx.map.on); },
   onAir(id) { return !!(this.pub && this.pub.on && this.pub.items.some(i => i.k === 'cam' && i.ref === id)); },
   markNav() { const d = $('#navOnAir'); if (d) d.classList.toggle('hide', !(this.pub && this.pub.on)); },
   onMsg(m) {
     if (m.t === 'prog') {
       this.pub = m.p; this.markNav();
-      if (S.page === 'direct') this.applyDirect(!!m.cut);
-      if (S.page === 'regie') this.renderPgm();
+      if (S.page === 'direct') { this.applyDirect(!!m.cut); CAM.mapSub(this.wantsMap()); }
+      if (S.page === 'regie') { this.renderPgm(); this.renderReplayPanel(); }
+      if (S.page === 'direct' || IS_OVERLAY) this.renderGfx();
       renderTeam(); CAM.renderTerrain();
     } else if (m.t === 'onair') {
       this.air = { ids: m.ids || [], prep: m.prep || [], since: m.since || {}, delay: m.delay || 0 };
@@ -3191,11 +3580,11 @@ const PROG = {
     } else if (m.t === 'progEd') {
       if (m.by === (S.me && S.me.id) && Date.now() - this.dirty < 1500) return;
       this.ed = m.prog;
-      if (S.page === 'regie') this.renderEditor();
+      if (S.page === 'regie') { this.renderEditor(); }
     }
   },
   leave() {
-    if (S.page !== 'direct') { this.players.clear(); this.lastSeq = -1; if (document.body.classList.contains('em-full')) this.fullscreen(false); }
+    if (S.page !== 'direct') { for (const el of this.players.values()) if (el._dp) el._dp.destroy(); for (const e of this.dps.values()) e.dp.destroy(); this.dps.clear(); this.players.clear(); this.lastSeq = -1; if (document.body.classList.contains('em-full')) this.fullscreen(false); }
     if (S.page !== 'regie') this.sel = '';
   },
   fullscreen(on) {
@@ -3217,7 +3606,8 @@ const PROG = {
       $$('#cvPv .ci[data-cam]').forEach(el => this.badge(el, el.dataset.cam));
       this.renderSfx(); this.renderWarn();
     }
-    if (S.page === 'direct') this.syncMedia();
+    if (S.page === 'direct') { this.syncMedia(); if (this.wantsMap()) this.drawMini($('#emStage .gx-map')); }
+    if (S.page === 'regie') this.renderQueue(true);
   },
   badge(el, id) {
     let b = el.querySelector('.cln'); if (!b) { b = document.createElement('span'); b.className = 'cln'; el.appendChild(b); }
@@ -3237,8 +3627,8 @@ const PROG = {
   },
   srcInfo(it) {
     if (it.k === 'media') { const md = this.mediaById(it.ref); return md ? { name: md.name, sub: md.kind === 'video' ? 'Vidéo · ' + this.fmtDur(md.dur) : md.kind === 'image' ? 'Image' : 'Son · ' + this.fmtDur(md.dur), media: md } : null; }
-    if (it.k === 'trib') { const t = byId(it.ref); return t ? { login: t.login, name: t.name, sub: t.district ? 'District ' + t.district : '', dead: isDead(t) } : null; }
-    const m = S.team.find(x => x.id === it.ref); return m && m.twitch ? { login: m.twitch, name: m.name, sub: 'Caméra', cam: true } : null;
+    if (it.k === 'trib') { const t = byId(it.ref); return t ? { login: t.login, name: t.name, sub: t.district ? 'District ' + t.district : '', dead: isDead(t), ctv: RTC.live('t:' + t.id) && (t.vsrc || 'auto') !== 'twitch' } : null; }
+    const m = S.team.find(x => x.id === it.ref); return m && (m.twitch || RTC.live('c:' + m.id)) ? { login: m.twitch, name: m.name, sub: 'Caméra', cam: true, ctv: RTC.live('c:' + m.id) && (m.vsrc || 'auto') !== 'twitch' } : null;
   },
 
   /* ---------- page Direct ---------- */
@@ -3246,7 +3636,7 @@ const PROG = {
     if (!$('#emStage')) {
       $('#pageView').innerHTML = `<div class="em-wrap"><div class="em-bar"><h3>CAPITOL TV</h3><span class="em-live" id="emLive">● EN DIRECT</span><span class="note" id="emScene"></span><span style="flex:1"></span>
         <button class="btn sm" id="emSound">${ic('vol')}Activer le son</button><button class="btn sm" id="emFull" title="Plein écran (F)">${ic('full')}Plein écran</button></div>
-        <div class="em-stage" id="emStage"><div class="em-tr" id="emTr"><div class="wipe"></div><div class="ray"></div><div class="ray" style="rotate:70deg"></div>${LOGO_OK ? `<img class="em-e" src="${esc(CONFIG.logo)}" alt="">` : ''}<div class="em-t word" style="font-size:clamp(14px,3vw,44px);color:#f6e2a6">CAPITOL TV</div></div></div></div>`;
+        <div id="emHold" class="hide"></div><div class="em-stage" id="emStage"><div class="em-tr" id="emTr"><div class="wipe"></div><div class="ray"></div><div class="ray" style="rotate:70deg"></div>${LOGO_OK ? `<img class="em-e" src="${esc(CONFIG.logo)}" alt="">` : ''}<div class="em-t word" style="font-size:clamp(14px,3vw,44px);color:#f6e2a6">CAPITOL TV</div></div></div></div>`;
       $('#emFull').onclick = () => this.fullscreen();
       $('#emSound').onclick = () => { this.sound = !this.sound; $('#emSound').classList.remove('primary'); $('#emSound').innerHTML = this.sound ? ic('vol') + 'Couper le son' : ic('vol') + 'Activer le son'; this.layout(); };
       if (this.sound) $('#emSound').innerHTML = ic('vol') + 'Couper le son';
@@ -3279,13 +3669,14 @@ const PROG = {
       for (const el of this.players.values()) { const md = el.querySelector('.em-md'); if (md && md.pause) md.pause(); el.remove(); } this.players.clear();
       this.syncMedia();
       if (!off) { off = document.createElement('div'); off.className = 'em-off'; st.appendChild(off); }
+      this.renderGfx();
       off.innerHTML = `<div>${LOGO_OK ? `<img src="${esc(CONFIG.logoFull)}" alt="Capitol TV">` : logo(160)}<p style="margin-top:14px;letter-spacing:.18em;font-weight:700">${p && p.on ? 'PLAN VIDE' : 'L\'ÉMISSION REPREND BIENTÔT'}</p>${p && p.title ? `<p>${esc(p.title)}</p>` : ''}</div>`;
       return;
     }
     if (off) off.remove();
     const keep = new Set();
     for (const it of p.items) {
-      const key = it.k === 'media' ? 'm:' + it.ref : it.login; keep.add(key);
+      const key = it.k === 'media' ? 'm:' + it.ref : (it.src && RTC.mode(it.src, it.vsrc || 'auto', it.login) !== 'twitch' ? 'r:' + it.src : it.login); keep.add(key);
       let el = this.players.get(key);
       const muted = !(this.sound && it.audio);
       if (!el) {
@@ -3293,6 +3684,21 @@ const PROG = {
         st.appendChild(el); this.players.set(key, el);
         requestAnimationFrame(() => el.classList.remove('gone'));
       }
+      const md = it.src ? RTC.mode(it.src, it.vsrc || 'auto', it.login) : 'twitch';
+      if (it.k !== 'media' && md !== 'twitch') {
+        const k2 = md + ':' + it.src;
+        if (el.dataset.rtc !== k2) {
+          el.dataset.rtc = k2; el.innerHTML = ''; el.dataset.muted = '';
+          if (el._dp) { el._dp.destroy(); el._dp = null; }
+          if (md === 'rtc') { el._dp = this.dpFor(it.src); el.appendChild(el._dp.el); }
+          else el.innerHTML = `<div class="em-aud"><b>${esc(it.name)}</b><span class="note">flux hors ligne</span></div>`;
+        }
+        if (el._dp) el._dp.setMuted(!(this.sound && it.audio));
+        Object.assign(el.style, { left: it.x + '%', top: it.y + '%', width: it.w + '%', height: it.h + '%', zIndex: 1 + (it.z || 0) });
+        this.label(el, it, newShot);
+        continue;
+      }
+      if (el.dataset.rtc) { el.dataset.rtc = ''; if (el._dp) { this.dpDrop(el._dp); el._dp = null; } el.innerHTML = ''; el.dataset.muted = ''; }
       if (it.k === 'media') {
         if (!el.dataset.media) {
           el.dataset.media = it.ref;
@@ -3313,9 +3719,96 @@ const PROG = {
       if (lab && (!le || le.dataset.h !== lab || newShot)) { if (le) le.remove(); le = document.createElement('div'); le.className = 'em-lab'; le.dataset.h = lab; le.innerHTML = lab; el.appendChild(le); }
       else if (!lab && le) le.remove();
     }
-    for (const [k, el] of this.players) if (!keep.has(k)) { el.classList.add('gone'); this.players.delete(k); const md = el.querySelector('.em-md'); setTimeout(() => { if (md && md.pause) md.pause(); el.remove(); }, 550); }
+    for (const [k, el] of this.players) if (!keep.has(k)) { el.classList.add('gone'); this.players.delete(k); const md = el.querySelector('.em-md'); const dp = el._dp; setTimeout(() => { if (md && md.pause) md.pause(); if (dp) this.dpDrop(dp); el.remove(); }, 550); }
+    this.renderGfx();
     if (!st.querySelector('.em-bug') && LOGO_OK) st.insertAdjacentHTML('beforeend', `<img class="em-bug" src="${esc(CONFIG.logo)}" alt="">`);
     this.syncMedia();
+  },
+  /* lecteurs Capitol TV gardés 90 s après la sortie d'antenne (pour les replays) */
+  dps: new Map(),
+  dpFor(src) {
+    let e = this.dps.get(src);
+    const delay = S.board.delay || 0;
+    if (e && e.dp.delay !== delay) { e.dp.destroy(); this.dps.delete(src); e = null; }
+    if (!e) { e = { dp: new DelayPlayer(src, { delay, record: true }) }; this.dps.set(src, e); }
+    clearTimeout(e.t); e.used = true;
+    return e.dp;
+  },
+  dpDrop(dp) {
+    const e = this.dps.get(dp.src); if (!e || e.dp !== dp) { dp.destroy(); return; }
+    e.used = false; dp.setMuted(true);
+    const hold = $('#emHold'); if (hold) hold.appendChild(dp.el);
+    clearTimeout(e.t); e.t = setTimeout(() => { if (!e.used) { dp.destroy(); this.dps.delete(dp.src); } }, 90000);
+  },
+  label(el, it, newShot) {
+    const lab = it.label ? `<b>${esc(it.name)}</b>${it.sub ? `<span>${esc(it.sub)}</span>` : ''}` : '';
+    let le = el.querySelector('.em-lab');
+    if (lab && (!le || le.dataset.h !== lab || newShot)) { if (le) le.remove(); le = document.createElement('div'); le.className = 'em-lab'; le.dataset.h = lab; le.innerHTML = lab; el.appendChild(le); }
+    else if (!lab && le) le.remove();
+  },
+  /* habillages de l'antenne */
+  renderGfx() {
+    const st = $('#emStage'); if (!st) return;
+    let g = st.querySelector('.em-gfx'); if (!g) { g = document.createElement('div'); g.className = 'em-gfx'; st.appendChild(g); }
+    const p = this.pub, G = (p && p.on && p.gfx) || {};
+    const alive = S.board.tributes.filter(t => !isDead(t)).length, all = S.board.tributes.length;
+    let lowT = null;
+    if (G.lower && G.lower.on) {
+      if (G.lower.auto || !G.lower.ref) { const big = (p.items || []).filter(i => i.k === 'trib').sort((a, b) => b.w * b.h - a.w * a.h)[0]; lowT = big ? byId(big.ref) : null; }
+      else lowT = byId(G.lower.ref);
+    }
+    const poll = GAMES.poll, bets = GAMES.bets;
+    const html = [
+      G.alive && G.alive.on && all ? `<div class="gx-alive"><b>${alive}</b><span>/ ${all}</span><i>EN VIE</i></div>` : '',
+      lowT ? `<div class="gx-lower ${isDead(lowT) ? 'dead' : ''}"><div class="n">${lowT.num ? `<em>${pad3(lowT.num)}</em>` : ''}${esc(lowT.name)}</div><div class="s">${esc(distLabel(lowT.district))}${lowT.alliance ? ' · ' + esc(lowT.alliance) : ''}${killsOf(lowT) ? ' · ' + killsOf(lowT) + ' élimination' + (killsOf(lowT) > 1 ? 's' : '') : ''}${isDead(lowT) ? ' · tombé' : lowT.status === 'injured' ? ' · blessé' : ''}</div>${G.lower.text ? `<div class="x">${esc(G.lower.text)}</div>` : ''}</div>` : '',
+      G.breaking && G.breaking.on && G.breaking.text ? `<div class="gx-break"><b>DERNIÈRE MINUTE</b><div class="tk"><span>${esc(G.breaking.text)}</span><span aria-hidden="true">${esc(G.breaking.text)}</span></div></div>` : '',
+      G.poll && G.poll.on && poll ? `<div class="gx-poll"><h5>${poll.closed ? 'RÉSULTATS' : 'SONDAGE'} · ${poll.total} vote${poll.total > 1 ? 's' : ''}</h5><b>${esc(poll.q)}</b>${poll.opts.map((o, i) => { const pc = poll.total ? Math.round(poll.counts[i] / poll.total * 100) : 0; return `<div class="op"><span>${esc(o)}</span><em>${pc}%</em><i style="width:${pc}%"></i></div>`; }).join('')}</div>` : '',
+      G.bets && G.bets.on && bets ? `<div class="gx-bets"><h5>FAVORIS DES SPECTATEURS</h5>${GAMES.favs(4).map(([t, pc]) => `<div class="op"><span>${esc(t.name)}</span><em>${pc}%</em><i style="width:${pc}%"></i></div>`).join('') || '<div class="note">Aucun pronostic</div>'}</div>` : '',
+      G.map && G.map.on ? `<canvas class="gx-map" width="320" height="320"></canvas>` : ''
+    ].join('');
+    if (g.dataset.h !== html) { g.dataset.h = html; g.innerHTML = html; }
+    if (G.map && G.map.on) this.drawMini(g.querySelector('.gx-map'));
+    this.renderReplay();
+  },
+  /* carte incrustée : positions avec le différé (même pour l'équipe) */
+  posHist: [],
+  drawMini(cv) {
+    if (!cv) return;
+    const D = (S.board.delay || 0) * 1000, full = isCrew() && !S.presenter;
+    let pos = CAM.pos || {};
+    if (full && D) { const want = Date.now() - D; let best = null; for (const h of this.posHist) if (h.ts <= want) best = h; pos = best ? best.p : {}; }
+    const pts = Object.entries(pos).map(([id, q]) => [byId(id), q]).filter(([t, q]) => t && q && q.d === 'minecraft:overworld' && !isDead(t));
+    const c = cv.getContext('2d'), W = cv.width;
+    c.clearRect(0, 0, W, W);
+    c.fillStyle = 'rgba(8,8,10,.82)'; c.beginPath(); c.arc(W / 2, W / 2, W / 2 - 2, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = 'rgba(212,175,55,.8)'; c.lineWidth = 3; c.stroke();
+    if (!pts.length) return;
+    const xs = pts.map(x => x[1].x), zs = pts.map(x => x[1].z);
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cz = (Math.min(...zs) + Math.max(...zs)) / 2;
+    const span = Math.max(80, Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs)) * 1.3, k = (W - 40) / span;
+    c.font = '600 15px Barlow Condensed, sans-serif'; c.textAlign = 'center';
+    for (const [t, q] of pts) {
+      const x = W / 2 + (q.x - cx) * k, y = W / 2 + (q.z - cz) * k;
+      c.fillStyle = t.status === 'injured' ? '#e89a3c' : '#5fbf6a'; c.beginPath(); c.arc(x, y, 6, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#fff'; c.fillText(t.num ? pad3(t.num) : t.name.slice(0, 6), x, y - 10);
+    }
+  },
+  renderReplay() {
+    const st = $('#emStage'); if (!st) return;
+    const r = this.pub && this.pub.replay;
+    let box = st.querySelector('.em-replay');
+    if (!r) { if (box) box.remove(); this.rpKey = ''; return; }
+    const key = r.src + ':' + r.at;
+    if (this.rpKey === key) return;
+    this.rpKey = key; if (box) box.remove();
+    const e = this.dps.get(r.src), v = e && e.dp.replay(r.sec, r.rate);
+    if (!v) return;
+    box = document.createElement('div'); box.className = 'em-replay';
+    box.appendChild(v);
+    box.insertAdjacentHTML('beforeend', `<div class="rp-tag"><b>REPLAY</b><span>${esc(r.name || '')}${r.rate < 1 ? ' · ralenti ×' + r.rate : ''}</span></div>`);
+    st.appendChild(box);
+    const left = Math.max(1000, r.end - nowS());
+    setTimeout(() => { if (this.rpKey === key) { box.classList.add('gone'); setTimeout(() => box.remove(), 500); } }, left);
   },
   /* lecture synchronisée : tout le monde est au même endroit du média */
   syncOne(md, at, loop, vol, wantSound) {
@@ -3357,8 +3850,8 @@ const PROG = {
     this.renderCanvas(); this.renderPgm();
   },
   sources() {
-    const cams = S.team.filter(m => m.twitch).map(m => ({ k: 'cam', ref: m.id, login: m.twitch, name: m.name, sub: (roleOf(m) || {}).name || 'Caméra', live: liveOf(m.twitch) }));
-    const tribs = sortedByNum().map(t => ({ k: 'trib', ref: t.id, login: t.login, name: t.name, sub: pad3(t.num) + (t.district ? ' · D' + t.district : '') + (isDead(t) ? ' · tombé' : ''), live: liveOf(t.login), dead: isDead(t) }));
+    const cams = S.team.filter(m => m.twitch || RTC.live('c:' + m.id)).map(m => ({ k: 'cam', ref: m.id, login: m.twitch, name: m.name, sub: (roleOf(m) || {}).name || 'Caméra', live: liveOf(m.twitch), ctv: RTC.live('c:' + m.id) && (m.vsrc || 'auto') !== 'twitch' }));
+    const tribs = sortedByNum().map(t => ({ k: 'trib', ref: t.id, login: t.login, name: t.name, sub: pad3(t.num) + (t.district ? ' · D' + t.district : '') + (isDead(t) ? ' · tombé' : ''), live: liveOf(t.login), dead: isDead(t), ctv: RTC.live('t:' + t.id) && (t.vsrc || 'auto') !== 'twitch' }));
     tribs.sort((a, b) => a.dead - b.dead);
     return { cams, tribs };
   },
@@ -3437,7 +3930,7 @@ const PROG = {
     const q = ($('#rgQ') && $('#rgQ').value || '').toLowerCase();
     const { cams, tribs } = this.sources();
     const row = x => `<div class="src ${x.k === 'cam' ? 'scam' : ''}" draggable="true" data-k="${x.k}" data-ref="${esc(x.ref)}" title="Glisser sur l'aperçu · double-clic : plein écran${x.dead ? '' : ''}" style="${x.dead ? 'opacity:.5' : ''}">
-      <div class="th" style="background-image:url('${thumbURL(x.login)}')">${x.live ? '<i></i>' : ''}</div><div style="min-width:0"><b>${esc(x.name)}</b><small>${esc(x.sub)}</small></div></div>`;
+      <div class="th ${x.ctv ? 'ctv' : ''}" style="${x.ctv ? '' : `background-image:url('${thumbURL(x.login)}')`}">${x.ctv ? '<span>CTV</span>' : ''}${x.live || x.ctv ? '<i></i>' : ''}</div><div style="min-width:0"><b>${esc(x.name)}</b><small>${esc(x.sub)}${x.ctv ? ' · flux Capitol TV' : ''}</small></div></div>`;
     const f = list => list.filter(x => !q || (x.name + ' ' + x.sub + ' ' + x.login).toLowerCase().includes(q));
     L.innerHTML = `${this.renderMediaSec(q)}<div class="cp-sec">${ic('cam')} Caméras <b>${cams.length}</b></div>${f(cams).map(row).join('') || '<div class="note" style="padding:4px 8px">Ajoute la chaîne Twitch des caméras dans leur fiche (page Équipe).</div>'}
       <div class="cp-sec">${ic('users')} Tributs (POV) <b>${tribs.length}</b></div>${f(tribs).map(row).join('')}`;
@@ -3460,6 +3953,11 @@ const PROG = {
               <button class="btn take" id="rgTake" style="width:100%;margin-top:8px">À L'ANTENNE ▶ <span style="opacity:.7;font-size:11px;margin-left:6px">(T)</span></button><div class="note" id="rgWarn" style="margin-top:6px;min-height:16px"></div></div>
           </div>
           <div class="rg-row rg-sfx" id="rgSfx"></div>
+          <div class="rg-panels">
+            <div class="sect rg-p"><h4>${ic('live')} Habillage</h4><div id="rgGfx"></div></div>
+            <div class="sect rg-p"><h4>${ic('grid')} File de plans</h4><div id="rgQueue"></div></div>
+            <div class="sect rg-p"><h4>⟲ Replay</h4><div id="rgReplay"></div></div>
+          </div>
           <div class="rg-row"><b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">PLANS</b><div class="scn" id="rgScenes"></div>
             <button class="btn sm" id="rgNew">${ic('plus')}Nouveau</button><button class="btn sm ghost" id="rgDup">Dupliquer</button><button class="btn sm ghost" id="rgDel" style="color:var(--red-hi)">${ic('trash')}</button></div>
           <div class="rg-row"><b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">DISPOSITIONS</b>${Object.entries(this.PRESETS).map(([k, [l]]) => `<button class="btn sm ghost" data-pre="${k}">${l}</button>`).join('')}</div>
@@ -3470,7 +3968,71 @@ const PROG = {
     }
     $('#rgTitle').value === '' && ($('#rgTitle').value = this.ed.title || '');
     $('#rgTr').value = this.ed.trans.type; $('#rgMs').value = this.ed.trans.ms;
-    this.renderSources(); this.renderScenes(); this.renderCanvas(); this.renderPgm(); this.renderSfx(); this.renderWarn();
+    this.renderSources(); this.renderScenes(); this.renderCanvas(); this.renderPgm(); this.renderSfx(); this.renderWarn(); this.renderGfxPanel(); this.renderQueue(); this.renderReplayPanel();
+  },
+  gfx() { return JSON.parse(JSON.stringify((this.ed && this.ed.gfx) || {})); },
+  sendGfx(g, quiet) { this.ed.gfx = g; NET.req({ t: 'progGfx', gfx: g }).catch(e => toastInfo('Habillage', e.message, true)); if (!quiet) this.renderGfxPanel(); },
+  renderGfxPanel() {
+    const box = $('#rgGfx'); if (!box) return;
+    const g = (this.ed && this.ed.gfx) || {}, on = k => g[k] && g[k].on;
+    const tribs = sortedByNum();
+    box.innerHTML = `
+      <div class="gx-row"><button class="btn sm ${on('breaking') ? 'live' : ''}" data-gx="breaking">Dernière minute</button><input class="inp" id="gxBreak" maxlength="200" placeholder="Texte du bandeau" value="${esc((g.breaking || {}).text || '')}"></div>
+      <div class="gx-row"><button class="btn sm ${on('lower') ? 'live' : ''}" data-gx="lower">Nom du tribut</button><select class="mini-sel" id="gxLow"><option value="">Auto (tribut principal du plan)</option>${tribs.map(t => `<option value="${esc(t.id)}" ${(g.lower || {}).ref === t.id && !(g.lower || {}).auto ? 'selected' : ''}>${pad3(t.num)} ${esc(t.name)}</option>`).join('')}</select></div>
+      <div class="gx-row"><button class="btn sm ${on('alive') ? 'live' : ''}" data-gx="alive">Compteur de vivants</button><button class="btn sm ${on('map') ? 'live' : ''}" data-gx="map">Carte incrustée</button><button class="btn sm ${on('poll') ? 'live' : ''}" data-gx="poll">Sondage</button><button class="btn sm ${on('bets') ? 'live' : ''}" data-gx="bets">Favoris</button></div>
+      <p class="note" style="margin:6px 0 0">Un clic = à l'écran sur la page Direct (et dans OBS). Sondages et pronostics : page <a href="#" data-goto="jeux">Jeux</a>.</p>`;
+    box.onclick = e => {
+      const go = e.target.closest('[data-goto]'); if (go) { e.preventDefault(); setPage(go.dataset.goto); return; }
+      const b = e.target.closest('[data-gx]'); if (!b) return;
+      const g2 = this.gfx(), k = b.dataset.gx; g2[k] = { ...(g2[k] || {}), on: !(g2[k] && g2[k].on) };
+      if (k === 'breaking') g2.breaking.text = $('#gxBreak').value.trim();
+      if (k === 'lower') { g2.lower.ref = $('#gxLow').value; g2.lower.auto = !g2.lower.ref; }
+      if (k === 'breaking' && g2.breaking.on && !g2.breaking.text) { toastInfo('Écris d\'abord le texte du bandeau', '', true); return; }
+      this.sendGfx(g2);
+    };
+    $('#gxBreak').onchange = e => { const g2 = this.gfx(); g2.breaking = { ...(g2.breaking || {}), text: e.target.value.trim() }; this.sendGfx(g2, true); };
+    $('#gxLow').onchange = e => { const g2 = this.gfx(); g2.lower = { ...(g2.lower || {}), ref: e.target.value, auto: !e.target.value }; this.sendGfx(g2, true); };
+  },
+  renderQueue(soft) {
+    const box = $('#rgQueue'); if (!box || !this.ed) return;
+    const q = this.ed.queue || [], run = this.ed.qrun, nx = this.ed.next;
+    const left = nx ? Math.max(0, Math.round((nx.at - nowS()) / 1000)) : 0;
+    const status = nx ? `Prochain : <b>${esc(nx.end ? 'fin de la file' : (this.scene(nx.scene) || {}).name || '?')}</b> dans ${this.fmtDur(left)} <span class="note">(${esc(nx.why)})</span>` : run ? 'File en cours : passe au suivant avec À L\'ANTENNE ou attends la fin du média.' : '';
+    if (soft) { const st = $('#rgQSt'); if (st) st.innerHTML = status; return; }
+    box.innerHTML = `${q.length ? `<ol class="qlist">${q.map((e, i) => `<li class="${run && run.i === i ? 'on' : ''}"><span>${esc((this.scene(e.scene) || {}).name || '?')}</span>
+        <input class="inp" type="number" min="0" max="3600" data-qd="${i}" value="${e.dur}" title="Durée en secondes (0 = jusqu'à la fin du média)"><span class="note">s</span><button class="btn sm ghost" data-qx="${i}">${ic('x')}</button></li>`).join('')}</ol>` : '<p class="note" style="margin:0 0 6px">Ajoute des plans dans l\'ordre : hymne, plan large, Katniss…</p>'}
+      <div class="gx-row"><button class="btn sm" data-qa="add">${ic('plus')}Plan de l'aperçu</button>${run ? '<button class="btn sm live" data-qa="stop">■ Arrêter</button>' : `<button class="btn sm primary" data-qa="run" ${q.length ? '' : 'disabled'}>▶ Lancer</button>`}<button class="btn sm ghost" data-qa="clear" ${q.length ? '' : 'disabled'}>Vider</button></div>
+      <div class="note" id="rgQSt" style="margin-top:6px">${status}</div>
+      <label class="switch" style="margin-top:6px"><input type="checkbox" id="rgAuto" ${this.ed.autoBack !== false ? 'checked' : ''}> Revenir au plan précédent quand une vidéo est finie</label>`;
+    const send = run => NET.req({ t: 'progQueue', queue: this.ed.queue || [], run }).catch(e => toastInfo('File', e.message, true));
+    box.onclick = e => {
+      const x = e.target.closest('[data-qx]'); if (x) { this.ed.queue.splice(+x.dataset.qx, 1); send(); this.renderQueue(); return; }
+      const a = e.target.closest('[data-qa]'); if (!a) return;
+      if (a.dataset.qa === 'add') { const md = this.mediaDurOf(this.scene()); (this.ed.queue = this.ed.queue || []).push({ id: rid(), scene: this.ed.preview, dur: md ? 0 : 20 }); send(); }
+      if (a.dataset.qa === 'run') send(true);
+      if (a.dataset.qa === 'stop') send(false);
+      if (a.dataset.qa === 'clear') { this.ed.queue = []; send(false); }
+      this.renderQueue();
+    };
+    box.onchange = e => {
+      const d = e.target.closest('[data-qd]'); if (d) { this.ed.queue[+d.dataset.qd].dur = Math.max(0, +d.value || 0); send(); }
+      if (e.target.id === 'rgAuto') NET.req({ t: 'progAuto', on: e.target.checked });
+    };
+  },
+  mediaDurOf(sc) { return sc ? Math.max(0, ...sc.items.filter(i => i.k === 'media' && !i.loop).map(i => (this.mediaById(i.ref) || {}).dur || 0)) : 0; },
+  renderReplayPanel() {
+    const box = $('#rgReplay'); if (!box || !this.ed) return;
+    const live = this.ed.scenes.find(x => x.id === this.ed.live);
+    const srcs = live ? live.items.filter(i => i.k !== 'media').map(i => { const s = this.srcInfo(i); const src = (i.k === 'trib' ? 't:' : 'c:') + i.ref; return s && RTC.live(src) ? { src, name: s.name } : null; }).filter(Boolean) : [];
+    const r = this.pub && this.pub.replay;
+    box.innerHTML = srcs.length ? `<div class="gx-row" style="flex-wrap:wrap">${srcs.map(x => `<button class="btn sm" data-rp="${esc(x.src)}" data-nm="${esc(x.name)}">⟲ ${esc(x.name)}</button>`).join('')}</div>
+      <div class="gx-row"><select class="mini-sel" id="rpSec"><option value="15">15 s</option><option value="30" selected>30 s</option><option value="45">45 s</option></select><select class="mini-sel" id="rpRate"><option value="0.5" selected>Ralenti ×0,5</option><option value="0.75">×0,75</option><option value="1">Vitesse normale</option></select>${r ? '<button class="btn sm live" data-rp="stop">■ Fin du replay</button>' : ''}</div>`
+      : '<p class="note" style="margin:0">Le replay rejoue les dernières secondes d\'un flux Capitol TV (mod ou OBS) à l\'antenne. Les flux Twitch ne peuvent pas être rejoués.</p>';
+    box.onclick = e => {
+      const b = e.target.closest('[data-rp]'); if (!b) return;
+      if (b.dataset.rp === 'stop') NET.req({ t: 'progReplay', stop: true });
+      else NET.req({ t: 'progReplay', src: b.dataset.rp, name: b.dataset.nm, sec: +$('#rpSec').value, rate: +$('#rpRate').value }).then(() => toastInfo('Replay lancé', b.dataset.nm));
+    };
   },
   renderScenes() {
     const box = $('#rgScenes'); if (!box) return;
@@ -3482,9 +4044,9 @@ const PROG = {
     const items = sc ? sc.items.slice().sort((a, b) => (a.z || 0) - (b.z || 0)) : [];
     cv.innerHTML = items.map(it => {
       const s = this.srcInfo(it);
-      const bg = !s ? 'background:#3a1016' : s.media ? '' : `background-image:url('${thumbURL(s.login)}')`;
+      const bg = !s ? 'background:#3a1016' : s.media || s.ctv ? '' : `background-image:url('${thumbURL(s.login)}')`;
       return `<div class="ci ${edit && it.id === this.sel ? 'sel' : ''} ${s && s.media ? 'cmd ' + s.media.kind : ''}" data-it="${esc(it.id)}" ${edit && it.k === 'cam' ? `data-cam="${esc(it.ref)}"` : ''} style="left:${it.x}%;top:${it.y}%;width:${it.w}%;height:${it.h}%;z-index:${1 + (it.z || 0)};${bg}">
-        ${s && s.media ? `<span class="mdi">${s.media.kind === 'video' ? '▶' : s.media.kind === 'image' ? '▣' : '♪'}</span>` : ''}
+        ${s && s.media ? `<span class="mdi">${s.media.kind === 'video' ? '▶' : s.media.kind === 'image' ? '▣' : '♪'}</span>` : s && s.ctv ? '<span class="mdi ctv">CTV</span>' : ''}
         <span class="nm">${s ? esc(s.name) : 'Source introuvable'}${it.label === false && !(s && s.media) ? ' · sans nom' : ''}${it.loop ? ' · ⟲' : ''}</span>${it.audio ? '<span class="au">SON</span>' : ''}
         ${edit ? '<i class="hd nw"></i><i class="hd ne"></i><i class="hd sw"></i><i class="hd se"></i>' : ''}</div>`;
     }).join('') + (!items.length ? `<div class="hint">${edit ? 'Glisse ici des caméras ou des tributs depuis la liste de gauche.' : 'Rien à l\'antenne'}</div>` : '');

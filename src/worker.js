@@ -76,6 +76,11 @@ export default {
       if (p === "/auth/logout") return redirect("/login", [setCookie(COOKIE, "", 0)]);
       if (p.startsWith("/overlay/")) return overlayLogin(env, p.slice(9));
       if (PUBLIC_PATHS.has(p)) return env.ASSETS.fetch(req);
+      if (p.startsWith("/whip/")) {
+        // diffusion vers Capitol TV (mod Minecraft ou OBS) : la clé de diffusion fait office d'accès
+        if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: WHIP_CORS });
+        return env.GAME.getByName("main").fetch(new Request(new URL(p, "https://game"), { method: req.method, headers: req.headers, body: req.method === "POST" || req.method === "PATCH" ? req.body : null }));
+      }
 
       let user = await readSession(req, env);
       let guestCookie = null;
@@ -116,8 +121,8 @@ export default {
         return new Response("Connexion requise", { status: 401 });
       }
       if (p.startsWith("/media/")) return serveMedia(req, env, p.slice(7));
-      if (p.startsWith("/api/media")) {
-        if (user.guest || user.overlay) return new Response("Réservé à l'équipe", { status: 403 });
+      if (p.startsWith("/api/media") || p.startsWith("/api/rtc")) {
+        if (p.startsWith("/api/media") && (user.guest || user.overlay)) return new Response("Réservé à l'équipe", { status: 403 });
         const h = new Headers(req.headers);
         h.set("X-CTV-User", JSON.stringify(user));
         return env.GAME.getByName("main").fetch(new Request(new URL(p + url.search, "https://game"), { method: req.method, headers: h, body: req.method === "GET" || req.method === "HEAD" ? null : req.body }));
@@ -138,6 +143,8 @@ export default {
 
 /* ---------- médias préenregistrés (stockés en morceaux dans KV) ---------- */
 const MEDIA_CHUNK = 8 * 1024 * 1024;
+const WHIP_CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, DELETE, PATCH, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization", "Access-Control-Expose-Headers": "Location" };
+const RTC_API = "https://rtc.live.cloudflare.com/v1/apps/";
 async function serveMedia(req, env, id) {
   if (!env.MEDIA) return new Response("Stockage des médias non configuré", { status: 503 });
   id = String(id).replace(/[^a-z0-9]/gi, "").slice(0, 40);
@@ -240,6 +247,7 @@ const LOGIN_RE = /^[a-z0-9_]{3,25}$/;
 const cleanLogin = s => { s = String(s || "").toLowerCase(); return LOGIN_RE.test(s) ? s : null; };
 const isStaff = a => a && (a.perm === "admin" || a.perm === "mod");
 const CAMROLES = ["cam", "chef"];
+const rid8 = () => crypto.randomUUID().replace(/-/g, "").slice(0, 10);
 const isCrew = a => !!a && !a.guest && !a.overlay && !a.server && (isStaff(a) || CAMROLES.includes(a.cam) || !!a.team);
 const hasPerm = (a, k) => !!a && (a.perm === "admin" || (Array.isArray(a.perms) && a.perms.includes(k)));
 const isSup = a => !!a && (isStaff(a) || a.cam === "chef" || hasPerm(a, "program"));
@@ -326,7 +334,7 @@ export class Game extends DurableObject {
 
   load() {
     if (!this.loading) this.loading = (async () => {
-      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams"]);
+      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets"]);
       this.board = { ...defaultBoard(), ...(m.get("board") || {}) };
       this.alerts = m.get("alerts") || {};
       this.team = m.get("team") || [];
@@ -346,6 +354,10 @@ export class Game extends DurableObject {
       this.prog = m.get("prog") || { scenes: [{ id: "s1", name: "Plan 1", items: [] }], live: "", preview: "s1", trans: { type: "logo", ms: 1400 }, seq: 0, title: "" };
       this.media = m.get("media") || [];
       this.srvCams = m.get("srvcams") || [];
+      this.skeys = m.get("skeys") || {};
+      this.pubs = m.get("pubs") || {};
+      this.poll = m.get("poll") || null;
+      this.bets = m.get("bets") || { open: true, users: {}, settled: null };
       this.cleanSince = this.cleanSince || {};
       this.pos = this.pos || {};
       this.near = this.near || new Map();
@@ -378,6 +390,8 @@ export class Game extends DurableObject {
     if (path === "/public") return Response.json({ open: !!this.board.publicAccess });
     if (path === "/mod") return this.modConnect(req);
     if (path.startsWith("/api/media")) return this.mediaApi(req, path);
+    if (path.startsWith("/api/rtc")) return this.rtcApi(req, path);
+    if (path.startsWith("/whip/")) return this.whip(req, path);
     let user = null;
     try { user = JSON.parse(req.headers.get("X-CTV-User") || "null"); } catch (e) {}
     if (!user || !user.id) return new Response("Connexion requise", { status: 401 });
@@ -423,6 +437,10 @@ export class Game extends DurableObject {
       me: { id: a.id, name: a.name, av: a.av, perm: a.perm, pub: a.pub, lock: !!a.lock, guest: !!a.guest, tribute: this.tributeOf(a.id), cam: a.cam || "", sup: isSup(a), crew: isCrew(a) && !a.lock, map: this.mapAllowed(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "" },
       roles: this.roles, prog: a.lock ? undefined : this.progPublic(), progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
       media: isCrew(a) ? this.media : undefined, srvCams: isCrew(a) ? this.srvCams : undefined,
+      pubs: this.pubsFor(a), rtc: { on: this.rtcOn(), pub: !!this.board.rtcPublic },
+      skeys: hasPerm(a, "program") || a.perm === "admin" ? this.allKeys() : undefined,
+      mykeys: a.guest || a.overlay ? undefined : this.myKeys(a.id),
+      poll: this.pollPublic(a.id), bets: this.betsPublic(a.id),
       onair: isCrew(a) ? { ids: this.onAirCams(), prep: this.prepCams(), since: this.cleanSince || {}, delay: this.board.delay || 0 } : undefined,
       cam: isCrew(a) && !a.lock ? this.camView(a) : undefined,
       board: this.viewFor(a),
@@ -620,6 +638,7 @@ export class Game extends DurableObject {
         if (!admin || a.pub) return deny();
         this.applyPatch(m.p || {});
         await this.ctx.storage.put("board", this.board);
+        this.checkVictor();
         if (!this.board.publicAccess) for (const s of this.sockets()) { const x = this.att(s); if (x && x.guest) { this.send(s, { t: "auth" }); try { s.close(4001, "Connexion requise"); } catch (e) {} } }
         this.refreshLocks();
         this.broadcastBoard();
@@ -645,7 +664,22 @@ export class Game extends DurableObject {
         this.broadcast({ t: "alerts", all: {} }, x => isCrew(x) && !x.lock); this.modcast({ t: "alerts", all: {} }); reply(true); break;
       }
       case "team": case "setRole": case "roles": return this.onRolesOp(a, m, reply);
-      case "progSave": case "progTake": case "progSfx": return this.onProgOp(a, m, reply);
+      case "progSave": case "progTake": case "progSfx": case "progGfx": case "progQueue": case "progReplay": case "progAuto": return this.onProgOp(a, m, reply);
+      case "skeyNew": {
+        if (!hasPerm(a, "program") && !admin) return deny();
+        const src = String(m.src || ""); if (!/^[tc]:[\w-]{1,40}$/.test(src)) return reply(false, { msg: "Source inconnue." });
+        for (const [k, v] of Object.entries(this.skeys)) if (v === src) delete this.skeys[k];
+        const key = this.keyFor(src);
+        if (this.pubs[src]) { delete this.pubs[src]; this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); }
+        reply(true, { key }); this.broadcast({ t: "skeys", keys: this.allKeys() }, x => hasPerm(x, "program") || x.perm === "admin"); break;
+      }
+      case "rtcCfg": {
+        if (!admin) return deny();
+        this.board.rtcPublic = !!m.pub; await this.ctx.storage.put("board", this.board);
+        this.broadcastHelloAll(); reply(true); break;
+      }
+      case "pollStart": case "pollEnd": case "vote": return this.onPollOp(a, m, reply);
+      case "bet": case "betsOpen": case "betsReset": return this.onBetOp(a, m, reply);
       case "ban": {
         if (!staff) return deny();
         const uid = String(m.uid || "");
@@ -774,7 +808,7 @@ export class Game extends DurableObject {
         name: String(m.name || "").slice(0, 32), av: String(m.av || "").slice(0, 300),
         role: String(m.role || "").slice(0, 40), rid,
         perm: perms.includes("admin") ? "admin" : perms.includes("mod") ? "mod" : "member", cam: perms.includes("chef") ? "chef" : perms.includes("cam") ? "cam" : "",
-        twitch: cleanLogin(m.twitch) || "", mc: String(m.mc || "").replace(/[^A-Za-z0-9_]/g, "").slice(0, 16), bio: String(m.bio || "").slice(0, 200)
+        twitch: cleanLogin(m.twitch) || "", vsrc: ["auto", "ctv", "twitch"].includes(m.vsrc) ? m.vsrc : "auto", mc: String(m.mc || "").replace(/[^A-Za-z0-9_]/g, "").slice(0, 16), bio: String(m.bio || "").slice(0, 200)
       };
     }).filter(m => m.id && !seen.has(m.id) && seen.add(m.id));
   }
@@ -836,8 +870,8 @@ export class Game extends DurableObject {
      Émission en direct : scènes multi-caméras composées par la réalisation
      ===================================================================== */
   srcOf(it) {
-    if (it.k === "trib") { const t = this.board.tributes.find(x => x.id === it.ref); return t ? { login: t.login, name: t.name, sub: t.district ? "District " + t.district : "", st: t.status } : null; }
-    if (it.k === "cam") { const m = this.team.find(x => x.id === it.ref); return m && m.twitch ? { login: m.twitch, name: m.name, sub: "Caméra" } : null; }
+    if (it.k === "trib") { const t = this.board.tributes.find(x => x.id === it.ref); return t ? { login: t.login, name: t.name, sub: t.district ? "District " + t.district : "", st: t.status, src: "t:" + t.id, vsrc: t.vsrc || "auto" } : null; }
+    if (it.k === "cam") { const m = this.team.find(x => x.id === it.ref); return m && (m.twitch || this.pubs["c:" + m.id]) ? { login: m.twitch || "", name: m.name, sub: "Caméra", src: "c:" + m.id, vsrc: m.vsrc || "auto" } : null; }
     if (it.k === "media") { const md = this.media.find(x => x.id === it.ref); return md ? { media: md.id, name: md.name, sub: md.kind === "video" ? "Vidéo" : md.kind === "image" ? "Image" : "Son", kind: md.kind, mime: md.mime, dur: md.dur || 0 } : null; }
     return null;
   }
@@ -847,6 +881,7 @@ export class Game extends DurableObject {
     const items = sc ? sc.items.map(it => { const s = this.srcOf(it); return s ? { id: it.id, k: it.k, ref: it.ref, x: it.x, y: it.y, w: it.w, h: it.h, z: it.z, label: it.label !== false, audio: !!it.audio, loop: !!it.loop, vol: it.vol == null ? 100 : it.vol, at: starts[it.ref] || 0, ...s } : null; }).filter(Boolean) : [];
     const fx = this.prog.sfx, md = fx && this.media.find(x => x.id === fx.id);
     return { seq: this.prog.seq, scene: sc ? sc.name : "", items, trans: this.prog.trans, title: this.prog.title || "", on: !!sc,
+      gfx: this.prog.gfx || {}, replay: this.prog.replay && Date.now() < this.prog.replay.end ? this.prog.replay : null, next: this.prog.next || null,
       sfx: md ? { id: md.id, name: md.name, kind: md.kind, at: fx.at, vol: fx.vol, loop: !!fx.loop, dur: md.dur || 0 } : null };
   }
   onAirCams() {
@@ -869,7 +904,8 @@ export class Game extends DurableObject {
     const t = p.trans || {};
     return { scenes, live: scenes.some(x => x.id === this.prog.live) ? this.prog.live : "", preview: scenes.some(x => x.id === p.preview) ? p.preview : scenes[0].id,
       trans: { type: ["logo", "fade", "cut"].includes(t.type) ? t.type : "logo", ms: num(t.ms, 1400, 300, 4000) }, seq: this.prog.seq, title: String(p.title || "").slice(0, 80),
-      starts: this.prog.starts || {}, sfx: this.prog.sfx || null };
+      starts: this.prog.starts || {}, sfx: this.prog.sfx || null,
+      gfx: this.prog.gfx || {}, queue: this.prog.queue || [], qrun: this.prog.qrun || null, next: this.prog.next || null, replay: this.prog.replay || null, autoBack: this.prog.autoBack !== false, prevLive: this.prog.prevLive || "" };
   }
   pushProg(newShot) {
     const pub = JSON.stringify({ t: "prog", p: this.progPublic(), cut: !!newShot });
@@ -956,11 +992,287 @@ export class Game extends DurableObject {
     try { await this.env.MEDIA.delete("meta:" + id); for (let n = 0; n < (md.n || 1); n++) await this.env.MEDIA.delete(`c:${id}:${n}`); } catch (e) {}
   }
 
+  /* plan suivant : file de plans programmés, sinon retour automatique après une vidéo */
+  planNext(sc, now) {
+    const q = this.prog.queue || [], run = this.prog.qrun;
+    if (run && run.i >= 0 && run.i < q.length) {
+      const e = q[run.i];
+      let dur = e.dur;
+      if (!dur) dur = this.mediaDur(sc);
+      if (dur > 0 && run.i + 1 < q.length) { this.prog.next = { at: now + dur * 1000, scene: q[run.i + 1].scene, why: "file" }; return; }
+      if (dur > 0 && run.i + 1 >= q.length) { this.prog.next = { at: now + dur * 1000, scene: "", why: "fin de file", end: true }; return; }
+      this.prog.next = null; return;
+    }
+    const md = this.mediaDur(sc);
+    if (this.prog.autoBack !== false && md > 0 && this.prog.prevLive && this.prog.scenes.some(x => x.id === this.prog.prevLive))
+      this.prog.next = { at: now + md * 1000 + 300, scene: this.prog.prevLive, why: "fin du média" };
+    else this.prog.next = null;
+  }
+  /* durée du plan quand il ne contient que des médias joués une fois (vidéo ou son) */
+  mediaDur(sc) {
+    if (!sc) return 0;
+    const md = sc.items.filter(i => i.k === "media").map(i => ({ i, m: this.media.find(x => x.id === i.ref) })).filter(x => x.m && x.m.kind !== "image" && !x.i.loop && x.m.dur > 0);
+    return md.length ? Math.max(...md.map(x => x.m.dur)) : 0;
+  }
+  async advanceQueue(a) {
+    const q = this.prog.queue || [], run = this.prog.qrun; if (!run) return;
+    run.i++;
+    if (run.i >= q.length) { this.prog.qrun = null; this.prog.next = null; return; }
+    await this.takeScene(q[run.i].scene, true);
+  }
+  async takeScene(sceneId, fromQueue) {
+    const sc = this.prog.scenes.find(x => x.id === sceneId); if (!sc) return;
+    const old = this.prog.scenes.find(x => x.id === this.prog.live), prevStarts = this.prog.starts || {}, starts = {}, now = Date.now();
+    const was = new Set(old ? old.items.filter(i => i.k === "media").map(i => i.ref) : []);
+    for (const it of sc.items) if (it.k === "media") starts[it.ref] = was.has(it.ref) && prevStarts[it.ref] ? prevStarts[it.ref] : now;
+    this.prog.starts = starts;
+    if (this.prog.live && this.prog.live !== sc.id) this.prog.prevLive = this.prog.live;
+    this.prog.live = sc.id; this.prog.seq = (this.prog.seq || 0) + 1;
+    if (!fromQueue) this.prog.qrun = null;
+    this.planNext(sc, now);
+  }
+  async runNext() {
+    const n = this.prog.next; if (!n || Date.now() < n.at - 200) return;
+    this.prog.next = null;
+    if (n.end) this.prog.qrun = null;
+    else if (n.why === "file" && this.prog.qrun) await this.advanceQueue();
+    else await this.takeScene(n.scene, false);
+    await this.ctx.storage.put("prog", this.prog);
+    this.broadcast({ t: "progEd", prog: this.prog, by: "" }, x => hasPerm(x, "program") && !x.lock);
+    this.pushProg(true);
+  }
+
+  /* ---------- vidéo native : diffusion depuis le mod ou OBS (Cloudflare Realtime) ---------- */
+  rtcOn() { return !!(this.env.RTC_APP_ID && this.env.RTC_APP_SECRET); }
+  async sfu(path, method, body) {
+    const r = await fetch(RTC_API + this.env.RTC_APP_ID + path, { method, headers: { Authorization: "Bearer " + this.env.RTC_APP_SECRET, "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || j.errorCode) throw new Error((j.errorDescription || j.errorCode || "SFU " + r.status));
+    return j;
+  }
+  keyFor(src) {
+    for (const [k, v] of Object.entries(this.skeys)) if (v === src) return k;
+    const k = (crypto.randomUUID() + crypto.randomUUID()).replace(/-/g, "").slice(0, 32);
+    this.skeys[k] = src; this.ctx.storage.put("skeys", this.skeys);
+    return k;
+  }
+  allKeys() {
+    const out = {};
+    for (const t of this.board.tributes) out["t:" + t.id] = this.keyFor("t:" + t.id);
+    for (const m of this.team) out["c:" + m.id] = this.keyFor("c:" + m.id);
+    return out;
+  }
+  myKeys(uid) {
+    const out = {};
+    if (this.inTeam(uid)) out["c:" + uid] = this.keyFor("c:" + uid);
+    const t = this.board.tributes.find(x => x.discordId && x.discordId === uid);
+    if (t) out["t:" + t.id] = this.keyFor("t:" + t.id);
+    return out;
+  }
+  rtcAllowed(a) { return !!a && this.rtcOn() && !a.lock && (isCrew(a) || a.overlay || !!this.board.rtcPublic); }
+  pubsFor(a) {
+    if (!this.rtcAllowed(a)) return {};
+    const out = {};
+    for (const [src, p] of Object.entries(this.pubs)) out[src] = { at: p.at, via: p.via, kinds: p.tracks.map(t => t.kind) };
+    return out;
+  }
+  pushPubs() {
+    for (const ws of this.sockets()) { const a = this.att(ws); if (!a || a.mod || a.server) continue; this.send(ws, { t: "pubs", pubs: this.pubsFor(a) }); }
+  }
+  broadcastHelloAll() { for (const ws of this.sockets()) { const a = this.att(ws); if (a && !a.mod && !a.server) this.send(ws, this.hello(a)); } }
+  async whip(req, path) {
+    const parts = path.split("/").filter(Boolean); // whip, key, sid?
+    const key = String(parts[1] || ""), src = this.skeys[key];
+    const H = extra => ({ ...WHIP_CORS, ...extra });
+    if (!src) return new Response("Clé de diffusion inconnue", { status: 404, headers: H() });
+    if (!this.rtcOn()) return new Response("Vidéo native non configurée sur le serveur", { status: 503, headers: H() });
+    if (req.method === "DELETE") {
+      if (this.pubs[src] && (!parts[2] || this.pubs[src].sid === parts[2])) { delete this.pubs[src]; this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); }
+      return new Response(null, { status: 200, headers: H() });
+    }
+    if (req.method === "PATCH") return new Response(null, { status: 204, headers: H() });
+    if (req.method !== "POST") return new Response("Méthode non prise en charge", { status: 405, headers: H() });
+    const sdp = await req.text();
+    if (!sdp.includes("v=0") || sdp.length > 60000) return new Response("Offre SDP attendue", { status: 400, headers: H() });
+    // sections média de l'offre : on publie chaque piste audio / vidéo
+    const tracks = [];
+    for (const sec of sdp.split(/\r?\nm=/).slice(1)) {
+      const kind = sec.startsWith("video") ? "video" : sec.startsWith("audio") ? "audio" : "";
+      const mid = (/\na=mid:(\S+)/.exec(sec) || [])[1];
+      if (kind && mid != null && !/\na=(inactive|recvonly)/.test(sec)) tracks.push({ location: "local", mid, trackName: kind + "-" + mid });
+    }
+    if (!tracks.length) return new Response("Aucune piste à publier", { status: 400, headers: H() });
+    try {
+      const ses = await this.sfu("/sessions/new", "POST");
+      const r = await this.sfu(`/sessions/${ses.sessionId}/tracks/new`, "POST", { sessionDescription: { type: "offer", sdp }, tracks });
+      const ok = (r.tracks || []).filter(t => !t.errorCode).map(t => ({ name: t.trackName, kind: String(t.trackName).split("-")[0] }));
+      if (!ok.length) throw new Error("pistes refusées");
+      const ua = req.headers.get("User-Agent") || "";
+      this.pubs[src] = { sid: ses.sessionId, tracks: ok, at: Date.now(), via: /CapitolTV/i.test(ua) ? "mod" : /obs/i.test(ua) ? "obs" : "autre" };
+      this.ctx.storage.put("pubs", this.pubs);
+      this.pushPubs();
+      const who = this.srcName(src);
+      this.crewcast({ t: "info", msg: "Flux vidéo reçu : " + who + " (" + this.pubs[src].via + ")" }, x => !x.mod && hasPerm(x, "program"));
+      return new Response(r.sessionDescription.sdp, { status: 201, headers: H({ "Content-Type": "application/sdp", Location: `/whip/${key}/${ses.sessionId}` }) });
+    } catch (e) {
+      return new Response("Erreur de diffusion : " + e.message, { status: 502, headers: H() });
+    }
+  }
+  srcName(src) {
+    const id = src.slice(2);
+    if (src[0] === "t") { const t = this.board.tributes.find(x => x.id === id); return t ? t.name : "tribut"; }
+    const m = this.team.find(x => x.id === id); return m ? m.name : "caméra";
+  }
+  async rtcApi(req, path) {
+    let user = null;
+    try { user = JSON.parse(req.headers.get("X-CTV-User") || "null"); } catch (e) {}
+    const J = (o, st = 200) => Response.json(o, { status: st });
+    if (!user || !user.id) return J({ msg: "Connexion requise" }, 401);
+    const anon = user.overlay || user.guest;
+    const a = { id: user.id, overlay: !!user.overlay, guest: !!user.guest, perm: anon ? "viewer" : this.permOf(user.id), cam: anon ? "" : this.camOf(user.id), perms: anon ? [] : this.permsOf(user.id), team: !anon && this.inTeam(user.id) };
+    a.lock = this.isLocked(a);
+    if (!this.rtcAllowed(a)) return J({ msg: "Flux réservés à l'équipe." }, 403);
+    const b = await req.json().catch(() => ({}));
+    try {
+      if (path.endsWith("/pull")) {
+        const pub = this.pubs[String(b.src || "")];
+        if (!pub) return J({ msg: "Ce flux n'est pas en ligne." }, 404);
+        const ses = await this.sfu("/sessions/new", "POST");
+        const r = await this.sfu(`/sessions/${ses.sessionId}/tracks/new`, "POST", { tracks: pub.tracks.map(t => ({ location: "remote", sessionId: pub.sid, trackName: t.name })) });
+        const bad = (r.tracks || []).filter(t => t.errorCode);
+        if (bad.length === pub.tracks.length) {
+          // l'émetteur a disparu sans prévenir
+          if (this.pubs[b.src] === pub) { delete this.pubs[b.src]; this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); }
+          return J({ msg: "Flux interrompu." }, 410);
+        }
+        return J({ sid: ses.sessionId, offer: r.sessionDescription, renego: !!r.requiresImmediateRenegotiation, tracks: r.tracks });
+      }
+      if (path.endsWith("/answer")) {
+        const sid = String(b.sid || "").replace(/[^\w-]/g, "");
+        await this.sfu(`/sessions/${sid}/renegotiate`, "PUT", { sessionDescription: { type: "answer", sdp: String(b.sdp || "") } });
+        return J({ ok: true });
+      }
+    } catch (e) { return J({ msg: "Vidéo : " + e.message }, 502); }
+    return J({ msg: "?" }, 404);
+  }
+
+  /* ---------- sondages à l'antenne ---------- */
+  pollPublic(uid) {
+    const p = this.poll; if (!p) return null;
+    const counts = p.opts.map(() => 0);
+    for (const v of Object.values(p.votes)) if (counts[v] != null) counts[v]++;
+    return { id: p.id, q: p.q, opts: p.opts, counts, total: Object.keys(p.votes).length, at: p.at, end: p.end, closed: !!p.closed || (p.end && Date.now() > p.end), mine: uid && p.votes[uid] != null ? p.votes[uid] : null };
+  }
+  pushPoll() {
+    clearTimeout(this.pollT);
+    this.pollT = setTimeout(() => { for (const ws of this.sockets()) { const a = this.att(ws); if (!a || a.mod || a.server) continue; this.send(ws, { t: "poll", poll: this.pollPublic(a.id) }); } }, 400);
+  }
+  async onPollOp(a, m, reply) {
+    const prog = hasPerm(a, "program") || a.perm === "admin";
+    if (m.t === "pollStart") {
+      if (!prog) return reply(false, { msg: "Réservé à la réalisation." });
+      const opts = (Array.isArray(m.opts) ? m.opts : []).map(x => String(x || "").trim().slice(0, 60)).filter(Boolean).slice(0, 6);
+      const q = String(m.q || "").trim().slice(0, 140);
+      if (!q || opts.length < 2) return reply(false, { msg: "Une question et au moins deux réponses." });
+      const dur = Math.max(0, Math.min(3600, +m.dur || 0));
+      this.poll = { id: rid8(), q, opts, at: Date.now(), end: dur ? Date.now() + dur * 1000 : 0, votes: {} };
+    } else if (m.t === "pollEnd") {
+      if (!prog) return reply(false, { msg: "Réservé à la réalisation." });
+      if (m.clear) this.poll = null; else if (this.poll) this.poll.closed = true;
+    } else {
+      const p = this.poll;
+      if (!p || p.id !== m.id || p.closed || (p.end && Date.now() > p.end)) return reply(false, { msg: "Le sondage est terminé." });
+      if (a.overlay) return reply(false, { msg: "Non autorisé." });
+      const i = parseInt(m.i, 10); if (!(i >= 0 && i < p.opts.length)) return reply(false, { msg: "Réponse inconnue." });
+      p.votes[a.id] = i;
+    }
+    this.ctx.storage.put("poll", this.poll);
+    this.pushPoll();
+    return reply(true);
+  }
+
+  /* ---------- pronostics « qui va gagner ? » (points fictifs) ---------- */
+  betUser(a) {
+    const u = this.bets.users[a.id] || (this.bets.users[a.id] = { n: a.name || "Spectateur", pts: 1000, b: {} });
+    u.n = a.name || u.n; return u;
+  }
+  victorEvent() { return this.board.events.find(e => e.k === "victor" && e.tid); }
+  betsPublic(uid) {
+    const B = this.bets, now = Date.now(), D = (this.board.delay || 0) * 1000;
+    const st = B.settled && now >= B.settled.at + D ? B.settled : null;
+    const pool = {};
+    for (const u of Object.values(B.users)) for (const [tid, v] of Object.entries(u.b)) pool[tid] = (pool[tid] || 0) + v;
+    const rows = Object.entries(B.users).map(([id, u]) => ({ id, n: u.n, pts: st && st.pts[id] != null ? st.pts[id] : u.pts + Object.values(u.b).reduce((x, y) => x + y, 0) * 0, stake: Object.values(u.b).reduce((x, y) => x + y, 0) }));
+    rows.sort((x, y) => (y.pts + (st ? 0 : y.stake)) - (x.pts + (st ? 0 : x.stake)));
+    const me = uid && B.users[uid] ? { pts: st && st.pts[uid] != null ? st.pts[uid] : B.users[uid].pts, b: B.users[uid].b, rank: rows.findIndex(r => r.id === uid) + 1 } : null;
+    return { open: !!B.open && !st, pool, top: rows.slice(0, 15).map(r => ({ n: r.n, pts: r.pts, stake: r.stake })), players: rows.length, me, winner: st ? st.tid : null };
+  }
+  pushBets() {
+    clearTimeout(this.betT);
+    this.betT = setTimeout(() => { for (const ws of this.sockets()) { const a = this.att(ws); if (!a || a.mod || a.server) continue; this.send(ws, { t: "bets", bets: this.betsPublic(a.id) }); } }, 600);
+  }
+  checkVictor() {
+    const v = this.victorEvent(), B = this.bets;
+    if (!v || (B.settled && B.settled.tid === v.tid)) return;
+    // répartition mutuelle : les mises sur le vainqueur se partagent toute la cagnotte
+    let pool = 0, onWin = 0;
+    for (const u of Object.values(B.users)) for (const [tid, x] of Object.entries(u.b)) { pool += x; if (tid === v.tid) onWin += x; }
+    const pts = {};
+    for (const [id, u] of Object.entries(B.users)) {
+      const stake = u.b[v.tid] || 0;
+      pts[id] = u.pts + (onWin ? Math.round(stake / onWin * pool) : Object.values(u.b).reduce((x, y) => x + y, 0));
+    }
+    B.settled = { tid: v.tid, at: v.ts, pts };
+    this.ctx.storage.put("bets", B);
+    this.pushBets();
+    this.scheduleAlarm();
+  }
+  async onBetOp(a, m, reply) {
+    const B = this.bets, prog = hasPerm(a, "program") || a.perm === "admin";
+    if (m.t === "betsOpen") { if (!prog) return reply(false, { msg: "Réservé à la régie." }); B.open = !!m.on; }
+    else if (m.t === "betsReset") { if (a.perm !== "admin") return reply(false, { msg: "Réservé à la régie." }); this.bets = { open: true, users: {}, settled: null }; }
+    else {
+      if (a.overlay || a.lock) return reply(false, { msg: "Non autorisé." });
+      if (!B.open || B.settled) return reply(false, { msg: "Les pronostics sont fermés." });
+      const t = this.board.tributes.find(x => x.id === m.tid); if (!t) return reply(false, { msg: "Tribut inconnu." });
+      const u = this.betUser(a), cur = u.b[t.id] || 0;
+      const amt = Math.round(+m.amt || 0);
+      const next = Math.max(0, cur + amt);
+      if (next - cur > u.pts) return reply(false, { msg: "Pas assez de points." });
+      u.pts -= next - cur; if (next) u.b[t.id] = next; else delete u.b[t.id];
+    }
+    this.ctx.storage.put("bets", this.bets);
+    this.pushBets();
+    return reply(true);
+  }
+
   async onProgOp(a, m, reply) {
     if (!hasPerm(a, "program") || a.lock) return reply(false, { msg: "Il faut la permission « Réalisation de l'émission »." });
     const wasLive = JSON.stringify(this.progPublic());
     if (m.t === "progSave") {
       this.prog = this.cleanProg(m.prog || {});
+    } else if (m.t === "progGfx") {
+      const g = m.gfx || {}, str = (v, n) => String(v || "").slice(0, n);
+      this.prog.gfx = {
+        lower: { on: !!(g.lower && g.lower.on), ref: str(g.lower && g.lower.ref, 40), auto: !!(g.lower && g.lower.auto), text: str(g.lower && g.lower.text, 80) },
+        breaking: { on: !!(g.breaking && g.breaking.on), text: str(g.breaking && g.breaking.text, 200) },
+        alive: { on: !!(g.alive && g.alive.on) }, map: { on: !!(g.map && g.map.on) }, poll: { on: !!(g.poll && g.poll.on) }, bets: { on: !!(g.bets && g.bets.on) }
+      };
+    } else if (m.t === "progAuto") {
+      this.prog.autoBack = !!m.on;
+    } else if (m.t === "progQueue") {
+      const q = (Array.isArray(m.queue) ? m.queue : []).slice(0, 30).map(x => ({ id: String(x.id || rid8()).slice(0, 12), scene: String(x.scene || "").slice(0, 20), dur: Math.max(0, Math.min(3600, Math.round(+x.dur || 0))) })).filter(x => this.prog.scenes.some(s => s.id === x.scene));
+      this.prog.queue = q;
+      if (m.run === true && q.length) { this.prog.qrun = { i: -1 }; await this.advanceQueue(a); }
+      else if (m.run === false) { this.prog.qrun = null; this.prog.next = null; }
+      else if (this.prog.qrun && this.prog.qrun.i >= q.length) { this.prog.qrun = null; this.prog.next = null; }
+    } else if (m.t === "progReplay") {
+      if (m.stop) this.prog.replay = null;
+      else {
+        const src = String(m.src || "").slice(0, 44), sec = Math.max(5, Math.min(60, +m.sec || 30)), rate = Math.max(0.25, Math.min(1, +m.rate || 0.5));
+        const nm = String(m.name || "").slice(0, 60);
+        this.prog.replay = { src, sec, rate, name: nm, at: Date.now(), end: Date.now() + sec / rate * 1000 + 800 };
+      }
     } else if (m.t === "progSfx") {
       const md = m.id && this.media.find(x => x.id === m.id);
       this.prog.sfx = md ? { id: md.id, at: Date.now(), vol: Math.max(0, Math.min(100, +m.vol || 100)), loop: !!m.loop } : null;
@@ -972,7 +1284,10 @@ export class Game extends DurableObject {
       const was = new Set(old ? old.items.filter(i => i.k === "media").map(i => i.ref) : []);
       if (sc) for (const it of sc.items) if (it.k === "media") starts[it.ref] = was.has(it.ref) && !m.restart && prevStarts[it.ref] ? prevStarts[it.ref] : now;
       this.prog.starts = starts;
+      if (this.prog.live && this.prog.live !== (sc ? sc.id : "")) this.prog.prevLive = this.prog.live;
       this.prog.live = sc ? sc.id : "";
+      if (!m.fromQueue && this.prog.qrun) { this.prog.qrun = null; }
+      this.planNext(sc, now);
       this.prog.seq = (this.prog.seq || 0) + 1;
       if (m.trans) this.prog.trans = this.cleanProg({ ...this.prog, trans: m.trans }).trans;
     }
@@ -981,6 +1296,7 @@ export class Game extends DurableObject {
     if (m.t === "progTake") this.pushProg(true);
     else if (JSON.stringify(this.progPublic()) !== wasLive) this.pushProg(false);
     else this.pushOnAir(false);
+    await this.scheduleAlarm();
     return reply(true);
   }
 
@@ -1082,7 +1398,7 @@ export class Game extends DurableObject {
     return {
       t: "hello", now: Date.now(), delay: this.board.delay || 0, srv: this.serverOn(),
       me: { id: a.id, name: a.name, perm: a.perm, cam: a.cam || "", sup: isSup(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "" },
-      roles: this.roles, onair: this.onAirCams(), prep: this.prepCams(),
+      roles: this.roles, onair: this.onAirCams(), prep: this.prepCams(), streamKey: this.keyFor("c:" + a.id),
       tribs: this.tribsForMod(), alerts, cams: this.camsList(), team: this.teamForMod(),
       feed: this.camData.feed.slice(-150), comms: this.camData.comms.filter(x => this.msgVisible(x, a)).slice(-150),
       reqs: Object.values(this.camData.reqs), pos: this.latestPos()
@@ -1374,6 +1690,10 @@ export class Game extends DurableObject {
     }
     if (this.board.lock && this.board.lock.mode === "schedule" && this.sockets().length && this.board.tributes.some(x => x.discordId))
       t = Math.min(t, (Math.floor(now / 60000) + 1) * 60000 + 1000);
+    if (this.prog && this.prog.next && this.prog.next.at) t = Math.min(t, Math.max(now + 200, this.prog.next.at));
+    if (this.prog && this.prog.replay && this.prog.replay.end > now) t = Math.min(t, this.prog.replay.end + 100);
+    if (this.bets && this.bets.settled) { const r = this.bets.settled.at + (this.board.delay || 0) * 1000; if (r > now) t = Math.min(t, r + 300); }
+    if (this.poll && this.poll.end > now) t = Math.min(t, this.poll.end + 200);
     if (t === Infinity) return;
     const cur = await this.ctx.storage.getAlarm();
     if (!cur || cur > t || cur < now) await this.ctx.storage.setAlarm(t);
@@ -1386,6 +1706,10 @@ export class Game extends DurableObject {
     const revealed = this.revealTimes().some(r => r > this.revealCursor - 1500 && r <= now + 500);
     this.revealCursor = now;
     if (revealed) this.broadcastBoard({ viewersOnly: true });
+    if (this.prog.next && now >= this.prog.next.at - 200) await this.runNext();
+    if (this.prog.replay && now >= this.prog.replay.end) { this.prog.replay = null; this.pushProg(false); }
+    if (this.bets.settled) { const r = this.bets.settled.at + (this.board.delay || 0) * 1000; if (r <= now + 500 && r > now - 60000) this.pushBets(); }
+    if (this.poll && this.poll.end && this.poll.end <= now + 300 && this.poll.end > now - 5000) this.pushPoll();
     await this.scheduleAlarm();
   }
   async twitchToken(force) {

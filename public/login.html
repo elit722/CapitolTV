@@ -6,16 +6,16 @@
 <title>Capitol TV — Connexion</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#060607;--surface:#111114;--hair:rgba(255,255,255,.08);--gold:#d6b261;--gold-hi:#f6e2a6;--gold-lo:#8f6c2b;--ink:#f3f0e9;--ink2:#bdb8ad;--mute:#77736b;--red:#ff5d74}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
-body{display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Manrope',system-ui,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;
+body{display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Barlow',system-ui,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;
   background:radial-gradient(900px 500px at 50% -10%,rgba(214,178,97,.12),transparent 65%),radial-gradient(700px 400px at 50% 120%,rgba(208,34,63,.10),transparent 60%),var(--bg)}
 .card{width:min(420px,100%);text-align:center;padding:40px 32px 32px;border:1px solid var(--hair);border-radius:20px;background:rgba(17,17,20,.8);backdrop-filter:blur(8px);box-shadow:0 40px 100px -30px #000}
-.mark{display:flex;justify-content:center;margin-bottom:18px;min-height:96px}
-.mark img{width:96px;height:96px;object-fit:contain;mix-blend-mode:screen;-webkit-mask-image:radial-gradient(closest-side,#000 84%,transparent);mask-image:radial-gradient(closest-side,#000 84%,transparent)}
+.mark{display:flex;justify-content:center;margin-bottom:18px;min-height:120px}
+.mark img{width:120px;height:120px;object-fit:contain;filter:drop-shadow(0 0 22px rgba(212,175,55,.35))}
 h1{margin:0;font-family:'Cinzel',serif;font-weight:700;font-size:26px;letter-spacing:.28em;background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,var(--gold-lo));-webkit-background-clip:text;background-clip:text;color:transparent}
 .sub{margin:8px 0 28px;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute);font-weight:700}
 p{color:var(--ink2);line-height:1.6;font-size:14px;margin:0 0 24px}
@@ -42,7 +42,7 @@ p{color:var(--ink2);line-height:1.6;font-size:14px;margin:0 0 24px}
 <script>
   const img = new Image();
   img.onload = () => document.getElementById('mark').appendChild(img);
-  img.src = '/logo.png'; img.alt = '';
+  img.src = '/emblem.png'; img.alt = '';
   const e = new URLSearchParams(location.search).get('e');
   const msg = { guild: "Ce site est réservé aux membres du serveur Discord de l'event. Rejoins le serveur puis réessaie.",
     denied: "Connexion annulée.", state: "La connexion a expiré, réessaie.", token: "Discord n'a pas validé la connexion, réessaie." }[e];
