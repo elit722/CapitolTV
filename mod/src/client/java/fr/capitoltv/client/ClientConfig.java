@@ -25,6 +25,16 @@ public final class ClientConfig {
     public boolean showCamsOnMap = true;
     public boolean alertsToasts = true;
     public boolean feedToasts = false;
+    /** mode caméra : HUD du jeu masqué, barre d'outils caméra (touches 1 à 9) */
+    public boolean cameraMode = true;
+    /** flux propre quand la régie t'affiche : plus aucune interface à l'écran (maintenir Alt gauche pour voir) */
+    public boolean cleanOnAir = true;
+    /** tout masquer en permanence (flux propre même hors antenne) */
+    public boolean cleanAlways = false;
+    /** voyant d'antenne : visible | discret | cache */
+    public String tally = "visible";
+    /** passer automatiquement en spectateur quand on est caméra */
+    public boolean autoSpectator = true;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
     private static ClientConfig inst;

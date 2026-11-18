@@ -4,5 +4,7 @@
   "key.capitoltv.signal": "Quick signal (action in progress)",
   "key.capitoltv.state": "Cycle state (active / rec / pause)",
   "key.capitoltv.follow": "Teleport to followed tribute",
-  "key.capitoltv.reply": "Reply \"Received\" to last message"
+  "key.capitoltv.reply": "Reply \"Received\" to last message",
+  "key.capitoltv.camera": "Camera mode (clean HUD, camera bar)",
+  "key.capitoltv.peek": "Show interface (hold, while on air)"
 }

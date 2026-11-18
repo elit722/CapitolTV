@@ -64,7 +64,7 @@ const avatarUrl = u => u.avatar
   : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(u.id) >> 22n) % 6n)}.png`;
 
 /* ---------- Worker (routage + authentification) ---------- */
-const PUBLIC_PATHS = new Set(["/login", "/login.html", "/logo.png", "/favicon.ico"]);
+const PUBLIC_PATHS = new Set(["/login", "/login.html", "/logo.png", "/emblem.png", "/favicon.ico"]);
 
 export default {
   async fetch(req, env) {
@@ -197,8 +197,20 @@ const LOGIN_RE = /^[a-z0-9_]{3,25}$/;
 const cleanLogin = s => { s = String(s || "").toLowerCase(); return LOGIN_RE.test(s) ? s : null; };
 const isStaff = a => a && (a.perm === "admin" || a.perm === "mod");
 const CAMROLES = ["cam", "chef"];
-const isCrew = a => !!a && !a.guest && !a.overlay && !a.server && (isStaff(a) || CAMROLES.includes(a.cam));
-const isSup = a => !!a && (isStaff(a) || a.cam === "chef");
+const isCrew = a => !!a && !a.guest && !a.overlay && !a.server && (isStaff(a) || CAMROLES.includes(a.cam) || !!a.team);
+const hasPerm = (a, k) => !!a && (a.perm === "admin" || (Array.isArray(a.perms) && a.perms.includes(k)));
+const isSup = a => !!a && (isStaff(a) || a.cam === "chef" || hasPerm(a, "program"));
+/* rôles du staff : chaque membre a un rôle, chaque rôle donne des permissions */
+const ROLE_PERMS = ["admin", "mod", "program", "roles", "chef", "cam", "special"];
+const defaultRoles = () => [
+  { id: "org", name: "Organisation", color: "#d6b261", perms: ["admin"], locked: true },
+  { id: "real", name: "Réalisation", color: "#e0514a", perms: ["program", "mod", "special", "chef"] },
+  { id: "modo", name: "Modération", color: "#5aa0e6", perms: ["mod"] },
+  { id: "chefcam", name: "Responsable caméra", color: "#b07ce8", perms: ["chef", "cam", "special"] },
+  { id: "cam", name: "Caméraman", color: "#5fbf8a", perms: ["cam"] },
+  { id: "equipe", name: "Équipe", color: "#9a9284", perms: [] }
+];
+const SLUG = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 24);
 const defaultBoard = () => ({
   tributes: [], ticker: "", don: { label: "Sponsoriser", url: "" }, fund: { raised: 0, goal: 0, cur: "€" },
   day: 0, startTs: null, cooldown: 20, lastHommage: 0, events: [], flash: null, delay: 0, hideChat: true, publicAccess: false,
@@ -271,7 +283,7 @@ export class Game extends DurableObject {
 
   load() {
     if (!this.loading) this.loading = (async () => {
-      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey"]);
+      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog"]);
       this.board = { ...defaultBoard(), ...(m.get("board") || {}) };
       this.alerts = m.get("alerts") || {};
       this.team = m.get("team") || [];
@@ -281,6 +293,14 @@ export class Game extends DurableObject {
       this.camData = { feed: c.feed || [], comms: c.comms || [], reqs: c.reqs || {} };
       this.camSt = m.get("camst") || {};
       this.srvKey = m.get("srvkey") || "";
+      this.roles = m.get("roles") || null;
+      if (!this.roles) {
+        // première fois : rôles par défaut + migration des anciens accès
+        this.roles = defaultRoles();
+        for (const t of this.team) t.rid = t.perm === "admin" ? "org" : t.perm === "mod" ? "modo" : t.cam === "chef" ? "chefcam" : t.cam === "cam" ? "cam" : "equipe";
+        this.ctx.storage.put("roles", this.roles); this.ctx.storage.put("team", this.team);
+      }
+      this.prog = m.get("prog") || { scenes: [{ id: "s1", name: "Plan 1", items: [] }], live: "", preview: "s1", trans: { type: "logo", ms: 1400 }, seq: 0, title: "" };
       this.pos = this.pos || {};
       this.near = this.near || new Map();
       this.cool = this.cool || new Map();
@@ -289,12 +309,17 @@ export class Game extends DurableObject {
   }
 
   get owners() { return String(this.env.OWNER_DISCORD_IDS || "").split(/[,\s]+/).filter(Boolean); }
-  permOf(id) {
-    if (this.owners.includes(id)) return "admin";
-    const m = this.team.find(x => x.id === id);
-    return m && (m.perm === "admin" || m.perm === "mod") ? m.perm : "viewer";
+  roleOf(id) { const m = this.team.find(x => x.id === id); return m ? this.roles.find(r => r.id === m.rid) || null : null; }
+  permsOf(id) {
+    if (this.owners.includes(id)) return ["admin", ...ROLE_PERMS.filter(p => p !== "admin")];
+    const r = this.roleOf(id); return r ? r.perms.slice() : [];
   }
-  camOf(id) { const m = this.team.find(x => x.id === id); return m && CAMROLES.includes(m.cam) ? m.cam : ""; }
+  permOf(id) {
+    const p = this.permsOf(id);
+    return p.includes("admin") ? "admin" : p.includes("mod") ? "mod" : "viewer";
+  }
+  camOf(id) { const p = this.permsOf(id); return p.includes("chef") ? "chef" : p.includes("cam") ? "cam" : ""; }
+  inTeam(id) { return this.owners.includes(id) || this.team.some(x => x.id === id); }
   sockets() { return this.ctx.getWebSockets(); }
   att(ws) { try { return ws.deserializeAttachment(); } catch (e) { return null; } }
   send(ws, obj) { try { ws.send(typeof obj === "string" ? obj : JSON.stringify(obj)); } catch (e) {} }
@@ -328,14 +353,15 @@ export class Game extends DurableObject {
     let teamChanged = false;
     if (user.guest) user.overlay = false;
     if (this.owners.includes(user.id) && !this.team.find(m => m.id === user.id)) {
-      this.team.push({ id: user.id, name: user.name, av: user.av, role: "Organisation", perm: "admin", bio: "" });
+      this.team.push({ id: user.id, name: user.name, av: user.av, role: "Organisation", rid: "org", perm: "admin", bio: "" });
       teamChanged = true;
     }
     const tm = this.team.find(m => m.id === user.id);
     if (tm && (tm.name !== user.name || tm.av !== user.av)) { tm.name = user.name; tm.av = user.av; teamChanged = true; }
     if (teamChanged) { await this.ctx.storage.put("team", this.team); this.broadcast({ t: "team", team: this.team }); }
 
-    const a = { id: user.id, name: user.name, av: user.av || "", perm: user.overlay || user.guest ? "viewer" : this.permOf(user.id), cam: user.overlay || user.guest ? "" : this.camOf(user.id), overlay: !!user.overlay, guest: !!user.guest, ch: null, chs: [], at: Date.now(), sub: false, pub: false, map: false };
+    const anon = user.overlay || user.guest;
+    const a = { id: user.id, name: user.name, av: user.av || "", perm: anon ? "viewer" : this.permOf(user.id), cam: anon ? "" : this.camOf(user.id), perms: anon ? [] : this.permsOf(user.id), team: !anon && this.inTeam(user.id), overlay: !!user.overlay, guest: !!user.guest, ch: null, chs: [], at: Date.now(), sub: false, pub: false, map: false };
     a.lock = this.isLocked(a);
     server.serializeAttachment(a);
     this.send(server, this.hello(a));
@@ -347,7 +373,8 @@ export class Game extends DurableObject {
   hello(a) {
     return {
       t: "hello", now: Date.now(),
-      me: { id: a.id, name: a.name, av: a.av, perm: a.perm, pub: a.pub, lock: !!a.lock, guest: !!a.guest, tribute: this.tributeOf(a.id), cam: a.cam || "", sup: isSup(a), crew: isCrew(a) && !a.lock, map: this.mapAllowed(a) },
+      me: { id: a.id, name: a.name, av: a.av, perm: a.perm, pub: a.pub, lock: !!a.lock, guest: !!a.guest, tribute: this.tributeOf(a.id), cam: a.cam || "", sup: isSup(a), crew: isCrew(a) && !a.lock, map: this.mapAllowed(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "" },
+      roles: this.roles, prog: a.lock ? undefined : this.progPublic(), progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
       cam: isCrew(a) && !a.lock ? this.camView(a) : undefined,
       board: this.viewFor(a),
       alerts: isCrew(a) && !a.lock ? this.alerts : undefined,
@@ -481,9 +508,9 @@ export class Game extends DurableObject {
     for (const ws of this.sockets()) {
       const a = this.att(ws);
       if (!a || a.overlay || a.guest || a.server) continue;
-      const p = this.permOf(a.id), c = this.camOf(a.id);
-      if (p === a.perm && c === (a.cam || "")) continue;
-      a.perm = p; a.cam = c;
+      const p = this.permOf(a.id), c = this.camOf(a.id), ps = this.permsOf(a.id), tm = this.inTeam(a.id);
+      if (p === a.perm && c === (a.cam || "") && JSON.stringify(ps) === JSON.stringify(a.perms || []) && tm === !!a.team) continue;
+      a.perm = p; a.cam = c; a.perms = ps; a.team = tm;
       if (a.mod) {
         if (!isCrew(a)) { this.send(ws, { t: "err", msg: "Tu n'es plus dans l'équipe caméra." }); try { ws.close(4003, "Retiré de l'équipe caméra"); } catch (e) {} continue; }
         ws.serializeAttachment(a); this.send(ws, this.modHello(a)); continue;
@@ -547,6 +574,7 @@ export class Game extends DurableObject {
         if (!this.board.publicAccess) for (const s of this.sockets()) { const x = this.att(s); if (x && x.guest) { this.send(s, { t: "auth" }); try { s.close(4001, "Connexion requise"); } catch (e) {} } }
         this.refreshLocks();
         this.broadcastBoard();
+        if (this.prog.live) this.pushProg(false);
         await this.scheduleAlarm();
         reply(true); break;
       }
@@ -567,14 +595,8 @@ export class Game extends DurableObject {
         this.alerts = {}; await this.ctx.storage.put("alerts", this.alerts);
         this.broadcast({ t: "alerts", all: {} }, x => isCrew(x) && !x.lock); this.modcast({ t: "alerts", all: {} }); reply(true); break;
       }
-      case "team": {
-        if (!admin) return deny();
-        this.team = this.cleanTeam(m.team);
-        await this.ctx.storage.put("team", this.team);
-        this.broadcast({ t: "team", team: this.team });
-        this.refreshPerms(); this.refreshLocks(); this.schedulePresence();
-        this.crewcast({ t: "team", team: this.teamForMod() }, x => x.mod); this.camsChanged(); reply(true); break;
-      }
+      case "team": case "setRole": case "roles": return this.onRolesOp(a, m, reply);
+      case "progSave": case "progTake": return this.onProgOp(a, m, reply);
       case "ban": {
         if (!staff) return deny();
         const uid = String(m.uid || "");
@@ -695,12 +717,129 @@ export class Game extends DurableObject {
   cleanTeam(arr) {
     if (!Array.isArray(arr)) return this.team;
     const seen = new Set();
-    return arr.slice(0, 100).map(m => ({
-      id: String(m && m.id || "").replace(/\D/g, "").slice(0, 20),
-      name: String(m.name || "").slice(0, 32), av: String(m.av || "").slice(0, 300),
-      role: String(m.role || "").slice(0, 40), perm: PERMS.includes(m.perm) ? m.perm : "member", cam: CAMROLES.includes(m.cam) ? m.cam : "",
-      bio: String(m.bio || "").slice(0, 200)
-    })).filter(m => m.id && !seen.has(m.id) && seen.add(m.id));
+    return arr.slice(0, 150).map(m => {
+      const rid = this.roles.some(r => r.id === m.rid) ? m.rid : "equipe";
+      const perms = (this.roles.find(r => r.id === rid) || { perms: [] }).perms;
+      return {
+        id: String(m && m.id || "").replace(/\D/g, "").slice(0, 20),
+        name: String(m.name || "").slice(0, 32), av: String(m.av || "").slice(0, 300),
+        role: String(m.role || "").slice(0, 40), rid,
+        perm: perms.includes("admin") ? "admin" : perms.includes("mod") ? "mod" : "member", cam: perms.includes("chef") ? "chef" : perms.includes("cam") ? "cam" : "",
+        twitch: cleanLogin(m.twitch) || "", bio: String(m.bio || "").slice(0, 200)
+      };
+    }).filter(m => m.id && !seen.has(m.id) && seen.add(m.id));
+  }
+  cleanRoles(arr) {
+    if (!Array.isArray(arr)) return this.roles;
+    const seen = new Set(), out = [];
+    for (const r of arr.slice(0, 30)) {
+      let id = SLUG(r && (r.id || r.name)) || "role";
+      while (seen.has(id)) id += "-2";
+      seen.add(id);
+      out.push({ id, name: String(r.name || "Rôle").slice(0, 30), color: /^#[0-9a-f]{6}$/i.test(r.color) ? r.color : "#9a9284", perms: (Array.isArray(r.perms) ? r.perms : []).filter(p => ROLE_PERMS.includes(p)), locked: id === "org" });
+    }
+    if (!out.some(r => r.id === "org")) out.unshift(defaultRoles()[0]);
+    out.find(r => r.id === "org").perms = ["admin"];
+    if (!out.some(r => r.id === "equipe")) out.push(defaultRoles()[5]);
+    return out;
+  }
+  /* gestion des rôles : depuis le site comme depuis le jeu */
+  async onRolesOp(a, m, reply) {
+    const admin = a.perm === "admin";
+    if (!hasPerm(a, "roles")) return reply(false, { msg: "Il faut la permission « Gérer les rôles »." });
+    const adminRole = rid => !!(this.roles.find(r => r.id === rid) || { perms: [] }).perms.includes("admin");
+    const touchesAdmin = (before, after) => {
+      for (const x of after) { const old = before.find(y => y.id === x.id); if ((old && adminRole(old.rid)) !== adminRole(x.rid)) return true; }
+      return before.some(y => adminRole(y.rid) && !after.find(x => x.id === y.id));
+    };
+    if (m.t === "roles") {
+      const next = this.cleanRoles(m.roles);
+      if (!admin) {
+        const bad = next.some(r => r.perms.includes("admin") && !(this.roles.find(o => o.id === r.id) || { perms: [] }).perms.includes("admin"))
+          || next.some(r => r.perms.includes("roles") && !(this.roles.find(o => o.id === r.id) || { perms: [] }).perms.includes("roles"));
+        if (bad) return reply(false, { msg: "Seule la régie peut donner les permissions « Régie » et « Gérer les rôles »." });
+      }
+      this.roles = next;
+      this.team = this.cleanTeam(this.team);
+      await this.ctx.storage.put("roles", this.roles); await this.ctx.storage.put("team", this.team);
+    } else {
+      let list;
+      if (m.t === "setRole") {
+        if (!this.team.some(x => x.id === m.uid)) return reply(false, { msg: "Membre inconnu." });
+        list = this.team.map(x => x.id === m.uid ? { ...x, rid: m.rid } : x);
+      } else list = m.team;
+      const next = this.cleanTeam(list);
+      if (!admin && touchesAdmin(this.team, next)) return reply(false, { msg: "Seule la régie peut donner ou retirer le rôle Organisation." });
+      if (!admin && next.some(x => { const old = this.team.find(y => y.id === x.id); return (!old || old.rid !== x.rid) && (this.roles.find(r => r.id === x.rid) || { perms: [] }).perms.includes("roles"); }))
+        return reply(false, { msg: "Seule la régie peut donner un rôle qui gère les rôles." });
+      this.team = next;
+      await this.ctx.storage.put("team", this.team);
+    }
+    this.broadcast({ t: "team", team: this.team, roles: this.roles });
+    this.modcast({ t: "roles", roles: this.roles });
+    this.refreshPerms(); this.refreshLocks(); this.schedulePresence();
+    this.modcast({ t: "team", team: this.teamForMod() }); this.camsChanged();
+    if (this.prog.live) this.pushProg(false);
+    return reply(true);
+  }
+
+  /* =====================================================================
+     Émission en direct : scènes multi-caméras composées par la réalisation
+     ===================================================================== */
+  srcOf(it) {
+    if (it.k === "trib") { const t = this.board.tributes.find(x => x.id === it.ref); return t ? { login: t.login, name: t.name, sub: t.district ? "District " + t.district : "", st: t.status } : null; }
+    if (it.k === "cam") { const m = this.team.find(x => x.id === it.ref); return m && m.twitch ? { login: m.twitch, name: m.name, sub: "Caméra" } : null; }
+    return null;
+  }
+  progPublic() {
+    const sc = this.prog.scenes.find(x => x.id === this.prog.live);
+    const items = sc ? sc.items.map(it => { const s = this.srcOf(it); return s ? { id: it.id, k: it.k, ref: it.ref, x: it.x, y: it.y, w: it.w, h: it.h, z: it.z, label: it.label !== false, audio: !!it.audio, ...s } : null; }).filter(Boolean) : [];
+    return { seq: this.prog.seq, scene: sc ? sc.name : "", items, trans: this.prog.trans, title: this.prog.title || "", on: !!sc };
+  }
+  onAirCams() {
+    const sc = this.prog.scenes.find(x => x.id === this.prog.live);
+    return sc ? [...new Set(sc.items.filter(it => it.k === "cam").map(it => it.ref))] : [];
+  }
+  cleanProg(p) {
+    const num = (v, d, lo, hi) => { v = +v; return isFinite(v) ? Math.max(lo, Math.min(hi, Math.round(v * 100) / 100)) : d; };
+    const scenes = (Array.isArray(p.scenes) ? p.scenes : []).slice(0, 40).map((sc, i) => ({
+      id: String(sc.id || "s" + i).replace(/[^a-z0-9_-]/gi, "").slice(0, 20) || "s" + i,
+      name: String(sc.name || "Plan " + (i + 1)).slice(0, 40),
+      items: (Array.isArray(sc.items) ? sc.items : []).slice(0, 16).map((it, j) => ({
+        id: String(it.id || "i" + j).replace(/[^a-z0-9_-]/gi, "").slice(0, 20) || "i" + j,
+        k: it.k === "cam" ? "cam" : "trib", ref: String(it.ref || "").slice(0, 40),
+        x: num(it.x, 0, -50, 150), y: num(it.y, 0, -50, 150), w: num(it.w, 50, 2, 200), h: num(it.h, 50, 2, 200), z: num(it.z, j, 0, 99),
+        label: it.label !== false, audio: !!it.audio
+      }))
+    }));
+    if (!scenes.length) scenes.push({ id: "s1", name: "Plan 1", items: [] });
+    const t = p.trans || {};
+    return { scenes, live: scenes.some(x => x.id === this.prog.live) ? this.prog.live : "", preview: scenes.some(x => x.id === p.preview) ? p.preview : scenes[0].id,
+      trans: { type: ["logo", "fade", "cut"].includes(t.type) ? t.type : "logo", ms: num(t.ms, 1400, 300, 4000) }, seq: this.prog.seq, title: String(p.title || "").slice(0, 80) };
+  }
+  pushProg(newShot) {
+    const pub = JSON.stringify({ t: "prog", p: this.progPublic(), cut: !!newShot });
+    for (const ws of this.sockets()) { const a = this.att(ws); if (a && !a.mod && !a.server && !a.lock) this.send(ws, pub); }
+    this.modcast({ t: "onair", ids: this.onAirCams() });
+    this.crewcast({ t: "onair", ids: this.onAirCams() }, x => !x.mod);
+  }
+  async onProgOp(a, m, reply) {
+    if (!hasPerm(a, "program") || a.lock) return reply(false, { msg: "Il faut la permission « Réalisation de l'émission »." });
+    const wasLive = JSON.stringify(this.progPublic());
+    if (m.t === "progSave") {
+      this.prog = this.cleanProg(m.prog || {});
+    } else {
+      const sc = this.prog.scenes.find(x => x.id === m.scene);
+      if (m.scene && !sc) return reply(false, { msg: "Plan introuvable." });
+      this.prog.live = sc ? sc.id : "";
+      this.prog.seq = (this.prog.seq || 0) + 1;
+      if (m.trans) this.prog.trans = this.cleanProg({ ...this.prog, trans: m.trans }).trans;
+    }
+    await this.ctx.storage.put("prog", this.prog);
+    this.broadcast({ t: "progEd", prog: this.prog, by: a.id }, x => hasPerm(x, "program") && !x.lock);
+    if (m.t === "progTake") this.pushProg(true);
+    else if (JSON.stringify(this.progPublic()) !== wasLive) this.pushProg(false);
+    return reply(true);
   }
 
   async webSocketClose(ws, code, reason) {
@@ -738,7 +877,7 @@ export class Game extends DurableObject {
   }
   teamForMod() {
     const { site, mod } = this.onlineIds();
-    return this.team.map(m => ({ id: m.id, name: m.name, cam: m.cam || "", perm: m.perm, online: site.has(m.id) || mod.has(m.id), sup: m.perm === "admin" || m.perm === "mod" || m.cam === "chef" || this.owners.includes(m.id) }));
+    return this.team.map(m => ({ id: m.id, name: m.name, cam: m.cam || "", perm: m.perm, rid: m.rid || "", twitch: m.twitch || "", online: site.has(m.id) || mod.has(m.id), sup: m.perm === "admin" || m.perm === "mod" || m.cam === "chef" || (this.roles.find(r => r.id === m.rid) || { perms: [] }).perms.includes("program") || this.owners.includes(m.id) }));
   }
   camsList() {
     const { mod } = this.onlineIds(), ids = new Set();
@@ -755,8 +894,11 @@ export class Game extends DurableObject {
       this.camsT = null;
       this.crewcast({ t: "cams", cams: this.camsList() });
       this.crewcast({ t: "team", team: this.teamForMod() }, x => x.mod);
+      this.sendServers({ t: "cams", names: this.camNames() });
     }, 1500);
   }
+  camNames() { return Object.entries(this.camSt).filter(([id, st]) => st.mc && CAMROLES.includes(this.camOf(id))).map(([, st]) => st.mc); }
+  sendServers(obj) { const j = JSON.stringify(obj); for (const ws of this.sockets()) { const a = this.att(ws); if (a && a.server) this.send(ws, j); } }
   saveCam(now) {
     clearTimeout(this.camSaveT);
     const go = () => { this.camSaveT = null; this.ctx.storage.put("cam", this.camData); this.ctx.storage.put("camst", this.camSt); };
@@ -774,14 +916,14 @@ export class Game extends DurableObject {
     if (who.server) {
       if (!this.srvKey || who.key !== this.srvKey) return refuse(4003, "Clé serveur invalide (régie › Carte & caméras)");
       server.serializeAttachment({ id: "server", name: "Serveur Minecraft", server: true, at: Date.now() });
-      this.send(server, { t: "hello", server: true, now: Date.now() });
+      this.send(server, { t: "hello", server: true, now: Date.now(), names: this.camNames() });
       this.crewcast({ t: "srv", on: true });
       return new Response(null, { status: 101, webSocket: client });
     }
     const u = who.user || {};
     if (!u.id || this.banned[u.id]) return refuse(4003, "Accès retiré");
-    const a = { id: u.id, name: (this.team.find(m => m.id === u.id) || {}).name || u.name, av: u.av || "", perm: this.permOf(u.id), cam: this.camOf(u.id), mod: true, at: Date.now() };
-    if (!isCrew(a)) return refuse(4003, "Ton compte n'a pas le rôle Caméra dans l'équipe Capitol TV");
+    const a = { id: u.id, name: (this.team.find(m => m.id === u.id) || {}).name || u.name, av: u.av || "", perm: this.permOf(u.id), cam: this.camOf(u.id), perms: this.permsOf(u.id), team: this.inTeam(u.id), mod: true, at: Date.now() };
+    if (!isCrew(a)) return refuse(4003, "Ton compte ne fait pas partie de l'équipe Capitol TV");
     server.serializeAttachment(a);
     this.camSt[a.id] = { ...(this.camSt[a.id] || {}), name: a.name, at: Date.now() };
     this.send(server, this.modHello(a));
@@ -792,7 +934,8 @@ export class Game extends DurableObject {
     const alerts = Object.entries(this.alerts).sort((x, y) => y[1].ts - x[1].ts).slice(0, 80).map(([id, al]) => ({ id, ...al }));
     return {
       t: "hello", now: Date.now(), delay: this.board.delay || 0, srv: this.serverOn(),
-      me: { id: a.id, name: a.name, perm: a.perm, cam: a.cam || "", sup: isSup(a) },
+      me: { id: a.id, name: a.name, perm: a.perm, cam: a.cam || "", sup: isSup(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "" },
+      roles: this.roles, onair: this.onAirCams(),
       tribs: this.tribsForMod(), alerts, cams: this.camsList(), team: this.teamForMod(),
       feed: this.camData.feed.slice(-150), comms: this.camData.comms.filter(x => this.msgVisible(x, a)).slice(-150),
       reqs: Object.values(this.camData.reqs), pos: this.latestPos()
@@ -840,6 +983,7 @@ export class Game extends DurableObject {
         break;
       }
       case "msg": case "buzz": case "req": case "reqUpd": case "special": return this.onCrewOp(a, m, reply);
+      case "setRole": case "roles": return this.onRolesOp(a, m, reply);
     }
   }
 
@@ -893,7 +1037,7 @@ export class Game extends DurableObject {
         this.crewcast({ t: "req", r }); return reply(true);
       }
       case "special": {
-        if (!sup) return reply(false, { msg: "Réservé à la régie et au responsable caméra." });
+        if (!sup && !hasPerm(a, "special")) return reply(false, { msg: "Il faut la permission « Annonces spéciales »." });
         const t = this.board.tributes.find(x => x.id === m.tr);
         this.addFeed({ k: "special", tr: t ? t.id : "", n: t ? t.name : "", text: String(m.text || "").trim().slice(0, 200), src: a.name });
         return reply(true);

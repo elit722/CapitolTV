@@ -7,7 +7,11 @@ import com.google.gson.JsonObject;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import fr.capitoltv.CapitolTV;
 import fr.capitoltv.net.CtvSocket;
+import fr.capitoltv.net.SpecPayload;
 import fr.capitoltv.net.TpPayload;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -48,6 +52,8 @@ public final class ServerBridge {
         public boolean tpForOps = true;
         public List<String> camNames = new ArrayList<>();
         public boolean reportEffects = true;
+        /** les caméras (déclarées sur Capitol TV) passent automatiquement en spectateur */
+        public boolean autoSpectator = true;
     }
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
@@ -56,6 +62,29 @@ public final class ServerBridge {
     private static MinecraftServer server;
     private static final ConcurrentLinkedQueue<JsonObject> events = new ConcurrentLinkedQueue<>();
     private static int tick;
+    /** pseudos Minecraft des caméras, envoyés par Capitol TV */
+    private static final Set<String> remoteCams = ConcurrentHashMap.newKeySet();
+
+    private static boolean isCam(String name) {
+        for (String n : remoteCams) if (n.equalsIgnoreCase(name)) return true;
+        return cfg.camNames.stream().anyMatch(x -> x.equalsIgnoreCase(name));
+    }
+
+    private static void setSpectator(MinecraftServer s, ServerPlayerEntity p, boolean on) {
+        if (p.isSpectator() == on) return;
+        s.getCommandManager().executeWithPrefix(s.getCommandSource(), "gamemode " + (on ? "spectator " : "adventure ") + p.getGameProfile().getName());
+        p.sendMessage(Text.literal("§6[Capitol TV]§r " + (on ? "Mode caméra : tu es en spectateur." : "Tu quittes le mode spectateur.")), false);
+    }
+
+    private static void onRemote(JsonObject m) {
+        String t = m.has("t") ? m.get("t").getAsString() : "";
+        if (!(t.equals("hello") || t.equals("cams")) || !m.has("names")) return;
+        remoteCams.clear();
+        for (var e : m.getAsJsonArray("names")) remoteCams.add(e.getAsString());
+        MinecraftServer s = server;
+        if (s == null || !cfg.autoSpectator) return;
+        s.execute(() -> { for (ServerPlayerEntity p : s.getPlayerManager().getPlayerList()) if (isCam(p.getGameProfile().getName())) setSpectator(s, p, true); });
+    }
 
     private ServerBridge() { }
 
@@ -79,6 +108,21 @@ public final class ServerBridge {
             events.add(e);
         });
 
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, s) -> {
+            ServerPlayerEntity p = handler.getPlayer();
+            if (cfg.autoSpectator && isCam(p.getGameProfile().getName())) s.execute(() -> setSpectator(s, p, true));
+        });
+        ServerPlayNetworking.registerGlobalReceiver(SpecPayload.ID, (payload, ctx) -> {
+            ServerPlayerEntity p = ctx.player();
+            MinecraftServer s = p.getServer();
+            if (s == null) return;
+            String n = p.getGameProfile().getName();
+            if (!isCam(n) && !s.getPlayerManager().isOperator(p.getGameProfile())) {
+                p.sendMessage(Text.literal("§6[Capitol TV]§r " + n + " n'est pas déclaré comme caméra sur Capitol TV (rôle Caméra + mod connecté)."), false);
+                return;
+            }
+            setSpectator(s, p, payload.on());
+        });
         ServerPlayNetworking.registerGlobalReceiver(TpPayload.ID, (payload, ctx) -> {
             ServerPlayerEntity p = ctx.player();
             MinecraftServer s = p.getServer();
@@ -125,6 +169,7 @@ public final class ServerBridge {
 
     private static boolean mayTeleport(MinecraftServer s, ServerPlayerEntity p) {
         if (cfg.tpForSpectators && p.isSpectator()) return true;
+        if (isCam(p.getGameProfile().getName())) return true;
         if (cfg.tpForOps && s.getPlayerManager().isOperator(p.getGameProfile())) return true;
         String n = p.getGameProfile().getName();
         return cfg.camNames.stream().anyMatch(x -> x.equalsIgnoreCase(n));
@@ -150,7 +195,7 @@ public final class ServerBridge {
             CapitolTV.LOG.info("Capitol TV : partie serveur inactive (renseigne la clé serveur dans config/capitoltv-server.json).");
             return;
         }
-        if (sock == null) sock = new CtvSocket(o -> { }, st -> CapitolTV.LOG.info("Capitol TV : liaison serveur {}", st));
+        if (sock == null) sock = new CtvSocket(ServerBridge::onRemote, st -> CapitolTV.LOG.info("Capitol TV : liaison serveur {}", st));
         sock.connect(cfg.url, Map.of("X-CTV-Server-Key", cfg.key.trim(), "User-Agent", "CapitolTV-Server/1.0"));
     }
 

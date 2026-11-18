@@ -24,11 +24,20 @@ public final class Data {
     public static final class Req { public String id = "", by = "", byName = "", tr = "", text = "", to = "", toName = "", state = "open", taker = "", takerName = ""; public long ts; public boolean bySup; }
     public static final class Cam { public String id = "", name = "", cam = "", st = "", follow = "", mc = "", d = ""; public boolean online; public double x, y, z; public long at; public boolean hasPos; }
     public static final class Pos { public double x, y, z, hp = -1; public String d = "", src = ""; public long ts; }
-    public static final class Member { public String id = "", name = "", cam = "", perm = ""; public boolean online, sup; }
+    public static final class Member { public String id = "", name = "", cam = "", perm = "", rid = "", twitch = ""; public boolean online, sup; }
+    public static final class Role { public String id = "", name = "", color = "#9a9284"; public List<String> perms = new ArrayList<>(); public boolean locked; }
 
     /* ---------- état ---------- */
     public static String meId = "", meName = "", meCam = "", mePerm = "";
     public static boolean meSup;
+    public static List<String> mePerms = new ArrayList<>();
+    public static String meRid = "";
+    public static final List<Role> roles = new ArrayList<>();
+    /** ids des caméras actuellement à l'antenne (émission de la régie) */
+    public static final List<String> onAirIds = new ArrayList<>();
+    public static boolean onAir() { return onAirIds.contains(meId); }
+    public static boolean can(String perm) { return "admin".equals(mePerm) || mePerms.contains(perm) || mePerms.contains("admin"); }
+    public static Role role(String id) { for (Role r : roles) if (r.id.equals(id)) return r; return null; }
     public static int delay;
     public static long skew;
     public static boolean serverMod;
@@ -171,9 +180,21 @@ public final class Data {
             JsonObject o = e.getAsJsonObject();
             Member m = new Member();
             m.id = s(o, "id"); m.name = s(o, "name"); m.cam = s(o, "cam"); m.perm = s(o, "perm"); m.online = b(o, "online"); m.sup = b(o, "sup");
+            m.rid = s(o, "rid"); m.twitch = s(o, "twitch");
             team.add(m);
         }
     }
+    static void setRoles(JsonArray a) {
+        roles.clear();
+        for (JsonElement e : a) if (e.isJsonObject()) {
+            JsonObject o = e.getAsJsonObject();
+            Role r = new Role();
+            r.id = s(o, "id"); r.name = s(o, "name"); r.color = s(o, "color"); r.locked = b(o, "locked");
+            for (JsonElement x : arr(o, "perms")) r.perms.add(x.getAsString());
+            roles.add(r);
+        }
+    }
+    static void setOnAir(JsonArray a) { onAirIds.clear(); for (JsonElement e : a) onAirIds.add(e.getAsString()); }
     static void mergePos(JsonObject p) {
         for (Map.Entry<String, JsonElement> en : p.entrySet()) {
             if (en.getValue().isJsonObject()) pos.put(en.getKey(), posOf(en.getValue().getAsJsonObject()));
@@ -198,6 +219,10 @@ public final class Data {
         reset();
         JsonObject me = obj(m, "me");
         meId = s(me, "id"); meName = s(me, "name"); meCam = s(me, "cam"); mePerm = s(me, "perm"); meSup = b(me, "sup");
+        meRid = s(me, "rid"); mePerms = new ArrayList<>();
+        for (JsonElement x : arr(me, "perms")) mePerms.add(x.getAsString());
+        setRoles(arr(m, "roles"));
+        setOnAir(arr(m, "onair"));
         skew = l(m, "now") - System.currentTimeMillis();
         delay = (int) l(m, "delay");
         serverMod = b(m, "srv");

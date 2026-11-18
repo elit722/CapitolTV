@@ -13,7 +13,7 @@
    ===================================================================== */
 const CONFIG = {
   // Logo : image "logo.png" placée dans le dossier public/ (sinon emblème par défaut)
-  logo: "logo.png",
+  logo: "emblem.png", logoFull: "logo.png",
   // Bouton de dons par défaut (modifiable ensuite depuis la régie)
   don: { label: "Sponsoriser", url: "" }
 };
@@ -43,6 +43,92 @@ a{color:var(--gold-hi)}
 .hide{display:none!important}
 body:not(.is-staff) .regie-only{display:none!important}
 body:not(.is-admin) .admin-only{display:none!important}
+
+body:not(.can-prog) .prog-only{display:none!important}
+body:not(.can-roles) .roles-only{display:none!important}
+body:not(.is-staff):not(.can-roles) .set-only{display:none!important}
+body:not(.is-staff) #snav button:not([data-s="roles"]){display:none!important}
+body.locked .nolock{display:none!important}
+.onair-dot{width:7px;height:7px;border-radius:50%;background:var(--red-hi);box-shadow:0 0 0 3px var(--red-a);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.35}}
+/* ----- émission en direct ----- */
+.em-wrap{position:fixed;left:0;right:0;top:64px;bottom:38px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;gap:10px;padding:14px}
+.em-bar{display:flex;align-items:center;gap:10px;width:100%;max-width:calc((100vh - 190px) * 16 / 9)}
+.em-bar h3{margin:0;font-size:13px;letter-spacing:.18em;font-weight:800}
+.em-live{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.14em;color:#fff;background:var(--red);padding:3px 9px;border-radius:5px}
+.em-live.off{background:var(--surface3);color:var(--mute)}
+.em-stage{position:relative;width:min(100%, calc((100vh - 190px) * 16 / 9));aspect-ratio:16/9;background:#050506;overflow:hidden;border-radius:6px;box-shadow:0 0 0 1px var(--hair2)}
+body.em-full .em-wrap{top:0;bottom:0;padding:0;z-index:90}
+body.em-full .em-bar{display:none}
+body.em-full .em-stage{width:min(100vw, 100vh * 16 / 9);border-radius:0;box-shadow:none}
+body.em-full header.top,body.em-full footer.ticker,body.em-full #toasts{display:none!important}
+.em-it{position:absolute;overflow:hidden;background:#0b0b0d;transition:left .7s cubic-bezier(.65,0,.35,1),top .7s cubic-bezier(.65,0,.35,1),width .7s cubic-bezier(.65,0,.35,1),height .7s cubic-bezier(.65,0,.35,1),opacity .5s}
+.em-it iframe{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none}
+.em-it.gone{opacity:0}
+.em-lab{position:absolute;left:2.2%;bottom:6%;display:flex;align-items:stretch;font-size:clamp(9px,1.25vw,17px);z-index:2;pointer-events:none;filter:drop-shadow(0 4px 12px rgba(0,0,0,.6));animation:labIn .6s .5s both}
+.em-lab b{background:linear-gradient(90deg,#d6b261,#f6e2a6);color:#141008;padding:.35em .8em;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.em-lab span{background:rgba(10,10,12,.86);color:#f3f0e9;padding:.35em .8em;font-weight:600}
+@keyframes labIn{from{transform:translateX(-14px);opacity:0}}
+.em-off{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--mute);background:radial-gradient(60% 60% at 50% 45%,rgba(214,178,97,.12),transparent 70%),#050506}
+.em-off img{height:38%;opacity:.9}
+.em-bug{position:absolute;right:2%;top:3%;height:9%;z-index:5;opacity:.85;pointer-events:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7))}
+/* transition logo */
+.em-tr{position:absolute;inset:0;z-index:20;pointer-events:none;display:grid;place-items:center;overflow:hidden}
+.em-tr .wipe{position:absolute;inset:-20%;background:conic-gradient(from 0deg,#0a0a0c,#1a150b,#0a0a0c,#1a150b,#0a0a0c);transform:scale(0) rotate(-40deg);border-radius:50%}
+.em-tr .em-e{position:relative;height:42%;opacity:0;transform:scale(.4) rotate(-20deg);filter:drop-shadow(0 0 30px rgba(246,226,166,.55))}
+.em-tr .em-t{position:absolute;top:73%;height:8%;opacity:0;transform:translateY(20px);letter-spacing:.3em}
+.em-tr .ray{position:absolute;width:140%;height:2px;background:linear-gradient(90deg,transparent,#f6e2a6,transparent);opacity:0}
+.em-tr.go .wipe{animation:trWipe var(--d) cubic-bezier(.7,0,.3,1) both}
+.em-tr.go .em-e{animation:trLogo var(--d) cubic-bezier(.5,0,.3,1) both}
+.em-tr.go .em-t{animation:trText var(--d) ease both}
+.em-tr.go .ray{animation:trRay var(--d) ease both}
+@keyframes trWipe{0%{transform:scale(0) rotate(-40deg);border-radius:50%}35%,65%{transform:scale(1.6) rotate(0);border-radius:0}100%{transform:scale(1.6) rotate(30deg);border-radius:0;opacity:0}}
+@keyframes trLogo{0%,15%{opacity:0;transform:scale(.4) rotate(-25deg)}40%,62%{opacity:1;transform:scale(1) rotate(0)}85%,100%{opacity:0;transform:scale(1.7) rotate(8deg)}}
+@keyframes trText{0%,30%{opacity:0;transform:translateY(20px)}45%,62%{opacity:1;transform:none}80%,100%{opacity:0}}
+@keyframes trRay{0%,25%{opacity:0;transform:rotate(-30deg) scaleX(.2)}45%{opacity:.9}70%,100%{opacity:0;transform:rotate(30deg) scaleX(1.2)}}
+.em-tr.fade .wipe{border-radius:0;background:#000;transform:none;opacity:0}
+.em-tr.fade.go .wipe{animation:trFade var(--d) ease both}
+@keyframes trFade{0%{opacity:0}45%,55%{opacity:1}100%{opacity:0}}
+/* ----- réalisation ----- */
+.rg{position:fixed;left:0;right:0;top:64px;bottom:38px;display:grid;grid-template-columns:250px 1fr;min-height:0;background:var(--bg)}
+.rg-src{border-right:1px solid var(--hair);display:flex;flex-direction:column;min-height:0;background:var(--side)}
+.rg-src .hd{padding:12px 12px 6px}
+.rg-src .list{padding:0 8px 14px}
+.src{display:grid;grid-template-columns:64px 1fr;gap:8px;align-items:center;padding:6px;border-radius:8px;cursor:grab;font-size:12.5px;user-select:none}
+.src:hover{background:var(--surface)} .src:active{cursor:grabbing}
+.src .th{width:64px;aspect-ratio:16/9;border-radius:4px;background:#111 center/cover;position:relative}
+.src .th i{position:absolute;right:3px;top:3px;width:6px;height:6px;border-radius:50%;background:var(--red-hi)}
+.src b{display:block;color:var(--ink);font-weight:700} .src small{color:var(--mute);font-size:11px}
+.src.scam b{color:#9cc6f2}
+.rg-main{display:flex;flex-direction:column;min-height:0;overflow:auto;padding:12px 16px 16px;gap:12px}
+.rg-mons{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;align-items:start}
+.mon h4{margin:0 0 6px;font-size:11px;letter-spacing:.16em;color:var(--mute);display:flex;gap:8px;align-items:center}
+.mon h4 .em-live{font-size:10px;padding:2px 7px}
+.cv{position:relative;width:100%;aspect-ratio:16/9;background:#060607;border:1px solid var(--hair2);border-radius:6px;overflow:hidden;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:10% 10%}
+.cv.pgm{border-color:var(--red-b);box-shadow:0 0 0 2px var(--red-a)}
+.cv.drop{outline:2px dashed var(--gold);outline-offset:-4px}
+.ci{position:absolute;background:#121216 center/cover;outline:1px solid rgba(255,255,255,.25);cursor:move;user-select:none}
+.ci.sel{outline:2px solid var(--gold-hi);z-index:60!important}
+.ci .nm{position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.75);color:#fff;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:3px;white-space:nowrap;max-width:90%;overflow:hidden;text-overflow:ellipsis}
+.ci .au{position:absolute;right:4px;top:4px;font-size:10px;background:var(--gold);color:#140f05;border-radius:3px;padding:0 4px;font-weight:800}
+.ci .hd{position:absolute;width:11px;height:11px;background:var(--gold-hi);border:1px solid #000;border-radius:2px;display:none}
+.ci.sel .hd{display:block}
+.ci .hd.nw{left:-6px;top:-6px;cursor:nwse-resize} .ci .hd.ne{right:-6px;top:-6px;cursor:nesw-resize} .ci .hd.sw{left:-6px;bottom:-6px;cursor:nesw-resize} .ci .hd.se{right:-6px;bottom:-6px;cursor:nwse-resize}
+.cv .guide{position:absolute;background:#e0514a;z-index:70;pointer-events:none}
+.cv .hint{position:absolute;inset:0;display:grid;place-items:center;color:var(--mute);font-size:13px;pointer-events:none;text-align:center;padding:20px}
+.rg-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.scn{display:flex;gap:6px;flex-wrap:wrap}
+.scn button{position:relative}
+.scn button.live::after{content:'';position:absolute;right:5px;top:5px;width:6px;height:6px;border-radius:50%;background:var(--red-hi)}
+.btn.take{height:46px;padding:0 22px;font-size:15px;font-weight:800;letter-spacing:.08em;background:var(--red);border-color:var(--red);color:#fff}
+.btn.take:hover{background:#e0294a}
+.insp{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:8px;align-items:end}
+.insp .inp{height:32px}
+.rl-t td,.rl-t th{padding:6px 6px;border-bottom:1px solid var(--hair);font-size:12.5px;text-align:center}
+.rl-t td:first-child,.rl-t th:first-child{text-align:left}
+.rl-t th{font-size:10.5px;color:var(--mute);font-weight:700;letter-spacing:.04em}
+.rl-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0}
+
 body:not(.is-crew) .crew-only{display:none!important}
 body:not(.can-map) .map-only{display:none!important}
 .air{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--gold-hi);background:var(--gold-a);border:1px solid var(--gold-b);border-radius:99px;padding:1px 7px;white-space:nowrap}
@@ -91,7 +177,7 @@ body:not(.can-map) .map-only{display:none!important}
 svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
 ::selection{background:var(--gold-b)}
 *{scrollbar-width:thin;scrollbar-color:var(--surface3) transparent}
-img.logo{object-fit:contain;mix-blend-mode:screen;display:block;-webkit-mask-image:radial-gradient(closest-side,#000 84%,transparent 100%);mask-image:radial-gradient(closest-side,#000 84%,transparent 100%)}
+img.logo{object-fit:contain;display:block;filter:drop-shadow(0 0 8px rgba(214,178,97,.28))}
 .emblem{display:block}
 
 /* ---------- header ---------- */
@@ -604,6 +690,8 @@ body.overlay #flashLayer{top:40px}
     <button data-page="sponsors" title="Sponsors (S)"><span data-ic="gift"></span><span class="lbl-txt">Sponsors</span></button>
     <button data-page="equipe" title="L'équipe (E)"><span data-ic="crown"></span><span class="lbl-txt">Équipe</span></button>
     <button data-page="carte" class="map-only" title="Carte de l'arène"><span data-ic="map"></span><span class="lbl-txt">Carte</span></button>
+    <button data-page="direct" class="nolock" title="L'émission en direct, réalisée par la régie"><span data-ic="live"></span><span class="lbl-txt">Direct</span><i class="onair-dot hide" id="navOnAir"></i></button>
+    <button data-page="regie" class="prog-only" title="Réalisation de l'émission (multi-caméras)"><span data-ic="grid"></span><span class="lbl-txt">Réalisation</span></button>
   </nav>
   <span class="delay hide" id="delayBadge" title="Les annonces du site sont retardées pour rester synchronisées avec les streams"><span data-ic="clock"></span><span id="delayTxt"></span></span>
   <div class="games hide" id="games"><b id="gDay">JOUR 1</b><span id="gClock">00:00:00</span></div>
@@ -618,7 +706,7 @@ body.overlay #flashLayer{top:40px}
   <div class="hactions">
     <button class="btn online-btn" id="onlineBtn" title="Qui est sur Capitol TV en ce moment"><span class="dot"></span><b id="onlineN">0</b><span class="lbl-txt">en ligne</span></button>
     <button class="btn icon" id="helpBtn" title="Raccourcis clavier (?)"><span data-ic="help"></span></button>
-    <button class="btn icon regie-only" id="setBtn" title="Réglages de la régie"><span data-ic="gear"></span></button>
+    <button class="btn icon set-only" id="setBtn" title="Réglages de la régie"><span data-ic="gear"></span></button>
     <a class="btn primary hide" id="guestLogin" href="/auth/login" title="Se connecter avec Discord pour signaler des actions">Se connecter</a>
     <button class="userchip" id="meBtn" title="Mon compte"><img class="av" id="meAv" alt=""><span id="meName">…</span></button>
   </div>
@@ -751,9 +839,9 @@ body.overlay #flashLayer{top:40px}
     <div id="pComms" class="panel hide">
       <div class="filters"><div class="frow">
         <div class="chips" id="cmChips">
-          <button class="chip on" data-cm="all">Général</button>
+          <button class="chip on" data-cm="all">Staff</button>
           <button class="chip" data-cm="cams">Caméras</button>
-          <button class="chip" data-cm="dm">Direct</button>
+          <button class="chip" data-cm="dm">Privé</button>
         </div>
         <span style="flex:1"></span>
         <select class="mini-sel" id="cmTo" title="Destinataire du message direct"></select>
@@ -816,6 +904,7 @@ body.overlay #flashLayer{top:40px}
           <button data-s="fund" class="admin-only"><span data-ic="plus"></span>Cagnotte</button>
           <button data-s="twitch" class="admin-only"><span data-ic="tv"></span>Twitch</button>
           <button data-s="cams" class="admin-only"><span data-ic="map"></span>Carte & caméras</button>
+          <button data-s="roles" class="roles-only"><span data-ic="crown"></span>Rôles & permissions</button>
           <button data-s="access"><span data-ic="lock"></span>Accès & bannis</button>
           <button data-s="display"><span data-ic="gear"></span>Affichage</button>
         </nav>
@@ -859,6 +948,9 @@ const allyDot = a => a ? `<span class="ally"><i style="background:hsl(${hue(a)} 
 
 /* Icônes */
 const ICONS = {
+  vol: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>',
+  live: '<circle cx="12" cy="12" r="3"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4M17.7 6.3a8 8 0 0 1 0 11.4M3.5 3.5a12 12 0 0 0 0 17M20.5 3.5a12 12 0 0 1 0 17"/>',
+  layers: '<path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/>',
   map: '<path d="M3.5 6.5 9 4l6 2.5 5.5-2.5v13.5L15 20l-6-2.5-5.5 2.5V6.5Z"/><path d="M9 4v13.5M15 6.5V20"/>',
   cam: '<path d="M3.5 7.5h11v9h-11z"/><path d="m14.5 10.5 6-3v9l-6-3"/>',
   pin: '<path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.3"/>',
@@ -990,6 +1082,9 @@ const isStaff = () => !!S.me && (S.me.perm === 'admin' || S.me.perm === 'mod') &
 const isAdmin = () => isStaff() && S.me.perm === 'admin' && !S.me.pub;
 const isRegie = isStaff;
 const isCrew = () => !!S.me && !!S.me.crew && !IS_OVERLAY && !isLocked();
+const hasPerm = k => !!S.me && !IS_OVERLAY && (S.me.perm === 'admin' || (S.me.perms || []).includes(k));
+const PERM_INFO = { admin: ['Régie complète', 'Tout gérer (tributs, différé, accès, rôles…)'], mod: ['Modération', 'Alertes et bannissements'], program: ['Réalisation', 'Composer et lancer l\'émission multi-caméras'], roles: ['Gérer les rôles', 'Créer les rôles et les attribuer'], chef: ['Responsable caméra', 'Assigner et « buzzer » les caméras'], cam: ['Caméra en jeu', 'Utiliser le mod en caméraman'], special: ['Annonces spéciales', 'Publier une annonce à toutes les caméras'] };
+const roleOf = m => (S.roles || []).find(r => r.id === m.rid) || null;
 const isSup = () => isCrew() && !!S.me.sup;
 const canMap = () => { if (!S.me || IS_OVERLAY || isLocked()) return false; if (isCrew()) return true; const mt = S.me.tribute && byId(S.me.tribute); if (mt && !isDead(mt)) return false; return !!(S.board.map && S.board.map.on && !S.board.map.staffOnly); };
 const nowS = () => Date.now() + (S.skew || 0);
@@ -1150,7 +1245,8 @@ const NET = {
       case 'alerts': onAlerts(m.all || {}); break;
       case 'live': onLive(m.live); break;
       case 'presence': onPresence(m.p); break;
-      case 'team': S.team = m.team || []; renderTeam(); renderOnline(); refreshSettings('access'); break;
+      case 'team': S.team = m.team || []; if (m.roles) S.roles = m.roles; renderTeam(); renderOnline(); refreshSettings('access'); refreshSettings('roles'); PROG.renderSources(); CAM.renderComms(); break;
+      case 'prog': case 'progEd': case 'onair': PROG.onMsg(m); break;
       case 'banned': S.banned = m.list || {}; refreshSettings('access'); break;
       case 'kicked': this.kicked = true; break;
       case 'auth': this.auth = true; break;
@@ -1217,12 +1313,16 @@ const delayNote = () => S.board.delay ? ` <b style="color:var(--gold-hi)">Diffé
 function paintBrand() {
   $('#brand').innerHTML = `${logo(42)}<div><div class="word">CAPITOL TV</div><small>${isStaff() ? (S.me.pub ? 'Mode présentateur · ' : PERM_LABEL[S.me.perm] + ' · ') + esc(S.me.name) : 'Couverture officielle des Jeux'}</small></div>`;
   $('#tickLbl').innerHTML = `${logo(22)}<span class="word">CAPITOL TV</span>`;
-  $('#connLogo').innerHTML = logo(84);
+  $('#connLogo').innerHTML = LOGO_OK ? `<img class="logo" src="${esc(CONFIG.logoFull)}" style="height:150px;width:auto" alt="Capitol TV">` : logo(84);
 }
 function applyRole() {
   document.body.classList.toggle('is-staff', isStaff());
   document.body.classList.toggle('is-admin', isAdmin());
   document.body.classList.toggle('is-crew', isCrew());
+  document.body.classList.toggle('can-prog', hasPerm('program') && !isLocked());
+  document.body.classList.toggle('can-roles', hasPerm('roles'));
+  if (!hasPerm('program') && S.page === 'regie') setPage('antenne');
+  if (isLocked() && S.page === 'direct') setPage('antenne');
   document.body.classList.toggle('can-map', canMap());
   if (!isCrew() && ['alerts', 'comms', 'terrain'].includes(S.tab)) S.tab = 'tributes';
   if (!canMap() && S.page === 'carte') setPage('antenne');
@@ -1236,8 +1336,8 @@ function applyRole() {
 }
 function onHello(m) {
   S.me = m.me; S.skew = (m.now || Date.now()) - Date.now();
-  S.team = m.team || []; S.banned = m.banned || {};
-  CAM.onHello(m);
+  S.team = m.team || []; S.banned = m.banned || {}; S.roles = m.roles || [];
+  CAM.onHello(m); PROG.onHello(m);
   S.alertsReady = false; S.seen = new Set(); S.alerts = {};
   if (m.alerts) onAlerts(m.alerts);
   onPresence(m.presence || { n: 0, counts: {}, team: {} });
@@ -1304,7 +1404,7 @@ function setPage(p) {
   if (p !== 'antenne') closeWall();
   renderPage();
 }
-function renderPage() { if (S.page === 'equipe') renderTeam(); else if (S.page === 'tributs') renderTributesPage(); else if (S.page === 'sponsors') renderSponsors(); else if (S.page === 'carte') CAM.renderMap(); CAM.mapSub(S.page === 'carte'); }
+function renderPage() { if (S.page === 'equipe') renderTeam(); else if (S.page === 'tributs') renderTributesPage(); else if (S.page === 'sponsors') renderSponsors(); else if (S.page === 'carte') CAM.renderMap(); else if (S.page === 'direct') PROG.renderDirect(); else if (S.page === 'regie') PROG.renderEditor(); CAM.mapSub(S.page === 'carte'); PROG.leave(); }
 function openTeam() { S.page = ''; setPage('equipe'); }
 function closeTeam() { S.page = ''; setPage('antenne'); }
 
@@ -1480,21 +1580,21 @@ function renderTeam() {
   const card = m => {
     const online = m.id in on, ch = on[m.id], t = ch ? byLogin(ch) : null;
     return `<div class="tm" data-id="${esc(m.id)}">
-      ${isAdmin() ? `<div class="ed"><button class="btn xs icon ghost" data-ta="edit" title="Modifier">${ic('gear')}</button></div>` : ''}
+      ${hasPerm('roles') ? `<div class="ed"><button class="btn xs icon ghost" data-ta="edit" title="Modifier">${ic('gear')}</button></div>` : ''}
       <div class="avw"><img class="av lg" src="${avSrc(m)}" alt="" onerror="this.style.visibility='hidden'"><span class="on ${online ? 'yes' : ''}" title="${online ? 'En ligne' : 'Hors ligne'}"></span></div>
       <div class="n">${esc(m.name || 'Membre')}</div>
-      <div class="r">${esc(m.role || PERM_LABEL[m.perm])}${m.cam ? ` · <span style="color:#7fb6ee">${m.cam === 'chef' ? 'Resp. caméra' : 'Caméra'}</span>` : ''}</div>
+      <div class="r">${esc(m.role || (roleOf(m) || {}).name || PERM_LABEL[m.perm])}${PROG.onAir(m.id) ? ' · <span style="color:var(--red-hi)">● à l\'antenne</span>' : ''}</div>
       ${m.bio ? `<div class="b">${esc(m.bio)}</div>` : ''}
       <div class="w">${online ? (t ? 'Regarde <b style="color:var(--ink2)">' + pad3(t.num) + ' · ' + esc(t.name) + '</b>' : 'En ligne') : 'Hors ligne'}</div>
       ${t && online ? `<button class="btn xs" data-ta="watch" data-ch="${esc(ch)}" style="margin-top:10px">${ic('play')}Même flux</button>` : ''}
     </div>`;
   };
-  const groups = [['admin', 'Régie'], ['mod', 'Modération'], ['member', 'Équipe']];
+  const groups = (S.roles || []).map(r => [r.id, r.name, r.color]);
   $('#pageView').innerHTML = `<div class="team-in">
     <div class="team-h"><div><h2>L'ÉQUIPE</h2><p>Les personnes derrière la couverture des Jeux sur Capitol TV.</p></div><span style="flex:1"></span>
-      ${isAdmin() ? `<button class="btn primary" data-ta="add">${ic('plus')}Ajouter un membre</button>` : ''}
+      ${hasPerm('roles') ? `<button class="btn primary" data-ta="add">${ic('plus')}Ajouter un membre</button><button class="btn" onclick="openSettings('roles')">${ic('crown')}Rôles & permissions</button>` : ''}
       <button class="btn" data-ta="close">${ic('x')}Retour à l'antenne</button></div>
-    ${S.team.length ? groups.map(([p, l]) => { const ms = S.team.filter(m => m.perm === p); return ms.length ? `<div class="team-sec">${l} · ${ms.length}</div><div class="team-grid">${ms.map(card).join('')}</div>` : ''; }).join('')
+    ${S.team.length ? groups.map(([p, l, c]) => { const ms = S.team.filter(m => (roleOf(m) ? m.rid : 'equipe') === p); return ms.length ? `<div class="team-sec"><span class="rl-dot" style="background:${esc(c)}"></span>${esc(l)} · ${ms.length}</div><div class="team-grid">${ms.map(card).join('')}</div>` : ''; }).join('')
       : '<div class="empty">L\'équipe n\'a pas encore été présentée.</div>'}
   </div>`;
 }
@@ -1507,24 +1607,22 @@ function openMember(m, preset) {
         : `<div class="row" style="align-items:center;margin-bottom:15px"><img class="av md" src="${avSrc(m)}" alt="" style="flex:0 0 34px"><div><b>${esc(m.name)}</b><div class="note">ID ${esc(m.id)}</div></div></div>`}
       <div class="row">
         <label class="f"><span class="lbl2">Rôle affiché</span><input class="inp" id="mRole" maxlength="40" value="${esc(m.role)}" placeholder="Présentateur, Réalisateur, Modo chat…" ${preset ? 'autofocus' : ''}></label>
-        <label class="f" style="flex:0 0 200px"><span class="lbl2">Accès</span><select class="inp" id="mPerm">
-          <option value="member" ${m.perm === 'member' ? 'selected' : ''}>Équipe (affichage seul)</option>
-          <option value="mod" ${m.perm === 'mod' ? 'selected' : ''}>Modération (alertes, bans)</option>
-          <option value="admin" ${m.perm === 'admin' ? 'selected' : ''}>Régie (tout)</option></select></label>
-        <label class="f" style="flex:0 0 190px"><span class="lbl2">Caméra en jeu <em>mod Minecraft</em></span><select class="inp" id="mCam">
-          <option value="" ${!m.cam ? 'selected' : ''}>—</option>
-          <option value="cam" ${m.cam === 'cam' ? 'selected' : ''}>Caméraman</option>
-          <option value="chef" ${m.cam === 'chef' ? 'selected' : ''}>Responsable caméra</option></select></label>
+        <label class="f" style="flex:0 0 220px"><span class="lbl2">Rôle staff <em>permissions</em></span><select class="inp" id="mRid">
+          ${(S.roles || []).map(r => `<option value="${esc(r.id)}" ${(m.rid || 'equipe') === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</select></label>
+        <label class="f" style="flex:0 0 190px"><span class="lbl2">Chaîne Twitch <em>caméra pour l'émission</em></span><input class="inp" id="mTw" value="${esc(m.twitch || '')}" placeholder="pseudo Twitch"></label>
       </div>
+      <p class="note" id="mRidInfo" style="margin-top:0"></p>
       <label class="f"><span class="lbl2">Petite présentation <em>facultatif</em></span><input class="inp" id="mBio" maxlength="200" value="${esc(m.bio)}"></label>
       <div class="note" id="mMsg" style="min-height:18px"></div>
     </div>
     <div class="modal-f">${!isNew ? `<button type="button" class="btn ghost" id="mDel" style="margin-right:auto;color:var(--red-hi)">${ic('trash')}Retirer de l'équipe</button>` : ''}
       <button type="button" class="btn ghost" data-close>Annuler</button><button type="submit" class="btn primary">Enregistrer</button></div></form>`);
   const save = list => NET.req({ t: 'team', team: list }).then(() => closeModal(), e => { $('#mMsg').innerHTML = '<span class="ko">' + esc(e.message) + '</span>'; });
+  const ridInfo = () => { const r = (S.roles || []).find(x => x.id === $('#mRid').value); $('#mRidInfo').innerHTML = r ? (r.perms.length ? 'Permissions : ' + r.perms.map(p => '<b style="color:var(--ink2)">' + esc(PERM_INFO[p][0]) + '</b>').join(', ') : 'Aucune permission particulière (comms du staff, carte).') : ''; };
+  box.querySelector('#mRid').onchange = ridInfo; ridInfo();
   box.querySelector('#fMem').addEventListener('submit', e => {
     e.preventDefault();
-    const x = { ...m, role: $('#mRole').value.trim(), perm: $('#mPerm').value, cam: $('#mCam').value, bio: $('#mBio').value.trim() };
+    const x = { ...m, role: $('#mRole').value.trim(), rid: $('#mRid').value, twitch: normTribute({ login: $('#mTw').value }).login, bio: $('#mBio').value.trim() };
     if (isNew && !preset) { x.id = $('#mId').value.replace(/\D/g, ''); x.name = $('#mName').value.trim() || 'Membre'; if (x.id.length < 15) { $('#mId').classList.add('bad'); return; } }
     if (isNew && S.team.find(t => t.id === x.id)) { $('#mMsg').innerHTML = '<span class="ko">Déjà dans l\'équipe.</span>'; return; }
     save(isNew ? [...S.team, x] : S.team.map(t => t.id === m.id ? x : t));
@@ -2207,8 +2305,10 @@ function openHelp() {
    ===================================================================== */
 const ADMIN_SECTIONS = ['tributes', 'games', 'twitch', 'lock', 'sponsors', 'fund', 'cams'];
 function openSettings(sec) {
-  if (!isStaff()) return;
+  if (!isStaff() && !hasPerm('roles')) return;
   if (sec) S.setSection = sec;
+  if (!isStaff()) S.setSection = 'roles';
+  if (S.setSection === 'roles' && !hasPerm('roles')) S.setSection = 'alerts';
   if (!isAdmin() && ADMIN_SECTIONS.includes(S.setSection)) S.setSection = 'alerts';
   show('#mSet'); renderSettings();
 }
@@ -2415,6 +2515,25 @@ function renderSettings() {
       </div>
       <p class="note" style="margin-bottom:0">Overlay OBS : définis une clé secrète avec <code>npx wrangler secret put OVERLAY_KEY</code>, puis ajoute une source <i>Navigateur</i> 1920×1080 avec <code>${esc(pub)}overlay/ta-clé</code>. Fond transparent : seuls le bandeau et les annonces apparaissent, avec le différé appliqué.</p>
     </div>`;
+  } else if (sec === 'roles') {
+    const R = S.rolesDraft || (S.rolesDraft = clone(S.roles || []));
+    const keys = Object.keys(PERM_INFO);
+    P.innerHTML = `
+    <div class="sect"><h4>Rôles du staff</h4>
+      <p class="note" style="margin-top:0">Chaque membre a un rôle, chaque rôle donne des permissions. Les changements s'appliquent tout de suite, sur le site comme dans le mod. Les rôles se gèrent aussi en jeu (onglet Rôles du mod).</p>
+      <div style="overflow:auto"><table class="rl-t" style="width:100%;border-collapse:collapse"><tr><th>Rôle</th>${keys.map(k => `<th title="${esc(PERM_INFO[k][1])}">${esc(PERM_INFO[k][0])}</th>`).join('')}<th>Membres</th><th></th></tr>
+      ${R.map((r, i) => `<tr data-ri="${i}"><td style="min-width:190px"><div class="row" style="gap:6px;align-items:center"><input type="color" data-rk="color" value="${esc(r.color)}" style="flex:none;width:30px;height:28px;border:0;background:none;padding:0"><input class="inp" data-rk="name" value="${esc(r.name)}" maxlength="30" ${r.locked ? 'readonly' : ''} style="height:30px"></div></td>
+        ${keys.map(k => `<td><input type="checkbox" data-rp="${k}" ${r.perms.includes(k) ? 'checked' : ''} ${r.locked || (k === 'admin' && !isAdmin()) || (k === 'roles' && !isAdmin()) ? 'disabled' : ''}></td>`).join('')}
+        <td>${S.team.filter(m => (m.rid || 'equipe') === r.id).length}</td>
+        <td>${r.locked || r.id === 'equipe' ? '' : `<button class="btn xs icon ghost" data-a="roleDel" title="Supprimer">${ic('trash')}</button>`}</td></tr>`).join('')}
+      </table></div>
+      <div class="row" style="margin-top:12px;gap:8px"><button class="btn" data-a="roleAdd" style="flex:none">${ic('plus')}Nouveau rôle</button><span style="flex:1"></span>
+        <button class="btn ghost" data-a="roleReset" style="flex:none">Annuler</button><button class="btn primary" data-a="roleSave" style="flex:none">Enregistrer les rôles</button></div>
+    </div>
+    <div class="sect"><h4>Attribution</h4>
+      ${S.team.length ? `<table class="rl-t" style="width:100%;border-collapse:collapse">${S.team.map(m => `<tr><td><img class="av" src="${avSrc(m)}" style="width:20px;height:20px;vertical-align:middle;margin-right:6px">${esc(m.name)}${m.twitch ? ` <span class="note">@${esc(m.twitch)}</span>` : ''}</td>
+        <td style="text-align:right"><select class="mini-sel" data-setrole="${esc(m.id)}">${(S.roles || []).map(r => `<option value="${esc(r.id)}" ${(m.rid || 'equipe') === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</select></td></tr>`).join('')}</table>` : '<div class="note">Personne dans l\'équipe pour l\'instant (page Équipe › Ajouter un membre).</div>'}
+    </div>`;
   } else if (sec === 'cams') {
     const mp = b.map, noMc = b.tributes.filter(t => !t.mc).length, cams = S.team.filter(m => m.cam);
     P.innerHTML = `
@@ -2461,9 +2580,19 @@ function settingsEvents() {
   });
   const P = $('#spane');
   P.addEventListener('input', e => {
+    const ri = e.target.closest('[data-ri]');
+    if (ri && S.rolesDraft && e.target.dataset.rk) { S.rolesDraft[+ri.dataset.ri][e.target.dataset.rk] = e.target.value; return; }
     if (e.target.id === 'tFilter') { const q = e.target.value.trim().toLowerCase(); $$('tr[data-s]', P).forEach(r => r.style.display = !q || r.dataset.s.includes(q) ? '' : 'none'); }
   });
   P.addEventListener('change', e => {
+    const sr = e.target.closest('[data-setrole]');
+    if (sr) { NET.req({ t: 'setRole', uid: sr.dataset.setrole, rid: sr.value }).then(() => toastInfo('Rôle attribué'), er => { toastInfo('Refusé', er.message, true); renderSettings(); }); return; }
+    const ri = e.target.closest('[data-ri]');
+    if (ri && S.rolesDraft) {
+      const r = S.rolesDraft[+ri.dataset.ri];
+      if (e.target.dataset.rp) { const k = e.target.dataset.rp; r.perms = e.target.checked ? [...new Set([...r.perms, k])] : r.perms.filter(x => x !== k); }
+      return;
+    }
     const tg = e.target, tr = tg.closest('tr[data-id]');
     if (tr && tg.dataset.k) {
       const t = byId(tr.dataset.id); if (!t) return;
@@ -2535,6 +2664,10 @@ function settingsEvents() {
       case 'lwDay': { const w = b.lock.windows[+a.dataset.i], d = +a.dataset.d; if (w) { w.days = w.days.includes(d) ? w.days.filter(x => x !== d) : [...w.days, d]; commit(); renderSettings(); } break; }
       case 'spAdd': b.sponsor.partners.push({ name: '', url: '', img: '' }); commit(); renderSettings(); break;
       case 'spDel': b.sponsor.partners.splice(+a.dataset.i, 1); commit(); renderSettings(); break;
+      case 'roleAdd': S.rolesDraft.push({ id: 'r' + rid(), name: 'Nouveau rôle', color: '#9a9284', perms: [] }); renderSettings(); break;
+      case 'roleDel': { const i = +a.closest('[data-ri]').dataset.ri; S.rolesDraft.splice(i, 1); renderSettings(); break; }
+      case 'roleReset': S.rolesDraft = null; renderSettings(); break;
+      case 'roleSave': NET.req({ t: 'roles', roles: S.rolesDraft }).then(() => { S.rolesDraft = null; toastInfo('Rôles enregistrés'); renderSettings(); }, er => toastInfo('Refusé', er.message, true)); break;
       case 'mapOn': b.map = { ...b.map, on: !b.map.on }; commit(); renderSettings(); break;
       case 'mapStaff': b.map = { ...b.map, staffOnly: !b.map.staffOnly }; commit(); renderSettings(); toastInfo(b.map.staffOnly ? 'Carte réservée à l\'équipe' : 'Carte publique (avec le différé)'); break;
       case 'srvKey': case 'srvRegen':
@@ -2693,7 +2826,7 @@ const CAM = {
     if (x.k === 'buzz' && direct) { toastInfo('BUZZ · ' + x.name, x.text, true); SND.alert(true); }
     else if (S.tab !== 'comms' || document.hidden) {
       this.unread++;
-      if (direct || x.sup) { toastInfo((direct ? 'Message direct · ' : x.ch === 'cams' ? 'Caméras · ' : 'Général · ') + x.name, x.text); SND.blip(); }
+      if (direct || x.sup) { toastInfo((direct ? 'Message privé · ' : x.ch === 'cams' ? 'Caméras · ' : 'Staff · ') + x.name, x.text); SND.blip(); }
     }
     this.badge();
   },
@@ -2710,7 +2843,7 @@ const CAM = {
     if (sel.dataset.h !== opts) { sel.innerHTML = opts; sel.dataset.h = opts; }
     sel.classList.toggle('hide', this.ch !== 'dm');
     $('#cmBuzz').classList.toggle('hide', !(isSup() && this.ch === 'dm'));
-    $('#cmText').placeholder = this.ch === 'dm' ? 'Message direct à ' + this.memberName(this.dmTo) + '…' : this.ch === 'cams' ? 'Message aux caméras…' : 'Message à toute l\'équipe…';
+    $('#cmText').placeholder = this.ch === 'dm' ? 'Message direct à ' + this.memberName(this.dmTo) + '…' : this.ch === 'cams' ? 'Message aux caméras…' : 'Message à tout le staff…';
     const q = $('#cmQuick'); if (!q.children.length) q.innerHTML = this.QUICK.map(t => `<button class="btn xs ghost" data-q="${esc(t)}">${esc(t)}</button>`).join('');
     const list = this.comms.filter(x => this.visible(x));
     const box = $('#cmList'), atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
@@ -2738,7 +2871,7 @@ const CAM = {
     const camRow = c => {
       const st = c.online ? c.st || 'actif' : 'off';
       return `<div class="cam" data-cam="${esc(c.id)}"><span class="d ${st}"></span>
-        <div style="min-width:0"><div class="n">${esc(c.name)}${c.cam === 'chef' ? ' <span style="color:var(--gold)">★</span>' : ''}<span class="st-lab ${st}">${c.online ? this.ST[c.st] || 'ACTIF' : 'HORS LIGNE'}</span></div>
+        <div style="min-width:0"><div class="n">${esc(c.name)}${c.cam === 'chef' ? ' <span style="color:var(--gold)">★</span>' : ''}${PROG.onAir(c.id) ? '<span class="st-lab rec">À L\'ANTENNE</span>' : ''}<span class="st-lab ${st}">${c.online ? this.ST[c.st] || 'ACTIF' : 'HORS LIGNE'}</span></div>
           <div class="s">${c.follow ? 'suit <b style="color:var(--ink2)">' + esc(this.trName(c.follow)) + '</b>' : 'ne suit personne'}${c.pos ? ` · ${Math.round(c.pos.x)} ${Math.round(c.pos.y)} ${Math.round(c.pos.z)}` : ''}${c.mc ? ' · ' + esc(c.mc) : ''}</div></div>
         <div class="a"><button class="btn xs icon ghost" data-tr="dm" title="Message direct">${ic('chat')}</button>${isSup() ? `<button class="btn xs ghost" data-tr="assign" title="Assigner à un tribut">Assigner</button><button class="btn xs ghost" data-tr="buzz" title="Faire sonner">Buzz</button>` : ''}</div></div>`;
     };
@@ -2985,6 +3118,335 @@ const CAM = {
 };
 setInterval(() => { CAM.tickAir(); if (S.page === 'carte' && $('#mapList')) CAM.renderSide(); }, 1000);
 
+
+/* =====================================================================
+   Émission en direct : réalisation multi-caméras + page « Direct »
+   ===================================================================== */
+const PROG = {
+  pub: null, ed: null, lastSeq: -1, sound: false, players: new Map(), saveT: null, dirty: 0,
+  sel: '', drag: null, wasFull: false,
+  PRESETS: {
+    full: ['Plein écran', [[0, 0, 100, 100]]],
+    side: ['Côte à côte', [[0, 25, 50, 50], [50, 25, 50, 50]]],
+    pip: ['Incrustation', [[0, 0, 100, 100], [66, 63, 30, 30]]],
+    grid4: ['Grille 2×2', [[0, 0, 50, 50], [50, 0, 50, 50], [0, 50, 50, 50], [50, 50, 50, 50]]],
+    one3: ['1 + 3', [[0, 12.5, 75, 75], [75, 0, 25, 25], [75, 37.5, 25, 25], [75, 75, 25, 25]]],
+    grid9: ['Grille 3×3', [0, 1, 2].flatMap(r => [0, 1, 2].map(c => [c * 33.333, r * 33.333, 33.333, 33.333]))]
+  },
+  onHello(m) {
+    this.pub = m.prog || null; if (m.progEd) this.ed = m.progEd;
+    this.markNav();
+    if (/direct|emission/i.test(H0) && !isLocked()) setTimeout(() => { setPage('direct'); this.fullscreen(true); }, 0);
+  },
+  onAir(id) { return !!(this.pub && this.pub.on && this.pub.items.some(i => i.k === 'cam' && i.ref === id)); },
+  markNav() { const d = $('#navOnAir'); if (d) d.classList.toggle('hide', !(this.pub && this.pub.on)); },
+  onMsg(m) {
+    if (m.t === 'prog') {
+      this.pub = m.p; this.markNav();
+      if (S.page === 'direct') this.applyDirect(!!m.cut);
+      if (S.page === 'regie') this.renderPgm();
+      renderTeam(); CAM.renderTerrain();
+    } else if (m.t === 'progEd') {
+      if (m.by === (S.me && S.me.id) && Date.now() - this.dirty < 1500) return;
+      this.ed = m.prog;
+      if (S.page === 'regie') this.renderEditor();
+    }
+  },
+  leave() {
+    if (S.page !== 'direct') { this.players.clear(); this.lastSeq = -1; if (document.body.classList.contains('em-full')) this.fullscreen(false); }
+    if (S.page !== 'regie') this.sel = '';
+  },
+  fullscreen(on) {
+    on = on === undefined ? !document.body.classList.contains('em-full') : on;
+    document.body.classList.toggle('em-full', on);
+    try { if (on && !IS_OVERLAY && document.documentElement.requestFullscreen && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {}); else if (!on && document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+  },
+  srcInfo(it) {
+    if (it.k === 'trib') { const t = byId(it.ref); return t ? { login: t.login, name: t.name, sub: t.district ? 'District ' + t.district : '', dead: isDead(t) } : null; }
+    const m = S.team.find(x => x.id === it.ref); return m && m.twitch ? { login: m.twitch, name: m.name, sub: 'Caméra', cam: true } : null;
+  },
+
+  /* ---------- page Direct ---------- */
+  renderDirect() {
+    if (!$('#emStage')) {
+      $('#pageView').innerHTML = `<div class="em-wrap"><div class="em-bar"><h3>CAPITOL TV</h3><span class="em-live" id="emLive">● EN DIRECT</span><span class="note" id="emScene"></span><span style="flex:1"></span>
+        <button class="btn sm" id="emSound">${ic('vol')}Activer le son</button><button class="btn sm" id="emFull" title="Plein écran (F)">${ic('full')}Plein écran</button></div>
+        <div class="em-stage" id="emStage"><div class="em-tr" id="emTr"><div class="wipe"></div><div class="ray"></div><div class="ray" style="rotate:70deg"></div>${LOGO_OK ? `<img class="em-e" src="${esc(CONFIG.logo)}" alt="">` : ''}<div class="em-t word" style="font-size:clamp(14px,3vw,44px);color:#f6e2a6">CAPITOL TV</div></div></div></div>`;
+      $('#emFull').onclick = () => this.fullscreen();
+      $('#emSound').onclick = () => { this.sound = !this.sound; $('#emSound').innerHTML = this.sound ? ic('vol') + 'Couper le son' : ic('vol') + 'Activer le son'; this.layout(); };
+      $('#emStage').ondblclick = () => this.fullscreen();
+      // l'antenne passe en muet pour ne pas entendre deux fois le son
+      slotObjs.forEach(o => { if (o && o.player && o.ready) try { o.player.setMuted(true); o.muted = true; } catch (e) {} });
+    }
+    this.applyDirect(false);
+  },
+  applyDirect(cut) {
+    const p = this.pub, tr = $('#emTr'); if (!$('#emStage')) return;
+    const type = p && p.trans ? p.trans.type : 'cut', ms = p && p.trans ? p.trans.ms : 1200;
+    $('#emLive').className = 'em-live' + (p && p.on ? '' : ' off'); $('#emLive').textContent = p && p.on ? '● EN DIRECT' : 'HORS ANTENNE';
+    $('#emScene').textContent = p ? (p.title ? p.title + ' · ' : '') + (p.scene || '') : '';
+    const shot = cut && this.lastSeq >= 0 && p && p.seq !== this.lastSeq;
+    this.lastSeq = p ? p.seq : -1;
+    if (shot && type !== 'cut' && tr) {
+      tr.className = 'em-tr ' + (type === 'fade' ? 'fade' : '');
+      tr.style.setProperty('--d', ms + 'ms'); void tr.offsetWidth; tr.classList.add('go');
+      clearTimeout(this.trT1); clearTimeout(this.trT2);
+      this.trT1 = setTimeout(() => this.layout(true), ms * .45);
+      this.trT2 = setTimeout(() => tr.classList.remove('go'), ms + 50);
+    } else this.layout(shot);
+  },
+  layout(newShot) {
+    const st = $('#emStage'); if (!st) return;
+    const p = this.pub;
+    let off = st.querySelector('.em-off');
+    if (!p || !p.on || !p.items.length) {
+      for (const el of this.players.values()) el.remove(); this.players.clear();
+      if (!off) { off = document.createElement('div'); off.className = 'em-off'; st.appendChild(off); }
+      off.innerHTML = `<div>${LOGO_OK ? `<img src="${esc(CONFIG.logoFull)}" alt="Capitol TV">` : logo(160)}<p style="margin-top:14px;letter-spacing:.18em;font-weight:700">${p && p.on ? 'PLAN VIDE' : 'L\'ÉMISSION REPREND BIENTÔT'}</p>${p && p.title ? `<p>${esc(p.title)}</p>` : ''}</div>`;
+      return;
+    }
+    if (off) off.remove();
+    const keep = new Set();
+    for (const it of p.items) {
+      const key = it.login; keep.add(key);
+      let el = this.players.get(key);
+      const muted = !(this.sound && it.audio);
+      if (!el) {
+        el = document.createElement('div'); el.className = 'em-it gone';
+        st.appendChild(el); this.players.set(key, el);
+        requestAnimationFrame(() => el.classList.remove('gone'));
+      }
+      if (el.dataset.muted !== String(muted)) { el.dataset.muted = String(muted); const f = el.querySelector('iframe'); const html = `<iframe src="${playerURL(it.login, muted)}" allow="autoplay; fullscreen" title="${esc(it.name)}"></iframe>`; if (f) f.outerHTML = html; else el.insertAdjacentHTML('afterbegin', html); }
+      Object.assign(el.style, { left: it.x + '%', top: it.y + '%', width: it.w + '%', height: it.h + '%', zIndex: 1 + (it.z || 0) });
+      const lab = it.label ? `<b>${esc(it.name)}</b>${it.sub ? `<span>${esc(it.sub)}</span>` : ''}` : '';
+      let le = el.querySelector('.em-lab');
+      if (lab && (!le || le.dataset.h !== lab || newShot)) { if (le) le.remove(); le = document.createElement('div'); le.className = 'em-lab'; le.dataset.h = lab; le.innerHTML = lab; el.appendChild(le); }
+      else if (!lab && le) le.remove();
+    }
+    for (const [k, el] of this.players) if (!keep.has(k)) { el.classList.add('gone'); this.players.delete(k); setTimeout(() => el.remove(), 550); }
+    if (!st.querySelector('.em-bug') && LOGO_OK) st.insertAdjacentHTML('beforeend', `<img class="em-bug" src="${esc(CONFIG.logo)}" alt="">`);
+  },
+
+  /* ---------- page Réalisation ---------- */
+  scene(id) { return this.ed && this.ed.scenes.find(x => x.id === (id || this.ed.preview)); },
+  save() {
+    this.dirty = Date.now(); clearTimeout(this.saveT);
+    this.saveT = setTimeout(() => NET.req({ t: 'progSave', prog: this.ed }).catch(e => toastInfo('Réalisation', e.message, true)), 300);
+    this.renderCanvas(); this.renderPgm();
+  },
+  sources() {
+    const cams = S.team.filter(m => m.twitch).map(m => ({ k: 'cam', ref: m.id, login: m.twitch, name: m.name, sub: (roleOf(m) || {}).name || 'Caméra', live: liveOf(m.twitch) }));
+    const tribs = sortedByNum().map(t => ({ k: 'trib', ref: t.id, login: t.login, name: t.name, sub: pad3(t.num) + (t.district ? ' · D' + t.district : '') + (isDead(t) ? ' · tombé' : ''), live: liveOf(t.login), dead: isDead(t) }));
+    tribs.sort((a, b) => a.dead - b.dead);
+    return { cams, tribs };
+  },
+  renderSources() {
+    const L = $('#rgSrc'); if (!L) return;
+    const q = ($('#rgQ') && $('#rgQ').value || '').toLowerCase();
+    const { cams, tribs } = this.sources();
+    const row = x => `<div class="src ${x.k === 'cam' ? 'scam' : ''}" draggable="true" data-k="${x.k}" data-ref="${esc(x.ref)}" title="Glisser sur l'aperçu · double-clic : plein écran${x.dead ? '' : ''}" style="${x.dead ? 'opacity:.5' : ''}">
+      <div class="th" style="background-image:url('${thumbURL(x.login)}')">${x.live ? '<i></i>' : ''}</div><div style="min-width:0"><b>${esc(x.name)}</b><small>${esc(x.sub)}</small></div></div>`;
+    const f = list => list.filter(x => !q || (x.name + ' ' + x.sub + ' ' + x.login).toLowerCase().includes(q));
+    L.innerHTML = `<div class="cp-sec">${ic('cam')} Caméras <b>${cams.length}</b></div>${f(cams).map(row).join('') || '<div class="note" style="padding:4px 8px">Ajoute la chaîne Twitch des caméras dans leur fiche (page Équipe).</div>'}
+      <div class="cp-sec">${ic('users')} Tributs <b>${tribs.length}</b></div>${f(tribs).map(row).join('')}`;
+  },
+  renderEditor() {
+    if (!hasPerm('program')) return;
+    if (!this.ed) { $('#pageView').innerHTML = '<div class="team-in"><div class="empty">Chargement…</div></div>'; return; }
+    if (!$('#cvPv')) {
+      $('#pageView').innerHTML = `<div class="rg"><div class="rg-src"><div class="hd"><div class="searchbox"><span data-ic="search"></span><input class="search" id="rgQ" placeholder="Rechercher une source…" autocomplete="off"></div></div><div class="list" id="rgSrc"></div></div>
+        <div class="rg-main">
+          <div class="rg-row"><input class="inp" id="rgTitle" maxlength="80" placeholder="Titre de l'émission (affiché sur la page Direct)" style="max-width:420px;height:34px"><span style="flex:1"></span>
+            <a class="btn sm" href="#" id="rgOpenDirect">${ic('live')}Voir la page Direct</a><button class="btn sm ghost" id="rgCopyObs" title="Lien plein écran pour OBS (nécessite le lien d'overlay)">${ic('copy')}Lien OBS</button></div>
+          <div class="rg-mons">
+            <div class="mon"><h4>APERÇU · <span id="pvName" style="color:var(--ink2)"></span><span style="flex:1"></span><span class="note">glisser-déposer · coins = taille (Maj : libre) · Suppr · flèches</span></h4><div class="cv" id="cvPv"></div></div>
+            <div class="mon"><h4>ANTENNE <span class="em-live" id="pgmTag">● EN DIRECT</span><span id="pgmName" style="color:var(--ink2)"></span></h4><div class="cv pgm" id="cvPg"></div>
+              <div class="rg-row" style="margin-top:10px">
+                <select class="mini-sel" id="rgTr"><option value="logo">Transition logo</option><option value="fade">Fondu</option><option value="cut">Cut</option></select>
+                <input class="inp" id="rgMs" type="number" min="300" max="4000" step="100" style="width:90px;height:30px" title="Durée (ms)">
+                <span style="flex:1"></span><button class="btn sm ghost" id="rgCut" title="Retirer l'émission de l'antenne">Hors antenne</button></div>
+              <button class="btn take" id="rgTake" style="width:100%;margin-top:8px">À L'ANTENNE ▶ <span style="opacity:.7;font-size:11px;margin-left:6px">(T)</span></button></div>
+          </div>
+          <div class="rg-row"><b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">PLANS</b><div class="scn" id="rgScenes"></div>
+            <button class="btn sm" id="rgNew">${ic('plus')}Nouveau</button><button class="btn sm ghost" id="rgDup">Dupliquer</button><button class="btn sm ghost" id="rgDel" style="color:var(--red-hi)">${ic('trash')}</button></div>
+          <div class="rg-row"><b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">DISPOSITIONS</b>${Object.entries(this.PRESETS).map(([k, [l]]) => `<button class="btn sm ghost" data-pre="${k}">${l}</button>`).join('')}</div>
+          <div id="rgInsp"></div>
+        </div></div>`;
+      paintIcons($('#pageView'));
+      this.bindEditor();
+    }
+    $('#rgTitle').value === '' && ($('#rgTitle').value = this.ed.title || '');
+    $('#rgTr').value = this.ed.trans.type; $('#rgMs').value = this.ed.trans.ms;
+    this.renderSources(); this.renderScenes(); this.renderCanvas(); this.renderPgm();
+  },
+  renderScenes() {
+    const box = $('#rgScenes'); if (!box) return;
+    box.innerHTML = this.ed.scenes.map((sc, i) => `<button class="btn sm ${sc.id === this.ed.preview ? 'on' : ''} ${sc.id === this.ed.live ? 'live' : ''}" data-sc="${esc(sc.id)}" title="${i < 9 ? 'Touche ' + (i + 1) + ' · ' : ''}double-clic : renommer">${esc(sc.name)} <span class="note">${sc.items.length}</span></button>`).join('');
+    $('#pvName').textContent = (this.scene() || {}).name || '';
+  },
+  drawItems(cv, sc, edit) {
+    if (!cv) return;
+    const items = sc ? sc.items.slice().sort((a, b) => (a.z || 0) - (b.z || 0)) : [];
+    cv.innerHTML = items.map(it => {
+      const s = this.srcInfo(it);
+      return `<div class="ci ${edit && it.id === this.sel ? 'sel' : ''}" data-it="${esc(it.id)}" style="left:${it.x}%;top:${it.y}%;width:${it.w}%;height:${it.h}%;z-index:${1 + (it.z || 0)};${s ? `background-image:url('${thumbURL(s.login)}')` : 'background:#3a1016'}">
+        <span class="nm">${s ? esc(s.name) : 'Source introuvable'}${it.label === false ? ' · sans nom' : ''}</span>${it.audio ? '<span class="au">SON</span>' : ''}
+        ${edit ? '<i class="hd nw"></i><i class="hd ne"></i><i class="hd sw"></i><i class="hd se"></i>' : ''}</div>`;
+    }).join('') + (!items.length ? `<div class="hint">${edit ? 'Glisse ici des caméras ou des tributs depuis la liste de gauche.' : 'Rien à l\'antenne'}</div>` : '');
+  },
+  renderCanvas() { this.drawItems($('#cvPv'), this.scene(), true); this.renderInsp(); this.renderScenes(); },
+  renderPgm() {
+    if (!$('#cvPg')) return;
+    const live = this.ed && this.ed.scenes.find(x => x.id === this.ed.live);
+    this.drawItems($('#cvPg'), live, false);
+    $('#pgmTag').className = 'em-live' + (live ? '' : ' off'); $('#pgmTag').textContent = live ? '● EN DIRECT' : 'HORS ANTENNE';
+    $('#pgmName').textContent = live ? live.name : '';
+  },
+  item() { const sc = this.scene(); return sc && sc.items.find(x => x.id === this.sel); },
+  renderInsp() {
+    const box = $('#rgInsp'); if (!box) return;
+    const it = this.item();
+    if (!it) { box.innerHTML = '<p class="note" style="margin:0">Sélectionne une source dans l\'aperçu pour régler sa position, sa taille, son nom à l\'écran et le son. Double-clic sur une source de gauche : plein écran dans l\'aperçu (Maj + double-clic : directement à l\'antenne).</p>'; return; }
+    const s = this.srcInfo(it) || { name: '?' };
+    box.innerHTML = `<div class="sect" style="margin:0"><h4 style="margin-top:0">${esc(s.name)}</h4><div class="insp">
+      ${['x', 'y', 'w', 'h'].map(k => `<label class="f" style="margin:0"><span class="lbl2">${{ x: 'Gauche %', y: 'Haut %', w: 'Largeur %', h: 'Hauteur %' }[k]}</span><input class="inp" type="number" step="0.5" data-ik="${k}" value="${it[k]}"></label>`).join('')}
+      <div class="row" style="gap:6px;flex:none"><button class="btn sm ghost" data-ia="front" style="flex:none">Devant</button><button class="btn sm ghost" data-ia="back" style="flex:none">Derrière</button><button class="btn sm ghost" data-ia="del" style="flex:none;color:var(--red-hi)">${ic('trash')}</button></div></div>
+      <div class="rg-row" style="margin-top:10px"><label class="switch"><input type="checkbox" data-ib="label" ${it.label !== false ? 'checked' : ''}> Nom à l'écran</label><label class="switch"><input type="checkbox" data-ib="audio" ${it.audio ? 'checked' : ''}> Son de cette source (une seule à la fois)</label>
+        <span style="flex:1"></span><button class="btn sm ghost" data-ia="fit">Plein écran</button><button class="btn sm ghost" data-ia="ratio">Format 16:9</button></div></div>`;
+  },
+  addItem(k, ref, x, y) {
+    const sc = this.scene(); if (!sc) return;
+    if (sc.items.length >= 16) { toastInfo('16 sources maximum par plan', '', true); return; }
+    const z = Math.max(0, ...sc.items.map(i => i.z || 0)) + 1;
+    const w = sc.items.length ? 40 : 100;
+    const it = { id: 'i' + rid(), k, ref, w, h: w, x: sc.items.length ? Math.max(0, Math.min(100 - w, x - w / 2)) : 0, y: sc.items.length ? Math.max(0, Math.min(100 - w, y - w / 2)) : 0, z, label: true, audio: !sc.items.some(i => i.audio) };
+    sc.items.push(it); this.sel = it.id; this.save();
+  },
+  applyPreset(k) {
+    const sc = this.scene(); if (!sc || !sc.items.length) { toastInfo('Ajoute d\'abord des sources à l\'aperçu'); return; }
+    const L = this.PRESETS[k][1];
+    const order = sc.items.slice().sort((a, b) => (a.id === this.sel ? -1 : b.id === this.sel ? 1 : (b.z || 0) - (a.z || 0)));
+    order.forEach((it, i) => {
+      if (i < L.length) { [it.x, it.y, it.w, it.h] = L[i]; it.z = k === 'pip' ? i : 0; }
+      else { it.x = 100; it.y = 100; it.w = 20; it.h = 20; it.z = 0; }
+    });
+    sc.items = sc.items.filter(it => !(it.x >= 100 && it.y >= 100));
+    this.save();
+  },
+  take(sceneId) {
+    const tr = { type: $('#rgTr') ? $('#rgTr').value : 'logo', ms: $('#rgMs') ? +$('#rgMs').value || 1400 : 1400 };
+    NET.req({ t: 'progTake', scene: sceneId === undefined ? this.ed.preview : sceneId, trans: tr }).then(() => SND.blip(), e => toastInfo('Antenne', e.message, true));
+  },
+  bindEditor() {
+    const pv = $('#cvPv');
+    $('#rgQ').oninput = () => this.renderSources();
+    $('#rgTitle').onchange = e => { this.ed.title = e.target.value; this.save(); };
+    $('#rgTr').onchange = e => { this.ed.trans.type = e.target.value; this.save(); };
+    $('#rgMs').onchange = e => { this.ed.trans.ms = Math.max(300, Math.min(4000, +e.target.value || 1400)); this.save(); };
+    $('#rgTake').onclick = () => this.take();
+    $('#rgCut').onclick = () => this.take('');
+    $('#rgOpenDirect').onclick = e => { e.preventDefault(); setPage('direct'); };
+    $('#rgCopyObs').onclick = e => { copy(location.origin + '/#direct', e.currentTarget); toastInfo('Lien copié', 'Pour OBS sans compte : ouvre d\'abord le lien d\'overlay (/overlay/CLÉ), puis ajoute #direct à l\'adresse.'); };
+    $('#rgNew').onclick = () => { const id = 's' + rid(); this.ed.scenes.push({ id, name: 'Plan ' + (this.ed.scenes.length + 1), items: [] }); this.ed.preview = id; this.sel = ''; this.save(); };
+    $('#rgDup').onclick = () => { const sc = this.scene(); if (!sc) return; const id = 's' + rid(); this.ed.scenes.push({ ...clone(sc), id, name: sc.name + ' (copie)', items: sc.items.map(i => ({ ...i, id: 'i' + rid() })) }); this.ed.preview = id; this.save(); };
+    $('#rgDel').onclick = e => {
+      const sc = this.scene(); if (!sc || this.ed.scenes.length < 2) return;
+      if (sc.id === this.ed.live) { toastInfo('Ce plan est à l\'antenne', 'Passe d\'abord un autre plan à l\'antenne.', true); return; }
+      const b = e.currentTarget; if (!b.dataset.sure) { b.dataset.sure = 1; b.textContent = 'Supprimer ?'; setTimeout(() => { b.dataset.sure = ''; b.innerHTML = ic('trash'); }, 2500); return; }
+      this.ed.scenes = this.ed.scenes.filter(x => x.id !== sc.id); this.ed.preview = this.ed.scenes[0].id; this.save();
+    };
+    $('#rgScenes').onclick = e => { const b = e.target.closest('[data-sc]'); if (b) { this.ed.preview = b.dataset.sc; this.sel = ''; this.save(); } };
+    $('#rgScenes').ondblclick = e => { const b = e.target.closest('[data-sc]'); if (!b) return; const sc = this.scene(b.dataset.sc); const n = prompt('Nom du plan', sc.name); if (n) { sc.name = n.slice(0, 40); this.save(); } };
+    $('#pageView').querySelector('.rg-main').addEventListener('click', e => { const b = e.target.closest('[data-pre]'); if (b) this.applyPreset(b.dataset.pre); });
+    // sources : glisser-déposer
+    $('#rgSrc').addEventListener('dragstart', e => { const r = e.target.closest('.src'); if (!r) return; e.dataTransfer.setData('text/plain', JSON.stringify({ k: r.dataset.k, ref: r.dataset.ref })); e.dataTransfer.effectAllowed = 'copy'; });
+    $('#rgSrc').addEventListener('dblclick', e => {
+      const r = e.target.closest('.src'); if (!r) return;
+      const sc = this.scene(); sc.items = [{ id: 'i' + rid(), k: r.dataset.k, ref: r.dataset.ref, x: 0, y: 0, w: 100, h: 100, z: 0, label: true, audio: true }];
+      this.sel = sc.items[0].id; this.save(); if (e.shiftKey) setTimeout(() => this.take(), 350);
+    });
+    pv.addEventListener('dragover', e => { e.preventDefault(); pv.classList.add('drop'); });
+    pv.addEventListener('dragleave', () => pv.classList.remove('drop'));
+    pv.addEventListener('drop', e => {
+      e.preventDefault(); pv.classList.remove('drop');
+      let d; try { d = JSON.parse(e.dataTransfer.getData('text/plain')); } catch (x) { return; }
+      const r = pv.getBoundingClientRect();
+      this.addItem(d.k, d.ref, (e.clientX - r.left) / r.width * 100, (e.clientY - r.top) / r.height * 100);
+    });
+    // déplacement / redimensionnement
+    pv.addEventListener('pointerdown', e => {
+      const el = e.target.closest('.ci');
+      if (!el) { this.sel = ''; this.renderCanvas(); return; }
+      const sc = this.scene(), it = sc.items.find(x => x.id === el.dataset.it); if (!it) return;
+      if (this.sel !== it.id) { this.sel = it.id; this.renderCanvas(); }
+      const hd = e.target.closest('.hd');
+      const r = pv.getBoundingClientRect();
+      this.drag = { id: it.id, mode: hd ? [...hd.classList].find(c => ['nw', 'ne', 'sw', 'se'].includes(c)) : 'move', sx: e.clientX, sy: e.clientY, r, o: { x: it.x, y: it.y, w: it.w, h: it.h } };
+      pv.setPointerCapture(e.pointerId); e.preventDefault();
+    });
+    pv.addEventListener('pointermove', e => {
+      const d = this.drag; if (!d) return;
+      const it = this.item(); if (!it) return;
+      const dx = (e.clientX - d.sx) / d.r.width * 100, dy = (e.clientY - d.sy) / d.r.height * 100, o = d.o;
+      const guides = [];
+      if (d.mode === 'move') {
+        let x = o.x + dx, y = o.y + dy;
+        const others = this.scene().items.filter(i => i.id !== it.id);
+        const xs = [0, 50, 100, ...others.flatMap(i => [i.x, i.x + i.w])], ys = [0, 50, 100, ...others.flatMap(i => [i.y, i.y + i.h])];
+        const snap = (v, size, list, axis) => { for (const c of [v, v + size / 2, v + size]) for (const t of list) if (Math.abs(c - t) < 1.4) { guides.push([axis, t]); return v + (t - c); } return v; };
+        if (!e.altKey) { x = snap(x, o.w, xs, 'x'); y = snap(y, o.h, ys, 'y'); }
+        it.x = Math.round(x * 10) / 10; it.y = Math.round(y * 10) / 10;
+      } else {
+        const ratio = o.h / o.w, free = e.shiftKey;
+        let w = o.w + (d.mode.includes('e') ? dx : -dx);
+        w = Math.max(5, Math.min(200, w));
+        let h = free ? Math.max(5, o.h + (d.mode.includes('s') ? dy : -dy)) : w * ratio;
+        it.w = Math.round(w * 10) / 10; it.h = Math.round(h * 10) / 10;
+        it.x = d.mode.includes('w') ? Math.round((o.x + o.w - it.w) * 10) / 10 : o.x;
+        it.y = d.mode.includes('n') ? Math.round((o.y + o.h - it.h) * 10) / 10 : o.y;
+      }
+      const el = pv.querySelector(`[data-it="${CSS.escape(it.id)}"]`);
+      if (el) Object.assign(el.style, { left: it.x + '%', top: it.y + '%', width: it.w + '%', height: it.h + '%' });
+      pv.querySelectorAll('.guide').forEach(g => g.remove());
+      for (const [a, v] of guides) pv.insertAdjacentHTML('beforeend', a === 'x' ? `<div class="guide" style="left:${v}%;top:0;bottom:0;width:1px"></div>` : `<div class="guide" style="top:${v}%;left:0;right:0;height:1px"></div>`);
+    });
+    const end = () => { if (!this.drag) return; this.drag = null; pv.querySelectorAll('.guide').forEach(g => g.remove()); this.save(); };
+    pv.addEventListener('pointerup', end); pv.addEventListener('pointercancel', end);
+    // inspecteur
+    $('#rgInsp').addEventListener('change', e => {
+      const it = this.item(); if (!it) return;
+      if (e.target.dataset.ik) it[e.target.dataset.ik] = +e.target.value || 0;
+      if (e.target.dataset.ib === 'label') it.label = e.target.checked;
+      if (e.target.dataset.ib === 'audio') { this.scene().items.forEach(i => i.audio = false); it.audio = e.target.checked; }
+      this.save();
+    });
+    $('#rgInsp').addEventListener('click', e => {
+      const b = e.target.closest('[data-ia]'); if (!b) return; this.itemAction(b.dataset.ia);
+    });
+  },
+  itemAction(a) {
+    const sc = this.scene(), it = this.item(); if (!it) return;
+    const zs = sc.items.map(i => i.z || 0);
+    if (a === 'front') it.z = Math.max(...zs) + 1;
+    if (a === 'back') { it.z = Math.min(...zs) - 1; sc.items.forEach(i => i.z = (i.z || 0) - it.z); }
+    if (a === 'del') { sc.items = sc.items.filter(i => i !== it); this.sel = ''; }
+    if (a === 'fit') { it.x = 0; it.y = 0; it.w = 100; it.h = 100; }
+    if (a === 'ratio') { it.h = it.w; }
+    this.save();
+  },
+  onKey(e) {
+    const it = this.item(), k = e.key;
+    if ((k === 'Delete' || k === 'Backspace') && it) { e.preventDefault(); this.itemAction('del'); return; }
+    if (k.startsWith('Arrow') && it) {
+      e.preventDefault(); const st = e.shiftKey ? 5 : .5;
+      if (k === 'ArrowLeft') it.x -= st; if (k === 'ArrowRight') it.x += st; if (k === 'ArrowUp') it.y -= st; if (k === 'ArrowDown') it.y += st;
+      it.x = Math.round(it.x * 10) / 10; it.y = Math.round(it.y * 10) / 10; this.save(); return;
+    }
+    if (k.toLowerCase() === 't' || k === 'Enter') { e.preventDefault(); this.take(); return; }
+    if (/^[1-9]$/.test(k)) { const sc = this.ed.scenes[+k - 1]; if (sc) { this.ed.preview = sc.id; this.sel = ''; this.save(); } }
+  }
+};
+
 /* =====================================================================
    Interactions
    ===================================================================== */
@@ -3117,6 +3579,8 @@ document.addEventListener('keydown', e => {
   }
   if (e.target.matches('input, textarea, select') || e.ctrlKey || e.metaKey || e.altKey) return;
   if ($$('.veil:not(.hide)').length) return;
+  if (S.page === 'regie') { PROG.onKey(e); return; }
+  if (S.page === 'direct') { if (e.key.toLowerCase() === 'f') PROG.fullscreen(); return; }
   const dm = e.code.match(/^(?:Digit|Numpad)(\d)$/);
   if (dm) { e.preventDefault(); numKey(dm[1]); return; }
   if ((e.key === 'Enter' || e.code === 'NumpadEnter') && S.numBuf) { e.preventDefault(); commitNum(); return; }

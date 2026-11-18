@@ -24,7 +24,7 @@ import java.util.Locale;
 /** Menu caméra Capitol TV (touche K par défaut). */
 public class CapitolScreen extends Screen {
     enum Tab {
-        ACTIONS("Actions"), FEED("Annonces"), MAP("Carte"), SIGNAL("Signaler"), COMMS("Comms"), TEAM("Équipe"), REQS("Demandes"), SETTINGS("Réglages");
+        ACTIONS("Actions"), FEED("Annonces"), MAP("Carte"), SIGNAL("Signaler"), COMMS("Comms"), TEAM("Équipe"), REQS("Demandes"), ROLES("Rôles"), SETTINGS("Réglages");
         final String label;
         Tab(String l) { label = l; }
     }
@@ -56,6 +56,10 @@ public class CapitolScreen extends Screen {
     static String tokenDraft = null;
     static String urlDraft = null;
     static String status = "";
+    static boolean rolesView;
+    static List<Data.Role> roleDraft = null;
+    static final String[] PERMS = {"admin", "mod", "program", "roles", "chef", "cam", "special"};
+    static final String[] PERM_L = {"Régie", "Modé", "Réal.", "Rôles", "Chef cam", "Caméra", "Annonces"};
     static long statusAt;
     // carte
     static double camX, camZ, scale = 1.0;
@@ -89,7 +93,9 @@ public class CapitolScreen extends Screen {
         detailField = msgField = reqField = tokenField = urlField = null;
 
         int ty = cy;
+        if (tab == Tab.ROLES && !Data.can("roles")) tab = Tab.ACTIONS;
         for (Tab t : Tab.values()) {
+            if (t == Tab.ROLES && !Data.can("roles")) continue;
             ButtonWidget b = btn(px + 4, ty, 72, (t == tab ? "▶ " : "") + t.label, () -> { tab = t; scroll = 0; selId = ""; clearAndInit(); });
             b.active = t != tab;
             ty += 18;
@@ -104,6 +110,7 @@ public class CapitolScreen extends Screen {
             case COMMS -> initComms();
             case TEAM -> initTeam();
             case REQS -> initReqs();
+            case ROLES -> initRoles();
             case SETTINGS -> initSettings();
         }
     }
@@ -428,17 +435,17 @@ public class CapitolScreen extends Screen {
         if (dmTo.isEmpty() && !targets.isEmpty()) dmTo = targets.get(0).id;
         String dmName = dmTo.isEmpty() ? "personne" : Data.memberName(dmTo);
         List<ButtonWidget> top = new ArrayList<>(Data.meSup
-                ? bar(cy, "Général", (Runnable) () -> setCh("all"), "Caméras", (Runnable) () -> setCh("cams"), "Direct", (Runnable) () -> setCh("dm"),
+                ? bar(cy, "Staff", (Runnable) () -> setCh("all"), "Caméras", (Runnable) () -> setCh("cams"), "Privé", (Runnable) () -> setCh("dm"),
                 "À : " + dmName + " ▶", (Runnable) () -> { dmTo = cycleMember(targets, dmTo); commsCh = "dm"; clearAndInit(); },
                 "BUZZ", (Runnable) () -> { if (dmTo.isEmpty()) return; CapitolClient.buzz(dmTo, msgDraft.isBlank() ? "La régie a besoin de toi !" : msgDraft.trim()); say("Buzz envoyé à " + Data.memberName(dmTo)); })
-                : bar(cy, "Général", (Runnable) () -> setCh("all"), "Caméras", (Runnable) () -> setCh("cams"), "Direct", (Runnable) () -> setCh("dm"),
+                : bar(cy, "Staff", (Runnable) () -> setCh("all"), "Caméras", (Runnable) () -> setCh("cams"), "Privé", (Runnable) () -> setCh("dm"),
                 "À : " + dmName + " ▶", (Runnable) () -> { dmTo = cycleMember(targets, dmTo); commsCh = "dm"; clearAndInit(); }));
         top.get(0).active = !commsCh.equals("all");
         top.get(1).active = !commsCh.equals("cams");
         top.get(2).active = !commsCh.equals("dm");
         listY = cy + 20;
         listBottom = barY - 44;
-        msgField = field(cx, barY - 40, cw - 74, msgDraft, commsCh.equals("dm") ? "Message à " + dmName : commsCh.equals("cams") ? "Message aux caméras" : "Message à toute l'équipe", 400, s -> msgDraft = s);
+        msgField = field(cx, barY - 40, cw - 74, msgDraft, commsCh.equals("dm") ? "Message à " + dmName : commsCh.equals("cams") ? "Message aux caméras" : "Message à tout le staff", 400, s -> msgDraft = s);
         btn(cx + cw - 70, barY - 40, 70, "Envoyer", this::sendMsg);
         Object[] q = new Object[QUICK.length * 2];
         for (int i = 0; i < QUICK.length; i++) { final String s = QUICK[i]; q[i * 2] = s; q[i * 2 + 1] = (Runnable) () -> { CapitolClient.message(commsCh, commsCh.equals("dm") ? dmTo : "", s); }; }
@@ -573,24 +580,112 @@ public class CapitolScreen extends Screen {
         }
     }
 
+
+    /* ---------------------------------------------------------------- rôles */
+    private Data.Role draftRole(String id) { if (roleDraft == null) return null; for (Data.Role r : roleDraft) if (r.id.equals(id)) return r; return null; }
+
+    private void initRoles() {
+        if (roleDraft == null) resetDraft();
+        boolean admin = "admin".equals(Data.mePerm) || Data.mePerms.contains("admin");
+        if (!rolesView) {
+            Data.Member m = null;
+            for (Data.Member x : Data.team) if (x.id.equals(selId)) m = x;
+            final Data.Member sel = m;
+            Data.Role cur = sel == null ? null : Data.role(sel.rid);
+            bar(barY,
+                    "Vue : membres", (Runnable) () -> { rolesView = true; selId = ""; scroll = 0; clearAndInit(); },
+                    sel == null ? "Choisis un membre" : "Rôle : " + (cur == null ? "?" : cur.name) + " ▶", (Runnable) () -> {
+                        if (sel == null || Data.roles.isEmpty()) return;
+                        int i = -1;
+                        for (int k = 0; k < Data.roles.size(); k++) if (Data.roles.get(k).id.equals(sel.rid)) i = k;
+                        Data.Role nx = Data.roles.get((i + 1) % Data.roles.size());
+                        if (!admin && (nx.perms.contains("admin") || nx.perms.contains("roles"))) nx = Data.roles.get((i + 2) % Data.roles.size());
+                        CapitolClient.setRole(sel.id, nx.id);
+                        say(sel.name + " → " + nx.name);
+                    });
+        } else {
+            Data.Role r = draftRole(selId);
+            if (r != null) {
+                Object[] pairs = new Object[PERMS.length * 2];
+                for (int i = 0; i < PERMS.length; i++) {
+                    final String k = PERMS[i];
+                    pairs[i * 2] = (r.perms.contains(k) ? "✔ " : "") + PERM_L[i];
+                    pairs[i * 2 + 1] = (Runnable) () -> {
+                        if (r.locked || ((k.equals("admin") || k.equals("roles")) && !admin)) { say("Réservé à la régie"); return; }
+                        if (r.perms.contains(k)) r.perms.remove(k); else r.perms.add(k);
+                        clearAndInit();
+                    };
+                }
+                bar(barY - 20, pairs);
+                listBottom = barY - 24;
+            }
+            bar(barY,
+                    "Vue : rôles", (Runnable) () -> { rolesView = false; selId = ""; scroll = 0; clearAndInit(); },
+                    "Annuler", (Runnable) () -> { resetDraft(); clearAndInit(); },
+                    "Enregistrer les rôles", (Runnable) () -> { CapitolClient.saveRoles(roleDraft); say("Rôles envoyés"); roleDraft = null; });
+        }
+    }
+
+    private static void resetDraft() {
+        roleDraft = new ArrayList<>();
+        for (Data.Role r : Data.roles) {
+            Data.Role c = new Data.Role();
+            c.id = r.id; c.name = r.name; c.color = r.color; c.locked = r.locked; c.perms = new ArrayList<>(r.perms);
+            roleDraft.add(c);
+        }
+    }
+
+    private static int color(String hex) {
+        try { return 0xFF000000 | Integer.parseInt(hex.replace("#", ""), 16); } catch (Exception e) { return Hud.INK; }
+    }
+
+    private void rowsRoles() {
+        if (!rolesView) {
+            for (Data.Member m : Data.team) {
+                Data.Role r = Data.role(m.rid);
+                rows.add(new Row(m.id, (m.online ? "● " : "○ ") + m.name, r == null ? Hud.INK : color(r.color), r == null ? "?" : r.name,
+                        (m.twitch.isEmpty() ? "" : "twitch.tv/" + m.twitch + " · ") + (r == null || r.perms.isEmpty() ? "aucune permission" : permsText(r.perms)), Hud.DIM));
+            }
+        } else if (roleDraft != null) {
+            for (Data.Role r : roleDraft) {
+                int n = 0;
+                for (Data.Member m : Data.team) if (m.rid.equals(r.id)) n++;
+                rows.add(new Row(r.id, r.name + (r.locked ? " (verrouillé)" : ""), color(r.color), n + " membre(s)", r.perms.isEmpty() ? "aucune permission" : permsText(r.perms), Hud.DIM));
+            }
+        }
+    }
+
+    private static String permsText(List<String> perms) {
+        List<String> out = new ArrayList<>();
+        for (int i = 0; i < PERMS.length; i++) if (perms.contains(PERMS[i])) out.add(PERM_L[i]);
+        return String.join(", ", out);
+    }
+
     /* ---------------------------------------------------------------- réglages */
     private void initSettings() {
         ClientConfig c = ClientConfig.get();
         int colW = Math.min(200, (cw - 10) / 2), x = cx, y = cy + 12;
+        int step = height < 300 ? 17 : 18;
         String[] states = {"actif", "rec", "pause", "inactif"};
         String[] notifs = {"all", "sup", "none"};
         String[] notifL = {"toutes", "supérieurs seulement", "aucune"};
         String[] hpos = {"tl", "tr", "bl"};
         String[] hposL = {"haut gauche", "haut droite", "bas gauche"};
-        btn(x, y, colW, "État : " + Hud.stateLabel(c.state), () -> { c.state = next(states, c.state); CapitolClient.setState(c.state); clearAndInit(); }); y += 18;
-        btn(x, y, colW, "Notifications : " + notifL[idx(notifs, c.notif)], () -> { c.notif = next(notifs, c.notif); ClientConfig.save(); CapitolClient.setState(c.state); clearAndInit(); }); y += 18;
-        btn(x, y, colW, "Sons : " + (c.sound ? "oui" : "non"), () -> { c.sound = !c.sound; ClientConfig.save(); clearAndInit(); }); y += 18;
-        btn(x, y, colW, "Bulles à l'écran : " + (c.toasts ? "oui" : "non"), () -> { c.toasts = !c.toasts; ClientConfig.save(); clearAndInit(); }); y += 18;
-        btn(x, y, colW, "Bulles des actions : " + (c.alertsToasts ? "oui" : "non"), () -> { c.alertsToasts = !c.alertsToasts; ClientConfig.save(); clearAndInit(); }); y += 18;
-        btn(x, y, colW, "Bulles des actes : " + (c.feedToasts ? "tous" : "mon tribut"), () -> { c.feedToasts = !c.feedToasts; ClientConfig.save(); clearAndInit(); }); y += 18;
-        btn(x, y, colW, "Encart HUD : " + (c.hud ? "oui" : "non"), () -> { c.hud = !c.hud; ClientConfig.save(); clearAndInit(); }); y += 18;
-        btn(x, y, colW, "Position HUD : " + hposL[idx(hpos, c.hudPos)], () -> { c.hudPos = next(hpos, c.hudPos); ClientConfig.save(); clearAndInit(); }); y += 18;
-        btn(x, y, colW, "Envoi de ce que je vois : " + (c.autoReport ? "oui" : "non"), () -> { c.autoReport = !c.autoReport; ClientConfig.save(); clearAndInit(); });
+        btn(x, y, colW, "État : " + Hud.stateLabel(c.state), () -> { c.state = next(states, c.state); CapitolClient.setState(c.state); clearAndInit(); }); y += step;
+        btn(x, y, colW, "Notifications : " + notifL[idx(notifs, c.notif)], () -> { c.notif = next(notifs, c.notif); ClientConfig.save(); CapitolClient.setState(c.state); clearAndInit(); }); y += step;
+        btn(x, y, colW, "Sons : " + (c.sound ? "oui" : "non"), () -> { c.sound = !c.sound; ClientConfig.save(); clearAndInit(); }); y += step;
+        btn(x, y, colW, "Bulles à l'écran : " + (c.toasts ? "oui" : "non"), () -> { c.toasts = !c.toasts; ClientConfig.save(); clearAndInit(); }); y += step;
+        btn(x, y, colW, "Bulles des actions : " + (c.alertsToasts ? "oui" : "non"), () -> { c.alertsToasts = !c.alertsToasts; ClientConfig.save(); clearAndInit(); }); y += step;
+        btn(x, y, colW, "Bulles des actes : " + (c.feedToasts ? "tous" : "mon tribut"), () -> { c.feedToasts = !c.feedToasts; ClientConfig.save(); clearAndInit(); }); y += step;
+        btn(x, y, colW, "Encart HUD : " + (c.hud ? "oui" : "non"), () -> { c.hud = !c.hud; ClientConfig.save(); clearAndInit(); }); y += step;
+        btn(x, y, colW, "Position HUD : " + hposL[idx(hpos, c.hudPos)], () -> { c.hudPos = next(hpos, c.hudPos); ClientConfig.save(); clearAndInit(); }); y += step;
+        btn(x, y, colW, "Envoi de ce que je vois : " + (c.autoReport ? "oui" : "non"), () -> { c.autoReport = !c.autoReport; ClientConfig.save(); clearAndInit(); }); y += step;
+        String[] tal = {"visible", "discret", "cache"};
+        String[] talL = {"visible", "discret (point)", "caché"};
+        btn(x, y, colW, "Mode caméra (F6) : " + (c.cameraMode ? "oui" : "non"), () -> { c.cameraMode = !c.cameraMode; ClientConfig.save(); clearAndInit(); }); y += step;
+        btn(x, y, colW, "Flux propre à l'antenne : " + (c.cleanOnAir ? "oui" : "non"), () -> { c.cleanOnAir = !c.cleanOnAir; ClientConfig.save(); clearAndInit(); }); y += step;
+        btn(x, y, colW, "Voyant d'antenne : " + talL[idx(tal, c.tally)], () -> { c.tally = next(tal, c.tally); ClientConfig.save(); clearAndInit(); }); y += step;
+        btn(x, y, colW, "Spectateur auto : " + (c.autoSpectator ? "oui" : "non"), () -> { c.autoSpectator = !c.autoSpectator; ClientConfig.save(); if (c.autoSpectator) { fr.capitoltv.client.CamMode.resetSpectatorTries(); fr.capitoltv.client.CamMode.ensureSpectator(MinecraftClient.getInstance(), true); } clearAndInit(); });
 
         int x2 = cx + colW + 10, w2 = cw - colW - 10, y2 = cy + 24;
         if (tokenDraft == null) tokenDraft = c.token;
@@ -628,7 +723,8 @@ public class CapitolScreen extends Screen {
         }
         y += 6;
         String help = "Touches : " + CapitolClient.menuKeyName() + " menu · " + CapitolClient.signalKey.getBoundKeyLocalizedText().getString()
-                + " signal rapide. Autres raccourcis (état, TP suivi, « Reçu ») à régler dans Options › Commandes › Capitol TV.";
+                + " signal rapide · " + CapitolClient.cameraKey.getBoundKeyLocalizedText().getString() + " mode caméra (barre 1 à 9) · "
+                + CapitolClient.peekKey.getBoundKeyLocalizedText().getString() + " maintenu : voir l'interface à l'antenne. Les sons sont coupés à l'antenne (ils partiraient dans ton stream).";
         for (OrderedText ot : textRenderer.wrapLines(Text.literal(help), w2)) { ctx.drawText(textRenderer, ot, x2, y, Hud.DIM, false); y += 10; }
         if (c.token.isEmpty()) {
             y += 4;
@@ -681,7 +777,7 @@ public class CapitolScreen extends Screen {
         ctx.fill(x1 - 1, y0, x1, y1, c);
     }
 
-    private boolean listTab() { return tab == Tab.ACTIONS || tab == Tab.FEED || tab == Tab.TEAM || tab == Tab.REQS; }
+    private boolean listTab() { return tab == Tab.ACTIONS || tab == Tab.FEED || tab == Tab.TEAM || tab == Tab.REQS || tab == Tab.ROLES; }
 
     /* ====================================================================== */
     @Override
@@ -705,6 +801,12 @@ public class CapitolScreen extends Screen {
         right = textRenderer.trimToWidth(right, pw / 2);
         ctx.drawText(textRenderer, right, px + pw - 6 - textRenderer.getWidth(right), py + 5, CapitolClient.online() ? Hud.stateColor(ClientConfig.get().state) : Hud.ORANGE, false);
 
+        if (Data.onAir()) {
+            String w = "● À L'ANTENNE : ce menu est visible dans ton stream";
+            int ww = textRenderer.getWidth(w) + 8, wx = px + (pw - ww) / 2;
+            ctx.fill(wx, py + 2, wx + ww, py + 15, 0xE0B0182C);
+            ctx.drawText(textRenderer, w, wx + 4, py + 5, 0xFFFFFFFF, false);
+        }
         if (!CapitolClient.online() && tab != Tab.SETTINGS && tab != Tab.MAP) {
             ctx.drawText(textRenderer, "Pas connecté au site Capitol TV — onglet Réglages pour coller ton jeton.", cx, listBottom - 10, Hud.ORANGE, false);
         }
@@ -749,6 +851,7 @@ public class CapitolScreen extends Screen {
             case FEED -> rowsFeed();
             case TEAM -> rowsTeam();
             case REQS -> rowsReqs();
+            case ROLES -> rowsRoles();
             default -> { }
         }
         int rh = 22, vis = Math.max(1, (listBottom - listY) / rh);
@@ -772,6 +875,7 @@ public class CapitolScreen extends Screen {
                 case ACTIONS -> pendingOnly ? "Aucune action en attente." : "Aucune action signalée.";
                 case FEED -> "Aucun acte annonciateur pour l'instant.";
                 case TEAM -> "Aucune caméra dans l'équipe (la régie attribue le rôle Caméra sur le site).";
+                case ROLES -> "Aucun membre.";
                 default -> "Aucune demande.";
             };
             ctx.drawText(textRenderer, e, cx + 6, listY + 6, Hud.DIM, false);

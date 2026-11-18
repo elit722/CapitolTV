@@ -35,6 +35,8 @@ public final class Hud {
 
     public static void sound(boolean strong) {
         if (!ClientConfig.get().sound) return;
+        // à l'antenne, les sons du jeu partent dans le stream : on se tait
+        if (Data.onAir() && ClientConfig.get().cleanOnAir && ClientConfig.get().cameraMode) return;
         MinecraftClient mc = MinecraftClient.getInstance();
         mc.getSoundManager().play(PositionedSoundInstance.master(strong ? SoundEvents.BLOCK_NOTE_BLOCK_BELL : SoundEvents.BLOCK_NOTE_BLOCK_PLING, strong ? 1.2f : 1.6f));
     }
@@ -63,6 +65,18 @@ public final class Hud {
         TextRenderer tr = mc.textRenderer;
         ClientConfig c = ClientConfig.get();
         int sw = ctx.getScaledWindowWidth(), sh = ctx.getScaledWindowHeight();
+        CamMode.renderTally(ctx, tr, sw);
+        if (CamMode.clean()) return;
+        if (CamMode.active() && CapitolClient.online()) CamMode.renderToolbar(ctx, tr, sw, sh);
+        if (!Data.meCam.isEmpty() && mc.player != null && CapitolClient.online()) {
+            boolean sp = mc.player.isSpectator();
+            String s = sp ? "SPECTATEUR" : "PAS EN SPECTATEUR";
+            int w = tr.getWidth(s) + 8, y = Data.onAir() && !"cache".equals(c.tally) ? 21 : 4;
+            if (!(sp && c.hudPos.equals("tr"))) {
+                ctx.fill(sw - w - 4, y, sw - 4, y + 12, sp ? 0xA0101014 : 0xE0503010);
+                ctx.drawText(tr, s, sw - w, y + 2, sp ? DIM : ORANGE, false);
+            }
+        }
 
         if (c.hud) {
             List<String> lines = new ArrayList<>();
@@ -94,12 +108,13 @@ public final class Hud {
                 long pend = Data.alerts.values().stream().filter(a -> !a.handled).count();
                 if (pend > 0) { lines.add(pend + " action(s) en attente"); colors.add(DIM); }
             }
+            if (CamMode.active() && Data.onAir()) { lines.add(0, "À L'ANTENNE · flux propre (Alt gauche : voir)"); colors.add(0, RED); }
             int w = tr.getWidth(head);
             for (String l : lines) w = Math.max(w, tr.getWidth(l));
             w = Math.min(w, 260);
             int h = 6 + 10 * (1 + lines.size());
             int x = c.hudPos.equals("tr") ? sw - w - 12 : 4;
-            int y = c.hudPos.equals("bl") ? sh - h - 40 : 4;
+            int y = c.hudPos.equals("bl") ? sh - h - (CamMode.active() ? 40 : 40) : (c.hudPos.equals("tr") ? 36 : 4);
             ctx.fill(x, y, x + w + 8, y + h, BG);
             ctx.fill(x, y, x + 2, y + h, headColor);
             ctx.drawText(tr, tr.trimToWidth(head, w), x + 5, y + 4, headColor, true);
@@ -107,7 +122,7 @@ public final class Hud {
         }
 
         long now = System.currentTimeMillis();
-        int ty = c.hudPos.equals("tr") ? 80 : 6;
+        int ty = c.hudPos.equals("tr") ? 90 : 38;
         synchronized (toasts) {
             toasts.removeIf(t -> t.until < now);
             for (Toast t : toasts) {

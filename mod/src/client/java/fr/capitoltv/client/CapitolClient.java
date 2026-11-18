@@ -16,7 +16,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.Map;
 
 public class CapitolClient implements ClientModInitializer {
-    public static KeyBinding menuKey, signalKey, stateKey, followKey, replyKey;
+    public static KeyBinding menuKey, signalKey, stateKey, followKey, replyKey, cameraKey, peekKey;
     private static CtvSocket sock;
     /** Tribut suivi par cette caméra (id Capitol TV). */
     public static String follow = "";
@@ -33,6 +33,11 @@ public class CapitolClient implements ClientModInitializer {
         stateKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.state", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, cat));
         followKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.follow", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, cat));
         replyKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.reply", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, cat));
+        cameraKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.camera", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F6, cat));
+        peekKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.peek", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, cat));
+        try { CamMode.install(); } catch (Throwable t) { fr.capitoltv.CapitolTV.LOG.warn("Capitol TV : HUD vanilla non géré ({})", t.toString()); }
+        ClientTickEvents.START_CLIENT_TICK.register(CamMode::startTick);
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((h, sender, client) -> { CamMode.resetSpectatorTries(); stDirty = true; });
 
         sock = new CtvSocket(m -> MinecraftClient.getInstance().execute(() -> onMessage(m)), st -> MinecraftClient.getInstance().execute(() -> {
             if (st != CtvSocket.State.ONLINE) Data.ready = false;
@@ -117,6 +122,28 @@ public class CapitolClient implements ClientModInitializer {
         o.addProperty("op", op);
         send(o);
     }
+    public static void setRole(String uid, String rid) {
+        JsonObject o = new JsonObject();
+        o.addProperty("t", "setRole");
+        o.addProperty("uid", uid);
+        o.addProperty("rid", rid);
+        send(o);
+    }
+    public static void saveRoles(java.util.List<Data.Role> roles) {
+        com.google.gson.JsonArray a = new com.google.gson.JsonArray();
+        for (Data.Role r : roles) {
+            JsonObject x = new JsonObject();
+            x.addProperty("id", r.id); x.addProperty("name", r.name); x.addProperty("color", r.color);
+            com.google.gson.JsonArray p = new com.google.gson.JsonArray();
+            for (String k : r.perms) p.add(k);
+            x.add("perms", p);
+            a.add(x);
+        }
+        JsonObject o = new JsonObject();
+        o.addProperty("t", "roles");
+        o.add("roles", a);
+        send(o);
+    }
     public static void alertUpd(String id, String key, boolean val) {
         JsonObject o = new JsonObject();
         o.addProperty("t", "alertUpd");
@@ -144,12 +171,19 @@ public class CapitolClient implements ClientModInitializer {
             Data.Trib t = Data.tribById(follow);
             Hud.toast("Téléportation", t == null ? "Aucun tribut suivi" : Teleport.toTribute(t), Hud.BLUE, 3);
         }
+        while (cameraKey.wasPressed()) {
+            ClientConfig c = ClientConfig.get();
+            c.cameraMode = !c.cameraMode;
+            ClientConfig.save();
+            Hud.toast("Mode caméra", c.cameraMode ? "activé : HUD du jeu masqué, barre caméra (touches 1 à 9)" : "désactivé", Hud.GOLD, 4);
+        }
         while (replyKey.wasPressed()) {
             if (lastMsgFrom.isEmpty()) Hud.toast("Comms", "Aucun message auquel répondre", Hud.DIM, 3);
             else { message("dm", lastMsgFrom, "Reçu ✔"); Hud.toast("Comms", "« Reçu » envoyé à " + Data.memberName(lastMsgFrom), Hud.GREEN, 3); }
         }
         Observer.tick(mc);
         tick++;
+        if (online() && Data.ready && tick % 100 == 50) CamMode.ensureSpectator(mc, false);
         if (online() && Data.ready && (stDirty || tick % 40 == 0)) sendState(mc);
     }
 
@@ -172,7 +206,7 @@ public class CapitolClient implements ClientModInitializer {
         send(o);
     }
 
-    private static void quickSignal() {
+    public static void quickSignal() {
         if (!online()) { Hud.toast("Capitol TV", "Pas connecté au site (" + stateText() + ")", Hud.RED, 4); return; }
         Data.Trib t = Data.tribById(follow);
         if (t == null) t = Observer.nearestTribute();
@@ -197,6 +231,8 @@ public class CapitolClient implements ClientModInitializer {
                 stDirty = true;
                 if (!follow.isEmpty() && Data.tribById(follow) == null) follow = "";
                 Hud.toast("Capitol TV", "Connecté en tant que " + Data.meName + (Data.serverMod ? " · mod serveur actif" : ""), Hud.GOLD, 4);
+                CamMode.resetSpectatorTries();
+                CamMode.ensureSpectator(MinecraftClient.getInstance(), true);
             }
             case "tribs" -> {
                 Data.setTribs(Data.arr(m, "tribs"));
@@ -205,6 +241,13 @@ public class CapitolClient implements ClientModInitializer {
             case "delay" -> Data.delay = (int) Data.l(m, "delay");
             case "srv" -> Data.serverMod = Data.b(m, "on");
             case "cams" -> Data.setCams(Data.arr(m, "cams"));
+            case "roles" -> Data.setRoles(Data.arr(m, "roles"));
+            case "onair" -> {
+                boolean was = Data.onAir();
+                Data.setOnAir(Data.arr(m, "ids"));
+                if (!was && Data.onAir()) Hud.toast("À L'ANTENNE", "La régie affiche ta caméra" + (ClientConfig.get().cameraMode && ClientConfig.get().cleanOnAir ? " : flux propre (Alt gauche pour voir l'interface)" : ""), Hud.RED, 6);
+                else if (was && !Data.onAir()) Hud.toast("Hors antenne", "Ta caméra n'est plus affichée", Hud.DIM, 4);
+            }
             case "team" -> Data.setTeam(Data.arr(m, "team"));
             case "pos" -> Data.mergePos(Data.obj(m, "p"));
             case "alert" -> {
@@ -253,7 +296,7 @@ public class CapitolClient implements ClientModInitializer {
                     Hud.toast("BUZZ · " + msg.name, msg.text, Hud.RED, 10);
                     Hud.sound(true);
                 } else if (wants(msg.sup, direct)) {
-                    String where = direct ? "Direct" : msg.ch.equals("cams") ? "Caméras" : "Général";
+                    String where = direct ? "Privé" : msg.ch.equals("cams") ? "Caméras" : "Staff";
                     Hud.toast(where + " · " + msg.name, msg.text, msg.sup ? Hud.GOLD : Hud.BLUE, 7);
                     Hud.sound(false);
                 }
