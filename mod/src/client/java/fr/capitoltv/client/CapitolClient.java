@@ -57,7 +57,9 @@ public class CapitolClient implements ClientModInitializer {
         stDirty = true;
     }
     public static void disconnect() { sock.disconnect(); Data.reset(); }
-    public static boolean online() { return sock != null && sock.online(); }
+    /** Mode démonstration (tests automatiques) : l'interface se comporte comme connectée. */
+    public static boolean demo;
+    public static boolean online() { return demo || (sock != null && sock.online()); }
     public static String stateText() {
         if (sock == null) return "hors ligne";
         return switch (sock.state()) {

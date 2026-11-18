@@ -215,6 +215,8 @@ public final class Data {
         ready = false; tribs.clear(); alerts.clear(); feed.clear(); msgs.clear(); reqs.clear(); cams.clear(); pos.clear(); team.clear();
     }
 
+    /** Données de démonstration (tests automatiques). */
+    public static void loadDemo(JsonObject m) { hello(m); }
     static void hello(JsonObject m) {
         reset();
         JsonObject me = obj(m, "me");

@@ -79,6 +79,9 @@ public class CapitolScreen extends Screen {
 
     public CapitolScreen() { super(Text.literal("Capitol TV")); }
 
+    /** Ouvre le menu sur un onglet donné (ACTIONS, FEED, MAP, SIGNAL, COMMS, TEAM, REQS, ROLES, SETTINGS). */
+    public static CapitolScreen on(String t) { tab = Tab.valueOf(t); scroll = 0; selId = ""; fitted = false; return new CapitolScreen(); }
+
     @Override public boolean shouldPause() { return false; }
 
     static void say(String s) { status = s; statusAt = System.currentTimeMillis(); }

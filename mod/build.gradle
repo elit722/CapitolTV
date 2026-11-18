@@ -18,6 +18,20 @@ loom {
     }
 }
 
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = "capitoltv-test"
+        enableGameTests = false
+        enableClientGameTests = true
+        eula = true
+    }
+}
+
+tasks.matching { it.name == "runClientGameTest" }.configureEach {
+    jvmArgs "-Dfabric.client.gametest.disableNetworkSynchronizer=true"
+}
+
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"

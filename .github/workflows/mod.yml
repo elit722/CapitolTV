@@ -47,6 +47,13 @@ jobs:
           grep -q "Done (" server.log
           ! grep -qiE "Mixin apply failed|capitoltv.*(error|exception)" server.log
           test -f run/config/capitoltv-server.json && cat run/config/capitoltv-server.json
+      - name: Test client (vrai Minecraft + captures d'écran)
+        continue-on-error: true
+        timeout-minutes: 25
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb > /dev/null
+          xvfb-run -a -s "-screen 0 1280x720x24" gradle runClientGameTest --no-daemon --stacktrace > client.log 2>&1 || (tail -80 client.log; exit 1)
+          grep -iE "capitol|error|exception" client.log | head -40
       - name: Publication du .jar dans dist/
         working-directory: .
         run: |
@@ -55,5 +62,8 @@ jobs:
           rm -f dist/capitoltv-cam-sources.jar
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dist/capitoltv-cam.jar
-          git diff --cached --quiet || (git commit -m "Mod caméra : .jar compilé [skip ci]" && git push)
+          rm -rf dist/screens && mkdir -p dist/screens
+          find mod -path "*screenshots*" -name "ctv-*.png" -exec cp {} dist/screens/ \; || true
+          ls dist/screens || true
+          git add -A dist
+          git diff --cached --quiet || (git commit -m "Mod caméra : .jar compilé [skip ci]" && git pull --rebase -q && git push)

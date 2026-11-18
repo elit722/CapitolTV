@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "capitoltv-test",
+  "version": "1.0.0",
+  "name": "Capitol TV — tests",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-client-gametest": ["fr.capitoltv.test.CapitolClientGameTest"]
+  },
+  "depends": { "capitoltv": "*" }
+}
