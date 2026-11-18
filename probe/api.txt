@@ -1,0 +1,430 @@
+=== dev.onvoid.webrtc.PeerConnectionFactory
+Compiled from "PeerConnectionFactory.java"
+public class dev.onvoid.webrtc.PeerConnectionFactory extends dev.onvoid.webrtc.internal.DisposableNativeObject {
+  public dev.onvoid.webrtc.PeerConnectionFactory();
+  public dev.onvoid.webrtc.PeerConnectionFactory(dev.onvoid.webrtc.media.audio.AudioProcessing);
+  public dev.onvoid.webrtc.PeerConnectionFactory(dev.onvoid.webrtc.media.audio.AudioDeviceModuleBase);
+  public dev.onvoid.webrtc.PeerConnectionFactory(dev.onvoid.webrtc.media.audio.AudioDeviceModuleBase, dev.onvoid.webrtc.media.audio.AudioProcessing);
+  public dev.onvoid.webrtc.PeerConnectionFactory(java.util.Map<java.lang.String, java.lang.String>);
+  public dev.onvoid.webrtc.PeerConnectionFactory(java.util.Map<java.lang.String, java.lang.String>, dev.onvoid.webrtc.media.audio.AudioProcessing);
+  public dev.onvoid.webrtc.PeerConnectionFactory(java.util.Map<java.lang.String, java.lang.String>, dev.onvoid.webrtc.media.audio.AudioDeviceModuleBase);
+  public dev.onvoid.webrtc.PeerConnectionFactory(java.util.Map<java.lang.String, java.lang.String>, dev.onvoid.webrtc.media.audio.AudioDeviceModuleBase, dev.onvoid.webrtc.media.audio.AudioProcessing);
+  public static dev.onvoid.webrtc.PeerConnectionFactory$Builder builder();
+  public dev.onvoid.webrtc.media.audio.AudioTrackSource createAudioSource(dev.onvoid.webrtc.media.audio.AudioOptions);
+  public dev.onvoid.webrtc.media.audio.AudioTrack createAudioTrack(java.lang.String, dev.onvoid.webrtc.media.audio.AudioTrackSource);
+  public native dev.onvoid.webrtc.media.video.VideoTrack createVideoTrack(java.lang.String, dev.onvoid.webrtc.media.video.VideoTrackSource);
+  public dev.onvoid.webrtc.RTCPeerConnection createPeerConnection(dev.onvoid.webrtc.RTCConfiguration, dev.onvoid.webrtc.PeerConnectionObserver);
+  public native dev.onvoid.webrtc.RTCRtpCapabilities getRtpReceiverCapabilities(dev.onvoid.webrtc.media.MediaType);
+  public native dev.onvoid.webrtc.RTCRtpCapabilities getRtpSenderCapabilities(dev.onvoid.webrtc.media.MediaType);
+  public void addVoiceActivityListener(dev.onvoid.webrtc.media.audio.VoiceActivityConfig, dev.onvoid.webrtc.media.audio.VoiceActivityListener);
+  public void removeVoiceActivityListener(dev.onvoid.webrtc.media.audio.VoiceActivityListener);
+  public void dispose();
+}
+=== dev.onvoid.webrtc.RTCPeerConnection
+Compiled from "RTCPeerConnection.java"
+public class dev.onvoid.webrtc.RTCPeerConnection extends dev.onvoid.webrtc.internal.NativeObject {
+  public native dev.onvoid.webrtc.RTCRtpSender[] getSenders();
+  public native dev.onvoid.webrtc.RTCRtpReceiver[] getReceivers();
+  public native dev.onvoid.webrtc.RTCRtpTransceiver[] getTransceivers();
+  public dev.onvoid.webrtc.RTCRtpSender addTrack(dev.onvoid.webrtc.media.MediaStreamTrack, java.util.List<java.lang.String>);
+  public native void removeTrack(dev.onvoid.webrtc.RTCRtpSender);
+  public dev.onvoid.webrtc.RTCRtpTransceiver addTransceiver(dev.onvoid.webrtc.media.MediaStreamTrack, dev.onvoid.webrtc.RTCRtpTransceiverInit);
+  public dev.onvoid.webrtc.RTCRtpTransceiver addTransceiver(dev.onvoid.webrtc.media.MediaType, dev.onvoid.webrtc.RTCRtpTransceiverInit);
+  public native dev.onvoid.webrtc.RTCDataChannel createDataChannel(java.lang.String, dev.onvoid.webrtc.RTCDataChannelInit);
+  public native void createOffer(dev.onvoid.webrtc.RTCOfferOptions, dev.onvoid.webrtc.CreateSessionDescriptionObserver);
+  public native void createAnswer(dev.onvoid.webrtc.RTCAnswerOptions, dev.onvoid.webrtc.CreateSessionDescriptionObserver);
+  public native dev.onvoid.webrtc.RTCSessionDescription getCurrentLocalDescription();
+  public native dev.onvoid.webrtc.RTCSessionDescription getLocalDescription();
+  public native dev.onvoid.webrtc.RTCSessionDescription getPendingLocalDescription();
+  public native dev.onvoid.webrtc.RTCSessionDescription getCurrentRemoteDescription();
+  public native dev.onvoid.webrtc.RTCSessionDescription getRemoteDescription();
+  public native dev.onvoid.webrtc.RTCSessionDescription getPendingRemoteDescription();
+  public native void setLocalDescription(dev.onvoid.webrtc.RTCSessionDescription, dev.onvoid.webrtc.SetSessionDescriptionObserver);
+  public void setLocalDescription(dev.onvoid.webrtc.SetSessionDescriptionObserver);
+  public native void setRemoteDescription(dev.onvoid.webrtc.RTCSessionDescription, dev.onvoid.webrtc.SetSessionDescriptionObserver);
+  public native void addIceCandidate(dev.onvoid.webrtc.RTCIceCandidate);
+  public void addIceCandidate(dev.onvoid.webrtc.RTCIceCandidate, dev.onvoid.webrtc.AddIceCandidateObserver);
+  public native boolean removeIceCandidate(dev.onvoid.webrtc.RTCIceCandidate);
+  public native void setBitrate(java.lang.Integer, java.lang.Integer, java.lang.Integer);
+  public native void setAudioPlayout(boolean);
+  public native void setAudioRecording(boolean);
+  public native dev.onvoid.webrtc.RTCSignalingState getSignalingState();
+  public native dev.onvoid.webrtc.RTCIceGatheringState getIceGatheringState();
+  public native dev.onvoid.webrtc.RTCIceConnectionState getIceConnectionState();
+  public native dev.onvoid.webrtc.RTCPeerConnectionState getConnectionState();
+  public native dev.onvoid.webrtc.RTCConfiguration getConfiguration();
+  public native void setConfiguration(dev.onvoid.webrtc.RTCConfiguration);
+  public native void getStats(dev.onvoid.webrtc.RTCStatsCollectorCallback);
+  public native void getStats(dev.onvoid.webrtc.RTCRtpReceiver, dev.onvoid.webrtc.RTCStatsCollectorCallback);
+  public native void getStats(dev.onvoid.webrtc.RTCRtpSender, dev.onvoid.webrtc.RTCStatsCollectorCallback);
+  public native void restartIce();
+  public native void close();
+  public boolean equals(java.lang.Object);
+  public int hashCode();
+}
+=== dev.onvoid.webrtc.PeerConnectionObserver
+Compiled from "PeerConnectionObserver.java"
+public interface dev.onvoid.webrtc.PeerConnectionObserver {
+  public default void onSignalingChange(dev.onvoid.webrtc.RTCSignalingState);
+  public default void onConnectionChange(dev.onvoid.webrtc.RTCPeerConnectionState);
+  public default void onIceConnectionChange(dev.onvoid.webrtc.RTCIceConnectionState);
+  public default void onStandardizedIceConnectionChange(dev.onvoid.webrtc.RTCIceConnectionState);
+  public default void onIceConnectionReceivingChange(boolean);
+  public default void onIceGatheringChange(dev.onvoid.webrtc.RTCIceGatheringState);
+  public abstract void onIceCandidate(dev.onvoid.webrtc.RTCIceCandidate);
+  public default void onIceCandidateError(dev.onvoid.webrtc.RTCPeerConnectionIceErrorEvent);
+  public default void onIceCandidateRemoved(dev.onvoid.webrtc.RTCIceCandidate);
+  public default void onAddStream(dev.onvoid.webrtc.media.MediaStream);
+  public default void onRemoveStream(dev.onvoid.webrtc.media.MediaStream);
+  public default void onDataChannel(dev.onvoid.webrtc.RTCDataChannel);
+  public default void onRenegotiationNeeded();
+  public default void onAddTrack(dev.onvoid.webrtc.RTCRtpReceiver, dev.onvoid.webrtc.media.MediaStream[]);
+  public default void onRemoveTrack(dev.onvoid.webrtc.RTCRtpReceiver);
+  public default void onTrack(dev.onvoid.webrtc.RTCRtpTransceiver);
+  public default void onSelectedCandidatePairChanged(java.lang.String, int, java.lang.String);
+  public default void onSelectedCandidatePairChanged(dev.onvoid.webrtc.RTCCandidatePairChangeEvent);
+}
+=== dev.onvoid.webrtc.RTCConfiguration
+Compiled from "RTCConfiguration.java"
+public class dev.onvoid.webrtc.RTCConfiguration {
+  public static final int kAudioJitterBufferMaxPackets;
+  public java.util.List<dev.onvoid.webrtc.RTCIceServer> iceServers;
+  public dev.onvoid.webrtc.RTCIceTransportPolicy iceTransportPolicy;
+  public dev.onvoid.webrtc.RTCBundlePolicy bundlePolicy;
+  public dev.onvoid.webrtc.RTCRtcpMuxPolicy rtcpMuxPolicy;
+  public java.util.List<dev.onvoid.webrtc.RTCCertificatePEM> certificates;
+  public dev.onvoid.webrtc.PortAllocatorConfig portAllocatorConfig;
+  public int audioJitterBufferMaxPackets;
+  public boolean audioJitterBufferFastAccelerate;
+  public int audioJitterBufferMinDelayMs;
+  public java.lang.Integer iceCandidatePoolSize;
+  public dev.onvoid.webrtc.RTCTcpCandidatePolicy tcpCandidatePolicy;
+  public dev.onvoid.webrtc.RTCCandidateNetworkPolicy candidateNetworkPolicy;
+  public dev.onvoid.webrtc.RTCContinualGatheringPolicy continualGatheringPolicy;
+  public java.lang.Boolean disableIpv6OnWifi;
+  public java.lang.Integer maxIpv6Networks;
+  public dev.onvoid.webrtc.RTCAdapterType networkPreference;
+  public dev.onvoid.webrtc.RTCVpnPreference vpnPreference;
+  public java.lang.Boolean surfaceIceCandidatesOnIceTransportTypeChanged;
+  public java.lang.Integer iceConnectionReceivingTimeout;
+  public java.lang.Integer iceBackupCandidatePairPingInterval;
+  public java.lang.Integer iceCheckIntervalStrongConnectivity;
+  public java.lang.Integer iceCheckIntervalWeakConnectivity;
+  public java.lang.Integer iceCheckMinInterval;
+  public java.lang.Integer iceUnwritableTimeout;
+  public java.lang.Integer iceUnwritableMinChecks;
+  public java.lang.Integer iceInactiveTimeout;
+  public java.lang.Integer stunCandidateKeepaliveInterval;
+  public java.lang.Integer stableWritableConnectionPingInterval;
+  public java.lang.Boolean prioritizeMostLikelyIceCandidatePairs;
+  public java.lang.Boolean enableIceRenomination;
+  public java.lang.Boolean presumeWritableWhenFullyRelayed;
+  public dev.onvoid.webrtc.RTCPortPrunePolicy turnPortPrunePolicy;
+  public java.lang.String turnLoggingId;
+  public java.lang.Boolean enableDscp;
+  public java.lang.Boolean enableCpuAdaptation;
+  public java.lang.Boolean suspendBelowMinBitrate;
+  public java.lang.Integer screencastMinBitrate;
+  public dev.onvoid.webrtc.RTCCryptoOptions cryptoOptions;
+  public java.lang.Boolean offerExtmapAllowMixed;
+  public java.lang.Boolean enableImplicitRollback;
+  public java.lang.Boolean alwaysNegotiateDataChannels;
+  public dev.onvoid.webrtc.RTCConfiguration();
+}
+=== dev.onvoid.webrtc.RTCIceServer
+Compiled from "RTCIceServer.java"
+public class dev.onvoid.webrtc.RTCIceServer {
+  public java.util.List<java.lang.String> urls;
+  public java.lang.String username;
+  public java.lang.String password;
+  public dev.onvoid.webrtc.TlsCertPolicy tlsCertPolicy;
+  public java.lang.String hostname;
+  public java.util.List<java.lang.String> tlsAlpnProtocols;
+  public java.util.List<java.lang.String> tlsEllipticCurves;
+  public dev.onvoid.webrtc.RTCIceServer();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+  public java.lang.String toString();
+}
+=== dev.onvoid.webrtc.RTCSessionDescription
+Compiled from "RTCSessionDescription.java"
+public class dev.onvoid.webrtc.RTCSessionDescription {
+  public final dev.onvoid.webrtc.RTCSdpType sdpType;
+  public final java.lang.String sdp;
+  public dev.onvoid.webrtc.RTCSessionDescription(dev.onvoid.webrtc.RTCSdpType, java.lang.String);
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+  public java.lang.String toString();
+}
+=== dev.onvoid.webrtc.RTCSdpType
+Compiled from "RTCSdpType.java"
+public final class dev.onvoid.webrtc.RTCSdpType extends java.lang.Enum<dev.onvoid.webrtc.RTCSdpType> {
+  public static final dev.onvoid.webrtc.RTCSdpType OFFER;
+  public static final dev.onvoid.webrtc.RTCSdpType PR_ANSWER;
+  public static final dev.onvoid.webrtc.RTCSdpType ANSWER;
+  public static final dev.onvoid.webrtc.RTCSdpType ROLLBACK;
+  public static dev.onvoid.webrtc.RTCSdpType[] values();
+  public static dev.onvoid.webrtc.RTCSdpType valueOf(java.lang.String);
+}
+=== dev.onvoid.webrtc.CreateSessionDescriptionObserver
+Compiled from "CreateSessionDescriptionObserver.java"
+public interface dev.onvoid.webrtc.CreateSessionDescriptionObserver {
+  public abstract void onSuccess(dev.onvoid.webrtc.RTCSessionDescription);
+  public abstract void onFailure(java.lang.String);
+}
+=== dev.onvoid.webrtc.SetSessionDescriptionObserver
+Compiled from "SetSessionDescriptionObserver.java"
+public interface dev.onvoid.webrtc.SetSessionDescriptionObserver {
+  public abstract void onSuccess();
+  public abstract void onFailure(java.lang.String);
+}
+=== dev.onvoid.webrtc.RTCOfferOptions
+Compiled from "RTCOfferOptions.java"
+public class dev.onvoid.webrtc.RTCOfferOptions extends dev.onvoid.webrtc.RTCOfferAnswerOptions {
+  public boolean iceRestart;
+  public boolean restrictToStableOrHaveLocalOffer;
+  public dev.onvoid.webrtc.RTCOfferOptions();
+}
+=== dev.onvoid.webrtc.RTCIceGatheringState
+Compiled from "RTCIceGatheringState.java"
+public final class dev.onvoid.webrtc.RTCIceGatheringState extends java.lang.Enum<dev.onvoid.webrtc.RTCIceGatheringState> {
+  public static final dev.onvoid.webrtc.RTCIceGatheringState NEW;
+  public static final dev.onvoid.webrtc.RTCIceGatheringState GATHERING;
+  public static final dev.onvoid.webrtc.RTCIceGatheringState COMPLETE;
+  public static dev.onvoid.webrtc.RTCIceGatheringState[] values();
+  public static dev.onvoid.webrtc.RTCIceGatheringState valueOf(java.lang.String);
+}
+=== dev.onvoid.webrtc.RTCPeerConnectionState
+Compiled from "RTCPeerConnectionState.java"
+public final class dev.onvoid.webrtc.RTCPeerConnectionState extends java.lang.Enum<dev.onvoid.webrtc.RTCPeerConnectionState> {
+  public static final dev.onvoid.webrtc.RTCPeerConnectionState NEW;
+  public static final dev.onvoid.webrtc.RTCPeerConnectionState CONNECTING;
+  public static final dev.onvoid.webrtc.RTCPeerConnectionState CONNECTED;
+  public static final dev.onvoid.webrtc.RTCPeerConnectionState DISCONNECTED;
+  public static final dev.onvoid.webrtc.RTCPeerConnectionState FAILED;
+  public static final dev.onvoid.webrtc.RTCPeerConnectionState CLOSED;
+  public static dev.onvoid.webrtc.RTCPeerConnectionState[] values();
+  public static dev.onvoid.webrtc.RTCPeerConnectionState valueOf(java.lang.String);
+}
+=== dev.onvoid.webrtc.RTCRtpTransceiverInit
+Compiled from "RTCRtpTransceiverInit.java"
+public class dev.onvoid.webrtc.RTCRtpTransceiverInit {
+  public dev.onvoid.webrtc.RTCRtpTransceiverDirection direction;
+  public java.util.List<java.lang.String> streamIds;
+  public java.util.List<dev.onvoid.webrtc.RTCRtpEncodingParameters> sendEncodings;
+  public dev.onvoid.webrtc.RTCRtpTransceiverInit();
+}
+=== dev.onvoid.webrtc.RTCRtpTransceiverDirection
+Compiled from "RTCRtpTransceiverDirection.java"
+public final class dev.onvoid.webrtc.RTCRtpTransceiverDirection extends java.lang.Enum<dev.onvoid.webrtc.RTCRtpTransceiverDirection> {
+  public static final dev.onvoid.webrtc.RTCRtpTransceiverDirection SEND_RECV;
+  public static final dev.onvoid.webrtc.RTCRtpTransceiverDirection SEND_ONLY;
+  public static final dev.onvoid.webrtc.RTCRtpTransceiverDirection RECV_ONLY;
+  public static final dev.onvoid.webrtc.RTCRtpTransceiverDirection INACTIVE;
+  public static final dev.onvoid.webrtc.RTCRtpTransceiverDirection STOPPED;
+  public static dev.onvoid.webrtc.RTCRtpTransceiverDirection[] values();
+  public static dev.onvoid.webrtc.RTCRtpTransceiverDirection valueOf(java.lang.String);
+}
+=== dev.onvoid.webrtc.RTCRtpTransceiver
+Compiled from "RTCRtpTransceiver.java"
+public class dev.onvoid.webrtc.RTCRtpTransceiver extends dev.onvoid.webrtc.internal.DisposableNativeObject {
+  public native java.lang.String getMid();
+  public native dev.onvoid.webrtc.RTCRtpSender getSender();
+  public native dev.onvoid.webrtc.RTCRtpReceiver getReceiver();
+  public native dev.onvoid.webrtc.RTCRtpTransceiverDirection getDirection();
+  public native void setDirection(dev.onvoid.webrtc.RTCRtpTransceiverDirection);
+  public native dev.onvoid.webrtc.RTCRtpTransceiverDirection getCurrentDirection();
+  public native void stop();
+  public native void stopImmediately();
+  public native boolean stopped();
+  public native java.util.List<dev.onvoid.webrtc.RTCRtpCodecCapability> getCodecPreferences();
+  public native void setCodecPreferences(java.util.List<dev.onvoid.webrtc.RTCRtpCodecCapability>);
+  public native void dispose();
+  public boolean equals(java.lang.Object);
+  public int hashCode();
+}
+=== dev.onvoid.webrtc.RTCRtpSender
+Compiled from "RTCRtpSender.java"
+public class dev.onvoid.webrtc.RTCRtpSender extends dev.onvoid.webrtc.internal.DisposableNativeObject {
+  public native java.lang.String getId();
+  public native void setObserver(dev.onvoid.webrtc.RTCRtpSenderObserver);
+  public native dev.onvoid.webrtc.media.MediaStreamTrack getTrack();
+  public native dev.onvoid.webrtc.RTCDtlsTransport getTransport();
+  public native void replaceTrack(dev.onvoid.webrtc.media.MediaStreamTrack);
+  public native void setParameters(dev.onvoid.webrtc.RTCRtpSendParameters);
+  public native dev.onvoid.webrtc.RTCRtpSendParameters getParameters();
+  public native void setStreams(java.util.List<java.lang.String>);
+  public native java.util.List<java.lang.String> getStreams();
+  public native dev.onvoid.webrtc.RTCDtmfSender getDtmfSender();
+  public void setTransform(dev.onvoid.webrtc.RTCEncodedFrameTransformer);
+  public native void generateKeyFrame();
+  public dev.onvoid.webrtc.RTCEncodedVideoFrameInjector createEncodedVideoFrameInjector(dev.onvoid.webrtc.RTCEncodedVideoFrameInjectorObserver);
+  public dev.onvoid.webrtc.RTCEncodedAudioFrameInjector createEncodedAudioFrameInjector(dev.onvoid.webrtc.RTCEncodedAudioFrameInjectorObserver);
+  public native void dispose();
+  public boolean equals(java.lang.Object);
+  public int hashCode();
+}
+=== dev.onvoid.webrtc.RTCRtpSendParameters
+Compiled from "RTCRtpSendParameters.java"
+public class dev.onvoid.webrtc.RTCRtpSendParameters extends dev.onvoid.webrtc.RTCRtpParameters {
+  public java.lang.String transactionId;
+  public java.util.List<dev.onvoid.webrtc.RTCRtpEncodingParameters> encodings;
+  public dev.onvoid.webrtc.RTCDegradationPreference degradationPreference;
+  public dev.onvoid.webrtc.RTCRtpSendParameters();
+  public java.lang.String toString();
+}
+=== dev.onvoid.webrtc.RTCRtpEncodingParameters
+Compiled from "RTCRtpEncodingParameters.java"
+public class dev.onvoid.webrtc.RTCRtpEncodingParameters {
+  public java.lang.String rid;
+  public java.lang.Long ssrc;
+  public java.lang.Boolean active;
+  public java.lang.Integer maxBitrate;
+  public java.lang.Integer minBitrate;
+  public java.lang.Double maxFramerate;
+  public java.lang.Double scaleResolutionDownBy;
+  public dev.onvoid.webrtc.RTCResolutionRestriction scaleResolutionDownTo;
+  public java.lang.String scalabilityMode;
+  public java.lang.Integer numTemporalLayers;
+  public java.lang.Double bitratePriority;
+  public dev.onvoid.webrtc.RTCPriorityType networkPriority;
+  public java.lang.Boolean adaptivePtime;
+  public dev.onvoid.webrtc.RTCRtpCodecCapability codec;
+  public dev.onvoid.webrtc.RTCRtpEncodingParameters();
+  public java.lang.String toString();
+}
+=== dev.onvoid.webrtc.media.video.CustomVideoSource
+Compiled from "CustomVideoSource.java"
+public class dev.onvoid.webrtc.media.video.CustomVideoSource extends dev.onvoid.webrtc.media.video.VideoTrackSource {
+  public dev.onvoid.webrtc.media.video.CustomVideoSource();
+  public dev.onvoid.webrtc.media.video.CustomVideoSource(dev.onvoid.webrtc.media.SyncClock);
+  public native void pushFrame(dev.onvoid.webrtc.media.video.VideoFrame);
+  public void pushFrame(dev.onvoid.webrtc.media.video.VideoFrame, long);
+  public native void dispose();
+}
+=== dev.onvoid.webrtc.media.video.VideoFrame
+Compiled from "VideoFrame.java"
+public class dev.onvoid.webrtc.media.video.VideoFrame implements dev.onvoid.webrtc.internal.RefCounted {
+  public final dev.onvoid.webrtc.media.video.VideoFrameBuffer buffer;
+  public final int rotation;
+  public final long timestampNs;
+  public dev.onvoid.webrtc.media.video.VideoFrame(dev.onvoid.webrtc.media.video.VideoFrameBuffer, long);
+  public dev.onvoid.webrtc.media.video.VideoFrame(dev.onvoid.webrtc.media.video.VideoFrameBuffer, int, long);
+  public dev.onvoid.webrtc.media.video.VideoFrame copy();
+  public void retain();
+  public void release();
+  public java.lang.String toString();
+}
+=== dev.onvoid.webrtc.media.video.NativeI420Buffer
+Compiled from "NativeI420Buffer.java"
+public class dev.onvoid.webrtc.media.video.NativeI420Buffer extends dev.onvoid.webrtc.internal.RefCountedObject implements dev.onvoid.webrtc.media.video.I420Buffer {
+  public java.nio.ByteBuffer getDataY();
+  public java.nio.ByteBuffer getDataU();
+  public java.nio.ByteBuffer getDataV();
+  public int getStrideY();
+  public int getStrideU();
+  public int getStrideV();
+  public int getWidth();
+  public int getHeight();
+  public dev.onvoid.webrtc.media.video.I420Buffer toI420();
+  public dev.onvoid.webrtc.media.video.VideoFrameBuffer cropAndScale(int, int, int, int, int, int);
+  public java.lang.String toString();
+  public dev.onvoid.webrtc.media.video.NativeI420Buffer copy();
+  public static dev.onvoid.webrtc.media.video.NativeI420Buffer allocate(int, int);
+}
+=== dev.onvoid.webrtc.media.video.I420Buffer
+Compiled from "I420Buffer.java"
+public interface dev.onvoid.webrtc.media.video.I420Buffer extends dev.onvoid.webrtc.media.video.VideoFrameBuffer {
+  public abstract java.nio.ByteBuffer getDataY();
+  public abstract java.nio.ByteBuffer getDataU();
+  public abstract java.nio.ByteBuffer getDataV();
+  public abstract int getStrideY();
+  public abstract int getStrideU();
+  public abstract int getStrideV();
+}
+=== dev.onvoid.webrtc.media.video.VideoBufferConverter
+Compiled from "VideoBufferConverter.java"
+public final class dev.onvoid.webrtc.media.video.VideoBufferConverter {
+  public dev.onvoid.webrtc.media.video.VideoBufferConverter();
+  public static void convertFromI420(dev.onvoid.webrtc.media.video.VideoFrameBuffer, byte[], dev.onvoid.webrtc.media.FourCC) throws java.lang.Exception;
+  public static void convertFromI420(dev.onvoid.webrtc.media.video.VideoFrameBuffer, java.nio.ByteBuffer, dev.onvoid.webrtc.media.FourCC) throws java.lang.Exception;
+  public static void convertToI420(byte[], dev.onvoid.webrtc.media.video.I420Buffer, dev.onvoid.webrtc.media.FourCC) throws java.lang.Exception;
+  public static void convertToI420(java.nio.ByteBuffer, dev.onvoid.webrtc.media.video.I420Buffer, dev.onvoid.webrtc.media.FourCC) throws java.lang.Exception;
+}
+=== dev.onvoid.webrtc.media.FourCC
+Compiled from "FourCC.java"
+public final class dev.onvoid.webrtc.media.FourCC extends java.lang.Enum<dev.onvoid.webrtc.media.FourCC> {
+  public static final dev.onvoid.webrtc.media.FourCC ARGB;
+  public static final dev.onvoid.webrtc.media.FourCC BGRA;
+  public static final dev.onvoid.webrtc.media.FourCC ABGR;
+  public static final dev.onvoid.webrtc.media.FourCC RGBA;
+  public static final dev.onvoid.webrtc.media.FourCC BG24;
+  public static final dev.onvoid.webrtc.media.FourCC I420;
+  public static final dev.onvoid.webrtc.media.FourCC NV21;
+  public static final dev.onvoid.webrtc.media.FourCC NV12;
+  public static final dev.onvoid.webrtc.media.FourCC YUY2;
+  public static final dev.onvoid.webrtc.media.FourCC UYVY;
+  public static dev.onvoid.webrtc.media.FourCC[] values();
+  public static dev.onvoid.webrtc.media.FourCC valueOf(java.lang.String);
+  public int value();
+}
+=== dev.onvoid.webrtc.media.video.VideoTrack
+Compiled from "VideoTrack.java"
+public class dev.onvoid.webrtc.media.video.VideoTrack extends dev.onvoid.webrtc.media.MediaStreamTrack {
+  public void dispose();
+  public void addSink(dev.onvoid.webrtc.media.video.VideoTrackSink);
+  public void addSink(dev.onvoid.webrtc.media.video.VideoTrackSink, dev.onvoid.webrtc.media.video.VideoFrameAccess);
+  public void removeSink(dev.onvoid.webrtc.media.video.VideoTrackSink);
+  public native dev.onvoid.webrtc.media.video.VideoContentHint getContentHint();
+  public void setContentHint(dev.onvoid.webrtc.media.video.VideoContentHint);
+}
+=== dev.onvoid.webrtc.media.audio.CustomAudioSource
+Compiled from "CustomAudioSource.java"
+public class dev.onvoid.webrtc.media.audio.CustomAudioSource extends dev.onvoid.webrtc.media.audio.AudioTrackSource {
+  public static final int MAX_SAMPLES_PER_PUSH;
+  public static final int MIN_SAMPLE_RATE;
+  public static final int MAX_SAMPLE_RATE;
+  public static final int MAX_CHANNELS;
+  public dev.onvoid.webrtc.media.audio.CustomAudioSource();
+  public dev.onvoid.webrtc.media.audio.CustomAudioSource(dev.onvoid.webrtc.media.SyncClock);
+  public void pushAudio(byte[], int, int, int, int);
+  public void pushAudio(byte[], int, int, int, int, long);
+  public native void dispose();
+}
+=== dev.onvoid.webrtc.media.audio.AudioOptions
+Compiled from "AudioOptions.java"
+public class dev.onvoid.webrtc.media.audio.AudioOptions {
+  public boolean echoCancellation;
+  public boolean autoGainControl;
+  public boolean noiseSuppression;
+  public boolean highpassFilter;
+  public dev.onvoid.webrtc.media.audio.AudioOptions();
+}
+=== dev.onvoid.webrtc.media.audio.AudioTrackSource
+Compiled from "AudioTrackSource.java"
+public class dev.onvoid.webrtc.media.audio.AudioTrackSource extends dev.onvoid.webrtc.media.MediaSource {
+  public native void dispose();
+}
+=== dev.onvoid.webrtc.media.audio.AudioDeviceModule
+Compiled from "AudioDeviceModule.java"
+public class dev.onvoid.webrtc.media.audio.AudioDeviceModule extends dev.onvoid.webrtc.media.audio.AudioDeviceModuleBase {
+  public dev.onvoid.webrtc.media.audio.AudioDeviceModule();
+  public dev.onvoid.webrtc.media.audio.AudioDeviceModule(dev.onvoid.webrtc.media.audio.AudioLayer);
+}
+=== dev.onvoid.webrtc.media.audio.AudioLayer
+Compiled from "AudioLayer.java"
+public final class dev.onvoid.webrtc.media.audio.AudioLayer extends java.lang.Enum<dev.onvoid.webrtc.media.audio.AudioLayer> {
+  public static final dev.onvoid.webrtc.media.audio.AudioLayer kPlatformDefaultAudio;
+  public static final dev.onvoid.webrtc.media.audio.AudioLayer kWindowsCoreAudio;
+  public static final dev.onvoid.webrtc.media.audio.AudioLayer kWindowsCoreAudio2;
+  public static final dev.onvoid.webrtc.media.audio.AudioLayer kLinuxAlsaAudio;
+  public static final dev.onvoid.webrtc.media.audio.AudioLayer kLinuxPulseAudio;
+  public static final dev.onvoid.webrtc.media.audio.AudioLayer kAndroidJavaAudio;
+  public static final dev.onvoid.webrtc.media.audio.AudioLayer kAndroidOpenSLESAudio;
+  public static final dev.onvoid.webrtc.media.audio.AudioLayer kAndroidJavaInputAndOpenSLESOutputAudio;
+  public static final dev.onvoid.webrtc.media.audio.AudioLayer kAndroidAAudioAudio;
+  public static final dev.onvoid.webrtc.media.audio.AudioLayer kAndroidJavaInputAndAAudioOutputAudio;
+  public static final dev.onvoid.webrtc.media.audio.AudioLayer kDummyAudio;
+  public static dev.onvoid.webrtc.media.audio.AudioLayer[] values();
+  public static dev.onvoid.webrtc.media.audio.AudioLayer valueOf(java.lang.String);
+}

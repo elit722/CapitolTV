@@ -1,0 +1,20 @@
+Archive:  webrtc-java-1.0.1-linux-x86_64.jar
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+        0  2026-11-14 10:36   META-INF/
+      193  2026-11-14 10:36   META-INF/MANIFEST.MF
+        0  2026-11-14 10:36   META-INF/licenses/
+        0  2026-11-14 10:36   META-INF/licenses/libva/
+        0  2026-11-14 10:36   META-INF/licenses/nvdec/
+        0  2026-11-14 10:36   META-INF/licenses/nvenc/
+        0  2026-11-14 10:36   META-INF/licenses/webrtc/
+    15360  2026-11-14 10:36   META-INF/LICENSE
+     2255  2026-11-14 10:36   META-INF/NOTICE
+     1130  2026-11-14 10:36   META-INF/licenses/libva/COPYING
+     4188  2026-11-14 10:36   META-INF/licenses/nvdec/LICENSE
+     1188  2026-11-14 10:36   META-INF/licenses/nvenc/LICENSE
+   130043  2026-11-14 10:36   META-INF/licenses/webrtc/LICENSE.md
+     1388  2026-11-14 10:36   META-INF/licenses/webrtc/PATENTS
+ 26471560  2026-11-14 10:36   libwebrtc-java-linux-x86_64.so
+---------                     -------
+ 26627305                     15 files
