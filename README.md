@@ -145,6 +145,33 @@ Dans *Régie › Accès & bannis*, le bouton **Ouvrir à tout le monde** permet 
 
 **Rendre la connexion obligatoire** renvoie immédiatement les invités vers la page de connexion.
 
+## Caméras en jeu : le mod Minecraft (Fabric 1.21.8)
+
+Le dossier `mod/` contient un mod Fabric pour les caméramans. Le fichier `.jar` est compilé automatiquement par GitHub Actions (onglet **Actions › Mod caméra › Artifacts**). Il faut aussi **Fabric API** dans le dossier `mods`.
+
+**Mise en place**
+1. Page **Équipe** › modifier un membre › **Caméra en jeu** : *Caméraman* ou *Responsable caméra*.
+2. Chaque caméra ouvre **Mon compte › Mod caméra › Générer mon jeton** sur le site, puis en jeu : touche **K** › **Réglages** › **Coller** › **Connecter**.
+3. Dans la fiche de chaque tribut, renseigner son **pseudo Minecraft** (sinon il n'apparaît ni sur la carte ni dans les actes).
+
+**Dans le jeu (touche K)**
+- **Actions** : les signalements en cours, avec « écran dans 1:42 » (le différé) ; boutons TP, *Je filme*, *Je prends*, *Traité*.
+- **Annonces** : les actes annonciateurs — attaques, dégâts **avec la cause**, morts, effets, totems, points de vie bas, rencontres entre tributs, annonces spéciales — filtrables par type et par tribut.
+- **Carte** : positions des tributs et des caméras, zoom à la molette, déplacement à la souris, **TP en un clic** (vers un tribut, une caméra ou un point).
+- **Signaler** : tribut, type, urgent, « je filme cette action », détails. La touche **J** envoie un signal rapide sur le tribut suivi (ou le plus proche).
+- **Comms** : Général, Caméras, messages directs, réponses rapides ; « Buzz » pour la régie et le responsable caméra.
+- **Équipe** : état de chaque caméra (actif, en rec, pause, inactif), qui suit qui, TP vers une caméra ; le responsable peut assigner une caméra à un tribut.
+- **Demandes** : demandes de couverture (prendre, terminer, libérer).
+- **Réglages** : état, notifications (toutes / supérieurs seulement / aucune), sons, bulles, encart HUD et sa position, envoi de ce que je vois.
+
+**Téléportation** : en mode spectateur, le TP vers un joueur passe par la téléportation vanilla (aucun droit requis). Sinon, le mod serveur s'en charge (spectateurs, opérateurs ou pseudos listés dans `camNames`). Sans mod serveur, le mod envoie `/tp` (droits requis).
+
+**Mod côté serveur (recommandé)** : le même `.jar` installé sur le serveur de l'event envoie la position de *tous* les tributs, les dégâts avec leur cause, les morts et les effets. Régie › **Carte & caméras** › *Afficher et copier* la clé, à coller dans `config/capitoltv-server.json` (`"key"`), puis `/capitol reload`. Commandes : `/capitol status`, `/capitol annonce <texte>` (annonce spéciale envoyée à toutes les caméras). Sans mod serveur, chaque caméra remonte ce qu'elle voit autour d'elle (les doublons sont fusionnés).
+
+**Sur le site** (équipe uniquement) : onglets **Comms** et **Terrain** (caméras, demandes, actes, annonce spéciale) dans le panneau latéral, et compte à rebours d'antenne sur chaque alerte.
+
+**Carte du site** : onglet **Carte** pour l'équipe (positions en direct). Régie › **Carte & caméras** › *Ouvrir la carte* puis *Rendre publique* / *Verrouiller : équipe seulement*. Le public voit les positions **avec le différé**, et les comptes des tributs encore en vie n'y ont jamais accès.
+
 ## L'équipe et les accès
 
 - **Page Équipe** : onglet « Équipe » en haut, ou touche `E`. Elle est visible par tout le monde.

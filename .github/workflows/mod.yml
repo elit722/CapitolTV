@@ -28,3 +28,19 @@ jobs:
           name: capitoltv-cam
           path: mod/build/libs/capitoltv-cam-*.jar
           if-no-files-found: error
+      - name: Démarrage d'un serveur 1.21.8 avec le mod
+        run: |
+          mkdir -p run && echo "eula=true" > run/eula.txt
+          printf 'online-mode=false\nserver-port=25599\n' > run/server.properties
+          (gradle runServer --no-daemon > server.log 2>&1 &)
+          for i in $(seq 1 120); do
+            if grep -q "Done (" server.log 2>/dev/null; then break; fi
+            if grep -qE "Mixin apply failed|Exception in thread \"main\"|Could not execute entrypoint" server.log 2>/dev/null; then break; fi
+            sleep 3
+          done
+          pkill -f "net.fabricmc" || true
+          echo "----- extrait du journal -----"
+          grep -iE "capitol|mixin|Done \(|ERROR|Exception" server.log | head -60
+          grep -q "Done (" server.log
+          ! grep -qiE "Mixin apply failed|capitoltv.*(error|exception)" server.log
+          test -f run/config/capitoltv-server.json && cat run/config/capitoltv-server.json
