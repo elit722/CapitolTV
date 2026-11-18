@@ -169,14 +169,14 @@ public final class CamMoves {
 
     public static void render(DrawContext ctx, TextRenderer tr, int sw, int sh) {
         if (picker) {
-            int w = 220, h = 16 + NAMES.length * 12 + 8, x = (sw - w) / 2, y = sh / 2 - h / 2;
+            int w = Math.min(sw - 20, 300), h = 16 + NAMES.length * 12 + 8, x = (sw - w) / 2, y = 26;
             fr.capitoltv.client.gui.Ui.box(ctx, x, y, x + w, y + h, 0xE00E0E12, 0xFFD4AF37);
             ctx.drawText(tr, "MOUVEMENTS DE CAMÉRA", x + 8, y + 5, 0xFFD4AF37, false);
             for (int i = 0; i < NAMES.length; i++) {
                 int yy = y + 18 + i * 12;
                 ctx.drawText(tr, String.valueOf(i + 1), x + 8, yy, 0xFFF2D27A, false);
                 ctx.drawText(tr, NAMES[i], x + 20, yy, 0xFFEDE6D6, false);
-                ctx.drawText(tr, tr.trimToWidth(HINTS[i], w - 110), x + 104, yy, 0xFF8A8478, false);
+                ctx.drawText(tr, tr.trimToWidth(HINTS[i], w - 124), x + 118, yy, 0xFF8A8478, false);
             }
         } else if (move >= 0) {
             String s = "◉ " + NAMES[move] + " · V pour arrêter";

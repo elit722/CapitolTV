@@ -152,7 +152,7 @@ public final class Streamer {
         starting = true; status = "connexion…";
         WORK.execute(() -> {
             try {
-                if (factory == null) factory = new PeerConnectionFactory();
+                if (factory == null) factory = newFactory();
                 RTCConfiguration cfg = new RTCConfiguration();
                 RTCIceServer ice = new RTCIceServer();
                 ice.urls = List.of("stun:stun.cloudflare.com:3478");
@@ -176,7 +176,7 @@ public final class Streamer {
                 enc.maxFramerate = (double) ClientConfig.get().streamFps;
                 vi.sendEncodings = List.of(enc);
                 pc.addTransceiver(videoTrack, vi);
-                if (ClientConfig.get().streamMic) {
+                if (ClientConfig.get().streamMic && !noAudio) {
                     AudioOptions ao = new AudioOptions();
                     ao.echoCancellation = true; ao.noiseSuppression = true; ao.autoGainControl = true; ao.highpassFilter = true;
                     audioSource = factory.createAudioSource(ao);
@@ -213,6 +213,17 @@ public final class Streamer {
         });
     }
 
+    private static boolean noAudio;
+    /** usine WebRTC ; sans carte son (ou sans micro), on passe en audio factice */
+    private static PeerConnectionFactory newFactory() {
+        try { return new PeerConnectionFactory(); }
+        catch (Throwable e) {
+            noAudio = true;
+            CapitolTV.LOG.info("Capitol TV : pas de périphérique audio, diffusion sans micro");
+            return new PeerConnectionFactory(new dev.onvoid.webrtc.media.audio.AudioDeviceModule(dev.onvoid.webrtc.media.audio.AudioLayer.kDummyAudio));
+        }
+    }
+
     private interface SetCall { void run(SetSessionDescriptionObserver cb); }
     private static void waitSet(SetCall call) throws Exception {
         CompletableFuture<Void> f = new CompletableFuture<>();
@@ -242,7 +253,7 @@ public final class Streamer {
     /** Vérification au démarrage du test : bibliothèque native et offre WebRTC. */
     public static String selfTest() {
         try {
-            PeerConnectionFactory f = new PeerConnectionFactory();
+            PeerConnectionFactory f = newFactory();
             RTCConfiguration cfg = new RTCConfiguration();
             RTCPeerConnection p = f.createPeerConnection(cfg, c -> { });
             CustomVideoSource s = new CustomVideoSource();

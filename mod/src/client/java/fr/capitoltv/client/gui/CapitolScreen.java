@@ -123,7 +123,7 @@ public class CapitolScreen extends Screen {
         }
         if (!dock) btn(px + 6, py + ph - 22, SIDE - 12, "Fermer", this::close);
         // bouton « menu sur le côté » : on voit le jeu, on bouge (ZQSD) et on tourne (clic droit maintenu)
-        CtvButton dk = btn(px + pw - 22, py + 6, 16, dock ? "▣" : "◧", () -> { ClientConfig.get().dockMenu = !ClientConfig.get().dockMenu; ClientConfig.save(); clearAndInit(); });
+        CtvButton dk = btn(px + pw - 22, py + 6, 16, dock ? "«" : "»", () -> { ClientConfig.get().dockMenu = !ClientConfig.get().dockMenu; ClientConfig.save(); clearAndInit(); });
         dk.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(Text.literal(dock ? "Agrandir le menu" : "Menu sur le côté : tu vois le jeu et tu peux bouger")));
 
         switch (tab) {
@@ -702,7 +702,7 @@ public class CapitolScreen extends Screen {
         int colW = Math.min(200, (cw - 10) / 2), x = cx, y = cy;
         int step = height < 300 ? 17 : 18;
         int cwid = (colW - 6) / 3;
-        String[] pages = {"Général", "Bulles", "Caméra", "Diffusion"};
+        String[] pages = {"Base", "Bulles", "Caméra", "Vidéo"};
         cwid = (colW - 9) / 4;
         for (int i = 0; i < 4; i++) { final int k = i; chip(btn(x + i * (cwid + 3), y, cwid, pages[i], () -> { setPage = k; clearAndInit(); }), setPage == i); }
         y += 22;
@@ -763,11 +763,11 @@ public class CapitolScreen extends Screen {
     /* ---------------------------------------------------------------- wiki */
     static final String[][] WIKI = {
         {"Démarrer",
-         "1. Sur le site Capitol TV, ouvre « Mon compte » et génère ton jeton du mod.\n2. En jeu : touche K, onglet Réglages, bouton Coller puis Connecter.\n3. L'en-tête du menu passe au vert : tu reçois les actions, les comms et la carte.\n\nLe bouton ◧ en haut à droite du menu le range sur le côté : tu vois le jeu, tu te déplaces (ZQSD, espace, maj) et tu tournes la tête en maintenant le clic droit sur le jeu."},
+         "1. Sur le site Capitol TV, ouvre « Mon compte » et génère ton jeton du mod.\n2. En jeu : touche K, onglet Réglages, bouton Coller puis Connecter.\n3. L'en-tête du menu passe au vert : tu reçois les actions, les comms et la carte.\n\nLe bouton » en haut à droite du menu le range sur le côté : tu vois le jeu, tu te déplaces (ZQSD, espace, maj) et tu tournes la tête en maintenant le clic droit sur le jeu."},
         {"Mode caméra",
          "Réservé aux caméras : un admin fait /capitoltv camera add <pseudo> en jeu, ou te donne le rôle Caméra sur le site avec ton compte Minecraft dans ta fiche.\n\nF6 : active le mode caméra. Tu passes en spectateur, le HUD du jeu disparaît et une barre caméra apparaît en bas (touches 1 à 9) : TP sur le tribut suivi, tribut précédent / suivant, signaler, REC, caméra fluide, zoom, menu, écran propre.\n\nV : mouvements de caméra (voir l'article)."},
         {"Diffusion vidéo",
-         "Ton jeu peut envoyer lui-même son image à Capitol TV, sans OBS : Réglages › Diffusion › Diffuser mon image.\n\nL'image part juste après le dessin du monde : tes menus, ton HUD et ton chat n'apparaissent jamais dans le flux. Tu peux donc utiliser le menu en filmant.\n\nClé : les membres de l'équipe la reçoivent automatiquement. Les tributs la trouvent sur le site (Mon compte) ou la demandent à la régie, puis la collent dans Réglages › Diffusion.\n\nMicro : facultatif (ta voix part avec l'image). Le différé est ajouté par le site, tu n'as rien à régler.\n\nAlternatives : OBS (service WHIP, lien donné sur le site) ou Twitch, si la régie le choisit."},
+         "Ton jeu peut envoyer lui-même son image à Capitol TV, sans OBS : Réglages › Vidéo › Diffuser mon image.\n\nL'image part juste après le dessin du monde : tes menus, ton HUD et ton chat n'apparaissent jamais dans le flux. Tu peux donc utiliser le menu en filmant.\n\nClé : les membres de l'équipe la reçoivent automatiquement. Les tributs la trouvent sur le site (Mon compte) ou la demandent à la régie, puis la collent dans Réglages › Vidéo.\n\nMicro : facultatif (ta voix part avec l'image). Le différé est ajouté par le site, tu n'as rien à régler.\n\nAlternatives : OBS (service WHIP, lien donné sur le site) ou Twitch, si la régie le choisit."},
         {"Mouvements de caméra",
          "V ouvre la liste, puis une touche de 1 à 8 :\n1 Orbite autour du tribut suivi\n2 Orbite large en hauteur\n3 Travelling avant\n4 Grue (s'élève en le regardant)\n5 Suivi de dos\n6 Vue du ciel en rotation\n7 Panoramique sur place\n8 Regard verrouillé (tu bouges, la caméra le fixe)\n\nV arrête le mouvement. Bouger (ZQSD) l'arrête aussi, sauf le 8. Si le tribut est loin, tu es d'abord téléporté."},
         {"Antenne et différé",
@@ -829,9 +829,9 @@ public class CapitolScreen extends Screen {
         String st = "État : " + CapitolClient.stateText();
         for (OrderedText ot : textRenderer.wrapLines(Text.literal(st), w2)) { ctx.drawText(textRenderer, ot, x2, y, CapitolClient.online() ? Hud.GREEN : Hud.ORANGE, false); y += 10; }
         if (CapitolClient.online() && Data.ready) {
-            ctx.drawText(textRenderer, "Compte : " + Data.meName + " · " + ("chef".equals(Data.meCam) ? "responsable caméra" : Data.meSup ? "régie" : "caméra"), x2, y, Hud.INK, false); y += 10;
-            ctx.drawText(textRenderer, "Mod serveur : " + (Data.serverMod ? "actif (données complètes)" : "absent (données des caméras)"), x2, y, Hud.INK, false); y += 10;
-            ctx.drawText(textRenderer, "TP : " + (MinecraftClient.getInstance().player != null && MinecraftClient.getInstance().player.isSpectator() ? "spectateur (vanilla)" : Teleport.serverSide() ? "via le mod serveur" : "commande /tp (droits requis)"), x2, y, Hud.INK, false); y += 10;
+            ctx.drawText(textRenderer, textRenderer.trimToWidth("Compte : " + Data.meName + " · " + ("chef".equals(Data.meCam) ? "responsable caméra" : Data.meSup ? "régie" : "caméra"), w2), x2, y, Hud.INK, false); y += 10;
+            ctx.drawText(textRenderer, textRenderer.trimToWidth("Mod serveur : " + (Data.serverMod ? "actif (données complètes)" : "absent (données des caméras)"), w2), x2, y, Hud.INK, false); y += 10;
+            ctx.drawText(textRenderer, textRenderer.trimToWidth("TP : " + (MinecraftClient.getInstance().player != null && MinecraftClient.getInstance().player.isSpectator() ? "spectateur (vanilla)" : Teleport.serverSide() ? "via le mod serveur" : "commande /tp (droits requis)"), w2), x2, y, Hud.INK, false); y += 10;
         }
         if (c.token.isEmpty()) {
             y += 4;

@@ -127,7 +127,7 @@ public final class Hud {
         int ty = c.hudPos.equals("tr") ? 90 : 38;
         synchronized (toasts) {
             toasts.removeIf(t -> t.until < now);
-            for (Toast t : toasts) {
+            if (!CamMoves.picker) for (Toast t : toasts) {
                 int w = 200;
                 List<OrderedText> wrapped = tr.wrapLines(Text.literal(t.text), w - 10);
                 if (wrapped.size() > 4) wrapped = wrapped.subList(0, 4);
