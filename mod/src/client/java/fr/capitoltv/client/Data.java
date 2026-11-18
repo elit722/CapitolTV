@@ -44,6 +44,8 @@ public final class Data {
     public static int delay;
     public static long skew;
     public static boolean serverMod;
+    /** clé de diffusion vidéo reçue du site (membres de l'équipe) */
+    public static String streamKey = "";
     public static boolean ready;
     public static final Map<String, Trib> tribs = new LinkedHashMap<>();
     public static final Map<String, Alert> alerts = new HashMap<>();
@@ -226,6 +228,7 @@ public final class Data {
         JsonObject me = obj(m, "me");
         meId = s(me, "id"); meName = s(me, "name"); meCam = s(me, "cam"); mePerm = s(me, "perm"); meSup = b(me, "sup");
         meRid = s(me, "rid"); mePerms = new ArrayList<>();
+        streamKey = s(m, "streamKey");
         for (JsonElement x : arr(me, "perms")) mePerms.add(x.getAsString());
         setRoles(arr(m, "roles"));
         setOnAir(arr(m, "onair"));

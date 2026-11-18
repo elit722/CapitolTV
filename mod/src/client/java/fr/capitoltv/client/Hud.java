@@ -66,6 +66,8 @@ public final class Hud {
         ClientConfig c = ClientConfig.get();
         int sw = ctx.getScaledWindowWidth(), sh = ctx.getScaledWindowHeight();
         CamMode.renderTally(ctx, tr, sw);
+        CamMoves.render(ctx, tr, sw, sh);
+        if (Streamer.live() && ClientConfig.get().streamOn) { String s = "● DIFFUSION"; int w = tr.getWidth(s) + 8; ctx.fill(sw - w - 4, sh - 16, sw - 4, sh - 4, 0xA0101014); ctx.drawText(tr, s, sw - w, sh - 14, 0xFFE0514A, false); }
         if (CamMode.clean()) return;
         if (CamMode.active() && CapitolClient.online()) CamMode.renderToolbar(ctx, tr, sw, sh);
         if (!Data.meCam.isEmpty() && mc.player != null && CapitolClient.online()) {

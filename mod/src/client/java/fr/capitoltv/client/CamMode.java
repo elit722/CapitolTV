@@ -44,6 +44,8 @@ public final class CamMode {
     public static boolean clean() {
         ClientConfig c = ClientConfig.get();
         if (!active() || peek()) return false;
+        // diffusion par le mod : l'image part sans l'interface, inutile de la masquer à l'écran
+        if (Streamer.live()) return false;
         return c.cleanAlways || (c.cleanOnAir && (Data.onAir() || Data.onPrep()));
     }
 

@@ -6,7 +6,9 @@ version = project.mod_version
 group = project.maven_group
 base { archivesName = project.archives_base_name }
 
-repositories { }
+repositories { mavenCentral() }
+
+configurations { webrtcNatives }
 
 loom {
     splitEnvironmentSourceSets()
@@ -37,9 +39,18 @@ dependencies {
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    // vidéo native (WebRTC) : la bibliothèque Java est incluse dans le .jar du mod,
+    // ses bibliothèques natives (Windows, Linux, macOS) sont copiées à la racine du .jar
+    implementation "dev.onvoid.webrtc:webrtc-java:${project.webrtc_version}"
+    include "dev.onvoid.webrtc:webrtc-java:${project.webrtc_version}"
+    webrtcNatives "dev.onvoid.webrtc:webrtc-java:${project.webrtc_version}:windows-x86_64"
+    webrtcNatives "dev.onvoid.webrtc:webrtc-java:${project.webrtc_version}:linux-x86_64"
+    webrtcNatives "dev.onvoid.webrtc:webrtc-java:${project.webrtc_version}:macos-aarch64"
+    webrtcNatives "dev.onvoid.webrtc:webrtc-java:${project.webrtc_version}:macos-x86_64"
 }
 
 processResources {
+    from({ configurations.webrtcNatives.collect { zipTree(it) } }) { exclude 'META-INF/**' }
     inputs.property "version", project.version
     filesMatching("fabric.mod.json") { expand "version": inputs.properties.version }
 }

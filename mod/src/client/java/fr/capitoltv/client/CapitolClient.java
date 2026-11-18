@@ -16,7 +16,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.Map;
 
 public class CapitolClient implements ClientModInitializer {
-    public static KeyBinding menuKey, signalKey, stateKey, followKey, replyKey, cameraKey, peekKey;
+    public static KeyBinding menuKey, signalKey, stateKey, followKey, replyKey, cameraKey, peekKey, movesKey;
     private static CtvSocket sock;
     /** Tribut suivi par cette caméra (id Capitol TV). */
     public static String follow = "";
@@ -35,8 +35,11 @@ public class CapitolClient implements ClientModInitializer {
         replyKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.reply", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, cat));
         cameraKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.camera", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F6, cat));
         peekKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.peek", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, cat));
+        movesKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.moves", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_V, cat));
         try { CamMode.install(); } catch (Throwable t) { fr.capitoltv.CapitolTV.LOG.warn("Capitol TV : HUD vanilla non géré ({})", t.toString()); }
-        ClientTickEvents.START_CLIENT_TICK.register(CamMode::startTick);
+        ClientTickEvents.START_CLIENT_TICK.register(mc -> { if (!CamMoves.startTick(mc)) CamMode.startTick(mc); });
+        ClientTickEvents.END_CLIENT_TICK.register(CamMoves::endTick);
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(mc -> Streamer.stop(null));
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((h, sender, client) -> { CamMode.resetSpectatorTries(); stDirty = true; });
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((h, client) -> CamMode.serverCam = false);
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(fr.capitoltv.net.CamAccessPayload.ID, (payload, ctx) -> {
@@ -188,6 +191,11 @@ public class CapitolClient implements ClientModInitializer {
             c.cameraMode = !c.cameraMode;
             ClientConfig.save();
             Hud.toast("Mode caméra", c.cameraMode ? "activé : HUD du jeu masqué, barre caméra (touches 1 à 9)" : "désactivé", Hud.GOLD, 4);
+        }
+        while (movesKey.wasPressed()) {
+            if (mc.player == null) continue;
+            if (!CamMode.allowed() && !mc.player.isSpectator()) { Hud.toast("Mouvements de caméra", "Réservés aux caméras en spectateur", Hud.ORANGE, 3); continue; }
+            CamMoves.togglePicker();
         }
         while (replyKey.wasPressed()) {
             if (lastMsgFrom.isEmpty()) Hud.toast("Comms", "Aucun message auquel répondre", Hud.DIM, 3);

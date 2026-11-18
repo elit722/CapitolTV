@@ -6,5 +6,6 @@
   "key.capitoltv.follow": "TP vers le tribut suivi",
   "key.capitoltv.reply": "Répondre « Reçu » au dernier message",
   "key.capitoltv.camera": "Mode caméra (HUD masqué, barre caméra)",
-  "key.capitoltv.peek": "Voir l'interface (maintenir, à l'antenne)"
+  "key.capitoltv.peek": "Voir l'interface (maintenir, à l'antenne)",
+  "key.capitoltv.moves": "Mouvements de caméra"
 }

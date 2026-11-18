@@ -26,7 +26,7 @@ import java.util.Locale;
 /** Menu caméra Capitol TV (touche K par défaut). */
 public class CapitolScreen extends Screen {
     enum Tab {
-        ACTIONS("Actions", "⚑"), FEED("Annonces", "≡"), MAP("Carte", "◎"), SIGNAL("Signaler", "✚"), COMMS("Comms", "✉"), TEAM("Équipe", "☺"), REQS("Demandes", "☰"), ROLES("Rôles", "★"), SETTINGS("Réglages", "⚙");
+        ACTIONS("Actions", "⚑"), FEED("Annonces", "≡"), MAP("Carte", "◎"), SIGNAL("Signaler", "✚"), COMMS("Comms", "✉"), TEAM("Équipe", "☺"), REQS("Demandes", "☰"), ROLES("Rôles", "★"), SETTINGS("Réglages", "⚙"), WIKI("Wiki", "?");
         final String label, icon;
         Tab(String l, String i) { label = l; icon = i; }
     }
@@ -76,11 +76,17 @@ public class CapitolScreen extends Screen {
     private final List<Row> rows = new ArrayList<>();
     private TextFieldWidget detailField, msgField, reqField, tokenField, urlField;
     private double pressX, pressY;
-    private boolean dragging, pressedOnMap;
+    private boolean dragging, pressedOnMap, looking;
+
+    private boolean inPanel(double x, double y) { return x >= px && x < px + pw && y >= py && y < py + ph; }
 
     private record Row(String id, String l1, int c1, String r1, String l2, int c2) { }
     private final List<TextFieldWidget> fields = new ArrayList<>();
-    static final int SIDE = 96, HEAD = 26, RH = 26;
+    static final int HEAD = 26, RH = 26;
+    /** largeur de la colonne des onglets (réduite en mode « menu sur le côté ») */
+    private int SIDE = 96;
+    static int wikiSec, wikiScroll;
+    static String keyDraft = null;
 
     public CapitolScreen() { super(Text.literal("Capitol TV")); }
 
@@ -95,7 +101,10 @@ public class CapitolScreen extends Screen {
     @Override
     protected void init() {
         int m = width > 520 ? 14 : 6;
+        boolean dock = ClientConfig.get().dockMenu;
+        SIDE = dock ? 24 : 96;
         px = m; py = m; pw = width - 2 * m; ph = height - 2 * m;
+        if (dock) { pw = Math.max(250, (int) (width * 0.46)); px = width - pw - m; }
         cx = px + SIDE + 8; cy = py + HEAD + 8; cw = pw - SIDE - 16; ch = ph - HEAD - 14;
         barY = py + ph - 22;
         listY = cy; listBottom = barY - 6;
@@ -107,12 +116,15 @@ public class CapitolScreen extends Screen {
         if (tab == Tab.ROLES && !Data.can("roles")) tab = Tab.ACTIONS;
         for (Tab t : Tab.values()) {
             if (t == Tab.ROLES && !Data.can("roles")) continue;
-            CtvButton b = new CtvButton(px + 1, ty, SIDE - 1, th - 1, t.label, () -> { tab = t; scroll = 0; selId = ""; clearAndInit(); }).kind(CtvButton.Kind.TAB);
+            CtvButton b = new CtvButton(px + 1, ty, SIDE - 1, th - 1, dock ? "" : t.label, () -> { tab = t; scroll = 0; selId = ""; clearAndInit(); }).kind(CtvButton.Kind.TAB);
             b.icon = t.icon; b.selected = t == tab;
             addDrawableChild(b);
             ty += th;
         }
-        btn(px + 6, py + ph - 22, SIDE - 12, "Fermer", this::close);
+        if (!dock) btn(px + 6, py + ph - 22, SIDE - 12, "Fermer", this::close);
+        // bouton « menu sur le côté » : on voit le jeu, on bouge (ZQSD) et on tourne (clic droit maintenu)
+        CtvButton dk = btn(px + pw - 22, py + 6, 16, dock ? "▣" : "◧", () -> { ClientConfig.get().dockMenu = !ClientConfig.get().dockMenu; ClientConfig.save(); clearAndInit(); });
+        dk.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(Text.literal(dock ? "Agrandir le menu" : "Menu sur le côté : tu vois le jeu et tu peux bouger")));
 
         switch (tab) {
             case ACTIONS -> initActions();
@@ -124,6 +136,7 @@ public class CapitolScreen extends Screen {
             case REQS -> initReqs();
             case ROLES -> initRoles();
             case SETTINGS -> initSettings();
+            case WIKI -> initWiki();
         }
     }
 
@@ -689,8 +702,9 @@ public class CapitolScreen extends Screen {
         int colW = Math.min(200, (cw - 10) / 2), x = cx, y = cy;
         int step = height < 300 ? 17 : 18;
         int cwid = (colW - 6) / 3;
-        String[] pages = {"Général", "Bulles", "Caméra"};
-        for (int i = 0; i < 3; i++) { final int k = i; chip(btn(x + i * (cwid + 3), y, cwid, pages[i], () -> { setPage = k; clearAndInit(); }), setPage == i); }
+        String[] pages = {"Général", "Bulles", "Caméra", "Diffusion"};
+        cwid = (colW - 9) / 4;
+        for (int i = 0; i < 4; i++) { final int k = i; chip(btn(x + i * (cwid + 3), y, cwid, pages[i], () -> { setPage = k; clearAndInit(); }), setPage == i); }
         y += 22;
         String[] states = {"actif", "rec", "pause", "inactif"};
         String[] notifs = {"all", "sup", "none"};
@@ -708,6 +722,15 @@ public class CapitolScreen extends Screen {
         btn(x, y, colW, "Bulles à l'écran : " + (c.toasts ? "oui" : "non"), () -> { c.toasts = !c.toasts; ClientConfig.save(); clearAndInit(); }); y += step;
         btn(x, y, colW, "Bulles des actions : " + (c.alertsToasts ? "oui" : "non"), () -> { c.alertsToasts = !c.alertsToasts; ClientConfig.save(); clearAndInit(); }); y += step;
         btn(x, y, colW, "Bulles des actes : " + (c.feedToasts ? "tous" : "mon tribut"), () -> { c.feedToasts = !c.feedToasts; ClientConfig.save(); clearAndInit(); }); y += step;
+        } else if (setPage == 3) {
+        btn(x, y, colW, "Diffuser mon image : " + (c.streamOn ? "oui" : "non"), () -> { c.streamOn = !c.streamOn; ClientConfig.save(); if (!c.streamOn) fr.capitoltv.client.Streamer.stop("coupée"); clearAndInit(); }); y += step;
+        btn(x, y, colW, "Micro : " + (c.streamMic ? "oui" : "non"), () -> { c.streamMic = !c.streamMic; ClientConfig.save(); fr.capitoltv.client.Streamer.stop(null); clearAndInit(); }); y += step;
+        int[] hs = {480, 720, 1080};
+        btn(x, y, colW, "Qualité : " + c.streamHeight + "p", () -> { int i = 0; for (int k = 0; k < hs.length; k++) if (hs[k] == c.streamHeight) i = k; c.streamHeight = hs[(i + 1) % hs.length]; c.streamKbps = c.streamHeight >= 1080 ? 6000 : c.streamHeight >= 720 ? 4000 : 2000; ClientConfig.save(); fr.capitoltv.client.Streamer.stop(null); clearAndInit(); }); y += step;
+        btn(x, y, colW, "Images / s : " + c.streamFps, () -> { c.streamFps = c.streamFps >= 30 ? 20 : c.streamFps + 5; ClientConfig.save(); clearAndInit(); }); y += step + 4;
+        if (keyDraft == null) keyDraft = c.streamKey;
+        field(x, y, colW - 52, keyDraft, Data.streamKey.isEmpty() ? "Clé de diffusion" : "Clé reçue du site", 64, s -> keyDraft = s);
+        btn(x + colW - 49, y, 49, "Coller", () -> { String s = MinecraftClient.getInstance().keyboard.getClipboard(); if (s != null) { keyDraft = s.trim(); c.streamKey = keyDraft; ClientConfig.save(); fr.capitoltv.client.Streamer.stop(null); clearAndInit(); } });
         } else {
         String[] tal = {"visible", "discret", "cache"};
         String[] talL = {"visible", "discret (point)", "caché"};
@@ -737,6 +760,57 @@ public class CapitolScreen extends Screen {
         urlField = field(x2, y2, w2, urlDraft, "Adresse du site", 300, s -> urlDraft = s);
     }
 
+    /* ---------------------------------------------------------------- wiki */
+    static final String[][] WIKI = {
+        {"Démarrer",
+         "1. Sur le site Capitol TV, ouvre « Mon compte » et génère ton jeton du mod.\n2. En jeu : touche K, onglet Réglages, bouton Coller puis Connecter.\n3. L'en-tête du menu passe au vert : tu reçois les actions, les comms et la carte.\n\nLe bouton ◧ en haut à droite du menu le range sur le côté : tu vois le jeu, tu te déplaces (ZQSD, espace, maj) et tu tournes la tête en maintenant le clic droit sur le jeu."},
+        {"Mode caméra",
+         "Réservé aux caméras : un admin fait /capitoltv camera add <pseudo> en jeu, ou te donne le rôle Caméra sur le site avec ton compte Minecraft dans ta fiche.\n\nF6 : active le mode caméra. Tu passes en spectateur, le HUD du jeu disparaît et une barre caméra apparaît en bas (touches 1 à 9) : TP sur le tribut suivi, tribut précédent / suivant, signaler, REC, caméra fluide, zoom, menu, écran propre.\n\nV : mouvements de caméra (voir l'article)."},
+        {"Diffusion vidéo",
+         "Ton jeu peut envoyer lui-même son image à Capitol TV, sans OBS : Réglages › Diffusion › Diffuser mon image.\n\nL'image part juste après le dessin du monde : tes menus, ton HUD et ton chat n'apparaissent jamais dans le flux. Tu peux donc utiliser le menu en filmant.\n\nClé : les membres de l'équipe la reçoivent automatiquement. Les tributs la trouvent sur le site (Mon compte) ou la demandent à la régie, puis la collent dans Réglages › Diffusion.\n\nMicro : facultatif (ta voix part avec l'image). Le différé est ajouté par le site, tu n'as rien à régler.\n\nAlternatives : OBS (service WHIP, lien donné sur le site) ou Twitch, si la régie le choisit."},
+        {"Mouvements de caméra",
+         "V ouvre la liste, puis une touche de 1 à 8 :\n1 Orbite autour du tribut suivi\n2 Orbite large en hauteur\n3 Travelling avant\n4 Grue (s'élève en le regardant)\n5 Suivi de dos\n6 Vue du ciel en rotation\n7 Panoramique sur place\n8 Regard verrouillé (tu bouges, la caméra le fixe)\n\nV arrête le mouvement. Bouger (ZQSD) l'arrête aussi, sauf le 8. Si le tribut est loin, tu es d'abord téléporté."},
+        {"Antenne et différé",
+         "Le site retarde tout ce qu'il montre (annonces, statuts, vidéos) du même délai. « Écran dans 1:42 » indique quand une action passera à l'antenne.\n\nQuand la régie affiche ta caméra, un voyant « EN DIRECT » s'allume en haut à droite. « PRÊT » : la régie prépare un plan avec toi.\n\nAvec OBS ou Twitch, l'écran devient propre à l'antenne (Alt gauche maintenu pour voir l'interface) et les sons du jeu sont coupés. Avec la diffusion du mod, ce n'est pas nécessaire."},
+        {"Signaler et comms",
+         "Signaler : choisis le tribut, le type d'action et des détails ; la régie et le réacteur le voient tout de suite.\nJ : signal rapide sur le tribut suivi ou le plus proche.\n\nComms : Staff (toute l'équipe), Caméras, Privé. Les messages passent aussi sur le site. BUZZ fait sonner un membre."},
+        {"Carte et TP",
+         "La carte montre les tributs (et les caméras). Glisser : déplacer · molette : zoom · clic : sélectionner, puis TP ou Suivre.\nEn spectateur, la téléportation est directe. Sinon le mod serveur ou la commande /tp est utilisé."},
+        {"Commandes (admins)",
+         "/capitoltv camera add <joueur> · remove <nom> · list\n/capitoltv annonce <texte> : annonce spéciale à la régie\n/capitoltv status · reload"}
+    };
+
+    private void initWiki() { }
+
+    private void renderWiki(DrawContext ctx) {
+        int lw = Math.min(118, cw / 3), x = cx, y = cy;
+        Ui.box(ctx, x, y, x + lw, listBottom, Ui.BG0, Ui.LINE);
+        for (int i = 0; i < WIKI.length; i++) {
+            int yy = y + 4 + i * 16;
+            if (i == wikiSec) { ctx.fill(x + 1, yy - 2, x + lw - 1, yy + 12, 0x30D4AF37); ctx.fill(x + 1, yy - 2, x + 3, yy + 12, Ui.GOLD); }
+            ctx.drawText(textRenderer, textRenderer.trimToWidth(WIKI[i][0], lw - 12), x + 8, yy + 1, i == wikiSec ? Ui.GOLD_HI : Ui.DIM, false);
+        }
+        int tx = x + lw + 10, tw = cw - lw - 10;
+        Ui.section(ctx, WIKI[wikiSec][0], tx, y + 2, tw);
+        List<OrderedText> lines = new ArrayList<>();
+        for (String para : WIKI[wikiSec][1].split("\n", -1)) {
+            if (para.isEmpty()) { lines.add(OrderedText.EMPTY); continue; }
+            lines.addAll(textRenderer.wrapLines(Text.literal(para), tw - 6));
+        }
+        int vis = Math.max(1, (listBottom - y - 18) / 10);
+        wikiScroll = Math.max(0, Math.min(wikiScroll, Math.max(0, lines.size() - vis)));
+        for (int i = wikiScroll, yy = y + 16; i < lines.size() && yy + 9 <= listBottom; i++, yy += 10) ctx.drawText(textRenderer, lines.get(i), tx, yy, Ui.INK, false);
+    }
+
+    private boolean wikiClick(double mx, double my) {
+        if (tab != Tab.WIKI) return false;
+        int lw = Math.min(118, cw / 3);
+        if (mx < cx || mx >= cx + lw || my < cy) return false;
+        int i = (int) ((my - cy - 2) / 16);
+        if (i >= 0 && i < WIKI.length) { wikiSec = i; wikiScroll = 0; return true; }
+        return false;
+    }
+
     static int idx(String[] a, String v) { for (int i = 0; i < a.length; i++) if (a[i].equals(v)) return i; return 0; }
     static String next(String[] a, String v) { return a[(idx(a, v) + 1) % a.length]; }
 
@@ -744,13 +818,11 @@ public class CapitolScreen extends Screen {
         ClientConfig c = ClientConfig.get();
         int colW = Math.min(200, (cw - 10) / 2), x2 = cx + colW + 10, w2 = cw - colW - 10;
         Ui.section(ctx, "Liaison avec le site", x2, cy + 2, w2);
-        if (setPage == 2) {
-            int hy = cy + 22 + 5 * (height < 300 ? 17 : 18) + 4;
-            String h = fr.capitoltv.client.CamMode.allowed()
-                    ? "Flux propre : quand la régie prépare ou passe ta caméra à l'antenne, plus rien ne s'affiche à l'écran (à cause du différé, ça commence dès la préparation)."
-                    : "Mode caméra réservé : un admin doit faire /capitoltv camera add <pseudo>, ou lier ton compte Minecraft à un membre Caméra sur le site.";
-            for (OrderedText ot : textRenderer.wrapLines(Text.literal(h), colW)) { if (hy > barY - 4) break; ctx.drawText(textRenderer, ot, cx, hy, Ui.DIM, false); hy += 10; }
-        }
+        int hy = cy + 22 + (setPage == 3 ? 4 * (height < 300 ? 17 : 18) + 28 : 5 * (height < 300 ? 17 : 18) + 4);
+        String h = setPage == 2 ? (fr.capitoltv.client.CamMode.allowed() ? "" : "Réservé aux caméras désignées (Wiki › Mode caméra).")
+                : setPage == 3 ? "État : " + fr.capitoltv.client.Streamer.status() + (fr.capitoltv.client.Streamer.live() ? " · " + fr.capitoltv.client.Streamer.sent() + " images" : "") : "";
+        if (setPage == 3 && Data.streamKey.isEmpty() && c.streamKey.isBlank()) h += " · Pas de clé : Wiki › Diffusion.";
+        for (OrderedText ot : textRenderer.wrapLines(Text.literal(h), colW)) { if (hy > barY - 4) break; ctx.drawText(textRenderer, ot, cx, hy, fr.capitoltv.client.Streamer.live() && setPage == 3 ? Ui.GREEN : Ui.DIM, false); hy += 10; }
         ctx.drawText(textRenderer, "Jeton du mod :", x2, cy + 14, Hud.DIM, false);
         ctx.drawText(textRenderer, "Adresse du site :", x2, cy + 70, Hud.DIM, false);
         int y = cy + 104;
@@ -761,14 +833,9 @@ public class CapitolScreen extends Screen {
             ctx.drawText(textRenderer, "Mod serveur : " + (Data.serverMod ? "actif (données complètes)" : "absent (données des caméras)"), x2, y, Hud.INK, false); y += 10;
             ctx.drawText(textRenderer, "TP : " + (MinecraftClient.getInstance().player != null && MinecraftClient.getInstance().player.isSpectator() ? "spectateur (vanilla)" : Teleport.serverSide() ? "via le mod serveur" : "commande /tp (droits requis)"), x2, y, Hud.INK, false); y += 10;
         }
-        y += 6;
-        String help = "Touches : " + CapitolClient.menuKeyName() + " menu · " + CapitolClient.signalKey.getBoundKeyLocalizedText().getString()
-                + " signal rapide · " + CapitolClient.cameraKey.getBoundKeyLocalizedText().getString() + " mode caméra (barre 1 à 9) · "
-                + CapitolClient.peekKey.getBoundKeyLocalizedText().getString() + " maintenu : voir l'interface à l'antenne. Les sons sont coupés à l'antenne (ils partiraient dans ton stream).";
-        for (OrderedText ot : textRenderer.wrapLines(Text.literal(help), w2)) { if (y > py + ph - 12) break; ctx.drawText(textRenderer, ot, x2, y, Hud.DIM, false); y += 10; }
         if (c.token.isEmpty()) {
             y += 4;
-            for (OrderedText ot : textRenderer.wrapLines(Text.literal("Pour obtenir un jeton : connecte-toi sur le site Capitol TV, ouvre « Mon compte » puis « Mod caméra ». La régie doit t'avoir donné le rôle Caméra dans l'équipe."), w2)) {
+            for (OrderedText ot : textRenderer.wrapLines(Text.literal("Jeton : site Capitol TV › Mon compte (voir Wiki)."), w2)) {
                 if (y > py + ph - 12) break; ctx.drawText(textRenderer, ot, x2, y, Hud.GOLD, false); y += 10;
             }
         }
@@ -822,7 +889,7 @@ public class CapitolScreen extends Screen {
     /* ====================================================================== */
     @Override
     public void renderBackground(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        ctx.fillGradient(0, 0, width, height, 0xB0050506, 0xD0050506);
+        if (!ClientConfig.get().dockMenu) ctx.fillGradient(0, 0, width, height, 0xB0050506, 0xD0050506);
         int x1 = px + pw, y1 = py + ph;
         // ombre portée + panneau
         ctx.fill(px + 3, py + 3, x1 + 3, y1 + 3, 0x60000000);
@@ -845,16 +912,19 @@ public class CapitolScreen extends Screen {
         super.render(ctx, mouseX, mouseY, delta);
         // en-tête : emblème, titre, onglet
         Ui.emblem(ctx, px + 7, py + 5, 16);
-        Text title = Text.literal("CAPITOL TV").formatted(Formatting.BOLD);
-        ctx.drawText(textRenderer, title, px + 28, py + 5, Ui.GOLD, true);
-        ctx.drawText(textRenderer, tab.label.toUpperCase(), px + 28, py + 15, Ui.DIM, false);
+        if (pw > 330) {
+            Text title = Text.literal("CAPITOL TV").formatted(Formatting.BOLD);
+            ctx.drawText(textRenderer, title, px + 28, py + 5, Ui.GOLD, true);
+            ctx.drawText(textRenderer, tab.label.toUpperCase(), px + 28, py + 15, Ui.DIM, false);
+        } else ctx.drawText(textRenderer, tab.label.toUpperCase(), px + 28, py + 9, Ui.GOLD, false);
         // à droite : compte, état, différé
-        int rx = px + pw - 8;
+        int rx = px + pw - 28;
         String delayTxt = Data.delay > 0 ? "DIFFÉRÉ " + Data.delay / 60 + ":" + String.format(Locale.ROOT, "%02d", Data.delay % 60) : "DIRECT";
         rx -= textRenderer.getWidth(delayTxt) + 8;
         Ui.pill(ctx, delayTxt, rx, py + 7, 0xFF2A2620, Ui.GOLD_HI);
         String who = CapitolClient.online() && Data.ready ? Data.meName + " · " + Hud.stateLabel(ClientConfig.get().state) : CapitolClient.stateText();
-        who = textRenderer.trimToWidth(who, pw / 3);
+        if (fr.capitoltv.client.Streamer.live()) who = "● DIFF. · " + who;
+        who = textRenderer.trimToWidth(who, Math.max(40, pw - 200));
         int col = CapitolClient.online() ? Hud.stateColor(ClientConfig.get().state) : Hud.ORANGE;
         int ww = textRenderer.getWidth(who) + 20;
         rx -= ww + 4;
@@ -868,11 +938,8 @@ public class CapitolScreen extends Screen {
             Ui.box(ctx, wx, py + HEAD - 8, wx + w2, py + HEAD + 6, 0xF0B0182C, Ui.RED);
             ctx.drawText(textRenderer, w, wx + 6, py + HEAD - 5, 0xFFFFFFFF, false);
         }
-        if (fr.capitoltv.client.CamMode.denied()) {
-            String w = "Mode caméra réservé aux caméras désignées par la régie";
-            ctx.drawText(textRenderer, textRenderer.trimToWidth(w, SIDE - 8), px + 6, py + ph - 36, Ui.MUTE, false);
-        }
-        if (!CapitolClient.online() && tab != Tab.SETTINGS && tab != Tab.MAP) {
+
+        if (!CapitolClient.online() && tab != Tab.SETTINGS && tab != Tab.MAP && tab != Tab.WIKI) {
             String w = "Pas connecté au site Capitol TV · onglet Réglages pour coller ton jeton";
             int w2 = Math.min(cw, textRenderer.getWidth(w) + 12);
             Ui.box(ctx, cx, listBottom - 16, cx + w2, listBottom - 2, 0xE0301C0C, Hud.ORANGE);
@@ -883,6 +950,7 @@ public class CapitolScreen extends Screen {
             case MAP -> renderMap(ctx, mouseX, mouseY);
             case COMMS -> renderComms(ctx);
             case SETTINGS -> renderSettings(ctx);
+            case WIKI -> renderWiki(ctx);
             case SIGNAL -> renderSignal(ctx);
             default -> { }
         }
@@ -905,10 +973,10 @@ public class CapitolScreen extends Screen {
         List<String> info = new ArrayList<>();
         if (Data.delay > 0) {
             long at = Data.now() + Data.delay * 1000L;
-            info.add("Différé de " + Data.delay / 60 + ":" + String.format(Locale.ROOT, "%02d", Data.delay % 60) + " : ce que tu signales maintenant passera à l'écran (site et réact) vers " + hhmmss(at) + ".");
-        } else info.add("Pas de différé : la régie et le réacteur voient l'action en direct.");
+            info.add("À l'écran vers " + hhmmss(at) + " (différé " + Data.delay / 60 + ":" + String.format(Locale.ROOT, "%02d", Data.delay % 60) + ").");
+        }
         if (!sigInfo.isEmpty()) info.add(sigInfo + (Data.lastReportTs > 0 && Data.delay > 0 ? " — " + Data.airLabel(Data.lastReportTs) : ""));
-        info.add("Astuce : la touche " + CapitolClient.signalKey.getBoundKeyLocalizedText().getString() + " envoie un signal rapide sur le tribut suivi (ou le plus proche), sans ouvrir le menu.");
+
         for (String s : info) for (OrderedText ot : textRenderer.wrapLines(Text.literal(s), cw)) { if (y > py + ph - 12) return; ctx.drawText(textRenderer, ot, cx, y, Ui.DIM, false); y += 10; }
     }
 
@@ -964,6 +1032,8 @@ public class CapitolScreen extends Screen {
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
         if (super.mouseClicked(mx, my, button)) return true;
+        if (wikiClick(mx, my)) return true;
+        if (button == 1 && !inPanel(mx, my)) { looking = true; return true; }
         if (inMap(mx, my)) { pressX = mx; pressY = my; dragging = false; pressedOnMap = true; return true; }
         if (listTab() && mx >= cx && mx < cx + cw && my >= listY && my < listBottom) {
             int i = (int) ((my - listY) / RH) + scroll;
@@ -979,6 +1049,11 @@ public class CapitolScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mx, double my, int button, double dx, double dy) {
+        if (looking && button == 1) {
+            var pl = MinecraftClient.getInstance().player;
+            if (pl != null) pl.changeLookDirection(dx * 4, dy * 4);
+            return true;
+        }
         if (pressedOnMap && tab == Tab.MAP) {
             if (Math.abs(mx - pressX) + Math.abs(my - pressY) > 3) dragging = true;
             if (dragging) { camX -= dx / scale; camZ -= dy / scale; }
@@ -989,6 +1064,7 @@ public class CapitolScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mx, double my, int button) {
+        if (button == 1 && looking) { looking = false; return true; }
         if (pressedOnMap && tab == Tab.MAP) {
             pressedOnMap = false;
             if (!dragging) {
@@ -1012,6 +1088,7 @@ public class CapitolScreen extends Screen {
             return true;
         }
         if (tab == Tab.COMMS) { scroll = Math.max(0, scroll + (v > 0 ? 3 : -3)); return true; }
+        if (tab == Tab.WIKI) { wikiScroll = Math.max(0, wikiScroll + (v > 0 ? -2 : 2)); return true; }
         if (listTab()) { scroll = Math.max(0, scroll + (v > 0 ? -1 : 1)); return true; }
         return super.mouseScrolled(mx, my, h, v);
     }
@@ -1031,5 +1108,20 @@ public class CapitolScreen extends Screen {
     public void tick() {
         super.tick();
         if (tab == Tab.MAP && !fitted) fitMap();
+        // on peut se déplacer pendant que le menu est ouvert (sauf pendant la saisie de texte)
+        MinecraftClient mc = MinecraftClient.getInstance();
+        boolean typing = getFocused() instanceof TextFieldWidget;
+        long win = mc.getWindow().getHandle();
+        for (net.minecraft.client.option.KeyBinding kb : new net.minecraft.client.option.KeyBinding[]{mc.options.forwardKey, mc.options.backKey, mc.options.leftKey, mc.options.rightKey, mc.options.jumpKey, mc.options.sneakKey, mc.options.sprintKey}) {
+            net.minecraft.client.util.InputUtil.Key k = net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper.getBoundKeyOf(kb);
+            boolean down = !typing && k.getCategory() == net.minecraft.client.util.InputUtil.Type.KEYSYM && k.getCode() > 0 && net.minecraft.client.util.InputUtil.isKeyPressed(win, k.getCode());
+            kb.setPressed(down);
+        }
+    }
+
+    @Override
+    public void removed() {
+        super.removed();
+        net.minecraft.client.option.KeyBinding.unpressAll();
     }
 }

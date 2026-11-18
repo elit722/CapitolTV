@@ -58,13 +58,28 @@ public class CapitolClientGameTest implements FabricClientGameTest {
             context.runOnClient(c -> { Data.onAirIds.clear(); ClientConfig.get().cameraMode = false; });
             context.waitTicks(5);
             context.takeScreenshot("ctv-03-normal-hud");
-            String[] tabs = {"ACTIONS", "FEED", "MAP", "SIGNAL", "COMMS", "TEAM", "REQS", "ROLES", "SETTINGS"};
+            String[] tabs = {"ACTIONS", "FEED", "MAP", "SIGNAL", "COMMS", "TEAM", "REQS", "ROLES", "SETTINGS", "WIKI"};
             for (int i = 0; i < tabs.length; i++) {
                 final String t = tabs[i];
                 context.runOnClient(c -> c.setScreen(CapitolScreen.on(t)));
                 context.waitTicks(10);
                 context.takeScreenshot("ctv-1" + i + "-menu-" + t.toLowerCase());
             }
+            // bibliothèque vidéo native + capture du monde seul, menu ouvert par-dessus
+            context.runOnClient(c -> fr.capitoltv.CapitolTV.LOG.info("CTV-WEBRTC " + fr.capitoltv.client.Streamer.selfTest()));
+            context.runOnClient(c -> { ClientConfig.get().dockMenu = true; c.setScreen(CapitolScreen.on("COMMS")); });
+            context.waitTicks(10);
+            context.takeScreenshot("ctv-21-menu-dock");
+            context.runOnClient(c -> fr.capitoltv.client.Streamer.testShot = net.fabricmc.loader.api.FabricLoader.getInstance().getGameDir().resolve("screenshots").resolve("ctv-22-flux-envoye.png"));
+            context.waitTicks(20);
+            context.runOnClient(c -> fr.capitoltv.CapitolTV.LOG.info("CTV-HOOK " + fr.capitoltv.client.Streamer.hooked));
+            context.runOnClient(c -> { ClientConfig.get().dockMenu = false; CapitolScreen.setPage = 3; c.setScreen(CapitolScreen.on("SETTINGS")); });
+            context.waitTicks(10);
+            context.takeScreenshot("ctv-23-menu-diffusion");
+            context.runOnClient(c -> { c.setScreen(null); fr.capitoltv.client.CamMoves.picker = true; });
+            context.waitTicks(5);
+            context.takeScreenshot("ctv-24-mouvements");
+            context.runOnClient(c -> fr.capitoltv.client.CamMoves.picker = false);
             context.runOnClient(c -> { CapitolScreen.setPage = 2; c.setScreen(CapitolScreen.on("SETTINGS")); });
             context.waitTicks(10);
             context.takeScreenshot("ctv-19-menu-settings-camera");

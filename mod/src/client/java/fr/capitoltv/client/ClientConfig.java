@@ -35,6 +35,15 @@ public final class ClientConfig {
     public String tally = "visible";
     /** passer automatiquement en spectateur quand on est caméra */
     public boolean autoSpectator = true;
+    /** diffusion de l'image du jeu vers Capitol TV (sans OBS) */
+    public boolean streamOn = false;
+    public String streamKey = "";
+    public boolean streamMic = false;
+    public int streamFps = 30;
+    public int streamKbps = 4000;
+    public int streamHeight = 720;
+    /** menu réduit sur le côté : on voit le jeu et on peut bouger */
+    public boolean dockMenu = false;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
     private static ClientConfig inst;
