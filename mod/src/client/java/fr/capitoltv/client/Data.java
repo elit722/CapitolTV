@@ -229,6 +229,7 @@ public final class Data {
         for (JsonElement x : arr(me, "perms")) mePerms.add(x.getAsString());
         setRoles(arr(m, "roles"));
         setOnAir(arr(m, "onair"));
+        setPrep(m.has("prep") ? arr(m, "prep") : null);
         skew = l(m, "now") - System.currentTimeMillis();
         delay = (int) l(m, "delay");
         serverMod = b(m, "srv");

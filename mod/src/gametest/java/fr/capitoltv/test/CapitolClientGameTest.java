@@ -65,7 +65,14 @@ public class CapitolClientGameTest implements FabricClientGameTest {
                 context.waitTicks(10);
                 context.takeScreenshot("ctv-1" + i + "-menu-" + t.toLowerCase());
             }
-            context.runOnClient(c -> c.setScreen(null));
+            context.runOnClient(c -> { CapitolScreen.setPage = 2; c.setScreen(CapitolScreen.on("SETTINGS")); });
+            context.waitTicks(10);
+            context.takeScreenshot("ctv-19-menu-settings-camera");
+            // plan en préparation : flux propre + voyant « PRÊT »
+            context.runOnClient(c -> { c.setScreen(null); ClientConfig.get().cameraMode = true; fr.capitoltv.client.Data.prepIds.add("1"); });
+            context.waitTicks(10);
+            context.takeScreenshot("ctv-04-prep");
+            context.runOnClient(c -> { fr.capitoltv.client.Data.prepIds.clear(); ClientConfig.get().cameraMode = false; c.setScreen(null); });
         }
     }
 }

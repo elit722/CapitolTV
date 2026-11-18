@@ -60,7 +60,8 @@ public class CtvButton extends ButtonWidget {
         if (sep > 0 && kind == Kind.NORMAL) {
             String k = label.substring(0, sep), v = label.substring(sep + 3);
             int vw = t.getWidth(v), kw = t.getWidth(k);
-            if (kw + vw + 18 <= width) {
+            if (vw + 30 <= width) {
+                if (kw + vw + 18 > width) k = t.trimToWidth(k, width - vw - 22 - t.getWidth("…")) + "…";
                 ctx.drawText(t, k, x0 + 6, ty, active ? Ui.DIM : Ui.MUTE, false);
                 int vc = !active ? Ui.MUTE : v.equals("oui") || v.equals("OUI") ? Ui.GREEN : v.equals("non") ? 0xFFB06A62 : Ui.GOLD_HI;
                 ctx.drawText(t, v, x1 - 6 - vw, ty, vc, false);
