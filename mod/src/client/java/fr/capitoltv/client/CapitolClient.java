@@ -126,7 +126,7 @@ public class CapitolClient implements ClientModInitializer {
         JsonObject o = new JsonObject();
         o.addProperty("t", "setRole");
         o.addProperty("uid", uid);
-        o.addProperty("rid", rid);
+        o.addProperty("role", rid);
         send(o);
     }
     public static void saveRoles(java.util.List<Data.Role> roles) {

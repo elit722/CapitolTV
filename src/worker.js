@@ -766,7 +766,7 @@ export class Game extends DurableObject {
       let list;
       if (m.t === "setRole") {
         if (!this.team.some(x => x.id === m.uid)) return reply(false, { msg: "Membre inconnu." });
-        list = this.team.map(x => x.id === m.uid ? { ...x, rid: m.rid } : x);
+        list = this.team.map(x => x.id === m.uid ? { ...x, rid: m.role } : x);
       } else list = m.team;
       const next = this.cleanTeam(list);
       if (!admin && touchesAdmin(this.team, next)) return reply(false, { msg: "Seule la régie peut donner ou retirer le rôle Organisation." });

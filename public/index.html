@@ -2586,7 +2586,7 @@ function settingsEvents() {
   });
   P.addEventListener('change', e => {
     const sr = e.target.closest('[data-setrole]');
-    if (sr) { NET.req({ t: 'setRole', uid: sr.dataset.setrole, rid: sr.value }).then(() => toastInfo('Rôle attribué'), er => { toastInfo('Refusé', er.message, true); renderSettings(); }); return; }
+    if (sr) { NET.req({ t: 'setRole', uid: sr.dataset.setrole, role: sr.value }).then(() => toastInfo('Rôle attribué'), er => { toastInfo('Refusé', er.message, true); renderSettings(); }); return; }
     const ri = e.target.closest('[data-ri]');
     if (ri && S.rolesDraft) {
       const r = S.rolesDraft[+ri.dataset.ri];
