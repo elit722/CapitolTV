@@ -16,6 +16,10 @@
   "durable_objects": {
     "bindings": [{ "name": "GAME", "class_name": "Game" }]
   },
+  // Médias importés (sons, vidéos) et banque de clips
+  "kv_namespaces": [{ "binding": "MEDIA", "id": "ad5d373acdec4dca997fc1541c53bd4e" }],
+  "r2_buckets": [{ "binding": "CLIPS", "bucket_name": "capitol-tv-clips" }],
+
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Game"] }],
 
   "observability": { "enabled": true },
@@ -23,11 +27,11 @@
   // Variables publiques (les valeurs secrètes se règlent avec `npx wrangler secret put …`, voir README)
   "vars": {
     // ID de l'application Discord (Developer Portal > OAuth2 > Client ID)
-    "DISCORD_CLIENT_ID": "1628d32eaabdc534d3316973ff21613517452b3f46fa0117c0b44008d0838e27",
+    "DISCORD_CLIENT_ID": "1572717332692996167",
     // Facultatif : réserver le site aux membres d'un serveur Discord (ID du serveur)
     "DISCORD_GUILD_ID": "",
     // Ton ID Discord (et ceux des co-organisateurs), séparés par des virgules : toujours admin de la régie
-    "OWNER_DISCORD_IDS": "994523972135829504","348537039022718986",
+    "OWNER_DISCORD_IDS": "994523972135829504,348537039022718986",
     // Facultatif : statut en direct des tributs (dev.twitch.tv/console > Client ID)
     "TWITCH_CLIENT_ID": ""
   }
