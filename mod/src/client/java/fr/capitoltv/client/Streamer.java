@@ -272,8 +272,9 @@ public final class Streamer {
             VideoBufferConverter.convertToI420(bb, b, FourCC.ARGB);
             VideoFrame fr = new VideoFrame(b, System.nanoTime());
             s.pushFrame(fr); fr.release();
-            p.close(); t.dispose(); s.dispose(); f.dispose();
-            return "OK (offre " + sdp.length() + " octets, vidéo " + (sdp.contains("m=video") ? "oui" : "non") + ")";
+            String res = "OK (offre " + sdp.length() + " octets, vidéo " + (sdp.contains("m=video") ? "oui" : "non") + ", image envoyée)";
+            try { p.close(); } catch (Throwable ignored) { }
+            return res;
         } catch (Throwable e) {
             return "ÉCHEC " + e;
         }
