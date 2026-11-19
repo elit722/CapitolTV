@@ -70,6 +70,7 @@ public final class Streamer {
     private static final AtomicBoolean busy = new AtomicBoolean();
     private static int frames;
     private static String lastErr = "";
+    private static volatile int maxH = 720, maxFps = 30;
 
     public static boolean live() { return live; }
     public static String status() { return status; }
@@ -101,7 +102,7 @@ public final class Streamer {
         if (!c.streamOn) { if (live || starting) stop("coupée"); return; }
         if (!live && !starting) { if (System.currentTimeMillis() >= retryAt) start(); return; }
         if (!live || videoSource == null) return;
-        long now = System.nanoTime(), every = 1_000_000_000L / Math.max(10, Math.min(30, c.streamFps));
+        long now = System.nanoTime(), every = 1_000_000_000L / Math.max(10, Math.min(maxFps, c.streamFps));
         if (now - lastFrame < every || !busy.compareAndSet(false, true)) return;
         lastFrame = now;
         capture(img -> WORK.execute(() -> { try { push(img); } finally { img.close(); busy.set(false); } }), () -> busy.set(false));
@@ -129,7 +130,7 @@ public final class Streamer {
             for (int y = 0; y < h; y++) bb.asIntBuffer().position(y * w).put(argb, y * iw, w);
             NativeI420Buffer buf = NativeI420Buffer.allocate(w, h);
             VideoBufferConverter.convertToI420(bb, buf, FourCC.ARGB);
-            int max = ClientConfig.get().streamHeight;
+            int max = Math.min(ClientConfig.get().streamHeight, maxH);
             VideoFrameBuffer out = buf;
             if (max > 0 && h > max) {
                 int sh = max & ~1, sw = (int) Math.round(w * (double) sh / h) & ~1;
@@ -152,7 +153,17 @@ public final class Streamer {
         starting = true; status = "connexion…";
         WORK.execute(() -> {
             try {
-                if (factory == null) factory = newFactory();
+                factory();
+                // qualité maximale fixée par la régie (volume de données)
+                int vh = ClientConfig.get().streamHeight, vk = ClientConfig.get().streamKbps, vf = ClientConfig.get().streamFps;
+                try {
+                    HttpResponse<String> q = HTTP.send(HttpRequest.newBuilder(URI.create(base.replaceAll("/+$", "") + "/whip/" + key)).timeout(Duration.ofSeconds(8)).GET().build(), HttpResponse.BodyHandlers.ofString());
+                    if (q.statusCode() == 200) {
+                        com.google.gson.JsonObject j = com.google.gson.JsonParser.parseString(q.body()).getAsJsonObject();
+                        vh = Math.min(vh, j.get("h").getAsInt()); vk = Math.min(vk, j.get("kbps").getAsInt()); vf = Math.min(vf, j.get("fps").getAsInt());
+                    } else if (q.statusCode() == 404) throw new IllegalStateException("clé de diffusion inconnue");
+                } catch (IllegalStateException e) { throw e; } catch (Exception ignored) { }
+                maxH = vh; maxFps = vf;
                 RTCConfiguration cfg = new RTCConfiguration();
                 RTCIceServer ice = new RTCIceServer();
                 ice.urls = List.of("stun:stun.cloudflare.com:3478");
@@ -172,8 +183,8 @@ public final class Streamer {
                 vi.direction = RTCRtpTransceiverDirection.SEND_ONLY;
                 vi.streamIds = List.of("ctv");
                 RTCRtpEncodingParameters enc = new RTCRtpEncodingParameters();
-                enc.maxBitrate = ClientConfig.get().streamKbps * 1000;
-                enc.maxFramerate = (double) ClientConfig.get().streamFps;
+                enc.maxBitrate = vk * 1000;
+                enc.maxFramerate = (double) vf;
                 vi.sendEncodings = List.of(enc);
                 pc.addTransceiver(videoTrack, vi);
                 if (ClientConfig.get().streamMic && !noAudio) {
@@ -214,6 +225,8 @@ public final class Streamer {
     }
 
     private static boolean noAudio;
+    /** usine WebRTC partagée (diffusion + interphone) */
+    public static synchronized PeerConnectionFactory factory() { if (factory == null) factory = newFactory(); return factory; }
     /** usine WebRTC ; sans carte son (ou sans micro), on passe en audio factice */
     private static PeerConnectionFactory newFactory() {
         try { return new PeerConnectionFactory(); }

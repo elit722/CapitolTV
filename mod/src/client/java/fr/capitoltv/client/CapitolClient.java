@@ -16,7 +16,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.Map;
 
 public class CapitolClient implements ClientModInitializer {
-    public static KeyBinding menuKey, signalKey, stateKey, followKey, replyKey, cameraKey, peekKey, movesKey;
+    public static KeyBinding menuKey, signalKey, stateKey, followKey, replyKey, cameraKey, peekKey, movesKey, talkKey;
     private static CtvSocket sock;
     /** Tribut suivi par cette caméra (id Capitol TV). */
     public static String follow = "";
@@ -36,6 +36,7 @@ public class CapitolClient implements ClientModInitializer {
         cameraKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.camera", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F6, cat));
         peekKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.peek", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, cat));
         movesKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.moves", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_V, cat));
+        talkKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.talk", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_B, cat));
         try { CamMode.install(); } catch (Throwable t) { fr.capitoltv.CapitolTV.LOG.warn("Capitol TV : HUD vanilla non géré ({})", t.toString()); }
         ClientTickEvents.START_CLIENT_TICK.register(mc -> { if (!CamMoves.startTick(mc)) CamMode.startTick(mc); });
         ClientTickEvents.END_CLIENT_TICK.register(CamMoves::endTick);
@@ -192,6 +193,8 @@ public class CapitolClient implements ClientModInitializer {
             ClientConfig.save();
             Hud.toast("Mode caméra", c.cameraMode ? "activé : HUD du jeu masqué, barre caméra (touches 1 à 9)" : "désactivé", Hud.GOLD, 4);
         }
+        Talk.tick(talkKey.isPressed() && mc.currentScreen == null);
+        while (talkKey.wasPressed()) { }
         while (movesKey.wasPressed()) {
             if (mc.player == null) continue;
             if (!CamMode.allowed() && !mc.player.isSpectator()) { Hud.toast("Mouvements de caméra", "Réservés aux caméras en spectateur", Hud.ORANGE, 3); continue; }
@@ -245,7 +248,10 @@ public class CapitolClient implements ClientModInitializer {
 
     private static void onMessage(JsonObject m) {
         String t = Data.s(m, "t");
+        if (Talk.onReply(m)) return;
         switch (t) {
+            case "talkCh" -> Talk.onChannel(Data.b(m, "open"), Data.b(m, "regie"), Data.s(m, "by"));
+            case "talkSpeak" -> Talk.onSpeak(Data.s(m, "who"), Data.b(m, "on"), Data.s(m, "name"));
             case "hello" -> {
                 Data.hello(m);
                 stDirty = true;
@@ -253,6 +259,8 @@ public class CapitolClient implements ClientModInitializer {
                 Hud.toast("Capitol TV", "Connecté en tant que " + Data.meName + (Data.serverMod ? " · mod serveur actif" : ""), Hud.GOLD, 4);
                 CamMode.resetSpectatorTries();
                 CamMode.ensureSpectator(MinecraftClient.getInstance(), true);
+                JsonObject tk = Data.obj(m, "talk");
+                if (tk != null && Data.b(tk, "open")) Talk.onChannel(true, Data.b(tk, "regie"), "");
             }
             case "tribs" -> {
                 Data.setTribs(Data.arr(m, "tribs"));

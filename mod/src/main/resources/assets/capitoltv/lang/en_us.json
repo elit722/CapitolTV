@@ -7,5 +7,6 @@
   "key.capitoltv.reply": "Reply \"Received\" to last message",
   "key.capitoltv.camera": "Camera mode (clean HUD, camera bar)",
   "key.capitoltv.peek": "Show interface (hold, while on air)",
-  "key.capitoltv.moves": "Camera moves"
+  "key.capitoltv.moves": "Camera moves",
+  "key.capitoltv.talk": "Talk to the control room"
 }

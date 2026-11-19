@@ -7,5 +7,6 @@
   "key.capitoltv.reply": "Répondre « Reçu » au dernier message",
   "key.capitoltv.camera": "Mode caméra (HUD masqué, barre caméra)",
   "key.capitoltv.peek": "Voir l'interface (maintenir, à l'antenne)",
-  "key.capitoltv.moves": "Mouvements de caméra"
+  "key.capitoltv.moves": "Mouvements de caméra",
+  "key.capitoltv.talk": "Parler à la régie (interphone)"
 }

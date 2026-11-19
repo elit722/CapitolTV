@@ -67,6 +67,12 @@ public final class Hud {
         int sw = ctx.getScaledWindowWidth(), sh = ctx.getScaledWindowHeight();
         CamMode.renderTally(ctx, tr, sw);
         CamMoves.render(ctx, tr, sw, sh);
+        if (Talk.open) {
+            String s = Talk.speaking ? "● TU PARLES À LA RÉGIE" : Talk.regieSpeaks ? "◉ LA RÉGIE PARLE" + (Talk.regieName.isEmpty() ? "" : " · " + Talk.regieName) : "INTERPHONE · " + CapitolClient.talkKey.getBoundKeyLocalizedText().getString() + " pour parler";
+            int w = tr.getWidth(s) + 12, x = (sw - w) / 2, y = sh - 74;
+            ctx.fill(x, y, x + w, y + 14, Talk.speaking ? 0xE0B0182C : Talk.regieSpeaks ? 0xE0806010 : 0xB0101014);
+            ctx.drawText(tr, s, x + 6, y + 3, 0xFFFFFFFF, false);
+        }
         if (Streamer.live() && ClientConfig.get().streamOn) { String s = "● DIFFUSION"; int w = tr.getWidth(s) + 8; ctx.fill(sw - w - 4, sh - 16, sw - 4, sh - 4, 0xA0101014); ctx.drawText(tr, s, sw - w, sh - 14, 0xFFE0514A, false); }
         if (CamMode.clean()) return;
         if (CamMode.active() && CapitolClient.online()) CamMode.renderToolbar(ctx, tr, sw, sh);

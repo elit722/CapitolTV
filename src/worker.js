@@ -121,7 +121,11 @@ export default {
         return new Response("Connexion requise", { status: 401 });
       }
       if (p.startsWith("/media/")) return serveMedia(req, env, p.slice(7));
-      if (p.startsWith("/api/media") || p.startsWith("/api/rtc")) {
+      if (p.startsWith("/clip/")) {
+        const h = new Headers(req.headers); h.set("X-CTV-User", JSON.stringify(user));
+        return env.GAME.getByName("main").fetch(new Request(new URL(p, "https://game"), { method: "GET", headers: h }));
+      }
+      if (p.startsWith("/api/media") || p.startsWith("/api/rtc") || p.startsWith("/api/clips")) {
         if (p.startsWith("/api/media") && (user.guest || user.overlay)) return new Response("Réservé à l'équipe", { status: 403 });
         const h = new Headers(req.headers);
         h.set("X-CTV-User", JSON.stringify(user));
@@ -334,7 +338,7 @@ export class Game extends DurableObject {
 
   load() {
     if (!this.loading) this.loading = (async () => {
-      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets"]);
+      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips"]);
       this.board = { ...defaultBoard(), ...(m.get("board") || {}) };
       this.alerts = m.get("alerts") || {};
       this.team = m.get("team") || [];
@@ -358,6 +362,8 @@ export class Game extends DurableObject {
       this.pubs = m.get("pubs") || {};
       this.poll = m.get("poll") || null;
       this.bets = m.get("bets") || { open: true, users: {}, settled: null };
+      this.clips = m.get("clips") || [];
+      this.talk = this.talk || { open: [], regie: null, cams: {}, req: {}, speak: {} };
       this.cleanSince = this.cleanSince || {};
       this.pos = this.pos || {};
       this.near = this.near || new Map();
@@ -391,6 +397,7 @@ export class Game extends DurableObject {
     if (path === "/mod") return this.modConnect(req);
     if (path.startsWith("/api/media")) return this.mediaApi(req, path);
     if (path.startsWith("/api/rtc")) return this.rtcApi(req, path);
+    if (path.startsWith("/api/clips") || path.startsWith("/clip/")) return this.clipApi(req, path);
     if (path.startsWith("/whip/")) return this.whip(req, path);
     let user = null;
     try { user = JSON.parse(req.headers.get("X-CTV-User") || "null"); } catch (e) {}
@@ -437,7 +444,8 @@ export class Game extends DurableObject {
       me: { id: a.id, name: a.name, av: a.av, perm: a.perm, pub: a.pub, lock: !!a.lock, guest: !!a.guest, tribute: this.tributeOf(a.id), cam: a.cam || "", sup: isSup(a), crew: isCrew(a) && !a.lock, map: this.mapAllowed(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "" },
       roles: this.roles, prog: a.lock ? undefined : this.progPublic(), progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
       media: isCrew(a) ? this.media : undefined, srvCams: isCrew(a) ? this.srvCams : undefined,
-      pubs: this.pubsFor(a), rtc: { on: this.rtcOn(), pub: !!this.board.rtcPublic },
+      pubs: this.pubsFor(a), rtc: { on: this.rtcOn(), pub: !!this.board.rtcPublic, vq: { trib: this.vqFor("t:"), cam: this.vqFor("c:") } },
+      talk: this.talkSup(a) ? this.talkState() : undefined, clips: this.clipsFor(a),
       skeys: hasPerm(a, "program") || a.perm === "admin" ? this.allKeys() : undefined,
       mykeys: a.guest || a.overlay ? undefined : this.myKeys(a.id),
       poll: this.pollPublic(a.id), bets: this.betsPublic(a.id),
@@ -664,7 +672,7 @@ export class Game extends DurableObject {
         this.broadcast({ t: "alerts", all: {} }, x => isCrew(x) && !x.lock); this.modcast({ t: "alerts", all: {} }); reply(true); break;
       }
       case "team": case "setRole": case "roles": return this.onRolesOp(a, m, reply);
-      case "progSave": case "progTake": case "progSfx": case "progGfx": case "progQueue": case "progReplay": case "progAuto": return this.onProgOp(a, m, reply);
+      case "progSave": case "progTake": case "progSfx": case "progGfx": case "progQueue": case "progReplay": case "progAuto": case "progClip": return this.onProgOp(a, m, reply);
       case "skeyNew": {
         if (!hasPerm(a, "program") && !admin) return deny();
         const src = String(m.src || ""); if (!/^[tc]:[\w-]{1,40}$/.test(src)) return reply(false, { msg: "Source inconnue." });
@@ -675,10 +683,27 @@ export class Game extends DurableObject {
       }
       case "rtcCfg": {
         if (!admin) return deny();
-        this.board.rtcPublic = !!m.pub; await this.ctx.storage.put("board", this.board);
+        if (m.pub != null) this.board.rtcPublic = !!m.pub;
+        if (m.vq) { const c = x => ({ h: +x.h || 0, kbps: +x.kbps || 0, fps: +x.fps || 0 }); this.board.vq = { trib: c(m.vq.trib || {}), cam: c(m.vq.cam || {}) }; }
+        await this.ctx.storage.put("board", this.board);
         this.broadcastHelloAll(); reply(true); break;
       }
       case "pollStart": case "pollEnd": case "vote": return this.onPollOp(a, m, reply);
+      case "talkOpen": case "talkSpeak": case "talkDrop": {
+        if (!this.talkSup(a)) return deny();
+        const T = this.talk;
+        if (m.t === "talkOpen") {
+          const ids = m.all ? this.talkCams().map(x => x.id) : [String(m.uid || "")];
+          for (const id of ids) { T.open = T.open.filter(x => x !== id); if (m.on) T.open.push(id); delete T.req[id]; }
+          for (const id of ids) this.sendMod(id, { t: "talkCh", open: T.open.includes(id), regie: !!T.regie, by: a.name });
+          if (!m.on) for (const id of ids) delete T.cams[id];
+        } else if (m.t === "talkSpeak") {
+          T.speak.regie = !!m.on; T.speakBy = a.name;
+          for (const id of T.open) this.sendMod(id, { t: "talkSpeak", who: "regie", name: a.name, on: !!m.on });
+        } else if (m.t === "talkDrop") { delete T.req[String(m.uid || "")]; }
+        this.pushTalk(); reply(true); break;
+      }
+      case "clipLive": return this.onProgOp(a, { ...m, t: "progClip" }, reply);
       case "bet": case "betsOpen": case "betsReset": return this.onBetOp(a, m, reply);
       case "ban": {
         if (!staff) return deny();
@@ -882,6 +907,7 @@ export class Game extends DurableObject {
     const fx = this.prog.sfx, md = fx && this.media.find(x => x.id === fx.id);
     return { seq: this.prog.seq, scene: sc ? sc.name : "", items, trans: this.prog.trans, title: this.prog.title || "", on: !!sc,
       gfx: this.prog.gfx || {}, replay: this.prog.replay && Date.now() < this.prog.replay.end ? this.prog.replay : null, next: this.prog.next || null,
+      clip: this.prog.clip && Date.now() < this.prog.clip.end ? this.prog.clip : null,
       sfx: md ? { id: md.id, name: md.name, kind: md.kind, at: fx.at, vol: fx.vol, loop: !!fx.loop, dur: md.dur || 0 } : null };
   }
   onAirCams() {
@@ -1091,6 +1117,7 @@ export class Game extends DurableObject {
       return new Response(null, { status: 200, headers: H() });
     }
     if (req.method === "PATCH") return new Response(null, { status: 204, headers: H() });
+    if (req.method === "GET") return Response.json(this.vqFor(src), { headers: H() });
     if (req.method !== "POST") return new Response("Méthode non prise en charge", { status: 405, headers: H() });
     const sdp = await req.text();
     if (!sdp.includes("v=0") || sdp.length > 60000) return new Response("Offre SDP attendue", { status: 400, headers: H() });
@@ -1118,6 +1145,12 @@ export class Game extends DurableObject {
       return new Response("Erreur de diffusion : " + e.message, { status: 502, headers: H() });
     }
   }
+  /* qualité maximale demandée par la régie (le volume de données envoyé aux spectateurs en dépend) */
+  vqFor(src) {
+    const q = (this.board.vq || {})[src[0] === "t" ? "trib" : "cam"] || {};
+    const def = src[0] === "t" ? { h: 480, kbps: 1500, fps: 24 } : { h: 720, kbps: 3000, fps: 30 };
+    return { h: [360, 480, 720, 1080].includes(+q.h) ? +q.h : def.h, kbps: Math.max(500, Math.min(8000, +q.kbps || def.kbps)), fps: Math.max(10, Math.min(30, +q.fps || def.fps)) };
+  }
   srcName(src) {
     const id = src.slice(2);
     if (src[0] === "t") { const t = this.board.tributes.find(x => x.id === id); return t ? t.name : "tribut"; }
@@ -1134,15 +1167,28 @@ export class Game extends DurableObject {
     if (!this.rtcAllowed(a)) return J({ msg: "Flux réservés à l'équipe." }, 403);
     const b = await req.json().catch(() => ({}));
     try {
+      if (path.endsWith("/talk")) {
+        if (!this.talkSup(a)) return J({ msg: "Réservé à la régie." }, 403);
+        const sdp = String(b.sdp || ""), mid = (/\nm=audio[\s\S]*?\na=mid:(\S+)/.exec(sdp) || [])[1];
+        if (mid == null) return J({ msg: "Offre sans audio" }, 400);
+        const ses = await this.sfu("/sessions/new", "POST");
+        const r = await this.sfu(`/sessions/${ses.sessionId}/tracks/new`, "POST", { sessionDescription: { type: "offer", sdp }, tracks: [{ location: "local", mid, trackName: "regie" }] });
+        this.talk.regie = { sid: ses.sessionId, tracks: [{ name: "regie", kind: "audio" }], by: user.name || "Régie", at: Date.now() };
+        for (const id of this.talk.open) this.sendMod(id, { t: "talkCh", open: true, regie: true });
+        this.pushTalk();
+        return J({ sdp: r.sessionDescription.sdp });
+      }
       if (path.endsWith("/pull")) {
-        const pub = this.pubs[String(b.src || "")];
+        const talkSrc = String(b.src || "").startsWith("talk:");
+        if (talkSrc && !this.talkSup(a)) return J({ msg: "Réservé à la régie." }, 403);
+        const pub = talkSrc ? this.talk.cams[String(b.src).slice(5)] : this.pubs[String(b.src || "")];
         if (!pub) return J({ msg: "Ce flux n'est pas en ligne." }, 404);
         const ses = await this.sfu("/sessions/new", "POST");
         const r = await this.sfu(`/sessions/${ses.sessionId}/tracks/new`, "POST", { tracks: pub.tracks.map(t => ({ location: "remote", sessionId: pub.sid, trackName: t.name })) });
         const bad = (r.tracks || []).filter(t => t.errorCode);
         if (bad.length === pub.tracks.length) {
           // l'émetteur a disparu sans prévenir
-          if (this.pubs[b.src] === pub) { delete this.pubs[b.src]; this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); }
+          if (!talkSrc && this.pubs[b.src] === pub) { delete this.pubs[b.src]; this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); }
           return J({ msg: "Flux interrompu." }, 410);
         }
         return J({ sid: ses.sessionId, offer: r.sessionDescription, renego: !!r.requiresImmediateRenegotiation, tracks: r.tracks });
@@ -1153,6 +1199,121 @@ export class Game extends DurableObject {
         return J({ ok: true });
       }
     } catch (e) { return J({ msg: "Vidéo : " + e.message }, 502); }
+    return J({ msg: "?" }, 404);
+  }
+
+  /* ---------- interphone régie ↔ caméras ---------- */
+  talkSup(a) { return !!a && !a.mod && !a.server && !a.overlay && !a.guest && (hasPerm(a, "program") || a.perm === "admin" || a.cam === "chef"); }
+  talkCams() {
+    const on = new Set(); for (const ws of this.sockets()) { const x = this.att(ws); if (x && x.mod) on.add(x.id); }
+    return this.team.filter(m => CAMROLES.includes(this.camOf(m.id)) || on.has(m.id)).map(m => ({ id: m.id, name: m.name, online: on.has(m.id) }));
+  }
+  talkState() {
+    const T = this.talk;
+    return { cams: this.talkCams(), open: T.open, req: T.req, speak: T.speak, pubs: Object.fromEntries(Object.entries(T.cams).map(([k, v]) => [k, v.at])), regie: T.regie ? { by: T.regie.by, at: T.regie.at } : null };
+  }
+  pushTalk() {
+    clearTimeout(this.talkT);
+    this.talkT = setTimeout(() => { const st = this.talkState(); this.broadcast({ t: "talk", talk: st }, x => this.talkSup(x)); }, 150);
+  }
+  sendMod(uid, msg) { for (const ws of this.sockets()) { const x = this.att(ws); if (x && x.mod && x.id === uid) this.send(ws, msg); } }
+
+  /* ---------- banque de clips ---------- */
+  clipVisible(c, a) {
+    if (a && (isCrew(a) || a.overlay) && !a.lock) return true;
+    return c.kind === "twitch" || Date.now() >= (c.at || 0) + (this.board.delay || 0) * 1000;
+  }
+  clipsFor(a) {
+    return this.clips.filter(c => c.ready && this.clipVisible(c, a)).map(c => ({ id: c.id, title: c.title, kind: c.kind, slug: c.slug || "", tid: c.tid || "", tname: c.tname || "", by: c.byName, mine: a && c.by === a.id, at: c.at, dur: c.dur || 0, parts: c.parts ? c.parts.length : 0, mime: c.mime || "", pinned: !!c.pinned, size: c.size || 0 }));
+  }
+  pushClips() {
+    clearTimeout(this.clipT);
+    this.clipT = setTimeout(() => { for (const ws of this.sockets()) { const x = this.att(ws); if (!x || x.mod || x.server) continue; this.send(ws, { t: "clips", clips: this.clipsFor(x) }); } }, 300);
+  }
+  async dropClip(id) {
+    const c = this.clips.find(x => x.id === id); this.clips = this.clips.filter(x => x.id !== id);
+    if (c && c.kind === "ctv" && this.env.CLIPS) for (let n = 0; n < (c.parts || []).length; n++) try { await this.env.CLIPS.delete(`clip/${id}/${n}`); } catch (e) {}
+  }
+  /* ménage : on garde la banque sous 8 Go (les clips épinglés ne sont jamais supprimés) */
+  async trimClips() {
+    const MAX = 8 * 1024 * 1024 * 1024;
+    let tot = this.clips.reduce((n, c) => n + (c.size || 0), 0);
+    const old = this.clips.filter(c => !c.pinned && c.kind === "ctv").sort((x, y) => x.at - y.at);
+    while (tot > MAX && old.length) { const c = old.shift(); tot -= c.size || 0; await this.dropClip(c.id); }
+  }
+  async clipApi(req, path) {
+    let user = null;
+    try { user = JSON.parse(req.headers.get("X-CTV-User") || "null"); } catch (e) {}
+    const J = (o, st = 200) => Response.json(o, { status: st });
+    if (!user || !user.id) return J({ msg: "Connexion requise" }, 401);
+    const anon = user.overlay || user.guest;
+    const a = { id: user.id, name: user.name, overlay: !!user.overlay, guest: !!user.guest, perm: anon ? "viewer" : this.permOf(user.id), cam: anon ? "" : this.camOf(user.id), perms: anon ? [] : this.permsOf(user.id), team: !anon && this.inTeam(user.id) };
+    a.lock = this.isLocked(a);
+    const mod = hasPerm(a, "program") || a.perm === "admin";
+    const parts = path.split("/").filter(Boolean);
+    // lecture d'un morceau : /clip/<id>/<n>
+    if (parts[0] === "clip") {
+      const c = this.clips.find(x => x.id === parts[1]);
+      if (!c || !c.ready || !this.clipVisible(c, a) || !this.env.CLIPS) return new Response("Clip introuvable", { status: 404 });
+      const o = await this.env.CLIPS.get(`clip/${c.id}/${parseInt(parts[2], 10) || 0}`);
+      if (!o) return new Response("Morceau introuvable", { status: 404 });
+      return new Response(o.body, { headers: { "Content-Type": c.mime || "video/webm", "Cache-Control": "private, max-age=86400" } });
+    }
+    const id = String(parts[2] || "").replace(/[^a-z0-9]/gi, "");
+    const save = () => { this.ctx.storage.put("clips", this.clips); this.pushClips(); };
+    if (req.method === "GET") return J({ clips: this.clipsFor(a), used: mod ? this.clips.reduce((n, c) => n + (c.size || 0), 0) : undefined });
+    if (req.method === "POST" && id === "twitch") {
+      if (anon || a.lock) return J({ msg: "Connecte-toi pour ajouter un clip." }, 403);
+      const b = await req.json().catch(() => ({}));
+      const url = String(b.url || "");
+      const slug = (/clips\.twitch\.tv\/(?:embed\?clip=)?([\w-]+)/.exec(url) || /twitch\.tv\/[\w]+\/clip\/([\w-]+)/.exec(url) || [])[1];
+      if (!slug) return J({ msg: "Colle le lien d'un clip Twitch (clips.twitch.tv/… ou twitch.tv/chaine/clip/…)." }, 400);
+      if (this.clips.some(c => c.slug === slug)) return J({ msg: "Ce clip est déjà dans la banque." }, 409);
+      const t = this.board.tributes.find(x => x.id === b.tid);
+      this.clips.push({ id: rid8(), kind: "twitch", slug, title: String(b.title || "Clip").slice(0, 90), tid: t ? t.id : "", tname: t ? t.name : "", by: a.id, byName: a.name || "?", at: Date.now(), dur: 30, ready: true });
+      save(); return J({ ok: true });
+    }
+    if (req.method === "POST" && id === "new") {
+      if (!(isCrew(a) || a.overlay) || a.lock || anon && !a.overlay) return J({ msg: "Clips vidéo réservés à l'équipe." }, 403);
+      if (!this.env.CLIPS) return J({ msg: "Stockage des clips non configuré." }, 503);
+      const b = await req.json().catch(() => ({}));
+      const n = Math.max(1, Math.min(40, parseInt(b.n, 10) || 0));
+      const t = this.board.tributes.find(x => x.id === b.tid), cm = this.team.find(x => "c:" + x.id === b.src);
+      const c = { id: rid8(), kind: "ctv", title: String(b.title || "Clip").slice(0, 90), src: String(b.src || "").slice(0, 44), tid: t ? t.id : "", tname: t ? t.name : cm ? cm.name : "", by: a.id, byName: a.name || "Régie", at: Math.min(Date.now(), +b.at || Date.now()), dur: Math.max(1, Math.min(120, +b.dur || 30)), mime: String(b.mime || "video/webm").slice(0, 60), parts: new Array(n).fill(0), size: 0, ready: false };
+      this.clips.push(c); this.ctx.storage.put("clips", this.clips);
+      return J({ id: c.id });
+    }
+    if (req.method === "PUT" && id) {
+      const c = this.clips.find(x => x.id === id), n = parseInt(parts[3], 10);
+      if (!c || c.ready || c.by !== a.id) return J({ msg: "Clip inconnu." }, 404);
+      if (!(n >= 0 && n < c.parts.length)) return J({ msg: "Morceau invalide." }, 400);
+      const buf = await req.arrayBuffer();
+      if (buf.byteLength > 30 * 1024 * 1024) return J({ msg: "Morceau trop gros." }, 413);
+      await this.env.CLIPS.put(`clip/${id}/${n}`, buf, { httpMetadata: { contentType: c.mime } });
+      c.parts[n] = buf.byteLength;
+      if (c.parts.every(x => x > 0)) { c.ready = true; c.size = c.parts.reduce((x, y) => x + y, 0); await this.trimClips(); save(); }
+      else this.ctx.storage.put("clips", this.clips);
+      return J({ ok: true, ready: c.ready });
+    }
+    if (req.method === "PATCH" && id) {
+      const c = this.clips.find(x => x.id === id); if (!c) return J({ msg: "Clip introuvable." }, 404);
+      if (!mod && c.by !== a.id) return J({ msg: "Non autorisé." }, 403);
+      const b = await req.json().catch(() => ({}));
+      if (b.title) c.title = String(b.title).slice(0, 90);
+      if (b.pinned != null && mod) c.pinned = !!b.pinned;
+      save(); return J({ ok: true });
+    }
+    if (req.method === "DELETE") {
+      if (id === "old") {
+        if (!mod) return J({ msg: "Réservé à la régie." }, 403);
+        const days = Math.max(0, +new URL(req.url).searchParams.get("days") || 0), lim = Date.now() - days * 86400000;
+        for (const c of this.clips.filter(c => !c.pinned && c.at < lim)) await this.dropClip(c.id);
+        save(); return J({ ok: true });
+      }
+      const c = this.clips.find(x => x.id === id); if (!c) return J({ ok: true });
+      if (!mod && c.by !== a.id) return J({ msg: "Non autorisé." }, 403);
+      await this.dropClip(id); save(); return J({ ok: true });
+    }
     return J({ msg: "?" }, 404);
   }
 
@@ -1273,6 +1434,9 @@ export class Game extends DurableObject {
         const nm = String(m.name || "").slice(0, 60);
         this.prog.replay = { src, sec, rate, name: nm, at: Date.now(), end: Date.now() + sec / rate * 1000 + 800 };
       }
+    } else if (m.t === "progClip") {
+      const c = m.id && this.clips.find(x => x.id === m.id);
+      this.prog.clip = c ? { id: c.id, kind: c.kind, slug: c.slug || "", parts: c.parts ? c.parts.length : 0, mime: c.mime || "", title: c.title, name: c.tname || "", at: Date.now(), end: Date.now() + (c.dur || 30) * 1000 + 1500 } : null;
     } else if (m.t === "progSfx") {
       const md = m.id && this.media.find(x => x.id === m.id);
       this.prog.sfx = md ? { id: md.id, at: Date.now(), vol: Math.max(0, Math.min(100, +m.vol || 100)), loop: !!m.loop } : null;
@@ -1304,7 +1468,7 @@ export class Game extends DurableObject {
     try { ws.close(code, reason); } catch (e) {}
     const a = this.att(ws);
     if (a && a.server) this.crewcast({ t: "srv", on: this.serverOn(ws) });
-    if (a && a.mod) this.camsChanged();
+    if (a && a.mod) { this.camsChanged(); if (this.talk && this.talk.cams[a.id]) { delete this.talk.cams[a.id]; delete this.talk.speak[a.id]; this.pushTalk(); } }
     this.schedulePresence();
   }
   async webSocketError() { this.schedulePresence(); }
@@ -1398,7 +1562,8 @@ export class Game extends DurableObject {
     return {
       t: "hello", now: Date.now(), delay: this.board.delay || 0, srv: this.serverOn(),
       me: { id: a.id, name: a.name, perm: a.perm, cam: a.cam || "", sup: isSup(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "" },
-      roles: this.roles, onair: this.onAirCams(), prep: this.prepCams(), streamKey: this.keyFor("c:" + a.id),
+      roles: this.roles, onair: this.onAirCams(), prep: this.prepCams(), streamKey: this.keyFor("c:" + a.id), vq: this.vqFor("c:"),
+      talk: { open: this.talk.open.includes(a.id), regie: !!this.talk.regie },
       tribs: this.tribsForMod(), alerts, cams: this.camsList(), team: this.teamForMod(),
       feed: this.camData.feed.slice(-150), comms: this.camData.comms.filter(x => this.msgVisible(x, a)).slice(-150),
       reqs: Object.values(this.camData.reqs), pos: this.latestPos()
@@ -1419,6 +1584,39 @@ export class Game extends DurableObject {
       return;
     }
     switch (m.t) {
+      case "talkReq": {
+        if (this.talk.open.includes(a.id)) { this.send(ws, { t: "talkCh", open: true, regie: !!this.talk.regie }); break; }
+        this.talk.req[a.id] = Date.now(); this.pushTalk();
+        this.crewcast({ t: "info", msg: a.name + " demande à parler à la régie (interphone)" }, x => !x.mod && this.talkSup(x));
+        this.send(ws, { t: "info", msg: "Demande envoyée à la régie" });
+        break;
+      }
+      case "talkSpeak": {
+        if (!this.talk.open.includes(a.id)) break;
+        this.talk.speak[a.id] = !!m.on; this.pushTalk(); break;
+      }
+      case "talkPub": case "talkPull": case "talkAns": {
+        if (!this.talk.open.includes(a.id)) return reply(false, { msg: "Canal régie fermé" });
+        try {
+          if (m.t === "talkPub") {
+            const sdp = String(m.sdp || ""), mid = (/\nm=audio[\s\S]*?\na=mid:(\S+)/.exec(sdp) || [])[1];
+            if (mid == null) return reply(false, { msg: "Offre sans audio" });
+            const ses = await this.sfu("/sessions/new", "POST");
+            const r = await this.sfu(`/sessions/${ses.sessionId}/tracks/new`, "POST", { sessionDescription: { type: "offer", sdp }, tracks: [{ location: "local", mid, trackName: "talk" }] });
+            this.talk.cams[a.id] = { sid: ses.sessionId, tracks: [{ name: "talk", kind: "audio" }], at: Date.now() };
+            this.pushTalk();
+            return reply(true, { sdp: r.sessionDescription.sdp });
+          }
+          if (m.t === "talkPull") {
+            const g = this.talk.regie; if (!g) return reply(false, { msg: "La régie n'a pas encore ouvert son micro" });
+            const ses = await this.sfu("/sessions/new", "POST");
+            const r = await this.sfu(`/sessions/${ses.sessionId}/tracks/new`, "POST", { tracks: g.tracks.map(t => ({ location: "remote", sessionId: g.sid, trackName: t.name })) });
+            return reply(true, { sid: ses.sessionId, sdp: r.sessionDescription.sdp });
+          }
+          await this.sfu(`/sessions/${String(m.sid || "").replace(/[^\w-]/g, "")}/renegotiate`, "PUT", { sessionDescription: { type: "answer", sdp: String(m.sdp || "") } });
+          return reply(true);
+        } catch (e) { return reply(false, { msg: "Interphone : " + e.message }); }
+      }
       case "st": {
         const st = this.camSt[a.id] = { ...(this.camSt[a.id] || {}), name: a.name, at: Date.now() };
         if (["actif", "rec", "pause", "inactif"].includes(m.state)) st.state = m.state;
@@ -1692,6 +1890,7 @@ export class Game extends DurableObject {
       t = Math.min(t, (Math.floor(now / 60000) + 1) * 60000 + 1000);
     if (this.prog && this.prog.next && this.prog.next.at) t = Math.min(t, Math.max(now + 200, this.prog.next.at));
     if (this.prog && this.prog.replay && this.prog.replay.end > now) t = Math.min(t, this.prog.replay.end + 100);
+    if (this.prog && this.prog.clip && this.prog.clip.end > now) t = Math.min(t, this.prog.clip.end + 100);
     if (this.bets && this.bets.settled) { const r = this.bets.settled.at + (this.board.delay || 0) * 1000; if (r > now) t = Math.min(t, r + 300); }
     if (this.poll && this.poll.end > now) t = Math.min(t, this.poll.end + 200);
     if (t === Infinity) return;
@@ -1708,6 +1907,7 @@ export class Game extends DurableObject {
     if (revealed) this.broadcastBoard({ viewersOnly: true });
     if (this.prog.next && now >= this.prog.next.at - 200) await this.runNext();
     if (this.prog.replay && now >= this.prog.replay.end) { this.prog.replay = null; this.pushProg(false); }
+    if (this.prog.clip && now >= this.prog.clip.end) { this.prog.clip = null; this.pushProg(false); }
     if (this.bets.settled) { const r = this.bets.settled.at + (this.board.delay || 0) * 1000; if (r <= now + 500 && r > now - 60000) this.pushBets(); }
     if (this.poll && this.poll.end && this.poll.end <= now + 300 && this.poll.end > now - 5000) this.pushPoll();
     await this.scheduleAlarm();

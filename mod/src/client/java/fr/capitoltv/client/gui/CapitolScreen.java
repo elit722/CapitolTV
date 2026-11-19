@@ -772,6 +772,8 @@ public class CapitolScreen extends Screen {
          "V ouvre la liste, puis une touche de 1 à 8 :\n1 Orbite autour du tribut suivi\n2 Orbite large en hauteur\n3 Travelling avant\n4 Grue (s'élève en le regardant)\n5 Suivi de dos\n6 Vue du ciel en rotation\n7 Panoramique sur place\n8 Regard verrouillé (tu bouges, la caméra le fixe)\n\nV arrête le mouvement. Bouger (ZQSD) l'arrête aussi, sauf le 8. Si le tribut est loin, tu es d'abord téléporté."},
         {"Antenne et différé",
          "Le site retarde tout ce qu'il montre (annonces, statuts, vidéos) du même délai. « Écran dans 1:42 » indique quand une action passera à l'antenne.\n\nQuand la régie affiche ta caméra, un voyant « EN DIRECT » s'allume en haut à droite. « PRÊT » : la régie prépare un plan avec toi.\n\nAvec OBS ou Twitch, l'écran devient propre à l'antenne (Alt gauche maintenu pour voir l'interface) et les sons du jeu sont coupés. Avec la diffusion du mod, ce n'est pas nécessaire."},
+        {"Interphone régie",
+         "La régie peut te parler depuis le site : sa voix sort dans ton casque.\n\nQuand le canal est ouvert (bandeau INTERPHONE en bas de l'écran), maintiens B pour lui répondre.\nCanal fermé : appuie sur B pour demander la parole, la régie reçoit ta demande.\n\nTa voix ne part jamais dans le flux vidéo."},
         {"Signaler et comms",
          "Signaler : choisis le tribut, le type d'action et des détails ; la régie et le réacteur le voient tout de suite.\nJ : signal rapide sur le tribut suivi ou le plus proche.\n\nComms : Staff (toute l'équipe), Caméras, Privé. Les messages passent aussi sur le site. BUZZ fait sonner un membre."},
         {"Carte et TP",
