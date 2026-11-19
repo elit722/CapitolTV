@@ -99,10 +99,10 @@ public final class Streamer {
 
     public static void onWorldRendered() {
         ClientConfig c = ClientConfig.get();
-        if (!c.streamOn) { if (live || starting) stop("coupée"); return; }
+        if (!c.streamOn || "off".equals(c.streamLevel)) { if (live || starting) stop("coupée"); return; }
         if (!live && !starting) { if (System.currentTimeMillis() >= retryAt) start(); return; }
         if (!live || videoSource == null) return;
-        long now = System.nanoTime(), every = 1_000_000_000L / Math.max(10, Math.min(maxFps, c.streamFps));
+        long now = System.nanoTime(), every = 1_000_000_000L / Math.max(10, maxFps);
         if (now - lastFrame < every || !busy.compareAndSet(false, true)) return;
         lastFrame = now;
         capture(img -> WORK.execute(() -> { try { push(img); } finally { img.close(); busy.set(false); } }), () -> busy.set(false));
@@ -130,7 +130,7 @@ public final class Streamer {
             for (int y = 0; y < h; y++) bb.asIntBuffer().position(y * w).put(argb, y * iw, w);
             NativeI420Buffer buf = NativeI420Buffer.allocate(w, h);
             VideoBufferConverter.convertToI420(bb, buf, FourCC.ARGB);
-            int max = Math.min(ClientConfig.get().streamHeight, maxH);
+            int max = maxH;
             VideoFrameBuffer out = buf;
             if (max > 0 && h > max) {
                 int sh = max & ~1, sw = (int) Math.round(w * (double) sh / h) & ~1;
@@ -155,12 +155,15 @@ public final class Streamer {
             try {
                 factory();
                 // qualité maximale fixée par la régie (volume de données)
-                int vh = ClientConfig.get().streamHeight, vk = ClientConfig.get().streamKbps, vf = ClientConfig.get().streamFps;
+                // qualité choisie par le joueur, plafonnée par la régie
+                Quality.Level lv = Quality.of(Quality.chosen().isEmpty() ? "std" : Quality.chosen());
+                int vh = lv.h(), vk = lv.kbps(), vf = lv.fps();
                 try {
-                    HttpResponse<String> q = HTTP.send(HttpRequest.newBuilder(URI.create(base.replaceAll("/+$", "") + "/whip/" + key)).timeout(Duration.ofSeconds(8)).GET().build(), HttpResponse.BodyHandlers.ofString());
+                    HttpResponse<String> q = HTTP.send(HttpRequest.newBuilder(URI.create(qualityUrl(base, key))).timeout(Duration.ofSeconds(8)).GET().build(), HttpResponse.BodyHandlers.ofString());
                     if (q.statusCode() == 200) {
                         com.google.gson.JsonObject j = com.google.gson.JsonParser.parseString(q.body()).getAsJsonObject();
-                        vh = Math.min(vh, j.get("h").getAsInt()); vk = Math.min(vk, j.get("kbps").getAsInt()); vf = Math.min(vf, j.get("fps").getAsInt());
+                        readQuality(j);
+                        if (j.has("h") && j.get("h").getAsInt() > 0) { vh = j.get("h").getAsInt(); vk = j.get("kbps").getAsInt(); vf = j.get("fps").getAsInt(); }
                     } else if (q.statusCode() == 404) throw new IllegalStateException("clé de diffusion inconnue");
                 } catch (IllegalStateException e) { throw e; } catch (Exception ignored) { }
                 maxH = vh; maxFps = vf;
@@ -182,10 +185,7 @@ public final class Streamer {
                 RTCRtpTransceiverInit vi = new RTCRtpTransceiverInit();
                 vi.direction = RTCRtpTransceiverDirection.SEND_ONLY;
                 vi.streamIds = List.of("ctv");
-                RTCRtpEncodingParameters enc = new RTCRtpEncodingParameters();
-                enc.maxBitrate = vk * 1000;
-                enc.maxFramerate = (double) vf;
-                vi.sendEncodings = List.of(enc);
+                vi.sendEncodings = encodings(vh, vk, vf);
                 pc.addTransceiver(videoTrack, vi);
                 if (ClientConfig.get().streamMic && !noAudio) {
                     AudioOptions ao = new AudioOptions();
@@ -222,6 +222,37 @@ public final class Streamer {
                 retryAt = System.currentTimeMillis() + 10000;
             }
         });
+    }
+
+    /** couches envoyées : pleine qualité (f) + version légère 360p (q) pour les vignettes de la régie */
+    static List<RTCRtpEncodingParameters> encodings(int h, int kbps, int fps) {
+        RTCRtpEncodingParameters f = new RTCRtpEncodingParameters();
+        f.maxBitrate = kbps * 1000;
+        f.maxFramerate = (double) fps;
+        if (h < 720) return List.of(f);
+        f.rid = "f"; f.scaleResolutionDownBy = 1.0;
+        RTCRtpEncodingParameters q = new RTCRtpEncodingParameters();
+        q.rid = "q"; q.maxBitrate = 600_000; q.maxFramerate = (double) Math.min(fps, 30); q.scaleResolutionDownBy = h / 360.0;
+        return List.of(f, q);
+    }
+
+    private static String qualityUrl(String base, String key) {
+        String lv = Quality.chosen();
+        return base.replaceAll("/+$", "") + "/whip/" + key + (lv.isEmpty() ? "" : "?lvl=" + lv);
+    }
+
+    private static void readQuality(com.google.gson.JsonObject j) {
+        if (j.has("level")) Quality.applied = j.get("level").getAsString();
+        if (j.has("cap")) Quality.cap = j.get("cap").getAsString();
+    }
+
+    /** prévient le serveur du niveau choisi (même « sans POV ») et récupère le plafond de la régie */
+    public static void announce() {
+        String key = key();
+        if (key == null || key.isBlank()) return;
+        String url = qualityUrl(ClientConfig.get().url, key.trim());
+        HTTP.sendAsync(HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(8)).GET().build(), HttpResponse.BodyHandlers.ofString())
+                .thenAccept(r -> { if (r.statusCode() == 200) try { readQuality(com.google.gson.JsonParser.parseString(r.body()).getAsJsonObject()); } catch (Exception ignored) { } });
     }
 
     private static boolean noAudio;
@@ -273,6 +304,7 @@ public final class Streamer {
             VideoTrack t = f.createVideoTrack("video", s);
             RTCRtpTransceiverInit vi = new RTCRtpTransceiverInit();
             vi.direction = RTCRtpTransceiverDirection.SEND_ONLY;
+            vi.sendEncodings = encodings(1080, 7000, 30);
             p.addTransceiver(t, vi);
             CompletableFuture<RTCSessionDescription> offer = new CompletableFuture<>();
             p.createOffer(new RTCOfferOptions(), new CreateSessionDescriptionObserver() {
@@ -285,7 +317,7 @@ public final class Streamer {
             VideoBufferConverter.convertToI420(bb, b, FourCC.ARGB);
             VideoFrame fr = new VideoFrame(b, System.nanoTime());
             s.pushFrame(fr); fr.release();
-            String res = "OK (offre " + sdp.length() + " octets, vidéo " + (sdp.contains("m=video") ? "oui" : "non") + ", image envoyée)";
+            String res = "OK (offre " + sdp.length() + " octets, vidéo " + (sdp.contains("m=video") ? "oui" : "non") + ", couches " + (sdp.contains("a=simulcast:send f;q") ? "f+q" : "1") + ", image envoyée)";
             try { p.close(); } catch (Throwable ignored) { }
             return res;
         } catch (Throwable e) {

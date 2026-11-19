@@ -167,9 +167,16 @@ public class CapitolClient implements ClientModInitializer {
         send(o);
     }
 
+    private static int firstAskTicks;
+
     /* ---------- boucle ---------- */
     private static void onTick(MinecraftClient mc) {
-        while (menuKey.wasPressed()) if (mc.currentScreen == null) mc.setScreen(new CapitolScreen());
+        // joueur (sans jeton d'équipe) : K ouvre directement « Ma diffusion »
+        while (menuKey.wasPressed()) if (mc.currentScreen == null) mc.setScreen(ClientConfig.get().token.isBlank() && !demo ? new fr.capitoltv.client.gui.StreamScreen(null, false) : new CapitolScreen());
+        // première connexion à un serveur : proposer le choix de qualité du POV
+        if (!ClientConfig.get().streamAsked && mc.world != null && mc.player != null && mc.currentScreen == null && !mc.isInSingleplayer() && !demo) {
+            if (++firstAskTicks > 60) { firstAskTicks = 0; mc.setScreen(new fr.capitoltv.client.gui.StreamScreen(null, true)); }
+        } else firstAskTicks = 0;
         while (signalKey.wasPressed()) quickSignal();
         while (stateKey.wasPressed()) {
             String[] order = {"actif", "rec", "pause", "inactif"};

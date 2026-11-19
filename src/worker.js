@@ -79,7 +79,7 @@ export default {
       if (p.startsWith("/whip/")) {
         // diffusion vers Capitol TV (mod Minecraft ou OBS) : la clé de diffusion fait office d'accès
         if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: WHIP_CORS });
-        return env.GAME.getByName("main").fetch(new Request(new URL(p, "https://game"), { method: req.method, headers: req.headers, body: req.method === "POST" || req.method === "PATCH" ? req.body : null }));
+        return env.GAME.getByName("main").fetch(new Request(new URL(p + new URL(req.url).search, "https://game"), { method: req.method, headers: req.headers, body: req.method === "POST" || req.method === "PATCH" ? req.body : null }));
       }
 
       let user = await readSession(req, env);
@@ -147,6 +147,15 @@ export default {
 
 /* ---------- médias préenregistrés (stockés en morceaux dans KV) ---------- */
 const MEDIA_CHUNK = 8 * 1024 * 1024;
+/* niveaux de qualité des flux natifs (mod / OBS) : le joueur choisit, la régie fixe un plafond */
+const VQ_LEVELS = {
+  off: { h: 0, kbps: 0, fps: 0 },
+  eco: { h: 480, kbps: 2000, fps: 30 },
+  std: { h: 720, kbps: 4500, fps: 30 },
+  hd: { h: 1080, kbps: 7000, fps: 30 },
+  max: { h: 1080, kbps: 10000, fps: 60 }
+};
+const VQ_ORDER = ["eco", "std", "hd", "max"];
 const WHIP_CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, DELETE, PATCH, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization", "Access-Control-Expose-Headers": "Location" };
 const RTC_API = "https://rtc.live.cloudflare.com/v1/apps/";
 async function serveMedia(req, env, id) {
@@ -338,7 +347,7 @@ export class Game extends DurableObject {
 
   load() {
     if (!this.loading) this.loading = (async () => {
-      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips"]);
+      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref"]);
       this.board = { ...defaultBoard(), ...(m.get("board") || {}) };
       this.alerts = m.get("alerts") || {};
       this.team = m.get("team") || [];
@@ -360,6 +369,7 @@ export class Game extends DurableObject {
       this.srvCams = m.get("srvcams") || [];
       this.skeys = m.get("skeys") || {};
       this.pubs = m.get("pubs") || {};
+      this.vpref = m.get("vpref") || {};
       this.poll = m.get("poll") || null;
       this.bets = m.get("bets") || { open: true, users: {}, settled: null };
       this.clips = m.get("clips") || [];
@@ -444,7 +454,7 @@ export class Game extends DurableObject {
       me: { id: a.id, name: a.name, av: a.av, perm: a.perm, pub: a.pub, lock: !!a.lock, guest: !!a.guest, tribute: this.tributeOf(a.id), cam: a.cam || "", sup: isSup(a), crew: isCrew(a) && !a.lock, map: this.mapAllowed(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "" },
       roles: this.roles, prog: a.lock ? undefined : this.progPublic(), progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
       media: isCrew(a) ? this.media : undefined, srvCams: isCrew(a) ? this.srvCams : undefined,
-      pubs: this.pubsFor(a), rtc: { on: this.rtcOn(), pub: !!this.board.rtcPublic, vq: { trib: this.vqFor("t:"), cam: this.vqFor("c:") } },
+      pubs: this.pubsFor(a), rtc: { on: this.rtcOn(), pub: false, vq: { trib: this.vqCap("t:"), cam: this.vqCap("c:") }, vpref: isCrew(a) && !a.lock ? this.vpref : undefined },
       talk: this.talkSup(a) ? this.talkState() : undefined, clips: this.clipsFor(a),
       skeys: hasPerm(a, "program") || a.perm === "admin" ? this.allKeys() : undefined,
       mykeys: a.guest || a.overlay ? undefined : this.myKeys(a.id),
@@ -683,8 +693,8 @@ export class Game extends DurableObject {
       }
       case "rtcCfg": {
         if (!admin) return deny();
-        if (m.pub != null) this.board.rtcPublic = !!m.pub;
-        if (m.vq) { const c = x => ({ h: +x.h || 0, kbps: +x.kbps || 0, fps: +x.fps || 0 }); this.board.vq = { trib: c(m.vq.trib || {}), cam: c(m.vq.cam || {}) }; }
+        this.board.rtcPublic = false;
+        if (m.vq) { const c = (x, d) => VQ_LEVELS[x] && x !== "off" ? x : d; this.board.vq = { trib: c(m.vq.trib, "hd"), cam: c(m.vq.cam, "max") }; }
         await this.ctx.storage.put("board", this.board);
         this.broadcastHelloAll(); reply(true); break;
       }
@@ -1096,11 +1106,11 @@ export class Game extends DurableObject {
     if (t) out["t:" + t.id] = this.keyFor("t:" + t.id);
     return out;
   }
-  rtcAllowed(a) { return !!a && this.rtcOn() && !a.lock && (isCrew(a) || a.overlay || !!this.board.rtcPublic); }
+  rtcAllowed(a) { return !!a && this.rtcOn() && !a.lock && (isCrew(a) || a.overlay); }
   pubsFor(a) {
     if (!this.rtcAllowed(a)) return {};
     const out = {};
-    for (const [src, p] of Object.entries(this.pubs)) out[src] = { at: p.at, via: p.via, kinds: p.tracks.map(t => t.kind) };
+    for (const [src, p] of Object.entries(this.pubs)) out[src] = { at: p.at, via: p.via, kinds: p.tracks.map(t => t.kind), sim: !!p.sim, lvl: p.lvl || "" };
     return out;
   }
   pushPubs() {
@@ -1118,7 +1128,16 @@ export class Game extends DurableObject {
       return new Response(null, { status: 200, headers: H() });
     }
     if (req.method === "PATCH") return new Response(null, { status: 204, headers: H() });
-    if (req.method === "GET") return Response.json(this.vqFor(src), { headers: H() });
+    if (req.method === "GET") {
+      // le joueur annonce son niveau de qualité choisi (?lvl=…), on renvoie la qualité effective
+      const lvl = new URL(req.url).searchParams.get("lvl");
+      if (lvl && VQ_LEVELS[lvl] && this.vpref[src] !== lvl) {
+        this.vpref[src] = lvl; this.ctx.storage.put("vpref", this.vpref);
+        if (lvl === "off" && this.pubs[src]) { delete this.pubs[src]; this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); }
+        this.crewcast({ t: "vpref", vpref: this.vpref }, x => !x.mod && !x.lock);
+      }
+      return Response.json(this.vqFor(src), { headers: H() });
+    }
     if (req.method !== "POST") return new Response("Méthode non prise en charge", { status: 405, headers: H() });
     const sdp = await req.text();
     if (!sdp.includes("v=0") || sdp.length > 60000) return new Response("Offre SDP attendue", { status: 400, headers: H() });
@@ -1136,7 +1155,7 @@ export class Game extends DurableObject {
       const ok = (r.tracks || []).filter(t => !t.errorCode).map(t => ({ name: t.trackName, kind: String(t.trackName).split("-")[0] }));
       if (!ok.length) throw new Error("pistes refusées");
       const ua = req.headers.get("User-Agent") || "";
-      this.pubs[src] = { sid: ses.sessionId, tracks: ok, at: Date.now(), via: /CapitolTV/i.test(ua) ? "mod" : /obs/i.test(ua) ? "obs" : "autre" };
+      this.pubs[src] = { sid: ses.sessionId, tracks: ok, at: Date.now(), via: /CapitolTV/i.test(ua) ? "mod" : /obs/i.test(ua) ? "obs" : "autre", sim: /\na=simulcast:/.test(sdp), lvl: this.vqFor(src).level };
       this.ctx.storage.put("pubs", this.pubs);
       this.pushPubs();
       const who = this.srcName(src);
@@ -1146,11 +1165,19 @@ export class Game extends DurableObject {
       return new Response("Erreur de diffusion : " + e.message, { status: 502, headers: H() });
     }
   }
-  /* qualité maximale demandée par la régie (le volume de données envoyé aux spectateurs en dépend) */
+  /* plafond de qualité fixé par la régie (par type de flux) */
+  vqCap(src) {
+    const q = this.board.vq || {}, k = src[0] === "t" ? "trib" : "cam";
+    const v = typeof q[k] === "string" ? q[k] : "";
+    return VQ_LEVELS[v] && v !== "off" ? v : (k === "trib" ? "hd" : "max");
+  }
+  /* qualité effective d'un flux : choix du joueur, limité par le plafond de la régie */
   vqFor(src) {
-    const q = (this.board.vq || {})[src[0] === "t" ? "trib" : "cam"] || {};
-    const def = src[0] === "t" ? { h: 480, kbps: 1500, fps: 24 } : { h: 720, kbps: 3000, fps: 30 };
-    return { h: [360, 480, 720, 1080].includes(+q.h) ? +q.h : def.h, kbps: Math.max(500, Math.min(8000, +q.kbps || def.kbps)), fps: Math.max(10, Math.min(30, +q.fps || def.fps)) };
+    const cap = this.vqCap(src), pref = this.vpref[src] || "";
+    const want = VQ_LEVELS[pref] ? pref : "std";
+    const level = want === "off" ? "off" : VQ_ORDER.indexOf(want) > VQ_ORDER.indexOf(cap) ? cap : want;
+    const L = VQ_LEVELS[level];
+    return { level, pref, cap, h: L.h, kbps: L.kbps, fps: L.fps, low: { h: 360, kbps: 600 } };
   }
   srcName(src) {
     const id = src.slice(2);
@@ -1185,7 +1212,9 @@ export class Game extends DurableObject {
         const pub = talkSrc ? this.talk.cams[String(b.src).slice(5)] : this.pubs[String(b.src || "")];
         if (!pub) return J({ msg: "Ce flux n'est pas en ligne." }, 404);
         const ses = await this.sfu("/sessions/new", "POST");
-        const r = await this.sfu(`/sessions/${ses.sessionId}/tracks/new`, "POST", { tracks: pub.tracks.map(t => ({ location: "remote", sessionId: pub.sid, trackName: t.name })) });
+        // couche basse (vignettes de l'Antenne) ou pleine qualité (programme, Direct, OBS)
+        const rid = b.layer === "q" ? "q" : "f";
+        const r = await this.sfu(`/sessions/${ses.sessionId}/tracks/new`, "POST", { tracks: pub.tracks.map(t => ({ location: "remote", sessionId: pub.sid, trackName: t.name, ...(pub.sim && t.kind === "video" ? { simulcast: { preferredRid: rid, priorityOrdering: "none", ridNotAvailable: "asciibetical" } } : {}) })) });
         const bad = (r.tracks || []).filter(t => t.errorCode);
         if (bad.length === pub.tracks.length) {
           // l'émetteur a disparu sans prévenir
@@ -1564,7 +1593,7 @@ export class Game extends DurableObject {
     return {
       t: "hello", now: Date.now(), delay: this.board.delay || 0, srv: this.serverOn(),
       me: { id: a.id, name: a.name, perm: a.perm, cam: a.cam || "", sup: isSup(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "" },
-      roles: this.roles, onair: this.onAirCams(), prep: this.prepCams(), streamKey: this.keyFor("c:" + a.id), vq: this.vqFor("c:"),
+      roles: this.roles, onair: this.onAirCams(), prep: this.prepCams(), streamKey: this.keyFor("c:" + a.id), vq: this.vqFor("c:" + a.id),
       talk: { open: this.talk.open.includes(a.id), regie: !!this.talk.regie },
       tribs: this.tribsForMod(), alerts, cams: this.camsList(), team: this.teamForMod(),
       feed: this.camData.feed.slice(-150), comms: this.camData.comms.filter(x => this.msgVisible(x, a)).slice(-150),

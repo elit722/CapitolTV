@@ -76,6 +76,9 @@ public class CapitolClientGameTest implements FabricClientGameTest {
             context.runOnClient(c -> { ClientConfig.get().dockMenu = false; CapitolScreen.setPage = 3; c.setScreen(CapitolScreen.on("SETTINGS")); });
             context.waitTicks(10);
             context.takeScreenshot("ctv-23-menu-diffusion");
+            context.runOnClient(c -> { fr.capitoltv.client.Quality.cap = "hd"; c.setScreen(new fr.capitoltv.client.gui.StreamScreen(null, true)); });
+            context.waitTicks(10);
+            context.takeScreenshot("ctv-25-ma-diffusion");
             context.runOnClient(c -> { c.setScreen(null); fr.capitoltv.client.CamMoves.picker = true; });
             context.waitTicks(5);
             context.takeScreenshot("ctv-24-mouvements");

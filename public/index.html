@@ -1359,6 +1359,7 @@ const NET = {
       case 'prog': case 'progEd': case 'onair': case 'media': PROG.onMsg(m); break;
       case 'srvCams': S.srvCams = m.names || []; refreshSettings('cams'); break;
       case 'pubs': RTC.onPubs(m.pubs); break;
+      case 'vpref': RTC.vpref = m.vpref || {}; if (S.page === 'regie') PROG.renderSources(); break;
       case 'skeys': RTC.keys = m.keys || {}; break;
       case 'poll': case 'bets': GAMES.onMsg(m); break;
       case 'clips': CLIPS.onList(m.clips); break;
@@ -1787,7 +1788,7 @@ function openMe() {
       ${isCrew() ? `<div class="sect" style="margin-bottom:14px"><h4 style="margin-top:0">${ic('cam')} Mod caméra Minecraft</h4>
         <p class="note" style="margin-top:0">Le mod (Fabric 1.21.8) relie ton jeu à Capitol TV : actions en cours, actes annonciateurs, carte avec TP, signalements et comms. Génère ton jeton, puis dans le jeu : touche <b>K</b> › Réglages › Coller › Connecter. Le jeton est personnel (valable 60 jours).</p>
         <div id="tokBox"><button class="btn primary" id="tokBtn">${ic('cam')}Générer mon jeton</button></div></div>` : ''}
-      ${Object.keys(RTC.mykeys).length ? `<div class="sect" style="margin-bottom:14px"><h4 style="margin-top:0">${ic('live')} Diffuser ton image</h4><p class="note" style="margin-top:0">Ton jeu envoie lui-même son image à Capitol TV (mod Minecraft, sans OBS), ou passe par OBS. Twitch reste possible si la régie le choisit.</p>${Object.keys(RTC.mykeys).map(k => keyBox(k, true)).join('')}</div>` : ''}
+      ${Object.keys(RTC.mykeys).length ? `<div class="sect" style="margin-bottom:14px"><h4 style="margin-top:0">${ic('live')} Diffuser ton image</h4><p class="note" style="margin-top:0">Avec le mod Minecraft : copie ta clé, puis en jeu touche <b>K</b> › colle-la et choisis ta qualité (de 480p à 1080p 60 i/s, ou sans POV). Modifiable à tout moment. OBS fonctionne aussi avec la même clé. Seule la régie voit ce flux.</p>${Object.keys(RTC.mykeys).map(k => keyBox(k, true)).join('')}</div>` : ''}
       ${isStaff() ? `<label class="switch"><input type="checkbox" id="presIn" ${S.presenter ? 'checked' : ''}> <span><b style="color:var(--ink)">Mode présentateur</b> — voir l'antenne avec le différé, comme les spectateurs (idéal pour réagir en live sans te spoiler). L'édition est désactivée, les alertes restent visibles.</span></label>` : ''}
     </div>
     <div class="modal-f"><a class="btn ghost" href="/auth/logout" style="margin-right:auto">${ic('logout')}Se déconnecter</a><button class="btn primary" data-close>Fermer</button></div>`);
@@ -1815,12 +1816,13 @@ function slotSetContent(i, login, muted) {
   const o = slotObjs[i];
   const tr = login ? byLogin(login) : null, src = tr ? 't:' + tr.id : '', md = tr ? RTC.mode(src, tr.vsrc || 'auto', login) : '';
   if (md === 'rtc' || md === 'off') {
-    const key = md + ':' + src + ':' + (S.board.delay || 0);
+    const small = S.layout === '9' || S.layout === '4' || (S.layout === 'f' && i > 0), layer = small ? 'q' : 'f';
+    const key = md + ':' + src + ':' + (S.board.delay || 0) + ':' + layer;
     if (o.key !== key) {
       if (o.dp) { o.dp.destroy(); o.dp = null; }
       o.key = key; o.player = null; o.login = login;
       o.frame.innerHTML = '';
-      if (md === 'rtc') { o.dp = new DelayPlayer(src, { delay: isCrew() && !S.presenter ? 0 : (S.board.delay || 0) }); o.frame.appendChild(o.dp.el); }
+      if (md === 'rtc') { o.dp = new DelayPlayer(src, { delay: isCrew() && !S.presenter ? 0 : (S.board.delay || 0), layer }); o.frame.appendChild(o.dp.el); }
       else o.frame.innerHTML = `<div class="slot-empty"><div class="mark">${logo(64)}</div><h3>FLUX HORS LIGNE</h3><p>Ce tribut diffuse via Capitol TV (mod ou OBS) : son image apparaîtra dès qu'il sera en ligne.</p></div>`;
     }
     if (o.dp) { o.dp.setMuted(muted); if (!muted) o.dp.arm(); }
@@ -2720,9 +2722,8 @@ function renderSettings() {
       <div class="note" style="margin-top:6px">Ajoutées en jeu : ${(S.srvCams || []).length ? S.srvCams.map(n => '<b style="color:var(--ink2)">' + esc(n) + '</b>').join(' · ') : 'aucune'}</div>
       <p class="note" style="margin-bottom:0">Pour le jeton du site (comms, carte, actions) : chacun le génère depuis « Mon compte » et le colle dans le mod (touche K › Réglages).</p>
       ${isAdmin() ? `<h4 style="margin:14px 0 6px">Qualité maximale des flux Capitol TV</h4>
-      <p class="note" style="margin-top:0">C'est ce qui décide du volume de données (gratuit jusqu'à 1 000 Go par mois). Chaque personne qui regarde un flux le télécharge en entier.</p>
-      <div class="row">${['trib', 'cam'].map(k => { const q = (RTC.vq || {})[k] || {}; return `<label class="f"><span class="lbl2">${k === 'trib' ? 'POV des tributs' : 'Caméras'}</span><select class="inp" data-vq="${k}">${[[360, 800], [480, 1500], [720, 3000], [1080, 6000]].map(([h, kb]) => `<option value="${h}:${kb}" ${q.h === h ? 'selected' : ''}>${h}p · ${(kb / 1000).toLocaleString('fr-FR')} Mb/s</option>`).join('')}</select></label>`; }).join('')}</div>
-      <label class="switch"><input type="checkbox" id="rtcPub" ${RTC.pub ? 'checked' : ''}> Les spectateurs du site voient aussi les flux Capitol TV (beaucoup plus de données)</label>` : ''}
+      <p class="note" style="margin-top:0">Chaque joueur choisit sa qualité dans le mod (touche K) ; ce plafond s'applique par-dessus. Les flux Capitol TV ne sont visibles que par l'équipe et la page OBS : les spectateurs du site voient les POV Twitch.</p>
+      <div class="row">${['trib', 'cam'].map(k => { const q = (RTC.vq || {})[k] || (k === 'trib' ? 'hd' : 'max'); return `<label class="f"><span class="lbl2">${k === 'trib' ? 'POV des tributs' : 'Caméras'}</span><select class="inp" data-vq="${k}">${VQ.order.map(l => `<option value="${l}" ${q === l ? 'selected' : ''}>${VQ.label(l)}</option>`).join('')}</select></label>`; }).join('')}</div>` : ''}
     </div>
     <div class="sect"><h4>Mod côté serveur <em style="font-weight:500;color:var(--mute)">facultatif mais recommandé</em></h4>
       <p class="note" style="margin-top:0">Installé aussi sur le serveur de l'event (avec Fabric API), le même fichier .jar envoie la position de <b style="color:var(--ink2)">tous</b> les tributs, les dégâts avec leur cause, les morts et les effets, et permet aux caméras de se téléporter depuis la carte. Au premier démarrage il crée <code>config/capitoltv-server.json</code> : colle la clé ci-dessous dans <code>"key"</code>, puis <code>/capitol reload</code>.</p>
@@ -2758,9 +2759,9 @@ function settingsEvents() {
     if (e.target.id === 'tFilter') { const q = e.target.value.trim().toLowerCase(); $$('tr[data-s]', P).forEach(r => r.style.display = !q || r.dataset.s.includes(q) ? '' : 'none'); }
   });
   P.addEventListener('change', e => {
-    if (e.target.matches('[data-vq]') || e.target.id === 'rtcPub') {
-      const vq = {}; $$('[data-vq]', P).forEach(x => { const [h, kbps] = x.value.split(':').map(Number); vq[x.dataset.vq] = { h, kbps, fps: x.dataset.vq === 'trib' ? 24 : 30 }; });
-      NET.req({ t: 'rtcCfg', vq, pub: $('#rtcPub') ? $('#rtcPub').checked : undefined }).then(() => toastInfo('Réglage enregistré', 'Les flux suivent ce maximum dès leur prochaine connexion.'), x => toastInfo('Réglage', x.message, true));
+    if (e.target.matches('[data-vq]')) {
+      const vq = {}; $$('[data-vq]', P).forEach(x => { vq[x.dataset.vq] = x.value; });
+      NET.req({ t: 'rtcCfg', vq }).then(() => toastInfo('Réglage enregistré', 'Les flux suivent ce maximum dès leur prochaine connexion.'), x => toastInfo('Réglage', x.message, true));
       return;
     }
     const sr = e.target.closest('[data-setrole]');
@@ -3305,15 +3306,23 @@ setInterval(() => { CAM.tickAir(); if (S.page === 'carte' && $('#mapList')) CAM.
    Le différé est créé ici, dans le navigateur : la vidéo est enregistrée
    en petits segments et rejouée avec le retard choisi par la régie.
    ===================================================================== */
+const VQ = {
+  order: ['eco', 'std', 'hd', 'max'],
+  names: { off: 'Sans POV', eco: 'Éco · 480p', std: 'Standard · 720p', hd: 'HD · 1080p', max: 'Max · 1080p 60 i/s' },
+  mbps: { eco: 2, std: 4.5, hd: 7, max: 10 },
+  label(l) { return this.names[l] + (this.mbps[l] ? ' · ' + String(this.mbps[l]).replace('.', ',') + ' Mb/s' : ''); },
+  short: { off: 'sans POV', eco: '480p', std: '720p', hd: '1080p', max: '1080p60' }
+};
 const RTC = {
+  vpref: {},
   pubs: {}, on: false, pub: false, conns: new Map(), keys: {}, mykeys: {},
   onHello(m) {
     this.pubs = m.pubs || {}; this.on = !!(m.rtc && m.rtc.on); this.pub = !!(m.rtc && m.rtc.pub);
-    if (m.skeys) this.keys = m.skeys; this.mykeys = m.mykeys || {};
+    if (m.skeys) this.keys = m.skeys; this.mykeys = m.mykeys || {}; this.vpref = (m.rtc && m.rtc.vpref) || {};
     this.prune();
   },
   onPubs(p) { this.pubs = p || {}; this.prune(); renderStage(); if (S.page === 'direct') PROG.layout(); if (S.page === 'regie') { PROG.renderSources(); PROG.renderCanvas(); PROG.renderPgm(); } },
-  prune() { for (const [src, c] of this.conns) if (!this.live(src)) this.close(src); },
+  prune() { for (const [id, c] of this.conns) if (!this.live(c.src)) this.close(id); },
   live(src) { if (src && src.startsWith('talk:')) return !!(TALK.st && TALK.st.pubs[src.slice(5)]); return !!(src && this.pubs[src]); },
   allowed() { return this.on && !isLocked() && (isCrew() || IS_OVERLAY || this.pub); },
   /* source à afficher : 'rtc' (Capitol TV), 'twitch' ou '' (rien) */
@@ -3324,14 +3333,16 @@ const RTC = {
   },
   whipURL(key) { return location.origin + '/whip/' + key; },
   /* flux partagé par source (une seule connexion même si plusieurs lecteurs) */
-  stream(src) {
-    let c = this.conns.get(src);
-    if (!c) { c = { src, ms: new MediaStream(), users: 0, pc: null, state: 'new', subs: new Set() }; this.conns.set(src, c); this.connect(c); }
+  /* layer : 'f' pleine qualité (programme, Direct, OBS) ou 'q' couche légère (vignettes) */
+  stream(src, layer) {
+    const ly = layer === 'q' && this.pubs[src] && this.pubs[src].sim ? 'q' : 'f', id = src.startsWith('talk:') ? src : src + '|' + ly;
+    let c = this.conns.get(id);
+    if (!c) { c = { id, src, layer: ly, ms: new MediaStream(), users: 0, pc: null, state: 'new', subs: new Set() }; this.conns.set(id, c); this.connect(c); }
     c.users++;
     return c;
   },
-  release(c) { if (!c) return; c.users--; if (c.users <= 0) setTimeout(() => { if (c.users <= 0) this.close(c.src); }, 4000); },
-  close(src) { const c = this.conns.get(src); if (!c) return; this.conns.delete(src); c.dead = true; try { c.pc && c.pc.close(); } catch (e) {} },
+  release(c) { if (!c) return; c.users--; if (c.users <= 0) setTimeout(() => { if (c.users <= 0) this.close(c.id); }, 4000); },
+  close(id) { const c = this.conns.get(id); if (!c) return; this.conns.delete(id); c.dead = true; try { c.pc && c.pc.close(); } catch (e) {} },
   async connect(c) {
     if (c.dead) return;
     try {
@@ -3345,7 +3356,7 @@ const RTC = {
           c.retryT = setTimeout(() => { if (!c.dead && pc === c.pc && pc.connectionState !== 'connected' && this.live(c.src)) { try { pc.close(); } catch (x) {} this.connect(c); } }, 3000);
         }
       };
-      const r = await fetch('/api/rtc/pull', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ src: c.src }) });
+      const r = await fetch('/api/rtc/pull', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ src: c.src, layer: c.layer }) });
       const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.msg || 'refusé');
       await pc.setRemoteDescription(j.offer);
       await pc.setLocalDescription(await pc.createAnswer());
@@ -3362,14 +3373,14 @@ const RTC = {
 
 /* Lecteur avec différé : segments WebM (MediaRecorder) rejoués via MediaSource */
 class DelayPlayer {
-  constructor(src, { delay = 0, record = false } = {}) {
+  constructor(src, { delay = 0, record = false, layer = 'f' } = {}) {
     this.src = src; this.delay = Math.max(0, delay); this.record = record || this.delay > 0;
     this.el = document.createElement('div'); this.el.className = 'dp';
     this.video = document.createElement('video'); this.video.playsInline = true; this.video.autoplay = true; this.video.muted = true;
     this.el.appendChild(this.video);
     this.badge = document.createElement('div'); this.badge.className = 'dp-st'; this.el.appendChild(this.badge);
     this.segs = []; this.next = 0; this.muted = true;
-    this.conn = RTC.stream(src);
+    this.conn = RTC.stream(src, layer);
     this.onTracks = () => this.begin();
     this.conn.subs.add(this.onTracks);
     if (this.conn.ms.getTracks().length) this.begin();
@@ -4183,12 +4194,18 @@ const PROG = {
       <span class="note" style="flex:none">${left == null ? (fx.loop ? 'en boucle' : this.fmtDur(el)) : left > 0 ? 'reste ' + this.fmtDur(left) : 'terminé'}</span>
       <button class="btn sm" data-sfx="stop" style="flex:none">■ Arrêter</button>`;
   },
+  /* qualité choisie par le joueur dans le mod (ou « sans POV ») */
+  vqTag(x) {
+    const src = (x.k === 'trib' ? 't:' : 'c:') + x.ref, p = RTC.pubs[src], pref = (RTC.vpref || {})[src];
+    if (x.ctv) return ' · Capitol TV' + (p && p.lvl && VQ.short[p.lvl] ? ' ' + VQ.short[p.lvl] : p && p.via === 'obs' ? ' (OBS)' : '');
+    return pref === 'off' ? ' · <span style="color:var(--ink3)">sans POV</span>' : '';
+  },
   renderSources() {
     const L = $('#rgSrc'); if (!L) return;
     const q = ($('#rgQ') && $('#rgQ').value || '').toLowerCase();
     const { cams, tribs } = this.sources();
     const row = x => `<div class="src ${x.k === 'cam' ? 'scam' : ''}" draggable="true" data-k="${x.k}" data-ref="${esc(x.ref)}" title="Glisser sur l'aperçu · double-clic : plein écran${x.dead ? '' : ''}" style="${x.dead ? 'opacity:.5' : ''}">
-      <div class="th ${x.ctv ? 'ctv' : ''}" style="${x.ctv ? '' : `background-image:url('${thumbURL(x.login)}')`}">${x.ctv ? '<span>CTV</span>' : ''}${x.live || x.ctv ? '<i></i>' : ''}</div><div style="min-width:0"><b>${esc(x.name)}</b><small>${esc(x.sub)}${x.ctv ? ' · flux Capitol TV' : ''}</small></div></div>`;
+      <div class="th ${x.ctv ? 'ctv' : ''}" style="${x.ctv ? '' : `background-image:url('${thumbURL(x.login)}')`}">${x.ctv ? '<span>CTV</span>' : ''}${x.live || x.ctv ? '<i></i>' : ''}</div><div style="min-width:0"><b>${esc(x.name)}</b><small>${esc(x.sub)}${this.vqTag(x)}</small></div></div>`;
     const f = list => list.filter(x => !q || (x.name + ' ' + x.sub + ' ' + x.login).toLowerCase().includes(q));
     L.innerHTML = `${this.renderMediaSec(q)}<div class="cp-sec">${ic('cam')} Caméras <b>${cams.length}</b></div>${f(cams).map(row).join('') || '<div class="note" style="padding:4px 8px">Ajoute la chaîne Twitch des caméras dans leur fiche (page Équipe).</div>'}
       <div class="cp-sec">${ic('users')} Tributs (POV) <b>${tribs.length}</b></div>${f(tribs).map(row).join('')}`;

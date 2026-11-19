@@ -723,11 +723,9 @@ public class CapitolScreen extends Screen {
         btn(x, y, colW, "Bulles des actions : " + (c.alertsToasts ? "oui" : "non"), () -> { c.alertsToasts = !c.alertsToasts; ClientConfig.save(); clearAndInit(); }); y += step;
         btn(x, y, colW, "Bulles des actes : " + (c.feedToasts ? "tous" : "mon tribut"), () -> { c.feedToasts = !c.feedToasts; ClientConfig.save(); clearAndInit(); }); y += step;
         } else if (setPage == 3) {
-        btn(x, y, colW, "Diffuser mon image : " + (c.streamOn ? "oui" : "non"), () -> { c.streamOn = !c.streamOn; ClientConfig.save(); if (!c.streamOn) fr.capitoltv.client.Streamer.stop("coupée"); clearAndInit(); }); y += step;
-        btn(x, y, colW, "Micro : " + (c.streamMic ? "oui" : "non"), () -> { c.streamMic = !c.streamMic; ClientConfig.save(); fr.capitoltv.client.Streamer.stop(null); clearAndInit(); }); y += step;
-        int[] hs = {480, 720, 1080};
-        btn(x, y, colW, "Qualité : " + c.streamHeight + "p", () -> { int i = 0; for (int k = 0; k < hs.length; k++) if (hs[k] == c.streamHeight) i = k; c.streamHeight = hs[(i + 1) % hs.length]; c.streamKbps = c.streamHeight >= 1080 ? 6000 : c.streamHeight >= 720 ? 4000 : 2000; ClientConfig.save(); fr.capitoltv.client.Streamer.stop(null); clearAndInit(); }); y += step;
-        btn(x, y, colW, "Images / s : " + c.streamFps, () -> { c.streamFps = c.streamFps >= 30 ? 20 : c.streamFps + 5; ClientConfig.save(); clearAndInit(); }); y += step + 4;
+        String lv = fr.capitoltv.client.Quality.chosen();
+        btn(x, y, colW, "Ma diffusion : " + (lv.isEmpty() ? "à choisir" : fr.capitoltv.client.Quality.of(lv).name()), () -> MinecraftClient.getInstance().setScreen(new StreamScreen(this, false))); y += step;
+        btn(x, y, colW, "Micro : " + (c.streamMic ? "oui" : "non"), () -> { c.streamMic = !c.streamMic; ClientConfig.save(); fr.capitoltv.client.Streamer.stop(null); clearAndInit(); }); y += step + 4;
         if (keyDraft == null) keyDraft = c.streamKey;
         field(x, y, colW - 52, keyDraft, Data.streamKey.isEmpty() ? "Clé de diffusion" : "Clé reçue du site", 64, s -> keyDraft = s);
         btn(x + colW - 49, y, 49, "Coller", () -> { String s = MinecraftClient.getInstance().keyboard.getClipboard(); if (s != null) { keyDraft = s.trim(); c.streamKey = keyDraft; ClientConfig.save(); fr.capitoltv.client.Streamer.stop(null); clearAndInit(); } });
@@ -767,7 +765,7 @@ public class CapitolScreen extends Screen {
         {"Mode caméra",
          "Réservé aux caméras : un admin fait /capitoltv camera add <pseudo> en jeu, ou te donne le rôle Caméra sur le site avec ton compte Minecraft dans ta fiche.\n\nF6 : active le mode caméra. Tu passes en spectateur, le HUD du jeu disparaît et une barre caméra apparaît en bas (touches 1 à 9) : TP sur le tribut suivi, tribut précédent / suivant, signaler, REC, caméra fluide, zoom, menu, écran propre.\n\nV : mouvements de caméra (voir l'article)."},
         {"Diffusion vidéo",
-         "Ton jeu peut envoyer lui-même son image à Capitol TV, sans OBS : Réglages › Vidéo › Diffuser mon image.\n\nL'image part juste après le dessin du monde : tes menus, ton HUD et ton chat n'apparaissent jamais dans le flux. Tu peux donc utiliser le menu en filmant.\n\nClé : les membres de l'équipe la reçoivent automatiquement. Les tributs la trouvent sur le site (Mon compte) ou la demandent à la régie, puis la collent dans Réglages › Vidéo.\n\nMicro : facultatif (ta voix part avec l'image). Le différé est ajouté par le site, tu n'as rien à régler.\n\nAlternatives : OBS (service WHIP, lien donné sur le site) ou Twitch, si la régie le choisit."},
+         "Ton jeu envoie lui-même son image à la régie Capitol TV, sans OBS. Réglages › Vidéo › Ma diffusion (les joueurs : touche K).\n\nQualité au choix : Éco 480p, Standard 720p (conseillé), HD 1080p, Max 1080p 60 i/s, ou Sans POV. Modifiable à tout moment. La régie peut fixer un maximum (pastille LIMITÉ).\n\nL'image part juste après le dessin du monde : menus, HUD et chat n'apparaissent jamais dans le flux.\n\nClé : l'équipe la reçoit automatiquement ; les tributs la copient sur le site (Mon compte) et la collent dans Ma diffusion.\n\nSeule la régie voit ce flux ; le public du site voit ton Twitch. Le différé est ajouté par le site."},
         {"Mouvements de caméra",
          "V ouvre la liste, puis une touche de 1 à 8 :\n1 Orbite autour du tribut suivi\n2 Orbite large en hauteur\n3 Travelling avant\n4 Grue (s'élève en le regardant)\n5 Suivi de dos\n6 Vue du ciel en rotation\n7 Panoramique sur place\n8 Regard verrouillé (tu bouges, la caméra le fixe)\n\nV arrête le mouvement. Bouger (ZQSD) l'arrête aussi, sauf le 8. Si le tribut est loin, tu es d'abord téléporté."},
         {"Antenne et différé",

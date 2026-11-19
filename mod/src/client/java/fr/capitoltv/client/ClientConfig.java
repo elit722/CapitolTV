@@ -42,6 +42,10 @@ public final class ClientConfig {
     public int streamFps = 30;
     public int streamKbps = 4000;
     public int streamHeight = 720;
+    /** niveau de qualité choisi par le joueur : off | eco | std | hd | max (vide = pas encore choisi) */
+    public String streamLevel = "";
+    /** l'écran « Ma diffusion » a déjà été proposé à la première connexion */
+    public boolean streamAsked = false;
     /** menu réduit sur le côté : on voit le jeu et on peut bouger */
     public boolean dockMenu = false;
 
