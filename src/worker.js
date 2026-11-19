@@ -853,6 +853,7 @@ export class Game extends DurableObject {
   }
   /* gestion des rôles : depuis le site comme depuis le jeu */
   async onRolesOp(a, m, reply) {
+    setTimeout(() => this.pushTalk(), 300);
     const admin = a.perm === "admin";
     if (!hasPerm(a, "roles")) return reply(false, { msg: "Il faut la permission « Gérer les rôles »." });
     const adminRole = rid => !!(this.roles.find(r => r.id === rid) || { perms: [] }).perms.includes("admin");
@@ -1511,6 +1512,7 @@ export class Game extends DurableObject {
     });
   }
   camsChanged() {
+    if (this.talk) this.pushTalk();
     if (this.camsT) return;
     this.camsT = setTimeout(() => {
       this.camsT = null;
