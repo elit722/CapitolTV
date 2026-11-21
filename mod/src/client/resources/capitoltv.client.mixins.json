@@ -4,7 +4,8 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "ClientNetMixin",
-    "GameRendererMixin"
+    "GameRendererMixin",
+    "SoundEngineMixin"
   ],
   "injectors": {
     "defaultRequire": 0

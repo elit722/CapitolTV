@@ -1,44 +1,40 @@
 package fr.capitoltv.client;
 
-import java.util.List;
-
-/** Niveaux de qualité du flux envoyé à Capitol TV (choisis par le joueur, plafonnés par la régie). */
+/**
+ * Accord du joueur pour sa POV. La qualité n'est plus un choix : c'est toujours le maximum
+ * autorisé par la régie, et l'anti-lag du mod la baisse tout seul si le PC du joueur souffre.
+ */
 public final class Quality {
     private Quality() { }
 
-    public record Level(String id, String name, String spec, String hint, int h, int kbps, int fps) { }
-
-    public static final List<Level> ALL = List.of(
-            new Level("off", "Sans POV", "aucune image envoyée", "La régie ne verra pas ton écran.", 0, 0, 0),
-            new Level("eco", "Éco", "480p · 30 i/s · 2 Mb/s", "Petit PC ou connexion modeste.", 480, 2000, 30),
-            new Level("std", "Standard", "720p · 30 i/s · 4,5 Mb/s", "Conseillé pour la plupart des joueurs.", 720, 4500, 30),
-            new Level("hd", "HD", "1080p · 30 i/s · 7 Mb/s", "Bonne connexion (fibre).", 1080, 7000, 30),
-            new Level("max", "Max", "1080p · 60 i/s · 10 Mb/s", "PC puissant et fibre.", 1080, 10000, 60));
-
-    public static Level of(String id) {
-        for (Level l : ALL) if (l.id().equals(id)) return l;
-        return ALL.get(2);
-    }
-
-    public static int rank(String id) {
-        for (int i = 0; i < ALL.size(); i++) if (ALL.get(i).id().equals(id)) return i;
-        return 2;
-    }
-
     /** derniers retours du serveur : niveau appliqué et plafond de la régie */
     public static volatile String applied = "", cap = "";
+    public static volatile boolean blocked, capOff;
 
-    /** niveau choisi (vide = pas encore choisi) */
-    public static String chosen() { return ClientConfig.get().streamLevel == null ? "" : ClientConfig.get().streamLevel; }
-
-    /** applique un choix : coupe ou relance le flux et prévient le serveur */
-    public static void choose(String id) {
+    /** "on" (accord), "off" (refus) ou "" (pas encore demandé) */
+    public static String chosen() {
         ClientConfig c = ClientConfig.get();
-        c.streamLevel = of(id).id();
+        if (!c.streamAsked) return "";
+        return c.streamOn ? "on" : "off";
+    }
+
+    /** applique l'accord (ou le refus) : coupe ou relance le flux, prévient le serveur, adapte le son du jeu */
+    public static void choose(boolean on) {
+        ClientConfig c = ClientConfig.get();
+        boolean audioBefore = GameAudio.wanted();
         c.streamAsked = true;
-        c.streamOn = !"off".equals(c.streamLevel);
+        c.streamOn = on;
+        c.streamLevel = on ? "on" : "off";
         ClientConfig.save();
-        Streamer.stop(c.streamOn ? null : "sans POV (choix du joueur)");
+        Streamer.stop(on ? null : "POV refusée par le joueur");
         Streamer.announce();
+        if (audioBefore != GameAudio.wanted()) GameAudio.reload();
+    }
+
+    public static String label(String level) {
+        return switch (level == null ? "" : level) {
+            case "eco" -> "480p"; case "std" -> "720p"; case "hd" -> "1080p"; case "max" -> "1080p 60 i/s"; case "off" -> "coupée";
+            default -> "";
+        };
     }
 }

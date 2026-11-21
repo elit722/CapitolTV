@@ -2,6 +2,7 @@ package fr.capitoltv.client.gui;
 
 import fr.capitoltv.client.ClientConfig;
 import fr.capitoltv.client.Data;
+import fr.capitoltv.client.GameAudio;
 import fr.capitoltv.client.Quality;
 import fr.capitoltv.client.Streamer;
 import net.minecraft.client.MinecraftClient;
@@ -12,20 +13,18 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 /**
- * « Ma diffusion » : le joueur colle sa clé et choisit la qualité de son POV
- * (ou aucun POV). Ouvert à la première connexion, puis avec la touche K.
+ * « Ma POV » : accord du joueur (à la première connexion, puis touche K).
+ * Pas de choix de qualité : c'est toujours le maximum, baissé automatiquement si le jeu ralentit.
  */
 public class StreamScreen extends Screen {
     private final Screen parent;
     private final boolean first;
     private TextFieldWidget keyField;
     private String keyDraft;
-    private int px, py, pw, ph, step = 26, top = 40;
-    private String msg = "";
-    private long msgUntil;
+    private int px, py, pw, ph;
 
     public StreamScreen(Screen parent, boolean first) {
-        super(Text.literal("Ma diffusion"));
+        super(Text.literal("Ma POV"));
         this.parent = parent;
         this.first = first;
     }
@@ -38,23 +37,17 @@ public class StreamScreen extends Screen {
     protected void init() {
         ClientConfig c = ClientConfig.get();
         pw = Math.min(360, width - 20);
-        int cards = Quality.ALL.size();
-        // hauteur des cartes adaptée aux petits écrans
-        top = first ? 62 : 40;
-        step = Math.max(20, Math.min(26, (height - 16 - 68 - top) / cards));
-        ph = 68 + top + cards * step;
+        ph = Math.min(height - 16, 214);
         px = (width - pw) / 2; py = (height - ph) / 2;
-        int x = px + 12, w = pw - 24, y = py + top;
-
-        // clé de diffusion (donnée sur le site, page Mon compte)
-        boolean siteKey = (!Data.streamKey.isEmpty() || !Data.serverKey.isEmpty()) && (c.streamKey == null || c.streamKey.isBlank());
+        int x = px + 12, w = pw - 24, y = py + 92;
+        boolean auto = (!Data.streamKey.isEmpty() || !Data.serverKey.isEmpty()) && (c.streamKey == null || c.streamKey.isBlank());
         if (keyDraft == null) keyDraft = c.streamKey;
-        if (!siteKey) {
+        if (!auto) {
             keyField = new TextFieldWidget(textRenderer, x + 5, y + 4, w - 70, 12, Text.literal("Clé de diffusion"));
             keyField.setDrawsBackground(false);
             keyField.setMaxLength(64);
             keyField.setText(keyDraft == null ? "" : keyDraft);
-            keyField.setPlaceholder(Text.literal("Colle ici ta clé (site › Mon compte)"));
+            keyField.setPlaceholder(Text.literal("Clé (si le serveur ne l'envoie pas)"));
             keyField.setChangedListener(s -> keyDraft = s);
             addDrawableChild(keyField);
             addDrawableChild(new CtvButton(x + w - 58, y, 58, 18, "Coller", () -> {
@@ -63,34 +56,25 @@ public class StreamScreen extends Screen {
             }));
         }
         y += 26;
-
         String cur = Quality.chosen();
-        int capRank = Quality.cap.isEmpty() ? 99 : Quality.rank(Quality.cap);
-        for (Quality.Level l : Quality.ALL) {
-            final String id = l.id();
-            boolean over = !"off".equals(id) && Quality.rank(id) > capRank;
-            CtvButton b = new CtvButton(x, y, w, step - 4, l.name() + "   " + l.spec(), () -> {
-                saveKey();
-                Quality.choose(id);
-                say("off".equals(id) ? "Aucune image ne sera envoyée" : "Qualité enregistrée : " + Quality.of(id).name());
-                if (first) close(); else clearAndInit();
-            }).kind(CtvButton.Kind.CHIP);
-            b.selected = id.equals(cur);
-            if (over) b.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(Text.literal("Au-dessus du maximum fixé par la régie : tu enverras " + Quality.of(Quality.cap).spec())));
-            addDrawableChild(b);
-            y += step;
-        }
-        y += 4;
-        int bw = (w - 12) / 3;
-        addDrawableChild(new CtvButton(x, y, bw, 18, "Micro : " + (c.streamMic ? "oui" : "non"), () -> {
-            c.streamMic = !c.streamMic; ClientConfig.save(); Streamer.stop(null); clearAndInit();
+        int bw = (w - 6) / 2;
+        CtvButton yes = new CtvButton(x, y, bw, 24, "✔ J'accepte", () -> { saveKey(); Quality.choose(true); close(); }).kind(CtvButton.Kind.PRIMARY);
+        yes.selected = "on".equals(cur);
+        addDrawableChild(yes);
+        CtvButton no = new CtvButton(x + bw + 6, y, bw, 24, "Je refuse", () -> { saveKey(); Quality.choose(false); close(); });
+        no.selected = "off".equals(cur);
+        addDrawableChild(no);
+        y += 32;
+        int sw = (w - 6) / 2;
+        String snd = c.gameAudio ? "jeu" : c.streamMic ? "micro" : "aucun";
+        addDrawableChild(new CtvButton(x, y, sw, 18, "Son envoyé : " + snd, () -> {
+            boolean before = GameAudio.wanted();
+            if (c.gameAudio) { c.gameAudio = false; c.streamMic = true; } else if (c.streamMic) { c.streamMic = false; } else c.gameAudio = true;
+            ClientConfig.save(); Streamer.stop(null);
+            if (before != GameAudio.wanted()) GameAudio.reload();
+            clearAndInit();
         }));
-        CtvButton ad = new CtvButton(x + bw + 6, y, bw, 18, "Anti-lag : " + (c.streamAdapt ? "oui" : "non"), () -> {
-            c.streamAdapt = !c.streamAdapt; ClientConfig.save(); clearAndInit();
-        });
-        ad.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(Text.literal("Si ton jeu ralentit, la qualité envoyée baisse toute seule (puis remonte). La qualité choisie reste le maximum.")));
-        addDrawableChild(ad);
-        addDrawableChild(new CtvButton(x + 2 * (bw + 6), y, w - 2 * (bw + 6), 18, first && cur.isEmpty() ? "Plus tard" : "Fermer", this::close).kind(CtvButton.Kind.PRIMARY));
+        addDrawableChild(new CtvButton(x + sw + 6, y, w - sw - 6, 18, first && cur.isEmpty() ? "Plus tard" : "Fermer", this::close));
         if (hasKey()) Streamer.announce();
     }
 
@@ -99,8 +83,6 @@ public class StreamScreen extends Screen {
         String k = keyDraft == null ? "" : keyDraft.trim();
         if (keyField != null && !k.equals(c.streamKey == null ? "" : c.streamKey)) { c.streamKey = k; ClientConfig.save(); Streamer.stop(null); }
     }
-
-    private void say(String s) { msg = s; msgUntil = System.currentTimeMillis() + 3000; }
 
     @Override
     public void close() {
@@ -127,38 +109,21 @@ public class StreamScreen extends Screen {
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
         super.render(ctx, mouseX, mouseY, delta);
         Ui.emblem(ctx, px + 8, py + 7, 16);
-        ctx.drawText(textRenderer, Text.literal(first ? "PARTAGER TON POV ?" : "MA DIFFUSION").formatted(Formatting.BOLD), px + 30, py + 7, Ui.GOLD, true);
-        ctx.drawText(textRenderer, first ? "Capitol TV aimerait montrer ton écran de jeu" : "Ce que la régie Capitol TV reçoit de ton écran", px + 30, py + 18, Ui.DIM, false);
-        int x = px + 12, w = pw - 24;
-        if (first) {
-            int ty = py + 36;
-            for (var line : textRenderer.wrapLines(Text.literal("Seulement le jeu (ni HUD, ni chat, ni menus). Visible par la régie, peut passer dans l'émission. Choisis une qualité pour accepter, ou « Sans POV ». Modifiable à tout moment : touche K."), w)) {
-                ctx.drawText(textRenderer, line, x, ty, Ui.INK, false); ty += 9;
-                if (ty > py + top - 2) break;
-            }
+        ctx.drawText(textRenderer, Text.literal(first ? "PARTAGER TA POV ?" : "MA POV").formatted(Formatting.BOLD), px + 30, py + 7, Ui.GOLD, true);
+        ctx.drawText(textRenderer, "Capitol TV aimerait montrer ton écran de jeu", px + 30, py + 18, Ui.DIM, false);
+        int x = px + 12, w = pw - 24, ty = py + 38;
+        for (var line : textRenderer.wrapLines(Text.literal("Seulement le jeu et son son (ni HUD, ni chat, ni menus). Visible par la régie, peut passer dans l'émission. Qualité automatique : la meilleure que ton PC supporte sans ralentir. Touche K pour changer d'avis."), w)) {
+            if (ty > py + 84) break;
+            ctx.drawText(textRenderer, line, x, ty, Ui.INK, false); ty += 9;
         }
-        if (keyField == null) ctx.drawText(textRenderer, !Data.serverKey.isEmpty() ? "Clé reçue automatiquement du serveur ✔" + (Data.serverWho.isEmpty() ? "" : " · " + Data.serverWho) : "Clé de diffusion reçue du site ✔", x, py + top + 5, Ui.GREEN, false);
-        // statut
-        String st;
-        int col;
-        if (!hasKey()) { st = "Colle ta clé pour envoyer ton image"; col = Ui.DIM; }
-        else if ("off".equals(Quality.chosen())) { st = "Aucune image envoyée"; col = Ui.DIM; }
-        else if (Streamer.live()) {
-            String ap = Quality.applied.isEmpty() ? "" : " · " + Quality.of(Quality.applied).spec();
-            st = "● En direct vers la régie" + ap; col = Ui.GREEN;
-        } else { st = Streamer.status(); col = Ui.GOLD_HI; }
-        if (System.currentTimeMillis() < msgUntil) { st = msg; col = Ui.GOLD_HI; }
+        if (keyField == null) ctx.drawText(textRenderer, !Data.serverKey.isEmpty() ? "Clé reçue automatiquement du serveur ✔" + (Data.serverWho.isEmpty() ? "" : " · " + Data.serverWho) : "Clé de diffusion reçue du site ✔", x, py + 97, Ui.GREEN, false);
+        String st; int col;
+        if (Quality.capOff) { st = "Capture coupée par la régie pour le moment"; col = Ui.DIM; }
+        else if (Quality.blocked) { st = "La régie a coupé ta POV (ton jeu ramait trop)"; col = 0xFFE89A90; }
+        else if (!hasKey()) { st = "En attente de la clé du serveur de l'event…"; col = Ui.DIM; }
+        else if ("off".equals(Quality.chosen())) { st = "POV refusée : rien n'est envoyé"; col = Ui.DIM; }
+        else if (Streamer.live()) { st = "● En direct vers la régie · " + Streamer.sending(); col = Ui.GREEN; }
+        else { st = Streamer.status(); col = Ui.GOLD_HI; }
         ctx.drawText(textRenderer, textRenderer.trimToWidth(st, w), x, py + ph - 13, col, false);
-        // pastilles « conseillé » / « limite régie »
-        int y = py + top + 26;
-        int capRank = Quality.cap.isEmpty() ? 99 : Quality.rank(Quality.cap);
-        for (Quality.Level l : Quality.ALL) {
-            String tag = "std".equals(l.id()) ? "CONSEILLÉ" : !"off".equals(l.id()) && Quality.rank(l.id()) > capRank ? "LIMITÉ" : "";
-            if (!tag.isEmpty()) {
-                int tw = textRenderer.getWidth(tag) + 8;
-                Ui.pill(ctx, tag, x + w - tw - 4, y + (step - 4 - 12) / 2, tag.startsWith("C") ? 0xFF2A2620 : 0xFF3A1A1C, tag.startsWith("C") ? Ui.GOLD_HI : 0xFFE89A90);
-            }
-            y += step;
-        }
     }
 }

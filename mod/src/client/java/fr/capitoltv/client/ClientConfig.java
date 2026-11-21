@@ -48,6 +48,8 @@ public final class ClientConfig {
     public boolean streamAsked = false;
     /** baisse automatique de la qualité si le jeu ralentit */
     public boolean streamAdapt = true;
+    /** son du jeu envoyé avec la POV (sinon le micro si activé) */
+    public boolean gameAudio = true;
     /** menu réduit sur le côté : on voit le jeu et on peut bouger */
     public boolean dockMenu = false;
 

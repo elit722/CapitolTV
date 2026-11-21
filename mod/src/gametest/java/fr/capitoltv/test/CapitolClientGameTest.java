@@ -78,7 +78,7 @@ public class CapitolClientGameTest implements FabricClientGameTest {
             context.runOnClient(c -> { ClientConfig.get().dockMenu = false; CapitolScreen.setPage = 3; c.setScreen(CapitolScreen.on("SETTINGS")); });
             context.waitTicks(10);
             context.takeScreenshot("ctv-23-menu-diffusion");
-            context.runOnClient(c -> { fr.capitoltv.client.Quality.cap = "hd"; fr.capitoltv.client.Data.serverKey = "test"; fr.capitoltv.client.Data.serverWho = "Katniss"; c.setScreen(new fr.capitoltv.client.gui.StreamScreen(null, true)); });
+            context.runOnClient(c -> { fr.capitoltv.client.Data.serverKey = "test"; fr.capitoltv.client.Data.serverWho = "Katniss"; c.setScreen(new fr.capitoltv.client.gui.StreamScreen(null, true)); });
             context.waitTicks(10);
             context.takeScreenshot("ctv-25-ma-diffusion");
             context.runOnClient(c -> { fr.capitoltv.client.Data.serverKey = ""; c.setScreen(null); });

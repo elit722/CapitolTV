@@ -724,7 +724,7 @@ public class CapitolScreen extends Screen {
         btn(x, y, colW, "Bulles des actes : " + (c.feedToasts ? "tous" : "mon tribut"), () -> { c.feedToasts = !c.feedToasts; ClientConfig.save(); clearAndInit(); }); y += step;
         } else if (setPage == 3) {
         String lv = fr.capitoltv.client.Quality.chosen();
-        btn(x, y, colW, "Ma diffusion : " + (lv.isEmpty() ? "à choisir" : fr.capitoltv.client.Quality.of(lv).name()), () -> MinecraftClient.getInstance().setScreen(new StreamScreen(this, false))); y += step;
+        btn(x, y, colW, "Ma POV : " + (lv.isEmpty() ? "à choisir" : "on".equals(lv) ? "partagée (qualité auto)" : "coupée"), () -> MinecraftClient.getInstance().setScreen(new StreamScreen(this, false))); y += step;
         btn(x, y, colW, "Micro : " + (c.streamMic ? "oui" : "non"), () -> { c.streamMic = !c.streamMic; ClientConfig.save(); fr.capitoltv.client.Streamer.stop(null); clearAndInit(); }); y += step + 4;
         if (keyDraft == null) keyDraft = c.streamKey;
         field(x, y, colW - 52, keyDraft, Data.streamKey.isEmpty() ? "Clé de diffusion" : "Clé reçue du site", 64, s -> keyDraft = s);
@@ -765,7 +765,7 @@ public class CapitolScreen extends Screen {
         {"Mode caméra",
          "Réservé aux caméras : un admin fait /capitoltv camera add <pseudo> en jeu, ou te donne le rôle Caméra sur le site avec ton compte Minecraft dans ta fiche.\n\nF6 : active le mode caméra. Tu passes en spectateur, le HUD du jeu disparaît et une barre caméra apparaît en bas (touches 1 à 9) : TP sur le tribut suivi, tribut précédent / suivant, signaler, REC, caméra fluide, zoom, menu, écran propre.\n\nV : mouvements de caméra (voir l'article)."},
         {"Diffusion vidéo",
-         "Ton jeu envoie lui-même son image à la régie Capitol TV, sans OBS. Réglages › Vidéo › Ma diffusion (les joueurs : touche K).\n\nQualité au choix : Éco 480p, Standard 720p (conseillé), HD 1080p, Max 1080p 60 i/s, ou Sans POV. Modifiable à tout moment. La régie peut fixer un maximum (pastille LIMITÉ).\n\nL'image part juste après le dessin du monde : menus, HUD et chat n'apparaissent jamais dans le flux.\n\nClé : l'équipe la reçoit automatiquement ; les tributs la copient sur le site (Mon compte) et la collent dans Ma diffusion.\n\nSeule la régie voit ce flux ; le public du site voit ton Twitch. Le différé est ajouté par le site."},
+         "Ton jeu envoie lui-même son image et son son à la régie Capitol TV, sans OBS. Touche K › Ma POV : accepter ou refuser, et le son envoyé (jeu, micro ou aucun).\n\nQualité automatique : toujours la meilleure autorisée par la régie, baissée toute seule si ton jeu ralentit, puis remontée.\n\nL'image part juste après le dessin du monde : menus, HUD et chat n'apparaissent jamais dans le flux.\n\nClé : envoyée automatiquement par le serveur de l'event (ou par le site pour l'équipe).\n\nSeule la régie voit ce flux ; le public du site voit ton Twitch."},
         {"Mouvements de caméra",
          "V ouvre la liste, puis une touche de 1 à 8 :\n1 Orbite autour du tribut suivi\n2 Orbite large en hauteur\n3 Travelling avant\n4 Grue (s'élève en le regardant)\n5 Suivi de dos\n6 Vue du ciel en rotation\n7 Panoramique sur place\n8 Regard verrouillé (tu bouges, la caméra le fixe)\n\nV arrête le mouvement. Bouger (ZQSD) l'arrête aussi, sauf le 8. Si le tribut est loin, tu es d'abord téléporté."},
         {"Antenne et différé",

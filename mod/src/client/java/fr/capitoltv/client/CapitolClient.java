@@ -76,6 +76,7 @@ public class CapitolClient implements ClientModInitializer {
         stDirty = true;
     }
     public static void disconnect() { sock.disconnect(); Data.reset(); }
+    private static void reconnectLater() { new Thread(() -> { try { Thread.sleep(2000); } catch (InterruptedException ignored) { } MinecraftClient.getInstance().execute(CapitolClient::reconnect); }, "CapitolTV-move").start(); }
     /** Mode démonstration (tests automatiques) : l'interface se comporte comme connectée. */
     public static boolean demo;
     public static boolean online() { return demo || (sock != null && sock.online()); }
@@ -270,6 +271,11 @@ public class CapitolClient implements ClientModInitializer {
         switch (t) {
             case "talkCh" -> Talk.onChannel(Data.b(m, "open"), Data.b(m, "regie"), Data.s(m, "by"));
             case "talkSpeak" -> Talk.onSpeak(Data.s(m, "who"), Data.b(m, "on"), Data.s(m, "name"));
+            case "moved" -> {
+                // bascule vers le site de secours : nouvelle adresse retenue et reconnexion
+                String u = Data.s(m, "url");
+                if (u.startsWith("https://")) { Streamer.moveTo(u); Hud.toast("Capitol TV", "Le site a changé de serveur : reconnexion…", Hud.GOLD, 5); reconnectLater(); }
+            }
             case "hello" -> {
                 Data.hello(m);
                 stDirty = true;

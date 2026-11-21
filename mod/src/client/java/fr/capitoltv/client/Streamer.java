@@ -158,9 +158,10 @@ public final class Streamer {
         long now = System.currentTimeMillis();
         if (now - adaptAt < 1000) return;
         adaptAt = now;
-        if (!ClientConfig.get().streamAdapt) { if (step != firstStep()) { step = firstStep(); applyStep(); } return; }
+        // anti-lag toujours actif : la qualité suit les performances du joueur
         // comparé aux images/s du joueur sans diffusion (un petit PC n'est pas « en retard » à 35 i/s)
         int fps = MinecraftClient.getInstance().getCurrentFps();
+        watchImpact(fps);
         double low = Math.max(20, baseFps * 0.8), high = baseFps * 0.93;
         if (fps < low) { lowSec++; highSec = 0; } else if (fps >= high) { highSec++; lowSec = 0; } else { lowSec = 0; highSec = 0; }
         if (lowSec >= 4 && step < STEPS.length - 1) { step++; lowSec = 0; applyStep(); status = "anti-lag : " + curH + "p " + curFps + " i/s"; }
@@ -242,18 +243,18 @@ public final class Streamer {
         WORK.execute(() -> {
             try {
                 factory();
-                // qualité maximale fixée par la régie (volume de données)
-                // qualité choisie par le joueur, plafonnée par la régie
-                Quality.Level lv = Quality.of(Quality.chosen().isEmpty() ? "std" : Quality.chosen());
-                int vh = lv.h(), vk = lv.kbps(), vf = lv.fps();
+                // qualité : toujours le maximum autorisé par la régie (l'anti-lag baisse ensuite si besoin)
+                int vh = 720, vk = 4500, vf = 30;
                 try {
                     HttpResponse<String> q = HTTP.send(HttpRequest.newBuilder(URI.create(qualityUrl(base, key))).timeout(Duration.ofSeconds(8)).GET().build(), HttpResponse.BodyHandlers.ofString());
                     if (q.statusCode() == 200) {
                         com.google.gson.JsonObject j = com.google.gson.JsonParser.parseString(q.body()).getAsJsonObject();
+                        if (j.has("moved")) { moveTo(j.get("moved").getAsString()); throw new IllegalStateException("le site a déménagé, reconnexion…"); }
                         readQuality(j);
+                        if (Quality.capOff || Quality.blocked) throw new Paused(Quality.capOff ? "capture coupée par la régie" : "POV coupée par la régie");
                         if (j.has("h") && j.get("h").getAsInt() > 0) { vh = j.get("h").getAsInt(); vk = j.get("kbps").getAsInt(); vf = j.get("fps").getAsInt(); }
                     } else if (q.statusCode() == 404) throw new IllegalStateException("clé de diffusion inconnue");
-                } catch (IllegalStateException e) { throw e; } catch (Exception ignored) { }
+                } catch (IllegalStateException | Paused e) { throw e; } catch (Exception ignored) { }
                 maxH = vh; maxFps = vf; step = firstStep(); applyStep();
                 RTCConfiguration cfg = new RTCConfiguration();
                 RTCIceServer ice = new RTCIceServer();
@@ -275,7 +276,17 @@ public final class Streamer {
                 vi.streamIds = List.of("ctv");
                 vi.sendEncodings = encodings(vh, vk, vf);
                 pc.addTransceiver(videoTrack, vi);
-                if (ClientConfig.get().streamMic && !noAudio) {
+                if (GameAudio.active()) {
+                    // son du jeu (capturé par OpenAL) envoyé avec l'image
+                    gameSource = new dev.onvoid.webrtc.media.audio.CustomAudioSource();
+                    audioTrack = factory.createAudioTrack("audio", gameSource);
+                    RTCRtpTransceiverInit ai = new RTCRtpTransceiverInit();
+                    ai.direction = RTCRtpTransceiverDirection.SEND_ONLY;
+                    ai.streamIds = List.of("ctv");
+                    pc.addTransceiver(audioTrack, ai);
+                    final dev.onvoid.webrtc.media.audio.CustomAudioSource gs = gameSource;
+                    GameAudio.sink = (pcm, frames) -> { if (live) try { gs.pushAudio(pcm, 16, GameAudio.RATE, 2, frames); } catch (Throwable ignored) { } };
+                } else if (ClientConfig.get().streamMic && !noAudio) {
                     AudioOptions ao = new AudioOptions();
                     ao.echoCancellation = true; ao.noiseSuppression = true; ao.autoGainControl = true; ao.highpassFilter = true;
                     audioSource = factory.createAudioSource(ao);
@@ -302,6 +313,11 @@ public final class Streamer {
                 location = r.headers().firstValue("Location").orElse("");
                 waitSet(cb -> pc.setRemoteDescription(new RTCSessionDescription(RTCSdpType.ANSWER, r.body()), cb));
                 status = "connexion au serveur vidéo…";
+            } catch (Paused p) {
+                status = p.getMessage();
+                stop(null);
+                retryAt = System.currentTimeMillis() + 30000;
+                return;
             } catch (Throwable t) {
                 String m = t.getMessage() == null ? t.toString() : t.getMessage();
                 status = "erreur : " + m;
@@ -332,6 +348,36 @@ public final class Streamer {
     private static void readQuality(com.google.gson.JsonObject j) {
         if (j.has("level")) Quality.applied = j.get("level").getAsString();
         if (j.has("cap")) Quality.cap = j.get("cap").getAsString();
+        Quality.blocked = j.has("blocked") && j.get("blocked").getAsBoolean();
+        Quality.capOff = j.has("capOff") && j.get("capOff").getAsBoolean();
+    }
+
+    /** pause demandée par la régie (capture coupée) : on réessaie plus tard sans erreur */
+    private static final class Paused extends RuntimeException { Paused(String m) { super(m); } }
+    private static dev.onvoid.webrtc.media.audio.CustomAudioSource gameSource;
+
+    /** le site a basculé vers le site de secours : on retient la nouvelle adresse pour toujours */
+    public static void moveTo(String url) {
+        if (url == null || !url.startsWith("https://")) return;
+        String u = url.replaceAll("/+$", "");
+        ClientConfig c = ClientConfig.get();
+        if (!Data.serverKey.isEmpty() && (c.streamKey == null || c.streamKey.isBlank())) Data.serverUrl = u;
+        if (!u.equals(c.url)) { c.url = u; ClientConfig.save(); CapitolTV.LOG.info("Capitol TV : nouvelle adresse du site {}", u); }
+        retryAt = System.currentTimeMillis() + 1000;
+    }
+
+    /* ---------- impact de la capture sur le jeu : signalé à la régie ---------- */
+    private static int badSec;
+    private static long reportedAt;
+    private static void watchImpact(int fps) {
+        boolean atFloor = step >= STEPS.length - 1;
+        if (baseFps > 25 && fps < baseFps * (atFloor ? 0.75 : 0.5)) badSec++; else badSec = Math.max(0, badSec - 2);
+        if (badSec < 30 || System.currentTimeMillis() - reportedAt < 5 * 60000) return;
+        badSec = 0; reportedAt = System.currentTimeMillis();
+        String key = key(); if (key == null || key.isBlank()) return;
+        String body = String.format(java.util.Locale.ROOT, "{\"base\":%d,\"fps\":%d,\"h\":%d,\"step\":%d}", Math.round(baseFps), fps, curH, step);
+        HTTP.sendAsync(HttpRequest.newBuilder(URI.create(base().replaceAll("/+$", "") + "/whip/" + key.trim() + "/perf")).timeout(Duration.ofSeconds(8))
+                .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString(body)).build(), HttpResponse.BodyHandlers.discarding());
     }
 
     /** prévient le serveur du niveau choisi (même « sans POV ») et récupère le plafond de la régie */
@@ -340,7 +386,7 @@ public final class Streamer {
         if (key == null || key.isBlank()) return;
         String url = qualityUrl(base(), key.trim());
         HTTP.sendAsync(HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(8)).GET().build(), HttpResponse.BodyHandlers.ofString())
-                .thenAccept(r -> { if (r.statusCode() == 200) try { readQuality(com.google.gson.JsonParser.parseString(r.body()).getAsJsonObject()); } catch (Exception ignored) { } });
+                .thenAccept(r -> { if (r.statusCode() == 200) try { com.google.gson.JsonObject j = com.google.gson.JsonParser.parseString(r.body()).getAsJsonObject(); if (j.has("moved")) moveTo(j.get("moved").getAsString()); else readQuality(j); } catch (Exception ignored) { } });
     }
 
     private static boolean noAudio;
@@ -371,13 +417,16 @@ public final class Streamer {
         live = false; starting = false;
         String loc = location; location = "";
         if (!loc.isEmpty()) {
-            String url = ClientConfig.get().url.replaceAll("/+$", "") + loc;
+            String url = base().replaceAll("/+$", "") + loc;
             HTTP.sendAsync(HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(5)).DELETE().build(), HttpResponse.BodyHandlers.discarding());
         }
         try { if (pc != null) pc.close(); } catch (Throwable ignored) { }
         try { if (videoTrack != null) videoTrack.dispose(); } catch (Throwable ignored) { }
         try { if (videoSource != null) videoSource.dispose(); } catch (Throwable ignored) { }
         try { if (audioSource != null) audioSource.dispose(); } catch (Throwable ignored) { }
+        GameAudio.sink = null;
+        try { if (gameSource != null) gameSource.dispose(); } catch (Throwable ignored) { }
+        gameSource = null;
         pc = null; videoTrack = null; videoSource = null; audioSource = null; audioTrack = null;
         if (why != null) { status = why; if (was) Hud.toast("Diffusion", "Arrêtée", Hud.DIM, 3); }
     }
