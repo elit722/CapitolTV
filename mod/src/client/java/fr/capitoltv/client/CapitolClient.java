@@ -181,8 +181,11 @@ public class CapitolClient implements ClientModInitializer {
 
     /* ---------- boucle ---------- */
     private static void onTick(MinecraftClient mc) {
-        // joueur (sans jeton d'équipe) : K ouvre directement « Ma diffusion »
-        while (menuKey.wasPressed()) if (mc.currentScreen == null) mc.setScreen(ClientConfig.get().token.isBlank() && !demo ? new fr.capitoltv.client.gui.StreamScreen(null, false) : new CapitolScreen());
+        // K : tant que le joueur n'a pas répondu à la demande de diffusion, elle s'ouvre ; ensuite, le menu
+        while (menuKey.wasPressed()) if (mc.currentScreen == null) {
+            ClientConfig c0 = ClientConfig.get();
+            mc.setScreen(c0.token.isBlank() && !demo && !c0.streamAsked ? new fr.capitoltv.client.gui.StreamScreen(null, false) : new CapitolScreen());
+        }
         // première connexion à un serveur : proposer le choix de qualité du POV
         // première fois qu'une clé est disponible : demander l'accord du joueur (et sa qualité)
         String k0 = Streamer.key();

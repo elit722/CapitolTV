@@ -309,7 +309,7 @@ async function overlayLogin(env, key) {
    Durable Object : la régie centrale
    ===================================================================== */
 const TYPES = ["Combat", "Alliance", "Trahison", "Mort imminente", "Cadeau sponsor", "Moment drôle", "Révélation", "Autre"];
-const SCALARS = ["ticker", "don", "fund", "day", "startTs", "cooldown", "lastHommage", "flash", "delay", "hideChat", "lock", "sponsor", "publicAccess", "map", "theme"];
+const SCALARS = ["ticker", "don", "fund", "day", "startTs", "cooldown", "lastHommage", "flash", "delay", "hideChat", "lock", "sponsor", "publicAccess", "map", "theme", "delayMode"];
 const STATUSES = ["alive", "injured", "missing", "dead"];
 const PERMS = ["admin", "mod", "member"];
 const LOGIN_RE = /^[a-z0-9_]{3,25}$/;
@@ -456,7 +456,8 @@ export class Game extends DurableObject {
   sockets() { return this.ctx.getWebSockets(); }
   att(ws) { try { return ws.deserializeAttachment(); } catch (e) { return null; } }
   send(ws, obj) { try { ws.send(typeof obj === "string" ? obj : JSON.stringify(obj)); } catch (e) {} }
-  fullView(a) { return isStaff(a) && !a.pub; }
+  /* l'écran OBS reçoit tout en temps réel quand le différé est fait par OBS */
+  fullView(a) { return (isStaff(a) && !a.pub) || (!!a && !!a.overlay && this.board.delayMode !== "site"); }
 
   /* ---------- connexion ---------- */
   async fetch(req) {
@@ -913,6 +914,7 @@ export class Game extends DurableObject {
       if (p.set.fund && typeof p.set.fund === "object") { b.fund = { goal: Math.max(0, +p.set.fund.goal || 0), cur: String(p.set.fund.cur || "€").slice(0, 4), show: p.set.fund.show !== false, raised: 0 }; this.recalcFund(); }
       if (b.theme) { const t = b.theme || {}, hx = v => /^#[0-9a-f]{6}$/i.test(v || "") ? v : ""; b.theme = { name: String(t.name || "").slice(0, 40), gold: hx(t.gold), red: hx(t.red) }; }
       b.publicAccess = !!b.publicAccess;
+      b.delayMode = b.delayMode === "site" ? "site" : "obs";
       b.map = { on: !!(b.map && b.map.on), staffOnly: !(b.map && b.map.staffOnly === false) };
       b.delay = Math.max(0, Math.min(900, parseInt(b.delay, 10) || 0));
       b.cooldown = Math.max(0, Math.min(600, parseInt(b.cooldown, 10) || 0));

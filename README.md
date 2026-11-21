@@ -174,9 +174,11 @@ Le dossier `mod/` contient un mod Fabric pour les caméramans. Le fichier `.jar`
 
 ## Vidéo : POV des joueurs et caméras → régie → OBS
 
+**Différé** : par défaut, il est fait par **OBS** (Paramètres › Avancé › *Délai de diffusion*, même valeur que sur le site). La page Direct affiche alors tout en temps réel et OBS retarde le flux entier : tous les spectateurs ont le même retard, et une POV qui passe à l'antenne s'affiche tout de suite. Le réglage « Par le site » existe aussi (Réglages › Jeux), mais chaque POV attend alors le différé quand elle arrive à l'antenne.
+
 **Chemin de l'image** : chaque joueur et chaque caméra envoie son écran (le monde seulement, sans HUD ni chat) au serveur vidéo de Cloudflare (Realtime). La régie compose les plans sur la page **Réalisation**, la page **Direct** les affiche, et le streamer la capture dans OBS (source *Navigateur*, lien donné par le bouton **Lien OBS**). Le public du site ne voit que les POV Twitch.
 
-**Joueurs : aucune manipulation.** Avec le mod installé sur le serveur de l'event (clé serveur renseignée), chaque joueur dont le **pseudo Minecraft** est rempli dans sa fiche reçoit automatiquement sa clé. À la première connexion, une fenêtre lui demande son accord et sa qualité (Éco 480p, Standard 720p, HD 1080p, Max 1080p 60 i/s, ou Sans POV). Touche **K** pour changer d'avis. L'option *Anti-lag* baisse la qualité toute seule si le jeu ralentit.
+**Joueurs : aucune manipulation.** Avec le mod installé sur le serveur de l'event (clé serveur renseignée), chaque joueur dont le **pseudo Minecraft** est rempli dans sa fiche reçoit automatiquement sa clé. À la première connexion, une fenêtre lui demande son accord (J'accepte / Je refuse). La qualité n'est pas à choisir : toujours le maximum autorisé par la régie, baissé automatiquement si le jeu ralentit. Ensuite, touche **K** ouvre le menu (bouton « Ma POV » pour changer d'avis).
 
 **Coût pour les joueurs** : la carte graphique réduit l'image et la recopie en arrière-plan, sans bloquer le jeu ; l'encodage vidéo se fait hors du fil principal.
 
