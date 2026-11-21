@@ -1322,7 +1322,6 @@ function normBoard(b) {
     lock: (l => ({ mode: ['off', 'schedule', 'on'].includes(l.mode) ? l.mode : 'off', tz: String(l.tz || 'Europe/Paris'), msg: String(l.msg || ''),
       windows: (Array.isArray(l.windows) ? l.windows : []).map(w => ({ days: (Array.isArray(w.days) ? w.days : []).filter(d => d >= 0 && d <= 6), from: /^\d\d:\d\d$/.test(w.from) ? w.from : '20:00', to: /^\d\d:\d\d$/.test(w.to) ? w.to : '23:00' })) }))(b.lock || {}),
     theme: (t => ({ name: String(t.name || '').slice(0, 40), gold: /^#[0-9a-f]{6}$/i.test(t.gold || '') ? t.gold : '', red: /^#[0-9a-f]{6}$/i.test(t.red || '') ? t.red : '' }))(b.theme || {}),
-    delayMode: b.delayMode === 'site' ? 'site' : 'obs',
     sponsor: (s => ({ url: /^https?:\/\//i.test(s.url || '') ? s.url : '', label: String(s.label || 'Sponsoriser un tribut'), text: String(s.text || ''),
       partners: (Array.isArray(s.partners) ? s.partners : []).map(p => ({ name: String(p.name || ''), url: String(p.url || ''), img: String(p.img || '') })) }))(b.sponsor || {})
   };
@@ -1460,7 +1459,7 @@ function showConn(title, text, final) {
 function hideConn() { clearTimeout(showConn.t); $('#conn').classList.add('hide'); }
 
 /* Enregistrement : seules les modifications sont envoyées (plusieurs personnes peuvent être en régie) */
-const SCALARS = ['ticker', 'don', 'fund', 'day', 'startTs', 'cooldown', 'lastHommage', 'flash', 'delay', 'hideChat', 'lock', 'sponsor', 'publicAccess', 'map', 'theme', 'delayMode'];
+const SCALARS = ['ticker', 'don', 'fund', 'day', 'startTs', 'cooldown', 'lastHommage', 'flash', 'delay', 'hideChat', 'lock', 'sponsor', 'publicAccess', 'map', 'theme'];
 const clone = o => JSON.parse(JSON.stringify(o));
 function boardDiff(a, b) {
   const p = {}, set = {};
@@ -2608,14 +2607,10 @@ function renderSettings() {
         <label class="f" style="margin:0;flex:0 0 220px"><span class="lbl2">Retard des retransmissions</span><select class="inp" id="delaySel">
           ${[[0, 'Aucun (direct)'], [30, '30 secondes'], [60, '1 minute'], [120, '2 minutes'], [180, '3 minutes'], [300, '5 minutes'], [420, '7 minutes'], [600, '10 minutes'], [900, '15 minutes']].map(([v, l]) => `<option value="${v}" ${b.delay === v ? 'selected' : ''}>${l}</option>`).join('')}
           ${[0, 30, 60, 120, 180, 300, 420, 600, 900].includes(b.delay) ? '' : `<option value="${b.delay}" selected>${fmtDelay(b.delay)}</option>`}</select></label>
-        <label class="f" style="margin:0;flex:0 0 300px"><span class="lbl2">Différé du direct (page Direct / OBS)</span><select class="inp" id="delayMode">
-          <option value="obs" ${b.delayMode !== 'site' ? 'selected' : ''}>Dans OBS : même retard pour tous (recommandé)</option>
-          <option value="site" ${b.delayMode === 'site' ? 'selected' : ''}>Par le site (chaque POV attend le différé)</option></select></label>
         <label class="switch" style="margin:22px 0 0"><input type="checkbox" id="hideChat" ${b.hideChat ? 'checked' : ''}> Masquer le chat Twitch aux spectateurs pendant le différé</label>
       </div>
-      ${b.delay ? (b.delayMode !== 'site' ? `<p class="note" style="border-left:3px solid var(--gold);padding-left:10px"><b style="color:var(--gold-hi)">À faire dans OBS :</b> Paramètres › Avancé › <i>Délai de diffusion</i> : coche « Activer » et mets <b style="color:var(--ink)">${b.delay} secondes</b> (coche aussi « Préserver le point de coupure »). La page Direct affiche alors l'image en temps réel et OBS retarde tout le flux : <b style="color:var(--ink2)">tous les spectateurs ont exactement le même retard</b>, et une POV qui passe à l'antenne s'affiche tout de suite. Sans ce réglage, ton stream n'a <b style="color:var(--red-hi)">aucun différé</b>.</p>`
-        : `<p class="note">Le site retarde lui-même chaque POV sur la page Direct : une POV qui arrive à l'antenne affiche « Différé : image dans… » pendant toute la durée du différé (le site ne peut montrer que ce qu'il a reçu depuis qu'il la regarde). Préfère le réglage OBS.</p>`) : ''}
-      <p class="note">Pendant le différé, Capitol TV retient pour les spectateurs <b style="color:var(--ink2)">tout ce qu'il annonce</b> : coups de canon, parachutes, flashs, hommages, journal, statuts « blessé / tombé » et classement. Tout apparaît chez eux pile au moment où la scène passe dans les streams. La régie voit tout en temps réel (sauf en mode présentateur) ; sur la page Antenne, les POV Capitol TV ont le même différé pour tout le monde, équipe comprise.${b.delay ? ` <b style="color:var(--gold-hi)">${pending} annonce(s) en attente de diffusion.</b>` : ''}</p>
+      <p class="note"><b style="color:var(--gold-hi)">Direct (OBS) :</b> le site retarde lui-même toute l'image de la page Direct du même délai pour tout le monde, rien à régler dans OBS. Quand tu passes un plan à l'antenne, il apparaît sur le Direct après le délai, avec ses POV déjà prêtes (pas d'attente).</p>
+      <p class="note">Pendant le différé, Capitol TV retient pour les spectateurs <b style="color:var(--ink2)">tout ce qu'il annonce</b> : coups de canon, parachutes, flashs, hommages, journal, statuts « blessé / tombé » et classement. Tout apparaît chez eux pile au moment où la scène passe dans les streams. La régie voit tout en temps réel (sauf en mode présentateur) ; sur la page Direct et sur la page Antenne, les POV Capitol TV ont le même différé pour tout le monde, équipe comprise.${b.delay ? ` <b style="color:var(--gold-hi)">${pending} annonce(s) en attente de diffusion.</b>` : ''}</p>
       <p class="note" style="margin-bottom:0"><b style="color:var(--warn)">Important :</b> un site ne peut pas retarder une vidéo Twitch. Chaque streamer doit régler <b style="color:var(--ink2)">le même délai</b> de son côté : Twitch › Gestionnaire de stream › <i>Délai du stream</i> (jusqu'à 15 min), ou OBS › Paramètres › Avancé › <i>Délai de diffusion</i>.</p>
     </div>
     <div class="sect"><h4>Déroulé des Jeux</h4>
@@ -2920,7 +2915,6 @@ function settingsEvents() {
     if (id === 'tourSec') { S.tourSec = Math.max(10, Math.min(600, parseInt(tg.value, 10) || 40)); LS.set('ctv.tourSec', S.tourSec); if (S.tour) toggleTour(true); }
     if (id === 'oTheater') setTheater(tg.checked);
     if (id === 'oChat') { S.chat = tg.checked; LS.set('ctv.chat', S.chat); renderChat(); }
-    if (id === 'delayMode') { b.delayMode = tg.value === 'site' ? 'site' : 'obs'; commit(); renderSettings(); toastInfo(b.delayMode === 'site' ? 'Différé appliqué par le site' : 'Différé appliqué par OBS', b.delayMode === 'site' ? '' : 'Règle le même délai dans OBS › Paramètres › Avancé.'); }
     if (id === 'delaySel') { b.delay = parseInt(tg.value, 10) || 0; commit(); renderSettings(); toastInfo(b.delay ? 'Différé réglé sur ' + fmtDelay(b.delay) : 'Différé désactivé', b.delay ? 'Pense à demander le même délai aux streamers.' : ''); }
     if (id === 'hideChat') { b.hideChat = tg.checked; commit(false); }
   });
@@ -3936,11 +3930,40 @@ class Stage {
   }
   get sound() { return this.o.sound; }
   setSound(on) { this.o.sound = !!on; this.layout(false); }
-  /* page Direct : différé du site seulement si la régie l'a choisi (sinon OBS retarde tout le flux, pareil pour tous) */
-  delay() { return this.o.delay == null ? (S.board.delayMode === 'site' ? S.board.delay || 0 : 0) : this.o.delay; }
+  delay() { return this.o.delay == null ? (S.board.delay || 0) : this.o.delay; }
   /* petite vignette : couche légère du flux (économise la bande passante) */
   layerFor(it) { return this.o.layer !== 'auto' ? this.o.layer : it.w * it.h < 1200 ? 'q' : 'f'; }
   set(pub, cut) {
+    const D = this.o.delay == null ? (S.board.delay || 0) * 1000 : 0;
+    this.latest = pub;
+    if (!D) { if (this.q && this.q.length) { this.q.forEach(e => clearTimeout(e.t)); this.q = []; } return this.apply(pub, cut); }
+    if (!cut && this.q && this.q.length) { const last = this.q[this.q.length - 1]; if (last.raw === pub) return; }
+    this.prewarm(pub, Date.now() + D + 8000);
+    const e = { raw: pub, pub: this.shiftPub(pub, D), cut: cut || !!(this.q && this.q.length && this.q.some(x => x.cut)) };
+    e.t = setTimeout(() => { this.q = this.q.filter(x => x !== e); this.apply(e.pub, e.cut); }, D);
+    (this.q = this.q || []).push(e);
+  }
+  /* plan retardé : les heures (médias, musique, écrans, replays) sont décalées du différé */
+  shiftPub(pub, D) {
+    if (!pub) return pub;
+    const p = JSON.parse(JSON.stringify(pub)), sh = o => { if (o) for (const k of ['at', 'until', 'end']) if (typeof o[k] === 'number' && o[k] > 1e12) o[k] += D; };
+    (p.items || []).forEach(sh); ['sfx', 'bgm', 'screen', 'replay', 'clip', 'next'].forEach(k => sh(p[k]));
+    return p;
+  }
+  /* commence tout de suite à recevoir (et mettre en mémoire) les POV d'un plan qui passera à l'antenne */
+  prewarm(pub, until) {
+    if (!pub || !pub.on) return;
+    for (const it of pub.items || []) {
+      if (it.k === 'media' || !it.src || RTC.mode(it.src, it.vsrc || 'auto', it.login) !== 'rtc') continue;
+      const ly = this.layerFor(it), id = it.src + '|' + ly, delay = this.delay();
+      let e = this.dps.get(id);
+      if (e && e.dp.delay !== delay) { if (e.used) continue; e.dp.destroy(); this.dps.delete(id); e = null; }
+      if (!e) { e = { dp: new DelayPlayer(it.src, { delay, record: this.o.record, layer: ly }), used: false }; e.dp.key = id; e.dp.setMuted(true); this.dps.set(id, e); this.hold.appendChild(e.dp.el); }
+      e.warm = Math.max(e.warm || 0, until);
+      if (!e.used) { clearTimeout(e.t); e.t = setTimeout(() => { if (!e.used && this.dps.get(id) === e) { e.dp.destroy(); this.dps.delete(id); } }, until - Date.now() + (this.o.record ? 90000 : 4000)); }
+    }
+  }
+  apply(pub, cut) {
     const p = this.pub = pub, tr = this.el.querySelector(':scope > .em-tr');
     const type = p && p.trans ? p.trans.type : 'cut', ms = p && p.trans ? p.trans.ms : 1200;
     const shot = cut && this.lastSeq >= 0 && p && p.seq !== this.lastSeq;
@@ -4087,7 +4110,7 @@ class Stage {
     const e = this.dps.get(dp.key); if (!e || e.dp !== dp) { dp.destroy(); return; }
     e.used = false; dp.setMuted(true);
     this.hold.appendChild(dp.el);
-    clearTimeout(e.t); e.t = setTimeout(() => { if (!e.used) { dp.destroy(); this.dps.delete(dp.key); } }, this.o.record ? 90000 : 4000);
+    clearTimeout(e.t); e.t = setTimeout(() => { if (!e.used) { dp.destroy(); this.dps.delete(dp.key); } }, Math.max(0, (e.warm || 0) - Date.now()) + (this.o.record ? 90000 : 4000));
   }
   /* habillages */
   renderGfx() {
@@ -4180,11 +4203,11 @@ class Stage {
       PROG.syncOne(this.bgmEl, nowS() - t * 1000, false, bg.vol, this.o.sound, this);
     } else if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; }
   }
-  tick() { for (const el of this.players.values()) if (el._tw) this.twApply(el._tw); const t = this.el.querySelector(':scope > .em-tr .em-t'); if (t && t.textContent !== brandName()) t.textContent = brandName(); this.syncMedia(); this.tickScreen(); const m = this.el.querySelector(':scope > .em-gfx .gx-map'); if (m) PROG.drawMini(m, this.mainTrib()); }
+  tick() { if (this.q && this.q.length && this.latest) this.prewarm(this.latest, Date.now() + this.delay() * 1000 + 8000); for (const el of this.players.values()) if (el._tw) this.twApply(el._tw); const t = this.el.querySelector(':scope > .em-tr .em-t'); if (t && t.textContent !== brandName()) t.textContent = brandName(); this.syncMedia(); this.tickScreen(); const m = this.el.querySelector(':scope > .em-gfx .gx-map'); if (m) PROG.drawMini(m, this.mainTrib()); }
   /* POV principale : la plus grande à l'écran */
   mainTrib() { const p = this.pub, big = p && p.on ? (p.items || []).filter(i => i.k === 'trib').sort((a, b) => b.w * b.h - a.w * a.h)[0] : null; return big ? big.ref : ''; }
   destroy() {
-    clearTimeout(this.trT1); clearTimeout(this.trT2);
+    clearTimeout(this.trT1); clearTimeout(this.trT2); (this.q || []).forEach(e => clearTimeout(e.t)); this.q = [];
     for (const el of this.players.values()) { const md = el.querySelector('.em-md'); if (md && md.pause) md.pause(); }
     for (const e of this.dps.values()) { clearTimeout(e.t); e.dp.destroy(); }
     if (this.sfxEl) this.sfxEl.pause(); if (this.bgmEl) this.bgmEl.pause();

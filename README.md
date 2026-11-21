@@ -174,7 +174,7 @@ Le dossier `mod/` contient un mod Fabric pour les caméramans. Le fichier `.jar`
 
 ## Vidéo : POV des joueurs et caméras → régie → OBS
 
-**Différé** : par défaut, il est fait par **OBS** (Paramètres › Avancé › *Délai de diffusion*, même valeur que sur le site). La page Direct affiche alors tout en temps réel et OBS retarde le flux entier : tous les spectateurs ont le même retard, et une POV qui passe à l'antenne s'affiche tout de suite. Le réglage « Par le site » existe aussi (Réglages › Jeux), mais chaque POV attend alors le différé quand elle arrive à l'antenne.
+**Différé** : réglé sur le site, il est commun à tous et fait par le site. Rien à régler dans OBS. La page Direct affiche un plan pris à l'antenne exactement un différé plus tard, et commence à recevoir ses POV dès la prise : elles s'affichent sans attente. Les POV en repli Twitch ne peuvent pas être retardées par le site : c'est le délai de chaque stream Twitch qui s'applique.
 
 **Chemin de l'image** : chaque joueur et chaque caméra envoie son écran (le monde seulement, sans HUD ni chat) au serveur vidéo de Cloudflare (Realtime). La régie compose les plans sur la page **Réalisation**, la page **Direct** les affiche, et le streamer la capture dans OBS (source *Navigateur*, lien donné par le bouton **Lien OBS**). Le public du site ne voit que les POV Twitch.
 
