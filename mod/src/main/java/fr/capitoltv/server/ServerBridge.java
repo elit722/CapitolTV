@@ -8,6 +8,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import fr.capitoltv.CapitolTV;
 import fr.capitoltv.net.CtvSocket;
 import fr.capitoltv.net.CamAccessPayload;
+import fr.capitoltv.net.StreamKeyPayload;
 import fr.capitoltv.net.SpecPayload;
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -60,6 +61,8 @@ public final class ServerBridge {
         public boolean reportEffects = true;
         /** les caméras (déclarées sur Capitol TV) passent automatiquement en spectateur */
         public boolean autoSpectator = true;
+        /** envoie à chaque joueur sa clé de diffusion (POV) : rien à configurer côté joueur */
+        public boolean giveStreamKeys = true;
     }
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
@@ -82,8 +85,13 @@ public final class ServerBridge {
         p.sendMessage(Text.literal("§6[Capitol TV]§r " + (on ? "Mode caméra : tu es en spectateur." : "Tu quittes le mode spectateur.")), false);
     }
 
+    /** joueurs dont on attend la clé de diffusion */
+    private static final Set<String> wantKeys = ConcurrentHashMap.newKeySet();
+
     private static void onRemote(JsonObject m) {
         String t = m.has("t") ? m.get("t").getAsString() : "";
+        if (t.equals("pkeys") && m.has("keys")) { giveKeys(m.getAsJsonObject("keys")); return; }
+        if (t.equals("hello")) { MinecraftServer s0 = server; if (s0 != null) for (ServerPlayerEntity p : s0.getPlayerManager().getPlayerList()) wantKeys.add(p.getGameProfile().getName()); }
         if (!(t.equals("hello") || t.equals("cams")) || !m.has("names")) return;
         remoteCams.clear();
         for (var e : m.getAsJsonArray("names")) remoteCams.add(e.getAsString());
@@ -91,6 +99,21 @@ public final class ServerBridge {
         MinecraftServer s = server;
         if (s == null) return;
         s.execute(() -> refreshAccess(s));
+    }
+
+    /** Transmet à chaque joueur connu de Capitol TV sa clé de diffusion. */
+    private static void giveKeys(JsonObject keys) {
+        MinecraftServer s = server;
+        if (s == null) return;
+        s.execute(() -> {
+            for (ServerPlayerEntity p : s.getPlayerManager().getPlayerList()) {
+                String n = p.getGameProfile().getName();
+                if (!keys.has(n)) continue;
+                JsonObject k = keys.getAsJsonObject(n);
+                if (ServerPlayNetworking.canSend(p, StreamKeyPayload.ID))
+                    ServerPlayNetworking.send(p, new StreamKeyPayload(k.get("key").getAsString(), cfg.url, k.has("who") ? k.get("who").getAsString() : n));
+            }
+        });
     }
 
     /** Envoie à chaque joueur son droit au mode caméra et met les caméras en spectateur. */
@@ -175,6 +198,7 @@ public final class ServerBridge {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, s) -> {
             ServerPlayerEntity p = handler.getPlayer();
             boolean cam = isCam(p.getGameProfile().getName());
+            if (cfg.giveStreamKeys) wantKeys.add(p.getGameProfile().getName());
             s.execute(() -> {
                 if (ServerPlayNetworking.canSend(p, CamAccessPayload.ID)) ServerPlayNetworking.send(p, new CamAccessPayload(cam));
                 if (cam && cfg.autoSpectator) setSpectator(s, p, true);
@@ -276,6 +300,15 @@ public final class ServerBridge {
     private static void onTick(MinecraftServer s) {
         if (sock == null || !sock.online()) { if (events.size() > 200) events.clear(); return; }
         tick++;
+        if (cfg.giveStreamKeys && !wantKeys.isEmpty() && tick % 20 == 0) {
+            JsonArray names = new JsonArray();
+            for (String n : wantKeys) names.add(n);
+            wantKeys.clear();
+            JsonObject o = new JsonObject();
+            o.addProperty("t", "pkeys");
+            o.add("names", names);
+            sock.send(o);
+        }
         if (!events.isEmpty() && tick % 5 == 0) {
             JsonArray arr = new JsonArray();
             JsonObject e;

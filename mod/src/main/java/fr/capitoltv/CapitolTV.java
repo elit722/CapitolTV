@@ -1,6 +1,7 @@
 package fr.capitoltv;
 
 import fr.capitoltv.net.CamAccessPayload;
+import fr.capitoltv.net.StreamKeyPayload;
 import fr.capitoltv.net.SpecPayload;
 import fr.capitoltv.net.TpPayload;
 import fr.capitoltv.server.ServerBridge;
@@ -18,6 +19,7 @@ public class CapitolTV implements ModInitializer {
         PayloadTypeRegistry.playC2S().register(TpPayload.ID, TpPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(SpecPayload.ID, SpecPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(CamAccessPayload.ID, CamAccessPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(StreamKeyPayload.ID, StreamKeyPayload.CODEC);
         ServerBridge.init();
     }
 }

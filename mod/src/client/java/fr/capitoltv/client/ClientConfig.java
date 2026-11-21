@@ -46,6 +46,8 @@ public final class ClientConfig {
     public String streamLevel = "";
     /** l'écran « Ma diffusion » a déjà été proposé à la première connexion */
     public boolean streamAsked = false;
+    /** baisse automatique de la qualité si le jeu ralentit */
+    public boolean streamAdapt = true;
     /** menu réduit sur le côté : on voit le jeu et on peut bouger */
     public boolean dockMenu = false;
 

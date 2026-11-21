@@ -55,7 +55,7 @@ public final class Streamer {
     private Streamer() { }
 
     private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
-    private static final ExecutorService WORK = Executors.newSingleThreadExecutor(r -> { Thread t = new Thread(r, "CapitolTV-video"); t.setDaemon(true); return t; });
+    private static final ExecutorService WORK = Executors.newSingleThreadExecutor(r -> { Thread t = new Thread(r, "CapitolTV-video"); t.setDaemon(true); t.setPriority(Thread.NORM_PRIORITY - 2); return t; });
 
     private static PeerConnectionFactory factory;
     private static RTCPeerConnection pc;
@@ -79,11 +79,19 @@ public final class Streamer {
     /** clé à utiliser : celle collée dans les réglages, sinon celle reçue du site (équipe) */
     public static String key() {
         String k = ClientConfig.get().streamKey;
-        return k != null && !k.isBlank() ? k.trim() : Data.streamKey;
+        if (k != null && !k.isBlank()) return k.trim();
+        if (!Data.serverKey.isEmpty()) return Data.serverKey;
+        return Data.streamKey;
+    }
+    /** adresse du site : celle donnée par le serveur Minecraft si la clé vient de lui */
+    static String base() {
+        String k = ClientConfig.get().streamKey;
+        if ((k == null || k.isBlank()) && !Data.serverKey.isEmpty() && !Data.serverUrl.isBlank()) return Data.serverUrl;
+        return ClientConfig.get().url;
     }
 
     /** chemin d'une capture de contrôle demandée par le test automatique */
-    public static volatile java.nio.file.Path testShot;
+    public static volatile java.nio.file.Path testShot, testFast;
     public static volatile boolean hooked;
 
     /** Appelé par le mixin juste après le rendu du monde (avant HUD et menus). */
@@ -94,18 +102,98 @@ public final class Streamer {
             testShot = null;
             capture(img -> { try (img) { img.writeTo(t); } catch (Exception e) { CapitolTV.LOG.warn("Capitol TV : capture de test ratée ({})", e.toString()); } }, null);
         }
+        java.nio.file.Path tf = testFast;
+        if (tf != null) {
+            testFast = null;
+            Capture.grab(MinecraftClient.getInstance().getFramebuffer(), 720, (buf, w, h) -> {
+                try (NativeImage img = new NativeImage(w, h, false)) {
+                    for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) { int i = (y * w + x) * 4; img.setColor(x, y, 0xFF000000 | (buf.get(i + 2) & 255) << 16 | (buf.get(i + 1) & 255) << 8 | (buf.get(i) & 255)); }
+                    img.writeTo(tf);
+                } catch (Exception e) { CapitolTV.LOG.warn("Capitol TV : test capture rapide raté ({})", e.toString()); }
+                Capture.recycle(buf);
+            });
+        }
         try { onWorldRendered(); } catch (Throwable e) { status = "erreur : " + e; }
     }
 
     public static void onWorldRendered() {
         ClientConfig c = ClientConfig.get();
         if (!c.streamOn || "off".equals(c.streamLevel)) { if (live || starting) stop("coupée"); return; }
+        if (!live) baseline();
         if (!live && !starting) { if (System.currentTimeMillis() >= retryAt) start(); return; }
         if (!live || videoSource == null) return;
-        long now = System.nanoTime(), every = 1_000_000_000L / Math.max(10, maxFps);
+        adapt();
+        long now = System.nanoTime(), every = 1_000_000_000L / Math.max(10, curFps);
         if (now - lastFrame < every || !busy.compareAndSet(false, true)) return;
         lastFrame = now;
+        if (!Capture.broken()) {
+            // capture rapide : réduction et copie par la carte graphique, conversion hors du fil du jeu
+            boolean ok = Capture.grab(MinecraftClient.getInstance().getFramebuffer(), curH, (buf, w, h) -> WORK.execute(() -> { try { pushRgba(buf, w, h); } finally { Capture.recycle(buf); busy.set(false); } }));
+            if (!ok) busy.set(false);
+            return;
+        }
         capture(img -> WORK.execute(() -> { try { push(img); } finally { img.close(); busy.set(false); } }), () -> busy.set(false));
+    }
+
+    /* ---------- anti-lag : si le jeu ralentit, on envoie moins (puis on remonte) ---------- */
+    private static volatile int curH = 720, curFps = 30;
+    private static long adaptAt;
+    private static int lowSec, highSec;
+    private static final int[][] STEPS = {{1080, 60}, {1080, 30}, {720, 30}, {720, 24}, {540, 24}, {480, 20}, {360, 20}};
+    private static int step;
+
+    /** niveaux possibles sous le maximum choisi par le joueur (et autorisé par la régie) */
+    private static int firstStep() {
+        for (int i = 0; i < STEPS.length; i++) if (STEPS[i][0] <= maxH && STEPS[i][1] <= maxFps) return i;
+        return STEPS.length - 1;
+    }
+
+    private static void applyStep() {
+        int i = Math.max(firstStep(), Math.min(STEPS.length - 1, step));
+        step = i;
+        curH = Math.min(maxH, STEPS[i][0]); curFps = Math.min(maxFps, STEPS[i][1]);
+    }
+
+    private static void adapt() {
+        long now = System.currentTimeMillis();
+        if (now - adaptAt < 1000) return;
+        adaptAt = now;
+        if (!ClientConfig.get().streamAdapt) { if (step != firstStep()) { step = firstStep(); applyStep(); } return; }
+        // comparé aux images/s du joueur sans diffusion (un petit PC n'est pas « en retard » à 35 i/s)
+        int fps = MinecraftClient.getInstance().getCurrentFps();
+        double low = Math.max(20, baseFps * 0.8), high = baseFps * 0.93;
+        if (fps < low) { lowSec++; highSec = 0; } else if (fps >= high) { highSec++; lowSec = 0; } else { lowSec = 0; highSec = 0; }
+        if (lowSec >= 4 && step < STEPS.length - 1) { step++; lowSec = 0; applyStep(); status = "anti-lag : " + curH + "p " + curFps + " i/s"; }
+        else if (highSec >= 25 && step > firstStep()) { step--; highSec = 0; applyStep(); status = "en direct · " + curH + "p " + curFps + " i/s"; }
+    }
+
+    private static double baseFps = 60;
+    private static long baseAt;
+    private static void baseline() {
+        long now = System.currentTimeMillis();
+        if (now - baseAt < 1000) return;
+        baseAt = now;
+        int f = MinecraftClient.getInstance().getCurrentFps();
+        if (f > 0) baseFps = baseFps * 0.75 + f * 0.25;
+    }
+
+    /** qualité réellement envoyée en ce moment (après anti-lag) */
+    public static String sending() { return curH + "p · " + curFps + " i/s"; }
+
+    private static void pushRgba(java.nio.ByteBuffer rgba, int w, int h) {
+        CustomVideoSource src = videoSource;
+        if (src == null) return;
+        try {
+            NativeI420Buffer buf = NativeI420Buffer.allocate(w, h);
+            VideoBufferConverter.convertToI420(rgba, buf, FourCC.ABGR);
+            VideoFrame f = new VideoFrame(buf, System.nanoTime());
+            src.pushFrame(f);
+            f.release();
+            frames++;
+        } catch (Throwable t) {
+            lastErr = t.toString();
+            CapitolTV.LOG.debug("Capitol TV : image non envoyée ({})", lastErr);
+        }
     }
 
     /** copie asynchrone de l'image affichée (le GPU la renvoie quelques images plus tard) */
@@ -130,7 +218,7 @@ public final class Streamer {
             for (int y = 0; y < h; y++) bb.asIntBuffer().position(y * w).put(argb, y * iw, w);
             NativeI420Buffer buf = NativeI420Buffer.allocate(w, h);
             VideoBufferConverter.convertToI420(bb, buf, FourCC.ARGB);
-            int max = maxH;
+            int max = curH;
             VideoFrameBuffer out = buf;
             if (max > 0 && h > max) {
                 int sh = max & ~1, sw = (int) Math.round(w * (double) sh / h) & ~1;
@@ -148,8 +236,8 @@ public final class Streamer {
     }
 
     public static synchronized void start() {
-        String key = key(), base = ClientConfig.get().url;
-        if (key == null || key.isBlank()) { status = "pas de clé de diffusion (Réglages › Diffusion)"; retryAt = System.currentTimeMillis() + 5000; return; }
+        String key = key(), base = base();
+        if (key == null || key.isBlank()) { status = "en attente de la clé (serveur de l'event)"; retryAt = System.currentTimeMillis() + 5000; return; }
         starting = true; status = "connexion…";
         WORK.execute(() -> {
             try {
@@ -166,7 +254,7 @@ public final class Streamer {
                         if (j.has("h") && j.get("h").getAsInt() > 0) { vh = j.get("h").getAsInt(); vk = j.get("kbps").getAsInt(); vf = j.get("fps").getAsInt(); }
                     } else if (q.statusCode() == 404) throw new IllegalStateException("clé de diffusion inconnue");
                 } catch (IllegalStateException e) { throw e; } catch (Exception ignored) { }
-                maxH = vh; maxFps = vf;
+                maxH = vh; maxFps = vf; step = firstStep(); applyStep();
                 RTCConfiguration cfg = new RTCConfiguration();
                 RTCIceServer ice = new RTCIceServer();
                 ice.urls = List.of("stun:stun.cloudflare.com:3478");
@@ -250,7 +338,7 @@ public final class Streamer {
     public static void announce() {
         String key = key();
         if (key == null || key.isBlank()) return;
-        String url = qualityUrl(ClientConfig.get().url, key.trim());
+        String url = qualityUrl(base(), key.trim());
         HTTP.sendAsync(HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(8)).GET().build(), HttpResponse.BodyHandlers.ofString())
                 .thenAccept(r -> { if (r.statusCode() == 200) try { readQuality(com.google.gson.JsonParser.parseString(r.body()).getAsJsonObject()); } catch (Exception ignored) { } });
     }

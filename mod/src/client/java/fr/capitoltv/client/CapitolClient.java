@@ -42,7 +42,16 @@ public class CapitolClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(CamMoves::endTick);
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(mc -> Streamer.stop(null));
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((h, sender, client) -> { CamMode.resetSpectatorTries(); stDirty = true; });
-        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((h, client) -> CamMode.serverCam = false);
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((h, client) -> {
+            CamMode.serverCam = false;
+            if (!Data.serverKey.isEmpty()) { Data.serverKey = ""; Data.serverUrl = ""; Data.serverWho = ""; Streamer.stop("déconnecté du serveur"); }
+        });
+        // clé de diffusion donnée par le serveur de l'event : rien à copier pour le joueur
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(fr.capitoltv.net.StreamKeyPayload.ID, (payload, ctx) -> {
+            boolean changed = !payload.key().equals(Data.serverKey);
+            Data.serverKey = payload.key(); Data.serverUrl = payload.url(); Data.serverWho = payload.who();
+            if (changed) { Streamer.stop(null); Streamer.announce(); }
+        });
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(fr.capitoltv.net.CamAccessPayload.ID, (payload, ctx) -> {
             boolean was = CamMode.serverCam;
             CamMode.serverCam = payload.on();
@@ -174,7 +183,9 @@ public class CapitolClient implements ClientModInitializer {
         // joueur (sans jeton d'équipe) : K ouvre directement « Ma diffusion »
         while (menuKey.wasPressed()) if (mc.currentScreen == null) mc.setScreen(ClientConfig.get().token.isBlank() && !demo ? new fr.capitoltv.client.gui.StreamScreen(null, false) : new CapitolScreen());
         // première connexion à un serveur : proposer le choix de qualité du POV
-        if (!ClientConfig.get().streamAsked && mc.world != null && mc.player != null && mc.currentScreen == null && !mc.isInSingleplayer() && !demo) {
+        // première fois qu'une clé est disponible : demander l'accord du joueur (et sa qualité)
+        String k0 = Streamer.key();
+        if (!ClientConfig.get().streamAsked && k0 != null && !k0.isBlank() && mc.world != null && mc.player != null && mc.currentScreen == null && !demo) {
             if (++firstAskTicks > 60) { firstAskTicks = 0; mc.setScreen(new fr.capitoltv.client.gui.StreamScreen(null, true)); }
         } else firstAskTicks = 0;
         while (signalKey.wasPressed()) quickSignal();

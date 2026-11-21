@@ -20,7 +20,7 @@ public class StreamScreen extends Screen {
     private final boolean first;
     private TextFieldWidget keyField;
     private String keyDraft;
-    private int px, py, pw, ph, step = 26;
+    private int px, py, pw, ph, step = 26, top = 40;
     private String msg = "";
     private long msgUntil;
 
@@ -40,13 +40,14 @@ public class StreamScreen extends Screen {
         pw = Math.min(360, width - 20);
         int cards = Quality.ALL.size();
         // hauteur des cartes adaptée aux petits écrans
-        step = Math.max(20, Math.min(26, (height - 16 - 108) / cards));
-        ph = 108 + cards * step;
+        top = first ? 62 : 40;
+        step = Math.max(20, Math.min(26, (height - 16 - 68 - top) / cards));
+        ph = 68 + top + cards * step;
         px = (width - pw) / 2; py = (height - ph) / 2;
-        int x = px + 12, w = pw - 24, y = py + 40;
+        int x = px + 12, w = pw - 24, y = py + top;
 
         // clé de diffusion (donnée sur le site, page Mon compte)
-        boolean siteKey = !Data.streamKey.isEmpty() && (c.streamKey == null || c.streamKey.isBlank());
+        boolean siteKey = (!Data.streamKey.isEmpty() || !Data.serverKey.isEmpty()) && (c.streamKey == null || c.streamKey.isBlank());
         if (keyDraft == null) keyDraft = c.streamKey;
         if (!siteKey) {
             keyField = new TextFieldWidget(textRenderer, x + 5, y + 4, w - 70, 12, Text.literal("Clé de diffusion"));
@@ -80,11 +81,16 @@ public class StreamScreen extends Screen {
             y += step;
         }
         y += 4;
-        int bw = (w - 6) / 2;
+        int bw = (w - 12) / 3;
         addDrawableChild(new CtvButton(x, y, bw, 18, "Micro : " + (c.streamMic ? "oui" : "non"), () -> {
             c.streamMic = !c.streamMic; ClientConfig.save(); Streamer.stop(null); clearAndInit();
         }));
-        addDrawableChild(new CtvButton(x + bw + 6, y, bw, 18, first && cur.isEmpty() ? "Plus tard" : "Fermer", this::close).kind(CtvButton.Kind.PRIMARY));
+        CtvButton ad = new CtvButton(x + bw + 6, y, bw, 18, "Anti-lag : " + (c.streamAdapt ? "oui" : "non"), () -> {
+            c.streamAdapt = !c.streamAdapt; ClientConfig.save(); clearAndInit();
+        });
+        ad.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(Text.literal("Si ton jeu ralentit, la qualité envoyée baisse toute seule (puis remonte). La qualité choisie reste le maximum.")));
+        addDrawableChild(ad);
+        addDrawableChild(new CtvButton(x + 2 * (bw + 6), y, w - 2 * (bw + 6), 18, first && cur.isEmpty() ? "Plus tard" : "Fermer", this::close).kind(CtvButton.Kind.PRIMARY));
         if (hasKey()) Streamer.announce();
     }
 
@@ -121,10 +127,17 @@ public class StreamScreen extends Screen {
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
         super.render(ctx, mouseX, mouseY, delta);
         Ui.emblem(ctx, px + 8, py + 7, 16);
-        ctx.drawText(textRenderer, Text.literal("MA DIFFUSION").formatted(Formatting.BOLD), px + 30, py + 7, Ui.GOLD, true);
-        ctx.drawText(textRenderer, first ? "Choisis la qualité de ton POV pour la régie" : "Ce que la régie Capitol TV reçoit de ton écran", px + 30, py + 18, Ui.DIM, false);
+        ctx.drawText(textRenderer, Text.literal(first ? "PARTAGER TON POV ?" : "MA DIFFUSION").formatted(Formatting.BOLD), px + 30, py + 7, Ui.GOLD, true);
+        ctx.drawText(textRenderer, first ? "Capitol TV aimerait montrer ton écran de jeu" : "Ce que la régie Capitol TV reçoit de ton écran", px + 30, py + 18, Ui.DIM, false);
         int x = px + 12, w = pw - 24;
-        if (keyField == null) ctx.drawText(textRenderer, "Clé de diffusion reçue du site ✔", x, py + 45, Ui.GREEN, false);
+        if (first) {
+            int ty = py + 36;
+            for (var line : textRenderer.wrapLines(Text.literal("Seulement le jeu (ni HUD, ni chat, ni menus). Visible par la régie, peut passer dans l'émission. Choisis une qualité pour accepter, ou « Sans POV ». Modifiable à tout moment : touche K."), w)) {
+                ctx.drawText(textRenderer, line, x, ty, Ui.INK, false); ty += 9;
+                if (ty > py + top - 2) break;
+            }
+        }
+        if (keyField == null) ctx.drawText(textRenderer, !Data.serverKey.isEmpty() ? "Clé reçue automatiquement du serveur ✔" + (Data.serverWho.isEmpty() ? "" : " · " + Data.serverWho) : "Clé de diffusion reçue du site ✔", x, py + top + 5, Ui.GREEN, false);
         // statut
         String st;
         int col;
@@ -137,7 +150,7 @@ public class StreamScreen extends Screen {
         if (System.currentTimeMillis() < msgUntil) { st = msg; col = Ui.GOLD_HI; }
         ctx.drawText(textRenderer, textRenderer.trimToWidth(st, w), x, py + ph - 13, col, false);
         // pastilles « conseillé » / « limite régie »
-        int y = py + 66;
+        int y = py + top + 26;
         int capRank = Quality.cap.isEmpty() ? 99 : Quality.rank(Quality.cap);
         for (Quality.Level l : Quality.ALL) {
             String tag = "std".equals(l.id()) ? "CONSEILLÉ" : !"off".equals(l.id()) && Quality.rank(l.id()) > capRank ? "LIMITÉ" : "";

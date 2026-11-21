@@ -73,12 +73,15 @@ public class CapitolClientGameTest implements FabricClientGameTest {
             context.runOnClient(c -> fr.capitoltv.client.Streamer.testShot = net.fabricmc.loader.api.FabricLoader.getInstance().getGameDir().resolve("screenshots").resolve("ctv-22-flux-envoye.png"));
             context.waitTicks(20);
             context.runOnClient(c -> fr.capitoltv.CapitolTV.LOG.info("CTV-HOOK " + fr.capitoltv.client.Streamer.hooked));
+            context.runOnClient(c -> fr.capitoltv.client.Streamer.testFast = net.fabricmc.loader.api.FabricLoader.getInstance().getGameDir().resolve("screenshots").resolve("ctv-23-capture-rapide.png"));
+            context.waitTicks(20);
             context.runOnClient(c -> { ClientConfig.get().dockMenu = false; CapitolScreen.setPage = 3; c.setScreen(CapitolScreen.on("SETTINGS")); });
             context.waitTicks(10);
             context.takeScreenshot("ctv-23-menu-diffusion");
-            context.runOnClient(c -> { fr.capitoltv.client.Quality.cap = "hd"; c.setScreen(new fr.capitoltv.client.gui.StreamScreen(null, true)); });
+            context.runOnClient(c -> { fr.capitoltv.client.Quality.cap = "hd"; fr.capitoltv.client.Data.serverKey = "test"; fr.capitoltv.client.Data.serverWho = "Katniss"; c.setScreen(new fr.capitoltv.client.gui.StreamScreen(null, true)); });
             context.waitTicks(10);
             context.takeScreenshot("ctv-25-ma-diffusion");
+            context.runOnClient(c -> { fr.capitoltv.client.Data.serverKey = ""; c.setScreen(null); });
             context.runOnClient(c -> { c.setScreen(null); fr.capitoltv.client.CamMoves.picker = true; });
             context.waitTicks(5);
             context.takeScreenshot("ctv-24-mouvements");

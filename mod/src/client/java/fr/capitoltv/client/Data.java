@@ -46,6 +46,8 @@ public final class Data {
     public static boolean serverMod;
     /** clé de diffusion vidéo reçue du site (membres de l'équipe) */
     public static String streamKey = "";
+    /** clé de diffusion transmise automatiquement par le serveur Minecraft (joueurs) */
+    public static volatile String serverKey = "", serverUrl = "", serverWho = "";
     public static boolean ready;
     public static final Map<String, Trib> tribs = new LinkedHashMap<>();
     public static final Map<String, Alert> alerts = new HashMap<>();
