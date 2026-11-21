@@ -1,0 +1,17 @@
+net/minecraft/util/profiler/TracyProfiler.java
+com/mojang/blaze3d/textures/GpuTexture.java
+com/mojang/blaze3d/systems/RenderPass.java
+com/mojang/blaze3d/systems/CommandEncoder.java
+com/mojang/blaze3d/systems/GpuDevice.java
+com/mojang/blaze3d/systems/RenderSystem.java
+com/mojang/blaze3d/opengl/GlStateManager.java
+com/mojang/blaze3d/buffers/GpuFence.java
+com/mojang/blaze3d/buffers/GpuBuffer.java
+com/mojang/blaze3d/buffers/GpuBufferSlice.java
+net/minecraft/client/gl/RenderPipelines.java
+net/minecraft/client/gl/SimpleFramebuffer.java
+net/minecraft/client/gl/Framebuffer.java
+net/minecraft/client/gl/GlGpuFence.java
+net/minecraft/client/util/ScreenshotRecorder.java
+net/minecraft/client/util/tracy/TracyLoader.java
+net/minecraft/client/util/tracy/TracyFrameCapturer.java
