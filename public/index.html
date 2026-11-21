@@ -13,6 +13,7 @@
    ===================================================================== */
 const CONFIG = {
   // Logo : image "logo.png" placée dans le dossier public/ (sinon emblème par défaut)
+  name: "Capitol TV",
   logo: "emblem.png", logoFull: "emblem.png",
   // Bouton de dons par défaut (modifiable ensuite depuis la régie)
   don: { label: "Sponsoriser", url: "" }
@@ -57,15 +58,20 @@ body.locked .nolock{display:none!important}
 .em-bar h3{margin:0;font-size:13px;letter-spacing:.18em;font-weight:800}
 .em-live{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.14em;color:#fff;background:var(--red);padding:3px 9px;border-radius:5px}
 .em-live.off{background:var(--surface3);color:var(--mute)}
-.em-stage{position:relative;width:min(100%, calc((100vh - 190px) * 16 / 9));aspect-ratio:16/9;background:#050506;overflow:hidden;border-radius:6px;box-shadow:0 0 0 1px var(--hair2)}
+.em-stage{position:relative;width:min(100%, calc((100vh - 190px) * 16 / 9));aspect-ratio:16/9;background:#050506;overflow:hidden;container-type:size;border-radius:6px;box-shadow:0 0 0 1px var(--hair2)}
+/* rendu réel dans les moniteurs de la régie (même moteur que la page Direct) */
+.stg{position:absolute;inset:0;overflow:hidden;background:#050506;container-type:size;z-index:0}
+.cv.render .ci{background:transparent!important;border-color:rgba(214,178,97,.45)} .cv.render .ci .nm{opacity:.85}
+.cv.render .ci:not(.sel){box-shadow:none} .cv.render .hint{z-index:1}
+.em-it.gone{opacity:0;transform:scale(.88)}
 body.em-full .em-wrap{top:0;bottom:0;padding:0;z-index:90}
 body.em-full .em-bar{display:none}
 body.em-full .em-stage{width:min(100vw, 100vh * 16 / 9);border-radius:0;box-shadow:none}
 body.em-full header.top,body.em-full footer.ticker,body.em-full #toasts{display:none!important}
-.em-it{position:absolute;overflow:hidden;background:#0b0b0d;transition:left .7s cubic-bezier(.65,0,.35,1),top .7s cubic-bezier(.65,0,.35,1),width .7s cubic-bezier(.65,0,.35,1),height .7s cubic-bezier(.65,0,.35,1),opacity .5s}
+.em-it{position:absolute;overflow:hidden;background:#0b0b0d;transition:left .7s cubic-bezier(.65,0,.35,1),top .7s cubic-bezier(.65,0,.35,1),width .7s cubic-bezier(.65,0,.35,1),height .7s cubic-bezier(.65,0,.35,1),opacity .5s,transform .6s cubic-bezier(.2,.8,.2,1)}
 .em-it iframe{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none}
 .em-it.gone{opacity:0}
-.em-lab{position:absolute;left:2.2%;bottom:6%;display:flex;align-items:stretch;font-size:clamp(9px,1.25vw,17px);z-index:2;pointer-events:none;filter:drop-shadow(0 4px 12px rgba(0,0,0,.6));animation:labIn .6s .5s both}
+.em-lab{position:absolute;left:2.2%;bottom:6%;display:flex;align-items:stretch;font-size:1.25cqw;z-index:2;pointer-events:none;filter:drop-shadow(0 4px 12px rgba(0,0,0,.6));animation:labIn .6s .5s both}
 .em-lab b{background:linear-gradient(90deg,#d6b261,#f6e2a6);color:#141008;padding:.35em .8em;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 .em-lab span{background:rgba(10,10,12,.86);color:#f3f0e9;padding:.35em .8em;font-weight:600}
 @keyframes labIn{from{transform:translateX(-14px);opacity:0}}
@@ -115,7 +121,7 @@ body.em-full header.top,body.em-full footer.ticker,body.em-full #toasts{display:
 audio.em-md{display:none}
 .em-aud{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(circle at 50% 40%,#2a2112,#070708 70%);color:#f6e2a6;font-weight:800;letter-spacing:.08em;text-align:center;padding:4%}
 .em-aud img{height:32%;max-height:160px;filter:drop-shadow(0 0 18px rgba(212,175,55,.45))}
-.em-aud b{font-size:clamp(11px,2vw,30px)}
+.em-aud b{font-size:2cqw}
 .em-aud i{display:inline-block;width:6px;height:18px;margin:0 2px;background:#d4af37;border-radius:2px;animation:emEq 1s ease-in-out infinite}
 .em-aud i:nth-of-type(2){animation-delay:.15s}.em-aud i:nth-of-type(3){animation-delay:.3s}.em-aud i:nth-of-type(4){animation-delay:.45s}.em-aud i:nth-of-type(5){animation-delay:.6s}
 @keyframes emEq{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1.4)}}
@@ -129,19 +135,19 @@ audio.em-md{display:none}
 .ci .mdi.ctv{font:700 22px var(--serif);letter-spacing:.2em;color:rgba(255,138,138,.8)}
 /* ---- habillages de l'antenne ---- */
 .em-gfx{position:absolute;inset:0;z-index:60;pointer-events:none;font-family:var(--serif)}
-.gx-alive{position:absolute;left:2.2%;top:3.5%;display:flex;align-items:baseline;gap:.35em;background:linear-gradient(90deg,rgba(10,9,8,.92),rgba(10,9,8,.7));border-left:.3em solid var(--gold);padding:.35em .9em .3em .7em;font-size:clamp(12px,1.7vw,30px);color:#fff;animation:gxIn .5s ease both}
+.gx-alive{position:absolute;left:2.2%;top:3.5%;display:flex;align-items:baseline;gap:.35em;background:linear-gradient(90deg,rgba(10,9,8,.92),rgba(10,9,8,.7));border-left:.3em solid var(--gold);padding:.35em .9em .3em .7em;font-size:1.7cqw;color:#fff;animation:gxIn .5s ease both}
 .gx-alive b{font-size:1.6em;color:var(--gold-hi);line-height:1} .gx-alive span{opacity:.75} .gx-alive i{font-style:normal;letter-spacing:.2em;font-size:.6em;color:var(--gold)}
-.gx-lower{position:absolute;left:3%;bottom:13%;min-width:28%;max-width:60%;background:linear-gradient(90deg,rgba(12,11,10,.95),rgba(12,11,10,.78));border-left:.35em solid var(--gold);padding:.45em 1.2em .55em .9em;color:#fff;font-size:clamp(12px,1.6vw,28px);animation:gxSlide .6s cubic-bezier(.2,.8,.2,1) both}
+.gx-lower{position:absolute;left:3%;bottom:13%;min-width:28%;max-width:60%;background:linear-gradient(90deg,rgba(12,11,10,.95),rgba(12,11,10,.78));border-left:.35em solid var(--gold);padding:.45em 1.2em .55em .9em;color:#fff;font-size:1.6cqw;animation:gxSlide .6s cubic-bezier(.2,.8,.2,1) both}
 .gx-lower .n{font-weight:700;font-size:1.45em;letter-spacing:.06em;text-transform:uppercase;line-height:1.05}
 .gx-lower .n em{font-style:normal;color:var(--gold-hi);margin-right:.4em}
 .gx-lower .s{font-family:var(--sans);font-weight:600;font-size:.72em;color:#e8dcc2;letter-spacing:.04em;margin-top:.2em}
 .gx-lower .x{font-family:var(--sans);font-size:.7em;margin-top:.25em;color:#fff;opacity:.9}
 .gx-lower.dead{border-left-color:#8a8a8a} .gx-lower.dead .n{color:#ccc}
-.gx-break{position:absolute;left:0;right:0;bottom:3.2%;display:flex;align-items:stretch;height:clamp(22px,3.6vw,60px);font-size:clamp(11px,1.6vw,28px);animation:gxIn .4s ease both}
+.gx-break{position:absolute;left:0;right:0;bottom:3.2%;display:flex;align-items:stretch;height:3.6cqw;font-size:1.6cqw;animation:gxIn .4s ease both}
 .gx-break b{flex:none;display:flex;align-items:center;padding:0 1em;background:#c2121f;color:#fff;letter-spacing:.14em;font-weight:700;box-shadow:.4em 0 1em rgba(0,0,0,.4);z-index:1}
 .gx-break .tk{flex:1;overflow:hidden;background:rgba(255,255,255,.95);color:#111;display:flex;align-items:center;white-space:nowrap;font-family:var(--sans);font-weight:700}
 .gx-break .tk span{display:inline-block;padding-left:100%;animation:gxTick 18s linear infinite} .gx-break .tk span+span{display:none}
-.gx-poll,.gx-bets{position:absolute;right:2.2%;top:16%;width:min(34%,520px);background:rgba(10,9,8,.9);border-top:.25em solid var(--gold);padding:.6em .9em .8em;color:#fff;font-size:clamp(10px,1.25vw,22px);animation:gxIn .5s ease both}
+.gx-poll,.gx-bets{position:absolute;right:2.2%;top:16%;width:min(34%,520px);background:rgba(10,9,8,.9);border-top:.25em solid var(--gold);padding:.6em .9em .8em;color:#fff;font-size:1.25cqw;animation:gxIn .5s ease both}
 .gx-bets{top:auto;bottom:22%}
 .gx-poll h5,.gx-bets h5{margin:0 0 .3em;font-size:.72em;letter-spacing:.2em;color:var(--gold)} .gx-poll>b{display:block;font-family:var(--sans);font-size:1.05em;margin-bottom:.4em}
 .gx-poll .op,.gx-bets .op{position:relative;display:flex;justify-content:space-between;padding:.25em .5em;margin-top:.25em;background:rgba(255,255,255,.06);font-family:var(--sans);font-weight:600;overflow:hidden}
@@ -152,7 +158,7 @@ audio.em-md{display:none}
 @keyframes gxTick{from{transform:translateX(0)}to{transform:translateX(-100%)}}
 .em-replay,.em-clip{position:absolute;inset:0;z-index:55;background:#000;animation:gxIn .3s ease both} .em-clip video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain} .em-replay.gone{opacity:0;transition:opacity .5s}
 .em-replay video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
-.rp-tag{position:absolute;left:2.2%;top:3.5%;display:flex;align-items:center;gap:.6em;font-family:var(--serif);font-size:clamp(14px,2vw,36px);color:#fff}
+.rp-tag{position:absolute;left:2.2%;top:3.5%;display:flex;align-items:center;gap:.6em;font-family:var(--serif);font-size:2cqw;color:#fff}
 .rp-tag b{background:var(--gold);color:#111;padding:.1em .6em;letter-spacing:.2em;animation:rpBlink 1.2s ease-in-out infinite} .rp-tag span{background:rgba(0,0,0,.7);padding:.1em .6em;font-family:var(--sans);font-size:.6em;font-weight:600}
 @keyframes rpBlink{50%{opacity:.6}}
 /* ---- clips ---- */
@@ -211,6 +217,19 @@ audio.em-md{display:none}
 .mon h4 .em-live{font-size:10px;padding:2px 7px}
 .cv{position:relative;width:100%;aspect-ratio:16/9;background:#060607;border:1px solid var(--hair2);border-radius:6px;overflow:hidden;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:10% 10%}
 .cv.pgm{border-color:var(--red-b);box-shadow:0 0 0 2px var(--red-a)}
+.cvw{position:relative} .cvw>.stg{border-radius:6px} .cvw>.cv{z-index:1} .cv.render{background:transparent;background-image:none}
+.mon-b{height:24px;padding:0 8px} .mon-b.on{color:var(--gold-hi);background:var(--gold-a)} .mon-b:disabled{opacity:.35}
+.seg.sm button{height:26px;font-size:12px;padding:0 10px}
+.btn.apply{height:38px;font-weight:800;letter-spacing:.08em;background:var(--surface3);color:var(--mute)} .btn.apply.pend{background:linear-gradient(180deg,#e0a53a,#b67a17);color:#1a1205;animation:pulse 1.6s infinite}
+.pre-b{gap:6px} .pre-ic{width:26px;height:15px;flex:none} .pre-ic rect{fill:currentColor;opacity:.75}
+.mz-top{display:flex;gap:14px;align-items:center} #mzN{accent-color:var(--gold)}
+.cv.render .ci .nm{top:4px;bottom:auto;opacity:.75;font-size:9.5px}
+.use{border:1px solid var(--hair2);border-radius:10px;padding:10px 12px;margin-bottom:10px} .use-t{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px} .use-t span{color:var(--mute);font-size:12px}
+.use .bar{height:6px;border-radius:9px;background:var(--surface3);overflow:hidden} .use .bar i{display:block;height:100%;background:var(--gold)} .mz-prev .pre-ic{width:96px;height:54px;color:var(--gold)}
+.mz-list{max-height:320px;overflow:auto;border:1px solid var(--hair2);border-radius:8px;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:2px;padding:4px}
+.mz-r{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;min-width:0} .mz-r:hover{background:var(--surface2)} .mz-r.on{background:var(--gold-a)}
+.mz-r b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .mz-r small{color:var(--mute);white-space:nowrap} .mz-r em{margin-left:auto;font-style:normal;font-weight:800;color:var(--gold-hi)}
+.mz-live{font-style:normal;font-size:9.5px;font-weight:800;letter-spacing:.1em;color:#ffc9d1;background:var(--red-a);border:1px solid var(--red-b);border-radius:4px;padding:0 4px}
 .cv.drop{outline:2px dashed var(--gold);outline-offset:-4px}
 .ci{position:absolute;background:#121216 center/cover;outline:1px solid rgba(255,255,255,.25);cursor:move;user-select:none}
 .ci.sel{outline:2px solid var(--gold-hi);z-index:60!important}
@@ -300,6 +319,11 @@ header.top::after{content:"";position:absolute;left:20%;right:20%;bottom:-1px;he
 .games b{font-family:var(--serif);font-size:12.5px;letter-spacing:.2em;color:var(--gold)}
 .games span{font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums}
 .fund{width:190px;flex:none}
+/* en-tête trop chargé (cagnotte, horloge…) : on compacte par étapes au lieu de cacher des onglets */
+header.top.c1 .pagenav .lbl-txt{display:none} header.top.c1{gap:12px}
+header.top.c2 .live,header.top.c2 .brand small,header.top.c2 .access-badge,header.top.c2 .online-btn .lbl-txt{display:none} header.top.c2 .fund{width:130px} header.top.c2 .games b{display:none}
+header.top.c3 .brand .word,header.top.c3 .games,header.top.c3 .hstats .hs.opt{display:none} header.top.c3 .fund{width:96px} header.top.c3 .delay{padding:0 7px}
+header.top .pagenav{flex:0 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none} header.top .pagenav::-webkit-scrollbar{display:none} header.top .pagenav button{flex:none}
 .fund-t{display:flex;justify-content:space-between;gap:8px;font-size:10.5px;color:var(--mute);font-weight:700;text-transform:uppercase;letter-spacing:.08em}
 .fund-t b{color:var(--ink);font-size:12px;letter-spacing:0;font-variant-numeric:tabular-nums}
 .bar{height:5px;border-radius:9px;background:var(--surface3);margin-top:6px;overflow:hidden}
@@ -799,7 +823,7 @@ body.overlay #flashLayer{top:40px}
     <button data-page="memorial" title="Mémorial des tributs tombés"><span data-ic="fall"></span><span class="lbl-txt">Mémorial</span></button>
     <button data-page="alliances" title="Carte des alliances"><span data-ic="users"></span><span class="lbl-txt">Alliances</span></button>
     <button data-page="carte" class="map-only" title="Carte de l'arène"><span data-ic="map"></span><span class="lbl-txt">Carte</span></button>
-    <button data-page="direct" class="nolock" title="L'émission en direct, réalisée par la régie"><span data-ic="live"></span><span class="lbl-txt">Direct</span><i class="onair-dot hide" id="navOnAir"></i></button>
+    <button data-page="direct" class="nolock crew-only" title="L'émission en direct (page OBS du streamer), réservée à l'équipe"><span data-ic="live"></span><span class="lbl-txt">Direct</span><i class="onair-dot hide" id="navOnAir"></i></button>
     <button data-page="regie" class="prog-only" title="Réalisation de l'émission (multi-caméras)"><span data-ic="grid"></span><span class="lbl-txt">Réalisation</span></button>
   </nav>
   <span class="delay hide" id="delayBadge" title="Les annonces du site sont retardées pour rester synchronisées avec les streams"><span data-ic="clock"></span><span id="delayTxt"></span></span>
@@ -1011,6 +1035,7 @@ body.overlay #flashLayer{top:40px}
           <button data-s="lock" class="admin-only"><span data-ic="clock"></span>Accès des tributs</button>
           <button data-s="sponsors" class="admin-only"><span data-ic="gift"></span>Sponsors</button>
           <button data-s="fund" class="admin-only"><span data-ic="plus"></span>Cagnotte</button>
+          <button data-s="theme" class="admin-only"><span data-ic="eye"></span>Apparence</button>
           <button data-s="twitch" class="admin-only"><span data-ic="tv"></span>Twitch</button>
           <button data-s="cams" class="admin-only"><span data-ic="map"></span>Carte & caméras</button>
           <button data-s="roles" class="roles-only"><span data-ic="crown"></span>Rôles & permissions</button>
@@ -1168,6 +1193,20 @@ const SND = {
    ===================================================================== */
 const H0 = location.hash.slice(1);
 const IS_OVERLAY = /^overlay/i.test(H0);
+/* écran de sortie (OBS) : lien d'overlay, même ouvert avec #direct */
+const isOut = () => IS_OVERLAY || !!(S.me && S.me.overlay);
+/* couleurs et nom choisis dans Réglages › Apparence */
+function applyTheme() {
+  const t = (S.board && S.board.theme) || {}, r = document.documentElement.style;
+  const hex = v => /^#[0-9a-f]{6}$/i.test(v || '') ? v : '';
+  const mix = (h, k) => { const n = parseInt(h.slice(1), 16), c = [n >> 16, n >> 8 & 255, n & 255].map(x => Math.round(k > 0 ? x + (255 - x) * k : x * (1 + k))); return '#' + c.map(x => x.toString(16).padStart(2, '0')).join(''); };
+  const a = (h, o) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${n >> 8 & 255},${n & 255},${o})`; };
+  const g = hex(t.gold), rd = hex(t.red);
+  for (const [k, v] of Object.entries(g ? { '--gold': g, '--gold-hi': mix(g, .55), '--gold-lo': mix(g, -.4), '--gold-a': a(g, .10), '--gold-b': a(g, .24) } : { '--gold': '', '--gold-hi': '', '--gold-lo': '', '--gold-a': '', '--gold-b': '' })) v ? r.setProperty(k, v) : r.removeProperty(k);
+  for (const [k, v] of Object.entries(rd ? { '--red': rd, '--red-hi': mix(rd, .35), '--red-a': a(rd, .10), '--red-b': a(rd, .30) } : { '--red': '', '--red-hi': '', '--red-a': '', '--red-b': '' })) v ? r.setProperty(k, v) : r.removeProperty(k);
+  document.title = brandName() + ' — Couverture des Jeux';
+}
+function brandName() { return (S.board && S.board.theme && S.board.theme.name) || CONFIG.name || 'Capitol TV'; }
 const S = {
   board: null, alerts: {}, live: {}, liveTs: 0, hasLive: false,
   me: null, team: [], presence: { n: 0, counts: {}, team: {} }, banned: {}, skew: 0, oq: '', teamOpen: false, subbed: false, watchKey: '',
@@ -1360,6 +1399,7 @@ const NET = {
       case 'srvCams': S.srvCams = m.names || []; refreshSettings('cams'); break;
       case 'pubs': RTC.onPubs(m.pubs); break;
       case 'vpref': RTC.vpref = m.vpref || {}; if (S.page === 'regie') PROG.renderSources(); break;
+      case 'rtcUse': { const was = RTC.saving(); RTC.use = m.use; refreshSettings('cams'); if (was !== RTC.saving()) { RTC.prune(); PROG.layout(); renderStage(); } break; }
       case 'skeys': RTC.keys = m.keys || {}; break;
       case 'poll': case 'bets': GAMES.onMsg(m); break;
       case 'clips': CLIPS.onList(m.clips); break;
@@ -1391,7 +1431,7 @@ function showConn(title, text, final) {
 function hideConn() { clearTimeout(showConn.t); $('#conn').classList.add('hide'); }
 
 /* Enregistrement : seules les modifications sont envoyées (plusieurs personnes peuvent être en régie) */
-const SCALARS = ['ticker', 'don', 'fund', 'day', 'startTs', 'cooldown', 'lastHommage', 'flash', 'delay', 'hideChat', 'lock', 'sponsor', 'publicAccess', 'map'];
+const SCALARS = ['ticker', 'don', 'fund', 'day', 'startTs', 'cooldown', 'lastHommage', 'flash', 'delay', 'hideChat', 'lock', 'sponsor', 'publicAccess', 'map', "theme"];
 const clone = o => JSON.parse(JSON.stringify(o));
 function boardDiff(a, b) {
   const p = {}, set = {};
@@ -1428,7 +1468,7 @@ const delayNote = () => S.board.delay ? ` <b style="color:var(--gold-hi)">Diffé
    Compte, rôle, présence, équipe
    ===================================================================== */
 function paintBrand() {
-  $('#brand').innerHTML = `${logo(42)}<div><div class="word">CAPITOL TV</div><small>${isStaff() ? (S.me.pub ? 'Mode présentateur · ' : PERM_LABEL[S.me.perm] + ' · ') + esc(S.me.name) : 'Couverture officielle des Jeux'}</small></div>`;
+  $('#brand').innerHTML = `${logo(42)}<div><div class="word">${esc(brandName().toUpperCase())}</div><small>${isStaff() ? (S.me.pub ? 'Mode présentateur · ' : PERM_LABEL[S.me.perm] + ' · ') + esc(S.me.name) : 'Couverture officielle des Jeux'}</small></div>`;
   $('#tickLbl').innerHTML = `${logo(22)}<span class="word">CAPITOL TV</span>`;
   $('#connLogo').innerHTML = LOGO_OK ? `<img class="logo" src="${esc(CONFIG.logoFull)}" style="height:150px;width:auto" alt="Capitol TV">` : logo(84);
 }
@@ -2181,6 +2221,7 @@ function renderStats() {
   $('#gDay').textContent = S.board.day ? 'JOUR ' + S.board.day : 'LES JEUX';
 }
 function renderAll() {
+  applyTheme();
   renderStage(); renderSidebar(); renderAlerts(); renderJournal(); renderRank(); renderTicker(); renderWall();
 }
 function renderTabs() {
@@ -2470,7 +2511,7 @@ function openHelp() {
 /* =====================================================================
    Réglages régie
    ===================================================================== */
-const ADMIN_SECTIONS = ['tributes', 'games', 'twitch', 'lock', 'sponsors', 'fund', 'cams'];
+const ADMIN_SECTIONS = ['tributes', 'games', 'twitch', 'lock', 'sponsors', 'fund', 'cams', 'theme'];
 function openSettings(sec) {
   if (!isStaff() && !hasPerm('roles')) return;
   if (sec) S.setSection = sec;
@@ -2576,6 +2617,17 @@ function renderSettings() {
       ${b.tributes.filter(t => !t.discordId).length ? `<p class="note" style="margin-bottom:0">Pas encore liés : ${b.tributes.filter(t => !t.discordId).slice(0, 30).map(t => esc(t.name)).join(', ')}${b.tributes.filter(t => !t.discordId).length > 30 ? '…' : ''}</p>` : ''}
     </div>
     <p class="note"><b style="color:var(--warn)">Limite :</b> Capitol TV ferme ses propres lecteurs, mais ne peut pas empêcher quelqu'un d'aller directement sur Twitch. Le reste relève du règlement de l'event.</p>`;
+  } else if (sec === 'theme') {
+    const t = b.theme || {};
+    P.innerHTML = `<div class="sect"><h4>${ic('eye')} Apparence de l'émission</h4>
+      <p class="note" style="margin-top:0">Pour réutiliser le site pour un autre event : nom affiché (page Direct, transitions, onglet) et couleurs. Le logo se change en remplaçant <code>public/logo.png</code> (voir README).</p>
+      <div class="row"><label class="f"><span class="lbl2">Nom de l'émission</span><input class="inp" id="thN" maxlength="40" value="${esc(t.name || '')}" placeholder="${esc(CONFIG.name)}"></label>
+        <label class="f" style="flex:0 0 150px"><span class="lbl2">Couleur principale</span><input class="inp" id="thG" type="color" value="${esc(t.gold || '#d6b261')}" style="padding:2px;height:36px"></label>
+        <label class="f" style="flex:0 0 150px"><span class="lbl2">Couleur « direct »</span><input class="inp" id="thR" type="color" value="${esc(t.red || '#d0223f')}" style="padding:2px;height:36px"></label></div>
+      <div class="gx-row"><button class="btn sm ghost" id="thReset">Couleurs d'origine</button></div></div>`;
+    const upd = () => { b.theme = { name: $('#thN').value.trim(), gold: $('#thG').value, red: $('#thR').value }; applyTheme(); commit(false); };
+    P.oninput = e => { if (e.target.id && e.target.id.startsWith('th')) upd(); };
+    $('#thReset').onclick = () => { $('#thG').value = '#d6b261'; $('#thR').value = '#d0223f'; upd(); };
   } else if (sec === 'fund') {
     const f = b.fund, log = (b.fundLog || []).slice().reverse();
     P.innerHTML = `
@@ -2723,6 +2775,9 @@ function renderSettings() {
       <p class="note" style="margin-bottom:0">Pour le jeton du site (comms, carte, actions) : chacun le génère depuis « Mon compte » et le colle dans le mod (touche K › Réglages).</p>
       ${isAdmin() ? `<h4 style="margin:14px 0 6px">Qualité maximale des flux Capitol TV</h4>
       <p class="note" style="margin-top:0">Chaque joueur choisit sa qualité dans le mod (touche K) ; ce plafond s'applique par-dessus. Les flux Capitol TV ne sont visibles que par l'équipe et la page OBS : les spectateurs du site voient les POV Twitch.</p>
+      ${(() => { const u = RTC.use || { gb: 0, budget: 900 }, pc = Math.min(100, Math.round(u.gb / Math.max(1, u.budget) * 100)); return `<div class="use"><div class="use-t"><b>Ce mois-ci : ${u.gb.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} Go</b><span>${u.gb > 1000 ? 'au-delà des 1 000 Go gratuits : ≈ ' + ((u.gb - 1000) * 0.05).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' $' : 'gratuit jusqu\'à 1 000 Go'}</span></div><div class="bar"><i style="width:${pc}%;${u.save ? 'background:var(--warn)' : ''}"></i></div>
+        <label class="f" style="margin:8px 0 0"><span class="lbl2">Budget : au-delà, la régie passe automatiquement en qualité légère (la sortie OBS reste en pleine qualité)</span><select class="inp" id="useBudget">${[300, 500, 700, 900, 1500, 2000, 5000].map(g => `<option value="${g}" ${u.budget === g ? 'selected' : ''}>${g.toLocaleString('fr-FR')} Go${g > 1000 ? ' (≈ ' + ((g - 1000) * 0.05) + ' $ max)' : ''}</option>`).join('')}</select></label>
+        ${u.save ? '<p class="note" style="color:var(--warn);margin:6px 0 0">Budget atteint : économie activée.</p>' : ''}<p class="note" style="margin:6px 0 0">Mesuré par les écrans de la régie et la page OBS. Le compteur Cloudflare officiel est dans le tableau de bord, rubrique Realtime.</p></div>`; })()}
       <div class="row">${['trib', 'cam'].map(k => { const q = (RTC.vq || {})[k] || (k === 'trib' ? 'hd' : 'max'); return `<label class="f"><span class="lbl2">${k === 'trib' ? 'POV des tributs' : 'Caméras'}</span><select class="inp" data-vq="${k}">${VQ.order.map(l => `<option value="${l}" ${q === l ? 'selected' : ''}>${VQ.label(l)}</option>`).join('')}</select></label>`; }).join('')}</div>` : ''}
     </div>
     <div class="sect"><h4>Mod côté serveur <em style="font-weight:500;color:var(--mute)">facultatif mais recommandé</em></h4>
@@ -2759,6 +2814,7 @@ function settingsEvents() {
     if (e.target.id === 'tFilter') { const q = e.target.value.trim().toLowerCase(); $$('tr[data-s]', P).forEach(r => r.style.display = !q || r.dataset.s.includes(q) ? '' : 'none'); }
   });
   P.addEventListener('change', e => {
+    if (e.target.id === 'useBudget') NET.req({ t: 'rtcBudget', gb: +e.target.value });
     if (e.target.matches('[data-vq]')) {
       const vq = {}; $$('[data-vq]', P).forEach(x => { vq[x.dataset.vq] = x.value; });
       NET.req({ t: 'rtcCfg', vq }).then(() => toastInfo('Réglage enregistré', 'Les flux suivent ce maximum dès leur prochaine connexion.'), x => toastInfo('Réglage', x.message, true));
@@ -3319,12 +3375,26 @@ const RTC = {
   onHello(m) {
     this.pubs = m.pubs || {}; this.on = !!(m.rtc && m.rtc.on); this.pub = !!(m.rtc && m.rtc.pub);
     if (m.skeys) this.keys = m.skeys; this.mykeys = m.mykeys || {}; this.vpref = (m.rtc && m.rtc.vpref) || {};
+    if (m.rtc && m.rtc.use) this.use = m.rtc.use;
     this.prune();
+    clearInterval(this.useT); this.useT = setInterval(() => this.report(), 60000);
   },
-  onPubs(p) { this.pubs = p || {}; this.prune(); renderStage(); if (S.page === 'direct') PROG.layout(); if (S.page === 'regie') { PROG.renderSources(); PROG.renderCanvas(); PROG.renderPgm(); } },
+  /* consommation : chaque écran compte ce qu'il reçoit du serveur vidéo (c'est ce qui est facturé) */
+  use: null, sent: new WeakMap(),
+  async report() {
+    let b = 0;
+    for (const c of this.conns.values()) {
+      if (!c.pc) continue;
+      try { let tot = 0; (await c.pc.getStats()).forEach(r => { if (r.type === 'inbound-rtp') tot += r.bytesReceived || 0; }); const prev = this.sent.get(c.pc) || 0; b += Math.max(0, tot - prev); this.sent.set(c.pc, tot); } catch (e) {}
+    }
+    if (b > 0) NET.send({ t: 'rtcUse', b });
+  },
+  /* budget dépassé : tout le monde (sauf la sortie OBS) passe en couche légère */
+  saving() { return !!(this.use && this.use.save) && !isOut(); },
+  onPubs(p) { this.pubs = p || {}; this.prune(); renderStage(); PROG.layout(); if (S.page === 'regie') { PROG.renderSources(); PROG.renderCanvas(); PROG.renderPgm(); } },
   prune() { for (const [id, c] of this.conns) if (!this.live(c.src)) this.close(id); },
   live(src) { if (src && src.startsWith('talk:')) return !!(TALK.st && TALK.st.pubs[src.slice(5)]); return !!(src && this.pubs[src]); },
-  allowed() { return this.on && !isLocked() && (isCrew() || IS_OVERLAY || this.pub); },
+  allowed() { return this.on && !isLocked() && (isCrew() || isOut()); },
   /* source à afficher : 'rtc' (Capitol TV), 'twitch' ou '' (rien) */
   mode(src, vsrc, login) {
     if (vsrc !== 'twitch' && this.allowed() && this.live(src)) return 'rtc';
@@ -3335,7 +3405,7 @@ const RTC = {
   /* flux partagé par source (une seule connexion même si plusieurs lecteurs) */
   /* layer : 'f' pleine qualité (programme, Direct, OBS) ou 'q' couche légère (vignettes) */
   stream(src, layer) {
-    const ly = layer === 'q' && this.pubs[src] && this.pubs[src].sim ? 'q' : 'f', id = src.startsWith('talk:') ? src : src + '|' + ly;
+    const ly = (layer === 'q' || this.saving()) && this.pubs[src] && this.pubs[src].sim ? 'q' : 'f', id = src.startsWith('talk:') ? src : src + '|' + ly;
     let c = this.conns.get(id);
     if (!c) { c = { id, src, layer: ly, ms: new MediaStream(), users: 0, pc: null, state: 'new', subs: new Set() }; this.conns.set(id, c); this.connect(c); }
     c.users++;
@@ -3374,7 +3444,7 @@ const RTC = {
 /* Lecteur avec différé : segments WebM (MediaRecorder) rejoués via MediaSource */
 class DelayPlayer {
   constructor(src, { delay = 0, record = false, layer = 'f' } = {}) {
-    this.src = src; this.delay = Math.max(0, delay); this.record = record || this.delay > 0;
+    this.src = src; this.layer = layer; this.delay = Math.max(0, delay); this.record = record || this.delay > 0;
     this.el = document.createElement('div'); this.el.className = 'dp';
     this.video = document.createElement('video'); this.video.playsInline = true; this.video.autoplay = true; this.video.muted = true;
     this.el.appendChild(this.video);
@@ -3701,7 +3771,7 @@ const GAMES = {
     if (m.t === 'bets') this.bets = m.bets;
     this.mark();
     if (S.page === 'jeux') this.render();
-    if (S.page === 'direct' || IS_OVERLAY) PROG.renderGfx();
+    PROG.renderGfx();
   },
   mark() { const d = $('#navPoll'); if (d) d.classList.toggle('hide', !(this.poll && !this.poll.closed && this.poll.mine == null)); },
   /* tributs préférés du public, en % des points misés */
@@ -3792,8 +3862,209 @@ function renderAlliances() {
     ${isAdmin() ? '<p class="note">Les alliances se règlent dans la fiche de chaque tribut (champ « Alliance »).</p>' : ''}</div>`;
 }
 
+/* =====================================================================
+   Moteur de rendu de l'émission : page Direct (OBS) et moniteurs de la régie
+   ===================================================================== */
+class Stage {
+  /* o.sound : son actif · o.delay : différé (null = celui de la régie) · o.layer : 'auto' | 'f' | 'q'
+     o.extras : replays et clips · o.record : garder les flux enregistrés (replays) */
+  constructor(el, o = {}) {
+    this.el = el; this.o = Object.assign({ sound: false, delay: null, layer: 'auto', extras: false, record: false, bug: true }, o);
+    this.players = new Map(); this.dps = new Map(); this.pub = null; this.lastSeq = -1; this.sfxEl = null; this.rpKey = ''; this.clipKey = '';
+    if (!el.querySelector(':scope > .em-tr')) el.insertAdjacentHTML('afterbegin', `<div class="em-tr"><div class="wipe"></div><div class="ray"></div><div class="ray" style="rotate:70deg"></div>${LOGO_OK ? `<img class="em-e" src="${esc(CONFIG.logo)}" alt="">` : ''}<div class="em-t word" style="font-size:3cqw;color:#f6e2a6">${esc(brandName())}</div></div>`);
+    this.hold = document.createElement('div'); this.hold.className = 'hide'; el.appendChild(this.hold);
+  }
+  get sound() { return this.o.sound; }
+  setSound(on) { this.o.sound = !!on; this.layout(false); }
+  delay() { return this.o.delay == null ? (S.board.delay || 0) : this.o.delay; }
+  /* petite vignette : couche légère du flux (économise la bande passante) */
+  layerFor(it) { return this.o.layer !== 'auto' ? this.o.layer : it.w * it.h < 1200 ? 'q' : 'f'; }
+  set(pub, cut) {
+    const p = this.pub = pub, tr = this.el.querySelector(':scope > .em-tr');
+    const type = p && p.trans ? p.trans.type : 'cut', ms = p && p.trans ? p.trans.ms : 1200;
+    const shot = cut && this.lastSeq >= 0 && p && p.seq !== this.lastSeq;
+    this.lastSeq = p ? p.seq : -1;
+    if (shot && type !== 'cut' && tr) {
+      tr.className = 'em-tr ' + (type === 'fade' ? 'fade' : '');
+      tr.style.setProperty('--d', ms + 'ms'); void tr.offsetWidth; tr.classList.add('go');
+      clearTimeout(this.trT1); clearTimeout(this.trT2);
+      this.trT1 = setTimeout(() => this.layout(true), ms * .45);
+      this.trT2 = setTimeout(() => tr.classList.remove('go'), ms + 50);
+    } else this.layout(shot);
+  }
+  layout(newShot) {
+    const st = this.el, p = this.pub;
+    let off = st.querySelector(':scope > .em-off');
+    if (!p || !p.on || !p.items.length) {
+      for (const el of this.players.values()) { const md = el.querySelector('.em-md'); if (md && md.pause) md.pause(); if (el._dp) this.dpDrop(el._dp); el.remove(); } this.players.clear();
+      this.syncMedia();
+      if (!off) { off = document.createElement('div'); off.className = 'em-off'; st.appendChild(off); }
+      this.renderGfx();
+      const h = `<div>${LOGO_OK ? `<img src="${esc(CONFIG.logoFull)}" alt="">` : logo(160)}<p style="margin-top:14px;letter-spacing:.18em;font-weight:700">${p && p.on ? 'PLAN VIDE' : 'L\'ÉMISSION REPREND BIENTÔT'}</p>${p && p.title ? `<p>${esc(p.title)}</p>` : ''}</div>`;
+      if (off.dataset.h !== h) { off.dataset.h = h; off.innerHTML = h; }
+      return;
+    }
+    if (off) off.remove();
+    const keep = new Set();
+    p.items.forEach((it, idx) => {
+      const md = it.k === 'media' ? '' : it.src ? RTC.mode(it.src, it.vsrc || 'auto', it.login) : 'twitch';
+      const key = it.k === 'media' ? 'm:' + it.ref : (md && md !== 'twitch' ? 'r:' + it.src : 'tw:' + it.login); keep.add(key);
+      let el = this.players.get(key);
+      const muted = !(this.o.sound && it.audio);
+      if (!el) {
+        el = document.createElement('div'); el.className = 'em-it gone';
+        if (it.d) el.style.transitionDelay = '0s,0s,0s,0s,' + it.d + 'ms,' + it.d + 'ms';
+        st.appendChild(el); this.players.set(key, el);
+        requestAnimationFrame(() => requestAnimationFrame(() => { el.classList.remove('gone'); if (it.d) setTimeout(() => { el.style.transitionDelay = ''; }, it.d + 700); }));
+      }
+      Object.assign(el.style, { left: it.x + '%', top: it.y + '%', width: it.w + '%', height: it.h + '%', zIndex: 1 + (it.z || 0) });
+      if (it.k !== 'media' && md !== 'twitch') {
+        const ly = this.layerFor(it), k2 = md + ':' + it.src + ':' + ly;
+        if (el.dataset.rtc !== k2) {
+          el.dataset.rtc = k2; el.dataset.muted = '';
+          const old = el._dp; el._dp = null;
+          if (md === 'rtc') { el._dp = this.dpFor(it.src, ly); el.prepend(el._dp.el); }
+          else { el.querySelectorAll(':scope > :not(.em-lab)').forEach(x => x.remove()); el.insertAdjacentHTML('afterbegin', `<div class="em-aud"><b>${esc(it.name)}</b><span class="note">flux hors ligne</span></div>`); }
+          if (old) this.dpDrop(old);
+          el.querySelectorAll(':scope > .em-aud, :scope > iframe').forEach(x => { if (md === 'rtc') x.remove(); });
+        }
+        if (el._dp) el._dp.setMuted(muted);
+        this.label(el, it, newShot);
+        return;
+      }
+      if (el.dataset.rtc) { el.dataset.rtc = ''; if (el._dp) { this.dpDrop(el._dp); el._dp = null; } el.innerHTML = ''; el.dataset.muted = ''; }
+      if (it.k === 'media') {
+        if (!el.dataset.media) {
+          el.dataset.media = it.ref;
+          const u = esc(PROG.mediaURL(it.ref));
+          el.insertAdjacentHTML('afterbegin', it.kind === 'video' ? `<video class="em-md" src="${u}" playsinline preload="auto"></video>`
+            : it.kind === 'image' ? `<img class="em-md" src="${u}" alt="">`
+            : `<div class="em-aud">${LOGO_OK ? `<img src="${esc(CONFIG.logo)}" alt="">` : ''}<b>${esc(it.name)}</b><span class="eq"><i></i><i></i><i></i><i></i><i></i></span></div><audio class="em-md" src="${u}" preload="auto"></audio>`);
+        }
+        el._it = it;
+        const le = el.querySelector('.em-lab'); if (le) le.remove();
+        return;
+      }
+      // Twitch (repli) : le lecteur Twitch est rechargé seulement si le son change
+      if (el.dataset.muted !== String(muted)) { el.dataset.muted = String(muted); const f = el.querySelector('iframe'); const html = `<iframe src="${playerURL(it.login, muted)}" allow="autoplay; fullscreen" title="${esc(it.name)}"></iframe>`; if (f) f.outerHTML = html; else el.insertAdjacentHTML('afterbegin', html); }
+      this.label(el, it, newShot);
+    });
+    for (const [k, el] of this.players) if (!keep.has(k)) { el.classList.add('gone'); this.players.delete(k); const md = el.querySelector('.em-md'); const dp = el._dp; setTimeout(() => { if (md && md.pause) md.pause(); if (dp) this.dpDrop(dp); el.remove(); }, 550); }
+    this.renderGfx();
+    if (this.o.bug && !st.querySelector(':scope > .em-bug') && LOGO_OK) st.insertAdjacentHTML('beforeend', `<img class="em-bug" src="${esc(CONFIG.logo)}" alt="">`);
+    this.syncMedia();
+  }
+  label(el, it, newShot) {
+    const lab = it.label ? `<b>${esc(it.name)}</b>${it.sub ? `<span>${esc(it.sub)}</span>` : ''}` : '';
+    let le = el.querySelector('.em-lab');
+    if (lab && (!le || le.dataset.h !== lab || newShot)) { if (le) le.remove(); le = document.createElement('div'); le.className = 'em-lab'; le.dataset.h = lab; le.innerHTML = lab; el.appendChild(le); }
+    else if (!lab && le) le.remove();
+  }
+  /* lecteurs Capitol TV gardés 90 s après la sortie d'antenne (pour les replays) */
+  dpFor(src, layer) {
+    const id = src + '|' + layer;
+    let e = this.dps.get(id);
+    const delay = this.delay();
+    if (e && e.dp.delay !== delay) { e.dp.destroy(); this.dps.delete(id); e = null; }
+    if (!e) { e = { dp: new DelayPlayer(src, { delay, record: this.o.record, layer }) }; e.dp.key = id; this.dps.set(id, e); }
+    clearTimeout(e.t); e.used = true;
+    return e.dp;
+  }
+  dpDrop(dp) {
+    const e = this.dps.get(dp.key); if (!e || e.dp !== dp) { dp.destroy(); return; }
+    e.used = false; dp.setMuted(true);
+    this.hold.appendChild(dp.el);
+    clearTimeout(e.t); e.t = setTimeout(() => { if (!e.used) { dp.destroy(); this.dps.delete(dp.key); } }, this.o.record ? 90000 : 4000);
+  }
+  /* habillages */
+  renderGfx() {
+    const st = this.el;
+    let g = st.querySelector(':scope > .em-gfx'); if (!g) { g = document.createElement('div'); g.className = 'em-gfx'; st.appendChild(g); }
+    const p = this.pub, G = (p && p.on && p.gfx) || {};
+    const alive = S.board.tributes.filter(t => !isDead(t)).length, all = S.board.tributes.length;
+    let lowT = null;
+    if (G.lower && G.lower.on) {
+      if (G.lower.auto || !G.lower.ref) { const big = (p.items || []).filter(i => i.k === 'trib').sort((a, b) => b.w * b.h - a.w * a.h)[0]; lowT = big ? byId(big.ref) : null; }
+      else lowT = byId(G.lower.ref);
+    }
+    const poll = GAMES.poll, bets = GAMES.bets;
+    const html = [
+      G.alive && G.alive.on && all ? `<div class="gx-alive"><b>${alive}</b><span>/ ${all}</span><i>EN VIE</i></div>` : '',
+      lowT ? `<div class="gx-lower ${isDead(lowT) ? 'dead' : ''}"><div class="n">${lowT.num ? `<em>${pad3(lowT.num)}</em>` : ''}${esc(lowT.name)}</div><div class="s">${esc(distLabel(lowT.district))}${lowT.alliance ? ' · ' + esc(lowT.alliance) : ''}${killsOf(lowT) ? ' · ' + killsOf(lowT) + ' élimination' + (killsOf(lowT) > 1 ? 's' : '') : ''}${isDead(lowT) ? ' · tombé' : lowT.status === 'injured' ? ' · blessé' : ''}</div>${G.lower.text ? `<div class="x">${esc(G.lower.text)}</div>` : ''}</div>` : '',
+      G.breaking && G.breaking.on && G.breaking.text ? `<div class="gx-break"><b>DERNIÈRE MINUTE</b><div class="tk"><span>${esc(G.breaking.text)}</span><span aria-hidden="true">${esc(G.breaking.text)}</span></div></div>` : '',
+      G.poll && G.poll.on && poll ? `<div class="gx-poll"><h5>${poll.closed ? 'RÉSULTATS' : 'SONDAGE'} · ${poll.total} vote${poll.total > 1 ? 's' : ''}</h5><b>${esc(poll.q)}</b>${poll.opts.map((o, i) => { const pc = poll.total ? Math.round(poll.counts[i] / poll.total * 100) : 0; return `<div class="op"><span>${esc(o)}</span><em>${pc}%</em><i style="width:${pc}%"></i></div>`; }).join('')}</div>` : '',
+      G.bets && G.bets.on && bets ? `<div class="gx-bets"><h5>FAVORIS DES SPECTATEURS</h5>${GAMES.favs(4).map(([t, pc]) => `<div class="op"><span>${esc(t.name)}</span><em>${pc}%</em><i style="width:${pc}%"></i></div>`).join('') || '<div class="note">Aucun pronostic</div>'}</div>` : '',
+      G.map && G.map.on ? `<canvas class="gx-map" width="320" height="320"></canvas>` : ''
+    ].join('');
+    if (g.dataset.h !== html) { g.dataset.h = html; g.innerHTML = html; }
+    if (G.map && G.map.on) PROG.drawMini(g.querySelector('.gx-map'));
+    if (this.o.extras) { this.renderReplay(); this.renderClip(); }
+    else this.renderTags();
+  }
+  /* moniteurs : un simple bandeau quand un replay ou un clip passe à l'antenne */
+  renderTags() {
+    const p = this.pub, r = p && (p.replay || p.clip);
+    let t = this.el.querySelector(':scope > .em-ov'); 
+    if (!r) { if (t) t.remove(); return; }
+    if (!t) { t = document.createElement('div'); t.className = 'em-ov rp-tag'; this.el.appendChild(t); }
+    t.innerHTML = `<b>${p.replay ? 'REPLAY' : 'CLIP'}</b><span>${esc(p.replay ? p.replay.name || '' : p.clip.title || '')}</span>`;
+  }
+  renderClip() {
+    const st = this.el, c = this.pub && this.pub.clip;
+    let box = st.querySelector(':scope > .em-clip');
+    if (!c) { if (box) box.remove(); this.clipKey = ''; return; }
+    const key = c.id + ':' + c.at; if (this.clipKey === key) return;
+    this.clipKey = key; if (box) box.remove();
+    box = document.createElement('div'); box.className = 'em-clip';
+    if (c.kind === 'twitch') box.innerHTML = `<iframe src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(c.slug)}&parent=${encodeURIComponent(HOST)}&autoplay=true&muted=${this.o.sound ? 'false' : 'true'}" allow="autoplay; fullscreen"></iframe>`;
+    else { const v = CLIPS.player(c, !this.o.sound); box.appendChild(v); }
+    box.insertAdjacentHTML('beforeend', `<div class="rp-tag"><b>CLIP</b><span>${esc(c.title)}${c.name ? ' · ' + esc(c.name) : ''}</span></div>`);
+    st.appendChild(box);
+  }
+  renderReplay() {
+    const st = this.el, r = this.pub && this.pub.replay;
+    let box = st.querySelector(':scope > .em-replay');
+    if (!r) { if (box) box.remove(); this.rpKey = ''; return; }
+    const key = r.src + ':' + r.at;
+    if (this.rpKey === key) return;
+    this.rpKey = key; if (box) box.remove();
+    const e = [...this.dps.values()].find(x => x.dp.src === r.src && x.dp.layer !== 'q') || [...this.dps.values()].find(x => x.dp.src === r.src), v = e && e.dp.replay(r.sec, r.rate);
+    if (!v) return;
+    box = document.createElement('div'); box.className = 'em-replay';
+    box.appendChild(v);
+    box.insertAdjacentHTML('beforeend', `<div class="rp-tag"><b>REPLAY</b><span>${esc(r.name || '')}${r.rate < 1 ? ' · ralenti ×' + r.rate : ''}</span></div>`);
+    st.appendChild(box);
+    const left = Math.max(1000, r.end - nowS());
+    setTimeout(() => { if (this.rpKey === key) { box.classList.add('gone'); setTimeout(() => box.remove(), 500); } }, left);
+  }
+  syncMedia() {
+    const p = this.pub;
+    for (const el of this.players.values()) {
+      const it = el._it; if (!it) continue;
+      const md = el.querySelector('.em-md');
+      if (md && md.tagName !== 'IMG') PROG.syncOne(md, it.at || nowS(), it.loop, it.vol, this.o.sound && it.audio !== false, this);
+    }
+    const fx = p && p.on !== undefined ? p.sfx : null;
+    if (fx) {
+      if (!this.sfxEl || this.sfxEl.dataset.id !== fx.id + ':' + fx.at) {
+        if (this.sfxEl) { this.sfxEl.pause(); this.sfxEl.remove(); }
+        this.sfxEl = document.createElement('audio'); this.sfxEl.preload = 'auto'; this.sfxEl.dataset.id = fx.id + ':' + fx.at;
+        this.sfxEl.src = PROG.mediaURL(fx.id); this.el.appendChild(this.sfxEl);
+      }
+      PROG.syncOne(this.sfxEl, fx.at, fx.loop, fx.vol, this.o.sound, this);
+    } else if (this.sfxEl) { this.sfxEl.pause(); this.sfxEl.remove(); this.sfxEl = null; }
+  }
+  tick() { this.syncMedia(); const m = this.el.querySelector(':scope > .em-gfx .gx-map'); if (m) PROG.drawMini(m); }
+  destroy() {
+    clearTimeout(this.trT1); clearTimeout(this.trT2);
+    for (const el of this.players.values()) { const md = el.querySelector('.em-md'); if (md && md.pause) md.pause(); }
+    for (const e of this.dps.values()) { clearTimeout(e.t); e.dp.destroy(); }
+    if (this.sfxEl) this.sfxEl.pause();
+    this.players.clear(); this.dps.clear(); this.el.innerHTML = '';
+  }
+}
 const PROG = {
-  pub: null, ed: null, lastSeq: -1, sound: IS_OVERLAY, players: new Map(), saveT: null, dirty: 0,
+  pub: null, ed: null, sound: IS_OVERLAY, main: null, pgmStage: null, pvStage: null, saveT: null, dirty: 0,
   sel: '', drag: null, wasFull: false, media: [], air: { ids: [], prep: [], since: {}, delay: 0 }, ups: {}, listen: null, sfxEl: null,
   SLOTS: [
     { slot: 'theme', name: 'Générique · The Caesar Flickerman Show', kind: 'audio' },
@@ -3806,8 +4077,23 @@ const PROG = {
     pip: ['Incrustation', [[0, 0, 100, 100], [66, 63, 30, 30]]],
     grid4: ['Grille 2×2', [[0, 0, 50, 50], [50, 0, 50, 50], [0, 50, 50, 50], [50, 50, 50, 50]]],
     one3: ['1 + 3', [[0, 12.5, 75, 75], [75, 0, 25, 25], [75, 37.5, 25, 25], [75, 75, 25, 25]]],
-    grid9: ['Grille 3×3', [0, 1, 2].flatMap(r => [0, 1, 2].map(c => [c * 33.333, r * 33.333, 33.333, 33.333]))]
+    grid9: ['Grille 3×3', [0, 1, 2].flatMap(r => [0, 1, 2].map(c => [c * 33.333, r * 33.333, 33.333, 33.333]))],
+    trio: ['1 + 2', [[0, 0, 66.667, 100], [66.667, 0, 33.333, 50], [66.667, 50, 33.333, 50]]],
+    duel: ['Duel', [[0, 0, 50, 100], [50, 0, 50, 100]]],
+    grid6: ['Grille 3×2', [0, 1].flatMap(r => [0, 1, 2].map(c => [c * 33.333, r * 50, 33.333, 50]))],
+    one5: ['1 + 5', [[0, 0, 66.667, 66.667], [66.667, 0, 33.333, 33.333], [66.667, 33.333, 33.333, 33.333], [0, 66.667, 33.333, 33.333], [33.333, 66.667, 33.333, 33.333], [66.667, 66.667, 33.333, 33.333]]],
+    strip: ['Bandeau', [[0, 0, 100, 75], [0, 75, 25, 25], [25, 75, 25, 25], [50, 75, 25, 25], [75, 75, 25, 25]]],
+    grid16: ['Grille 4×4', [0, 1, 2, 3].flatMap(r => [0, 1, 2, 3].map(c => [c * 25, r * 25, 25, 25]))]
   },
+  /* grille automatique pour n sources (mosaïque) */
+  gridOf(n) {
+    n = Math.max(1, n); let best = null;
+    for (let c = 1; c <= n; c++) { const r = Math.ceil(n / c), cell = Math.min(100 / c * 16, 100 / r * 9); if (!best || cell > best.cell) best = { c, r, cell }; }
+    const { c, r } = best, w = 100 / c, h = 100 / r, out = [];
+    for (let i = 0; i < n; i++) { const row = Math.floor(i / c), inRow = row === r - 1 ? n - row * c : c, off = (100 - inRow * w) / 2; out.push([off + (i % c) * w, row * h, w, h]); }
+    return out;
+  },
+  preIcon(L) { return `<svg class="pre-ic" viewBox="0 0 32 18">${L.map(([x, y, w, h]) => `<rect x="${x * .32 + .4}" y="${y * .18 + .4}" width="${Math.max(.5, w * .32 - .8)}" height="${Math.max(.5, h * .18 - .8)}" rx=".6"/>`).join('')}</svg>`; },
   onHello(m) {
     this.pub = m.prog || null; if (m.progEd) this.ed = m.progEd;
     if (m.media) this.media = m.media;
@@ -3823,8 +4109,8 @@ const PROG = {
     if (m.t === 'prog') {
       this.pub = m.p; this.markNav();
       if (S.page === 'direct') { this.applyDirect(!!m.cut); CAM.mapSub(this.wantsMap()); }
-      if (S.page === 'regie') { this.renderPgm(); this.renderReplayPanel(); }
-      if (S.page === 'direct' || IS_OVERLAY) this.renderGfx();
+      if (S.page === 'regie') { this.renderPgm(); this.renderReplayPanel(); if (this.pgmStage) this.pgmStage.set(this.pub, !!m.cut); this.renderPv(); }
+      if (IS_OVERLAY && !this.main) this.renderGfx();
       renderTeam(); CAM.renderTerrain();
     } else if (m.t === 'onair') {
       this.air = { ids: m.ids || [], prep: m.prep || [], since: m.since || {}, delay: m.delay || 0 };
@@ -3833,14 +4119,14 @@ const PROG = {
       this.media = m.list || [];
       if (S.page === 'regie') { this.renderSources(); this.renderCanvas(); this.renderPgm(); }
     } else if (m.t === 'progEd') {
-      if (m.by === (S.me && S.me.id) && Date.now() - this.dirty < 1500) return;
+      if (m.by === (S.me && S.me.id) && Date.now() - this.dirty < 1500) { if (this.ed && m.prog) { for (const k of ['airItems', 'airGfx', 'airScene', 'apply', 'live', 'seq']) this.ed[k] = m.prog[k]; if (S.page === 'regie') { this.renderMode(); this.renderPgm(); this.renderScenes(); } } return; }
       this.ed = m.prog;
       if (S.page === 'regie') { this.renderEditor(); }
     }
   },
   leave() {
-    if (S.page !== 'direct') { for (const el of this.players.values()) if (el._dp) el._dp.destroy(); for (const e of this.dps.values()) e.dp.destroy(); this.dps.clear(); this.players.clear(); this.lastSeq = -1; if (document.body.classList.contains('em-full')) this.fullscreen(false); }
-    if (S.page !== 'regie') this.sel = '';
+    if (S.page !== 'direct' && this.main) { this.main.destroy(); this.main = null; if (document.body.classList.contains('em-full')) this.fullscreen(false); }
+    if (S.page !== 'regie') { this.sel = ''; this.dropMons(); }
   },
   fullscreen(on) {
     on = on === undefined ? !document.body.classList.contains('em-full') : on;
@@ -3861,7 +4147,8 @@ const PROG = {
       $$('#cvPv .ci[data-cam]').forEach(el => this.badge(el, el.dataset.cam));
       this.renderSfx(); this.renderWarn();
     }
-    if (S.page === 'direct') { this.syncMedia(); if (this.wantsMap()) this.drawMini($('#emStage .gx-map')); }
+    if (this.main) this.main.tick();
+    for (const m of this.mons()) m.tick();
     if (S.page === 'regie') this.renderQueue(true);
   },
   badge(el, id) {
@@ -3888,13 +4175,16 @@ const PROG = {
 
   /* ---------- page Direct ---------- */
   renderDirect() {
-    if (!$('#emStage')) {
-      $('#pageView').innerHTML = `<div class="em-wrap"><div class="em-bar"><h3>CAPITOL TV</h3><span class="em-live" id="emLive">● EN DIRECT</span><span class="note" id="emScene"></span><span style="flex:1"></span>
+    if (!isCrew() && !isOut()) { $('#pageView').innerHTML = '<div class="team-in"><div class="empty">La page Direct est réservée à la régie et au streamer.</div></div>'; return; }
+    if (!$('#emStage') || !this.main) {
+      $('#pageView').innerHTML = `<div class="em-wrap"><div class="em-bar"><h3>${esc(brandName().toUpperCase())}</h3><span class="em-live" id="emLive">● EN DIRECT</span><span class="note" id="emScene"></span><span style="flex:1"></span>
         <button class="btn sm" id="emSound">${ic('vol')}Activer le son</button><button class="btn sm" id="emFull" title="Plein écran (F)">${ic('full')}Plein écran</button></div>
-        <div id="emHold" class="hide"></div><div class="em-stage" id="emStage"><div class="em-tr" id="emTr"><div class="wipe"></div><div class="ray"></div><div class="ray" style="rotate:70deg"></div>${LOGO_OK ? `<img class="em-e" src="${esc(CONFIG.logo)}" alt="">` : ''}<div class="em-t word" style="font-size:clamp(14px,3vw,44px);color:#f6e2a6">CAPITOL TV</div></div></div></div>`;
+        <div class="em-stage" id="emStage"></div></div>`;
+      this.main = new Stage($('#emStage'), { sound: this.sound, delay: null, layer: 'auto', extras: true, record: true, onNeedSound: () => { const b = $('#emSound'); if (b && !this.sound) b.classList.add('primary'); } });
       $('#emFull').onclick = () => this.fullscreen();
-      $('#emSound').onclick = () => { this.sound = !this.sound; $('#emSound').classList.remove('primary'); $('#emSound').innerHTML = this.sound ? ic('vol') + 'Couper le son' : ic('vol') + 'Activer le son'; this.layout(); };
-      if (this.sound) $('#emSound').innerHTML = ic('vol') + 'Couper le son';
+      const lab = () => { $('#emSound').innerHTML = ic('vol') + (this.sound ? 'Couper le son' : 'Activer le son'); };
+      $('#emSound').onclick = () => { this.sound = !this.sound; $('#emSound').classList.remove('primary'); lab(); this.main.setSound(this.sound); };
+      lab();
       $('#emStage').ondblclick = () => this.fullscreen();
       // l'antenne passe en muet pour ne pas entendre deux fois le son
       slotObjs.forEach(o => { if (o && o.player && o.ready) try { o.player.setMuted(true); o.muted = true; } catch (e) {} });
@@ -3902,143 +4192,14 @@ const PROG = {
     this.applyDirect(false);
   },
   applyDirect(cut) {
-    const p = this.pub, tr = $('#emTr'); if (!$('#emStage')) return;
-    const type = p && p.trans ? p.trans.type : 'cut', ms = p && p.trans ? p.trans.ms : 1200;
+    const p = this.pub; if (!this.main || !$('#emStage')) return;
     $('#emLive').className = 'em-live' + (p && p.on ? '' : ' off'); $('#emLive').textContent = p && p.on ? '● EN DIRECT' : 'HORS ANTENNE';
     $('#emScene').textContent = p ? (p.title ? p.title + ' · ' : '') + (p.scene || '') : '';
-    const shot = cut && this.lastSeq >= 0 && p && p.seq !== this.lastSeq;
-    this.lastSeq = p ? p.seq : -1;
-    if (shot && type !== 'cut' && tr) {
-      tr.className = 'em-tr ' + (type === 'fade' ? 'fade' : '');
-      tr.style.setProperty('--d', ms + 'ms'); void tr.offsetWidth; tr.classList.add('go');
-      clearTimeout(this.trT1); clearTimeout(this.trT2);
-      this.trT1 = setTimeout(() => this.layout(true), ms * .45);
-      this.trT2 = setTimeout(() => tr.classList.remove('go'), ms + 50);
-    } else this.layout(shot);
+    this.main.set(p, cut);
   },
-  layout(newShot) {
-    const st = $('#emStage'); if (!st) return;
-    const p = this.pub;
-    let off = st.querySelector('.em-off');
-    if (!p || !p.on || !p.items.length) {
-      for (const el of this.players.values()) { const md = el.querySelector('.em-md'); if (md && md.pause) md.pause(); el.remove(); } this.players.clear();
-      this.syncMedia();
-      if (!off) { off = document.createElement('div'); off.className = 'em-off'; st.appendChild(off); }
-      this.renderGfx();
-      off.innerHTML = `<div>${LOGO_OK ? `<img src="${esc(CONFIG.logoFull)}" alt="Capitol TV">` : logo(160)}<p style="margin-top:14px;letter-spacing:.18em;font-weight:700">${p && p.on ? 'PLAN VIDE' : 'L\'ÉMISSION REPREND BIENTÔT'}</p>${p && p.title ? `<p>${esc(p.title)}</p>` : ''}</div>`;
-      return;
-    }
-    if (off) off.remove();
-    const keep = new Set();
-    for (const it of p.items) {
-      const key = it.k === 'media' ? 'm:' + it.ref : (it.src && RTC.mode(it.src, it.vsrc || 'auto', it.login) !== 'twitch' ? 'r:' + it.src : it.login); keep.add(key);
-      let el = this.players.get(key);
-      const muted = !(this.sound && it.audio);
-      if (!el) {
-        el = document.createElement('div'); el.className = 'em-it gone';
-        st.appendChild(el); this.players.set(key, el);
-        requestAnimationFrame(() => el.classList.remove('gone'));
-      }
-      const md = it.src ? RTC.mode(it.src, it.vsrc || 'auto', it.login) : 'twitch';
-      if (it.k !== 'media' && md !== 'twitch') {
-        const k2 = md + ':' + it.src;
-        if (el.dataset.rtc !== k2) {
-          el.dataset.rtc = k2; el.innerHTML = ''; el.dataset.muted = '';
-          if (el._dp) { el._dp.destroy(); el._dp = null; }
-          if (md === 'rtc') { el._dp = this.dpFor(it.src); el.appendChild(el._dp.el); }
-          else el.innerHTML = `<div class="em-aud"><b>${esc(it.name)}</b><span class="note">flux hors ligne</span></div>`;
-        }
-        if (el._dp) el._dp.setMuted(!(this.sound && it.audio));
-        Object.assign(el.style, { left: it.x + '%', top: it.y + '%', width: it.w + '%', height: it.h + '%', zIndex: 1 + (it.z || 0) });
-        this.label(el, it, newShot);
-        continue;
-      }
-      if (el.dataset.rtc) { el.dataset.rtc = ''; if (el._dp) { this.dpDrop(el._dp); el._dp = null; } el.innerHTML = ''; el.dataset.muted = ''; }
-      if (it.k === 'media') {
-        if (!el.dataset.media) {
-          el.dataset.media = it.ref;
-          const u = esc(this.mediaURL(it.ref));
-          el.insertAdjacentHTML('afterbegin', it.kind === 'video' ? `<video class="em-md" src="${u}" playsinline preload="auto"></video>`
-            : it.kind === 'image' ? `<img class="em-md" src="${u}" alt="">`
-            : `<div class="em-aud">${LOGO_OK ? `<img src="${esc(CONFIG.logo)}" alt="">` : ''}<b>${esc(it.name)}</b><span class="eq"><i></i><i></i><i></i><i></i><i></i></span></div><audio class="em-md" src="${u}" preload="auto"></audio>`);
-        }
-        el._it = it;
-        Object.assign(el.style, { left: it.x + '%', top: it.y + '%', width: it.w + '%', height: it.h + '%', zIndex: 1 + (it.z || 0) });
-        const le = el.querySelector('.em-lab'); if (le) le.remove();
-        continue;
-      }
-      if (el.dataset.muted !== String(muted)) { el.dataset.muted = String(muted); const f = el.querySelector('iframe'); const html = `<iframe src="${playerURL(it.login, muted)}" allow="autoplay; fullscreen" title="${esc(it.name)}"></iframe>`; if (f) f.outerHTML = html; else el.insertAdjacentHTML('afterbegin', html); }
-      Object.assign(el.style, { left: it.x + '%', top: it.y + '%', width: it.w + '%', height: it.h + '%', zIndex: 1 + (it.z || 0) });
-      const lab = it.label ? `<b>${esc(it.name)}</b>${it.sub ? `<span>${esc(it.sub)}</span>` : ''}` : '';
-      let le = el.querySelector('.em-lab');
-      if (lab && (!le || le.dataset.h !== lab || newShot)) { if (le) le.remove(); le = document.createElement('div'); le.className = 'em-lab'; le.dataset.h = lab; le.innerHTML = lab; el.appendChild(le); }
-      else if (!lab && le) le.remove();
-    }
-    for (const [k, el] of this.players) if (!keep.has(k)) { el.classList.add('gone'); this.players.delete(k); const md = el.querySelector('.em-md'); const dp = el._dp; setTimeout(() => { if (md && md.pause) md.pause(); if (dp) this.dpDrop(dp); el.remove(); }, 550); }
-    this.renderGfx();
-    if (!st.querySelector('.em-bug') && LOGO_OK) st.insertAdjacentHTML('beforeend', `<img class="em-bug" src="${esc(CONFIG.logo)}" alt="">`);
-    this.syncMedia();
-  },
-  /* lecteurs Capitol TV gardés 90 s après la sortie d'antenne (pour les replays) */
-  dps: new Map(),
-  dpFor(src) {
-    let e = this.dps.get(src);
-    const delay = S.board.delay || 0;
-    if (e && e.dp.delay !== delay) { e.dp.destroy(); this.dps.delete(src); e = null; }
-    if (!e) { e = { dp: new DelayPlayer(src, { delay, record: true }) }; this.dps.set(src, e); }
-    clearTimeout(e.t); e.used = true;
-    return e.dp;
-  },
-  dpDrop(dp) {
-    const e = this.dps.get(dp.src); if (!e || e.dp !== dp) { dp.destroy(); return; }
-    e.used = false; dp.setMuted(true);
-    const hold = $('#emHold'); if (hold) hold.appendChild(dp.el);
-    clearTimeout(e.t); e.t = setTimeout(() => { if (!e.used) { dp.destroy(); this.dps.delete(dp.src); } }, 90000);
-  },
-  label(el, it, newShot) {
-    const lab = it.label ? `<b>${esc(it.name)}</b>${it.sub ? `<span>${esc(it.sub)}</span>` : ''}` : '';
-    let le = el.querySelector('.em-lab');
-    if (lab && (!le || le.dataset.h !== lab || newShot)) { if (le) le.remove(); le = document.createElement('div'); le.className = 'em-lab'; le.dataset.h = lab; le.innerHTML = lab; el.appendChild(le); }
-    else if (!lab && le) le.remove();
-  },
-  /* habillages de l'antenne */
-  renderGfx() {
-    const st = $('#emStage'); if (!st) return;
-    let g = st.querySelector('.em-gfx'); if (!g) { g = document.createElement('div'); g.className = 'em-gfx'; st.appendChild(g); }
-    const p = this.pub, G = (p && p.on && p.gfx) || {};
-    const alive = S.board.tributes.filter(t => !isDead(t)).length, all = S.board.tributes.length;
-    let lowT = null;
-    if (G.lower && G.lower.on) {
-      if (G.lower.auto || !G.lower.ref) { const big = (p.items || []).filter(i => i.k === 'trib').sort((a, b) => b.w * b.h - a.w * a.h)[0]; lowT = big ? byId(big.ref) : null; }
-      else lowT = byId(G.lower.ref);
-    }
-    const poll = GAMES.poll, bets = GAMES.bets;
-    const html = [
-      G.alive && G.alive.on && all ? `<div class="gx-alive"><b>${alive}</b><span>/ ${all}</span><i>EN VIE</i></div>` : '',
-      lowT ? `<div class="gx-lower ${isDead(lowT) ? 'dead' : ''}"><div class="n">${lowT.num ? `<em>${pad3(lowT.num)}</em>` : ''}${esc(lowT.name)}</div><div class="s">${esc(distLabel(lowT.district))}${lowT.alliance ? ' · ' + esc(lowT.alliance) : ''}${killsOf(lowT) ? ' · ' + killsOf(lowT) + ' élimination' + (killsOf(lowT) > 1 ? 's' : '') : ''}${isDead(lowT) ? ' · tombé' : lowT.status === 'injured' ? ' · blessé' : ''}</div>${G.lower.text ? `<div class="x">${esc(G.lower.text)}</div>` : ''}</div>` : '',
-      G.breaking && G.breaking.on && G.breaking.text ? `<div class="gx-break"><b>DERNIÈRE MINUTE</b><div class="tk"><span>${esc(G.breaking.text)}</span><span aria-hidden="true">${esc(G.breaking.text)}</span></div></div>` : '',
-      G.poll && G.poll.on && poll ? `<div class="gx-poll"><h5>${poll.closed ? 'RÉSULTATS' : 'SONDAGE'} · ${poll.total} vote${poll.total > 1 ? 's' : ''}</h5><b>${esc(poll.q)}</b>${poll.opts.map((o, i) => { const pc = poll.total ? Math.round(poll.counts[i] / poll.total * 100) : 0; return `<div class="op"><span>${esc(o)}</span><em>${pc}%</em><i style="width:${pc}%"></i></div>`; }).join('')}</div>` : '',
-      G.bets && G.bets.on && bets ? `<div class="gx-bets"><h5>FAVORIS DES SPECTATEURS</h5>${GAMES.favs(4).map(([t, pc]) => `<div class="op"><span>${esc(t.name)}</span><em>${pc}%</em><i style="width:${pc}%"></i></div>`).join('') || '<div class="note">Aucun pronostic</div>'}</div>` : '',
-      G.map && G.map.on ? `<canvas class="gx-map" width="320" height="320"></canvas>` : ''
-    ].join('');
-    if (g.dataset.h !== html) { g.dataset.h = html; g.innerHTML = html; }
-    if (G.map && G.map.on) this.drawMini(g.querySelector('.gx-map'));
-    this.renderReplay();
-    this.renderClip();
-  },
-  renderClip() {
-    const st = $('#emStage'); if (!st) return;
-    const c = this.pub && this.pub.clip;
-    let box = st.querySelector('.em-clip');
-    if (!c) { if (box) box.remove(); this.clipKey = ''; return; }
-    const key = c.id + ':' + c.at; if (this.clipKey === key) return;
-    this.clipKey = key; if (box) box.remove();
-    box = document.createElement('div'); box.className = 'em-clip';
-    if (c.kind === 'twitch') box.innerHTML = `<iframe src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(c.slug)}&parent=${encodeURIComponent(HOST)}&autoplay=true&muted=${this.sound ? 'false' : 'true'}" allow="autoplay; fullscreen"></iframe>`;
-    else { const v = CLIPS.player(c, !this.sound); box.appendChild(v); }
-    box.insertAdjacentHTML('beforeend', `<div class="rp-tag"><b>CLIP</b><span>${esc(c.title)}${c.name ? ' · ' + esc(c.name) : ''}</span></div>`);
-    st.appendChild(box);
-  },
+  renderGfx() { if (this.main) this.main.renderGfx(); for (const m of this.mons()) m.renderGfx(); },
+  layout() { if (this.main) this.main.layout(false); for (const m of this.mons()) m.layout(false); },
+  mons() { return [this.pgmStage, this.pvStage].filter(Boolean); },
   /* carte incrustée : positions avec le différé (même pour l'équipe) */
   posHist: [],
   drawMini(cv) {
@@ -4080,7 +4241,7 @@ const PROG = {
     setTimeout(() => { if (this.rpKey === key) { box.classList.add('gone'); setTimeout(() => box.remove(), 500); } }, left);
   },
   /* lecture synchronisée : tout le monde est au même endroit du média */
-  syncOne(md, at, loop, vol, wantSound) {
+  syncOne(md, at, loop, vol, wantSound, stage) {
     if (!md || !md.play) return;
     const dur = md.duration;
     let t = Math.max(0, (nowS() - at) / 1000);
@@ -4089,26 +4250,7 @@ const PROG = {
     md.volume = Math.max(0, Math.min(1, (vol == null ? 100 : vol) / 100));
     md.muted = !wantSound;
     if (md.readyState >= 1 && Math.abs(md.currentTime - t) > 0.75) { try { md.currentTime = t; } catch (e) {} }
-    if (md.paused) md.play().catch(() => { md.muted = true; md.play().catch(() => {}); if (wantSound) this.needSound(); });
-  },
-  needSound() { const b = $('#emSound'); if (b && !this.sound) b.classList.add('primary'); },
-  syncMedia() {
-    const st = $('#emStage'); if (!st) return;
-    const p = this.pub;
-    for (const el of this.players.values()) {
-      const it = el._it; if (!it) continue;
-      const md = el.querySelector('.em-md');
-      if (md && md.tagName !== 'IMG') this.syncOne(md, it.at || nowS(), it.loop, it.vol, this.sound && it.audio !== false);
-    }
-    const fx = p && p.on !== undefined ? p.sfx : null;
-    if (fx) {
-      if (!this.sfxEl || this.sfxEl.dataset.id !== fx.id + ':' + fx.at) {
-        if (this.sfxEl) { this.sfxEl.pause(); this.sfxEl.remove(); }
-        this.sfxEl = document.createElement('audio'); this.sfxEl.preload = 'auto'; this.sfxEl.dataset.id = fx.id + ':' + fx.at;
-        this.sfxEl.src = this.mediaURL(fx.id); st.appendChild(this.sfxEl);
-      }
-      this.syncOne(this.sfxEl, fx.at, fx.loop, fx.vol, this.sound);
-    } else if (this.sfxEl) { this.sfxEl.pause(); this.sfxEl.remove(); this.sfxEl = null; }
+    if (md.paused) md.play().catch(() => { md.muted = true; md.play().catch(() => {}); if (wantSound && stage && stage.o.onNeedSound) stage.o.onNeedSound(); });
   },
 
   /* ---------- page Réalisation ---------- */
@@ -4219,12 +4361,20 @@ const PROG = {
           <div class="rg-row"><input class="inp" id="rgTitle" maxlength="80" placeholder="Titre de l'émission (affiché sur la page Direct)" style="max-width:420px;height:34px"><span style="flex:1"></span>
             <a class="btn sm" href="#" id="rgOpenDirect">${ic('live')}Voir la page Direct</a><button class="btn sm ghost" id="rgCopyObs" title="Lien plein écran pour OBS (nécessite le lien d'overlay)">${ic('copy')}Lien OBS</button></div>
           <div class="rg-mons">
-            <div class="mon"><h4>APERÇU · <span id="pvName" style="color:var(--ink2)"></span><span style="flex:1"></span><span class="note">glisser-déposer · coins = taille (Maj : libre) · Suppr · flèches</span></h4><div class="cv" id="cvPv"></div></div>
-            <div class="mon"><h4>ANTENNE <span class="em-live" id="pgmTag">● EN DIRECT</span><span id="pgmName" style="color:var(--ink2)"></span></h4><div class="cv pgm" id="cvPg"></div>
+            <div class="mon"><h4>APERÇU · <span id="pvName" style="color:var(--ink2)"></span><span style="flex:1"></span>
+                <button class="btn sm ghost hide" id="pvSim" title="Afficher dans l'aperçu le plan à l'antenne avec les modifications en attente">${ic('eye')}Simuler les modifs</button>
+                <button class="btn sm ghost mon-b" id="pvImg" title="Image réelle (vidéo + habillage) ou simple schéma">${ic('eye')}Image</button><button class="btn sm ghost mon-b" id="pvSnd" title="Écouter l'aperçu">${ic('vol')}</button></h4>
+              <div class="cvw"><div class="stg" id="pvStg"></div><div class="cv" id="cvPv"></div></div>
+              <div class="note" style="margin-top:4px">Glisser-déposer · coins = taille (Maj : libre) · Suppr · flèches · <b>Habillage compris</b></div></div>
+            <div class="mon"><h4>ANTENNE <span class="em-live" id="pgmTag">● EN DIRECT</span><span id="pgmName" style="color:var(--ink2)"></span><span style="flex:1"></span>
+                <button class="btn sm ghost mon-b" id="pgImg" title="Image réelle ou schéma">${ic('eye')}Image</button><button class="btn sm ghost mon-b" id="pgSnd" title="Écouter l'antenne">${ic('vol')}</button></h4>
+              <div class="cvw"><div class="stg" id="pgStg"></div><div class="cv pgm" id="cvPg"></div></div>
               <div class="rg-row" style="margin-top:10px">
                 <select class="mini-sel" id="rgTr"><option value="logo">Transition logo</option><option value="fade">Fondu</option><option value="cut">Cut</option></select>
                 <input class="inp" id="rgMs" type="number" min="300" max="4000" step="100" style="width:90px;height:30px" title="Durée (ms)">
                 <span style="flex:1"></span><button class="btn sm ghost" id="rgCut" title="Retirer l'émission de l'antenne">Hors antenne</button></div>
+              <div class="rg-row" style="margin-top:8px"><span class="note" style="flex:none">Modifs du plan à l'antenne :</span><div class="seg sm" id="rgMode"><button data-mode="auto" title="Chaque déplacement ou ajout part tout de suite à l'antenne">Immédiates</button><button data-mode="manual" title="Rien ne change à l'antenne avant d'appuyer sur Appliquer">Manuelles</button></div></div>
+              <button class="btn apply hide" id="rgApply" style="width:100%;margin-top:8px">APPLIQUER LES MODIFS À L'ANTENNE <span style="opacity:.7;font-size:11px;margin-left:6px">(A)</span></button>
               <button class="btn take" id="rgTake" style="width:100%;margin-top:8px">À L'ANTENNE ▶ <span style="opacity:.7;font-size:11px;margin-left:6px">(T)</span></button><div class="note" id="rgWarn" style="margin-top:6px;min-height:16px"></div></div>
           </div>
           <div class="rg-row rg-sfx" id="rgSfx"></div>
@@ -4236,7 +4386,7 @@ const PROG = {
           </div>
           <div class="rg-row"><b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">PLANS</b><div class="scn" id="rgScenes"></div>
             <button class="btn sm" id="rgNew">${ic('plus')}Nouveau</button><button class="btn sm ghost" id="rgDup">Dupliquer</button><button class="btn sm ghost" id="rgDel" style="color:var(--red-hi)">${ic('trash')}</button></div>
-          <div class="rg-row"><b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">DISPOSITIONS</b>${Object.entries(this.PRESETS).map(([k, [l]]) => `<button class="btn sm ghost" data-pre="${k}">${l}</button>`).join('')}</div>
+          <div class="rg-row" style="flex-wrap:wrap"><b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">DISPOSITIONS</b>${Object.entries(this.PRESETS).map(([k, [l, L]]) => `<button class="btn sm ghost pre-b" data-pre="${k}" title="${L.length} source${L.length > 1 ? 's' : ''}">${this.preIcon(L)}${l}</button>`).join('')}<button class="btn sm pre-b" id="rgMosaic" title="Choisir combien de POV et lesquels (recherche par pseudo), avec effet d'apparition">${this.preIcon(this.gridOf(9))}Mosaïque…</button></div>
           <div id="rgInsp"></div>
         </div></div>`;
       paintIcons($('#pageView'));
@@ -4247,7 +4397,7 @@ const PROG = {
     this.renderSources(); this.renderScenes(); this.renderCanvas(); this.renderPgm(); this.renderSfx(); this.renderWarn(); this.renderGfxPanel(); this.renderQueue(); this.renderReplayPanel(); TALK.render();
   },
   gfx() { return JSON.parse(JSON.stringify((this.ed && this.ed.gfx) || {})); },
-  sendGfx(g, quiet) { this.ed.gfx = g; NET.req({ t: 'progGfx', gfx: g }).catch(e => toastInfo('Habillage', e.message, true)); if (!quiet) this.renderGfxPanel(); },
+  sendGfx(g, quiet) { this.ed.gfx = g; this.dirty = Date.now(); NET.req({ t: 'progGfx', gfx: g }).catch(e => toastInfo('Habillage', e.message, true)); if (!quiet) this.renderGfxPanel(); this.renderPv(); this.renderMode(); },
   renderGfxPanel() {
     const box = $('#rgGfx'); if (!box) return;
     const g = (this.ed && this.ed.gfx) || {}, on = k => g[k] && g[k].on;
@@ -4256,7 +4406,8 @@ const PROG = {
       <div class="gx-row"><button class="btn sm ${on('breaking') ? 'live' : ''}" data-gx="breaking">Dernière minute</button><input class="inp" id="gxBreak" maxlength="200" placeholder="Texte du bandeau" value="${esc((g.breaking || {}).text || '')}"></div>
       <div class="gx-row"><button class="btn sm ${on('lower') ? 'live' : ''}" data-gx="lower">Nom du tribut</button><select class="mini-sel" id="gxLow"><option value="">Auto (tribut principal du plan)</option>${tribs.map(t => `<option value="${esc(t.id)}" ${(g.lower || {}).ref === t.id && !(g.lower || {}).auto ? 'selected' : ''}>${pad3(t.num)} ${esc(t.name)}</option>`).join('')}</select></div>
       <div class="gx-row"><button class="btn sm ${on('alive') ? 'live' : ''}" data-gx="alive">Compteur de vivants</button><button class="btn sm ${on('map') ? 'live' : ''}" data-gx="map">Carte incrustée</button><button class="btn sm ${on('poll') ? 'live' : ''}" data-gx="poll">Sondage</button><button class="btn sm ${on('bets') ? 'live' : ''}" data-gx="bets">Favoris</button></div>
-      <p class="note" style="margin:6px 0 0">Un clic = à l'écran sur la page Direct (et dans OBS). Sondages et pronostics : page <a href="#" data-goto="jeux">Jeux</a>.</p>`;
+      <p class="note" id="gxNote" style="margin:6px 0 0"></p>`;
+    this.renderMode();
     box.onclick = e => {
       const go = e.target.closest('[data-goto]'); if (go) { e.preventDefault(); setPage(go.dataset.goto); return; }
       const b = e.target.closest('[data-gx]'); if (!b) return;
@@ -4327,11 +4478,79 @@ const PROG = {
         ${edit ? '<i class="hd nw"></i><i class="hd ne"></i><i class="hd sw"></i><i class="hd se"></i>' : ''}</div>`;
     }).join('') + (!items.length ? `<div class="hint">${edit ? 'Glisse ici des caméras ou des tributs depuis la liste de gauche.' : 'Rien à l\'antenne'}</div>` : '');
   },
-  renderCanvas() { this.drawItems($('#cvPv'), this.scene(), true); $$('#cvPv .ci[data-cam]').forEach(el => this.badge(el, el.dataset.cam)); this.renderInsp(); this.renderScenes(); this.renderWarn(); },
+  renderCanvas() { this.drawItems($('#cvPv'), this.scene(), true); $$('#cvPv .ci[data-cam]').forEach(el => this.badge(el, el.dataset.cam)); this.renderInsp(); this.renderScenes(); this.renderWarn(); this.renderPv(); this.renderMode(); },
+  /* ---------- moniteurs : image réelle (vidéo + habillage), comme sur la page Direct ---------- */
+  monPrefs: (() => { try { return JSON.parse(localStorage.getItem('ctv_mons')) || {}; } catch (e) { return {}; } })(),
+  saveMon() { try { localStorage.setItem('ctv_mons', JSON.stringify(this.monPrefs)); } catch (e) {} },
+  pvAt: {},
+  ensureMons() {
+    const pv = $('#pvStg'), pg = $('#pgStg'); if (!pv || !pg) return;
+    const P = this.monPrefs, img = k => P[k] !== false;
+    if (this.pgmStage && this.pgmStage.el !== pg) { this.pgmStage.destroy(); this.pgmStage = null; }
+    if (this.pvStage && this.pvStage.el !== pv) { this.pvStage.destroy(); this.pvStage = null; }
+    if (img('pg') && !this.pgmStage) { this.pgmStage = new Stage(pg, { delay: 0, layer: 'q', sound: P.snd === 'pg' }); this.pgmStage.set(this.pub, false); }
+    if (!img('pg') && this.pgmStage) { this.pgmStage.destroy(); this.pgmStage = null; }
+    if (img('pv') && !this.pvStage) { this.pvStage = new Stage(pv, { delay: 0, layer: 'q', sound: P.snd === 'pv' }); }
+    if (!img('pv') && this.pvStage) { this.pvStage.destroy(); this.pvStage = null; }
+    pv.classList.toggle('hide', !img('pv')); pg.classList.toggle('hide', !img('pg'));
+    $('#cvPv').classList.toggle('render', img('pv')); $('#cvPg').classList.toggle('render', img('pg'));
+    $('#pvImg').classList.toggle('on', img('pv')); $('#pgImg').classList.toggle('on', img('pg'));
+    $('#pvSnd').classList.toggle('on', P.snd === 'pv'); $('#pgSnd').classList.toggle('on', P.snd === 'pg');
+    $('#pvSnd').disabled = !img('pv'); $('#pgSnd').disabled = !img('pg');
+  },
+  dropMons() { for (const m of this.mons()) m.destroy(); this.pgmStage = this.pvStage = null; },
+  monToggle(k, what) {
+    const P = this.monPrefs;
+    if (what === 'img') P[k] = P[k] === false;
+    else P.snd = P.snd === k ? '' : k;
+    this.saveMon(); this.ensureMons();
+    if (this.pgmStage) this.pgmStage.setSound(P.snd === 'pg');
+    if (this.pvStage) this.pvStage.setSound(P.snd === 'pv');
+    this.renderPv(); this.renderPgm();
+  },
+  /* source telle que la page Direct la reçoit du serveur */
+  pubSrc(it) {
+    if (it.k === 'trib') { const t = byId(it.ref); return t ? { login: t.login, name: t.name, sub: t.district ? 'District ' + t.district : '', st: t.status, src: 't:' + t.id, vsrc: t.vsrc || 'auto' } : null; }
+    if (it.k === 'cam') { const m = S.team.find(x => x.id === it.ref); return m && (m.twitch || RTC.live('c:' + m.id)) ? { login: m.twitch || '', name: m.name, sub: 'Caméra', src: 'c:' + m.id, vsrc: m.vsrc || 'auto' } : null; }
+    const md = this.mediaById(it.ref); return md ? { media: md.id, name: md.name, sub: md.kind === 'video' ? 'Vidéo' : md.kind === 'image' ? 'Image' : 'Son', kind: md.kind, mime: md.mime, dur: md.dur || 0 } : null;
+  },
+  /* ce que donnerait ce plan à l'antenne, avec l'habillage en cours d'édition */
+  pubFromScene(sc) {
+    if (!sc) return null;
+    const air = this.pub && this.pub.on && sc.id === this.ed.live ? this.pub : null;
+    const items = sc.items.map(it => {
+      const s = this.pubSrc(it); if (!s) return null;
+      const a = air && air.items.find(x => x.ref === it.ref);
+      const at = it.k === 'media' ? (a && a.at) || (this.pvAt[sc.id + it.ref] = this.pvAt[sc.id + it.ref] || nowS()) : 0;
+      return { ...it, label: it.label !== false, audio: !!it.audio, d: 0, at, ...s };
+    }).filter(Boolean);
+    return { seq: 0, scene: sc.name, items, trans: { type: 'cut', ms: 0 }, title: this.ed.title || '', on: true, gfx: this.ed.gfx || {}, replay: null, clip: null, sfx: null };
+  },
+  renderPv() { this.ensureMons(); if (this.pvStage && this.ed) this.pvStage.set(this.pubFromScene(this.scene()), false); },
+  /* ---------- application des modifs : immédiate ou manuelle ---------- */
+  pending() {
+    const e = this.ed; if (!e || e.apply !== 'manual' || !e.live) return false;
+    const sc = e.scenes.find(x => x.id === e.live); if (!sc) return false;
+    const r = v => Math.round((+v || 0) * 100) / 100;
+    const norm = items => JSON.stringify((items || []).map(i => [i.id, i.k, i.ref, r(i.x), r(i.y), r(i.w), r(i.h), r(i.z), i.label !== false, !!i.audio, !!i.loop, i.vol == null ? 100 : r(i.vol)]));
+    return norm(sc.items) !== norm(e.airItems) || JSON.stringify(e.gfx || {}) !== JSON.stringify(e.airGfx || {});
+  },
+  renderMode() {
+    const m = $('#rgMode'); if (!m || !this.ed) return;
+    const man = this.ed.apply === 'manual', pend = this.pending();
+    $$('[data-mode]', m).forEach(b => b.classList.toggle('on', b.dataset.mode === (man ? 'manual' : 'auto')));
+    $('#rgApply').classList.toggle('hide', !man); $('#rgApply').disabled = !pend; $('#rgApply').classList.toggle('pend', pend);
+    $('#pvSim').classList.toggle('hide', !(man && pend)); $('#pvSim').classList.toggle('on', man && this.ed.preview === this.ed.live);
+    const gn = $('#gxNote'); if (gn) gn.innerHTML = man ? 'Mode manuel : l\'habillage change à l\'antenne quand tu appuies sur <b>Appliquer</b> (ou À l\'antenne).' : 'Un clic = à l\'écran sur la page Direct (et dans OBS). Sondages et pronostics : page <a href="#" data-goto="jeux">Jeux</a>.';
+  },
+  apply() { if (!this.pending()) return; NET.req({ t: 'progApply' }).then(() => { SND.blip(); toastInfo('Modifs appliquées à l\'antenne'); }, e => toastInfo('Antenne', e.message, true)); },
   renderPgm() {
     if (!$('#cvPg')) return;
-    const live = this.ed && this.ed.scenes.find(x => x.id === this.ed.live);
-    this.drawItems($('#cvPg'), live, false);
+    this.ensureMons();
+    const e = this.ed, live0 = e && e.scenes.find(x => x.id === e.live);
+    const live = live0 && e.apply === 'manual' && e.airItems && e.airScene === live0.id ? { ...live0, items: e.airItems } : live0;
+    if (this.monPrefs.pg !== false) $('#cvPg').innerHTML = live ? '' : '<div class="hint">Rien à l\'antenne</div>';
+    else this.drawItems($('#cvPg'), live, false);
     $('#pgmTag').className = 'em-live' + (live ? '' : ' off'); $('#pgmTag').textContent = live ? '● EN DIRECT' : 'HORS ANTENNE';
     $('#pgmName').textContent = live ? live.name : '';
   },
@@ -4352,7 +4571,7 @@ const PROG = {
   },
   addItem(k, ref, x, y) {
     const sc = this.scene(); if (!sc) return;
-    if (sc.items.length >= 16) { toastInfo('16 sources maximum par plan', '', true); return; }
+    if (sc.items.length >= 30) { toastInfo('30 sources maximum par plan', '', true); return; }
     const z = Math.max(0, ...sc.items.map(i => i.z || 0)) + 1;
     const w = sc.items.length ? 40 : 100;
     if (k === 'media') { sc.items.forEach(i => { if (i.k === 'media') i.audio = false; }); }
@@ -4365,11 +4584,55 @@ const PROG = {
     const L = this.PRESETS[k][1];
     const order = sc.items.slice().sort((a, b) => (a.id === this.sel ? -1 : b.id === this.sel ? 1 : (b.z || 0) - (a.z || 0)));
     order.forEach((it, i) => {
-      if (i < L.length) { [it.x, it.y, it.w, it.h] = L[i]; it.z = k === 'pip' ? i : 0; }
+      if (i < L.length) { [it.x, it.y, it.w, it.h] = L[i]; it.z = k === 'pip' ? i : 0; it.d = 0; }
       else { it.x = 100; it.y = 100; it.w = 20; it.h = 20; it.z = 0; }
     });
     sc.items = sc.items.filter(it => !(it.x >= 100 && it.y >= 100));
     this.save();
+  },
+  /* ---------- mosaïque : n POV choisis par pseudo, apparition une par une ---------- */
+  openMosaic() {
+    const { cams, tribs } = this.sources();
+    const all = [...tribs.filter(x => !x.dead), ...cams, ...tribs.filter(x => x.dead)];
+    const live = x => RTC.live((x.k === 'trib' ? 't:' : 'c:') + x.ref) || x.live;
+    let pick = [];
+    const m = modal(`<div class="modal-h"><h3>Mosaïque de POV</h3><button class="btn icon ghost" data-close>${ic('x')}</button></div>
+      <div class="modal-b">
+        <div class="mz-top"><label class="f" style="margin:0;flex:1"><span class="lbl2">Nombre de POV à l'écran : <b id="mzNv">9</b></span><input type="range" id="mzN" min="2" max="30" value="9" style="width:100%"></label>
+          <div class="mz-prev" id="mzPrev"></div></div>
+        <div class="searchbox" style="margin:10px 0 6px"><span data-ic="search"></span><input class="search" id="mzQ" placeholder="Chercher un pseudo (tribut ou caméra)…" autocomplete="off"></div>
+        <div class="mz-list" id="mzL"></div>
+        <div class="gx-row"><button class="btn sm ghost" data-mz="live">Cocher les POV en ligne</button><button class="btn sm ghost" data-mz="none">Tout décocher</button><span class="note" style="flex:1;text-align:right">Pas assez de cochés ? Les POV en ligne complètent la mosaïque.</span></div>
+        <div class="gx-row" style="margin-top:10px"><label class="switch"><input type="checkbox" id="mzAnim" checked> Apparition une par une</label><label class="switch"><input type="checkbox" id="mzLab" checked> Pseudos à l'écran</label><label class="switch"><input type="checkbox" id="mzNew" checked> Dans un nouveau plan</label></div>
+      </div>
+      <div class="modal-f"><span class="note" id="mzSum" style="flex:1"></span><button class="btn primary" id="mzGo">Créer la mosaïque</button></div>`, { wide: true });
+    const key = x => x.k + ':' + x.ref;
+    const final = () => {
+      const n = Math.max(+$('#mzN').value, pick.length), chosen = pick.map(k => all.find(x => key(x) === k)).filter(Boolean);
+      const fill = all.filter(x => !pick.includes(key(x)) && !x.dead && live(x)).slice(0, n - chosen.length);
+      return { n: chosen.length + fill.length, list: [...chosen, ...fill], chosen: chosen.length, fill: fill.length };
+    };
+    const draw = () => {
+      const q = $('#mzQ').value.toLowerCase().trim();
+      $('#mzL').innerHTML = all.filter(x => !q || (x.name + ' ' + x.login + ' ' + x.sub).toLowerCase().includes(q)).map(x => `<label class="mz-r ${pick.includes(key(x)) ? 'on' : ''}" style="${x.dead ? 'opacity:.5' : ''}"><input type="checkbox" data-mk="${esc(key(x))}" ${pick.includes(key(x)) ? 'checked' : ''}><b>${esc(x.name)}</b><small>${esc(x.k === 'cam' ? 'Caméra' : x.sub)}</small>${live(x) ? '<i class="mz-live">EN LIGNE</i>' : ''}${pick.includes(key(x)) ? `<em>${pick.indexOf(key(x)) + 1}</em>` : ''}</label>`).join('') || '<div class="note" style="padding:8px">Aucun résultat</div>';
+      const f = final();
+      $('#mzNv').textContent = Math.max(+$('#mzN').value, pick.length);
+      $('#mzPrev').innerHTML = this.preIcon(this.gridOf(Math.max(1, f.n || +$('#mzN').value)));
+      $('#mzSum').textContent = f.n ? `${f.n} POV : ${f.chosen} choisi${f.chosen > 1 ? 's' : ''}${f.fill ? ' + ' + f.fill + ' en ligne ajouté' + (f.fill > 1 ? 's' : '') : ''}` : 'Coche des POV ou attends que des joueurs soient en ligne.';
+      $('#mzGo').disabled = !f.n;
+    };
+    m.querySelector('#mzQ').oninput = draw; m.querySelector('#mzN').oninput = draw;
+    m.querySelector('#mzL').onchange = e => { const k = e.target.dataset.mk; if (!k) return; pick = e.target.checked ? [...pick, k] : pick.filter(x => x !== k); if (pick.length > +$('#mzN').value) $('#mzN').value = Math.min(30, pick.length); draw(); };
+    m.onclick = e => { const b = e.target.closest('[data-mz]'); if (!b) return; if (b.dataset.mz === 'none') pick = []; else pick = [...new Set([...pick, ...all.filter(x => !x.dead && live(x)).map(key)])].slice(0, 30); if (pick.length > +$('#mzN').value) $('#mzN').value = Math.min(30, pick.length); draw(); };
+    m.querySelector('#mzGo').onclick = () => {
+      const f = final(); if (!f.n) return;
+      const L = this.gridOf(f.n), anim = $('#mzAnim').checked, lab = $('#mzLab').checked;
+      const items = f.list.slice(0, 30).map((x, i) => ({ id: 'i' + rid(), k: x.k, ref: x.ref, x: L[i][0], y: L[i][1], w: L[i][2], h: L[i][3], z: 0, label: lab, audio: false, d: anim ? Math.round(i * Math.min(160, 2400 / f.n)) : 0 }));
+      if ($('#mzNew').checked) { const id = 's' + rid(); this.ed.scenes.push({ id, name: 'Mosaïque ' + f.n, items }); this.ed.preview = id; }
+      else { const sc = this.scene(); sc.items = items; }
+      this.sel = ''; closeModal(); this.save(); toastInfo('Mosaïque prête dans l\'aperçu', 'À L\'ANTENNE (T) pour la lancer.');
+    };
+    paintIcons(m); draw(); setTimeout(() => $('#mzQ') && $('#mzQ').focus(), 50);
   },
   take(sceneId) {
     const tr = { type: $('#rgTr') ? $('#rgTr').value : 'logo', ms: $('#rgMs') ? +$('#rgMs').value || 1400 : 1400 };
@@ -4393,9 +4656,18 @@ const PROG = {
     $('#rgTr').onchange = e => { this.ed.trans.type = e.target.value; this.save(); };
     $('#rgMs').onchange = e => { this.ed.trans.ms = Math.max(300, Math.min(4000, +e.target.value || 1400)); this.save(); };
     $('#rgTake').onclick = () => this.take();
+    $('#rgApply').onclick = () => this.apply();
+    $('#rgMode').onclick = e => { const b = e.target.closest('[data-mode]'); if (!b || b.dataset.mode === this.ed.apply) return; this.ed.apply = b.dataset.mode; NET.req({ t: 'progMode', apply: b.dataset.mode }).then(() => toastInfo(b.dataset.mode === 'manual' ? 'Mode manuel' : 'Mode immédiat', b.dataset.mode === 'manual' ? 'Tes modifs du plan à l\'antenne attendent le bouton Appliquer.' : 'Chaque modif part tout de suite à l\'antenne.')); this.renderMode(); };
+    $('#pvSim').onclick = () => { if (this.ed.preview !== this.ed.live) { this.ed.preview = this.ed.live; this.sel = ''; } if (this.monPrefs.pv === false) { this.monPrefs.pv = true; this.saveMon(); } this.save(); };
+    $('#pvImg').onclick = () => this.monToggle('pv', 'img'); $('#pgImg').onclick = () => this.monToggle('pg', 'img');
+    $('#pvSnd').onclick = () => this.monToggle('pv', 'snd'); $('#pgSnd').onclick = () => this.monToggle('pg', 'snd');
+    $('#rgMosaic').onclick = () => this.openMosaic();
     $('#rgCut').onclick = () => this.take('');
     $('#rgOpenDirect').onclick = e => { e.preventDefault(); setPage('direct'); };
-    $('#rgCopyObs').onclick = e => { copy(location.origin + '/#direct', e.currentTarget); toastInfo('Lien copié', 'Pour OBS sans compte : ouvre d\'abord le lien d\'overlay (/overlay/CLÉ), puis ajoute #direct à l\'adresse.'); };
+    $('#rgCopyObs').onclick = e => {
+      if (S.me && S.me.obsKey) { copy(location.origin + '/overlay/' + encodeURIComponent(S.me.obsKey), e.currentTarget); toastInfo('Lien OBS copié', 'Dans OBS : Source › Navigateur, colle ce lien, taille 1920 × 1080, coche « Contrôler l\'audio via OBS ». Aucun compte nécessaire.'); }
+      else { copy(location.origin + '/#direct', e.currentTarget); toastInfo('Lien copié', 'Ajoute la variable OVERLAY_KEY dans Cloudflare pour un lien OBS sans connexion.', true); }
+    };
     $('#rgNew').onclick = () => { const id = 's' + rid(); this.ed.scenes.push({ id, name: 'Plan ' + (this.ed.scenes.length + 1), items: [] }); this.ed.preview = id; this.sel = ''; this.save(); };
     $('#rgDup').onclick = () => { const sc = this.scene(); if (!sc) return; const id = 's' + rid(); this.ed.scenes.push({ ...clone(sc), id, name: sc.name + ' (copie)', items: sc.items.map(i => ({ ...i, id: 'i' + rid() })) }); this.ed.preview = id; this.save(); };
     $('#rgDel').onclick = e => {
@@ -4495,6 +4767,7 @@ const PROG = {
       it.x = Math.round(it.x * 10) / 10; it.y = Math.round(it.y * 10) / 10; this.save(); return;
     }
     if (k.toLowerCase() === 't' || k === 'Enter') { e.preventDefault(); this.take(); return; }
+    if (k.toLowerCase() === 'a' && this.ed && this.ed.apply === 'manual') { e.preventDefault(); this.apply(); return; }
     if (/^[1-9]$/.test(k)) { const sc = this.ed.scenes[+k - 1]; if (sc) { this.ed.preview = sc.id; this.sel = ''; this.save(); } }
   }
 };
@@ -4533,6 +4806,14 @@ $('#cmText').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preve
 $('#cmQuick').addEventListener('click', e => { const b = e.target.closest('[data-q]'); if (b) CAM.sendMsg(b.dataset.q); });
 $('#trList').addEventListener('click', e => CAM.terrainClick(e));
 $('#trList').addEventListener('keydown', e => e.stopPropagation());
+function fitHeader() {
+  const h = $('header.top'); if (!h || getComputedStyle(h).flexWrap === 'wrap') return;
+  h.classList.remove('c1', 'c2', 'c3');
+  for (const c of ['c1', 'c2', 'c3']) { if (h.scrollWidth <= h.clientWidth + 1 && $('#pageNav').scrollWidth <= $('#pageNav').clientWidth + 1) break; h.classList.add(c); }
+}
+{ let raf = 0; const go = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(fitHeader); };
+  new ResizeObserver(go).observe(document.body);
+  new MutationObserver(ms => { if (ms.some(m => m.target !== $('header.top'))) go(); }).observe($('header.top'), { subtree: true, childList: true, attributes: true, attributeFilter: ['class'], characterData: true }); }
 $('#pageNav').addEventListener('click', e => { const b = e.target.closest('[data-page]'); if (b) { S.page = S.page === b.dataset.page ? '' : S.page; setPage(b.dataset.page); } });
 $('#lockView').addEventListener('click', e => { const b = e.target.closest('[data-page-go]'); if (b) setPage(b.dataset.pageGo); });
 $('#meBtn').onclick = () => S.me && openMe();

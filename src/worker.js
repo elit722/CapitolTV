@@ -155,6 +155,7 @@ const VQ_LEVELS = {
   hd: { h: 1080, kbps: 7000, fps: 30 },
   max: { h: 1080, kbps: 10000, fps: 60 }
 };
+const MAX_ITEMS = 30;
 const VQ_ORDER = ["eco", "std", "hd", "max"];
 const WHIP_CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, DELETE, PATCH, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization", "Access-Control-Expose-Headers": "Location" };
 const RTC_API = "https://rtc.live.cloudflare.com/v1/apps/";
@@ -246,14 +247,14 @@ async function overlayLogin(env, key) {
   if (!env.OVERLAY_KEY || !env.SESSION_SECRET || key !== env.OVERLAY_KEY) return new Response("Clé d'overlay invalide", { status: 403 });
   const days = 365;
   const val = await signSession({ id: "overlay", name: "Overlay OBS", av: "", overlay: true, exp: Date.now() + days * 864e5 }, env.SESSION_SECRET);
-  return redirect("/#overlay", [setCookie(COOKIE, val, days * 86400)]);
+  return redirect("/#overlay-direct", [setCookie(COOKIE, val, days * 86400)]);
 }
 
 /* =====================================================================
    Durable Object : la régie centrale
    ===================================================================== */
 const TYPES = ["Combat", "Alliance", "Trahison", "Mort imminente", "Cadeau sponsor", "Moment drôle", "Révélation", "Autre"];
-const SCALARS = ["ticker", "don", "fund", "day", "startTs", "cooldown", "lastHommage", "flash", "delay", "hideChat", "lock", "sponsor", "publicAccess", "map"];
+const SCALARS = ["ticker", "don", "fund", "day", "startTs", "cooldown", "lastHommage", "flash", "delay", "hideChat", "lock", "sponsor", "publicAccess", "map", "theme"];
 const STATUSES = ["alive", "injured", "missing", "dead"];
 const PERMS = ["admin", "mod", "member"];
 const LOGIN_RE = /^[a-z0-9_]{3,25}$/;
@@ -347,7 +348,7 @@ export class Game extends DurableObject {
 
   load() {
     if (!this.loading) this.loading = (async () => {
-      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref"]);
+      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage"]);
       this.board = { ...defaultBoard(), ...(m.get("board") || {}) };
       this.alerts = m.get("alerts") || {};
       this.team = m.get("team") || [];
@@ -370,6 +371,7 @@ export class Game extends DurableObject {
       this.skeys = m.get("skeys") || {};
       this.pubs = m.get("pubs") || {};
       this.vpref = m.get("vpref") || {};
+      this.usage = m.get("usage") || { m: "", b: 0 };
       this.poll = m.get("poll") || null;
       this.bets = m.get("bets") || { open: true, users: {}, settled: null };
       this.clips = m.get("clips") || [];
@@ -451,10 +453,10 @@ export class Game extends DurableObject {
   hello(a) {
     return {
       t: "hello", now: Date.now(),
-      me: { id: a.id, name: a.name, av: a.av, perm: a.perm, pub: a.pub, lock: !!a.lock, guest: !!a.guest, tribute: this.tributeOf(a.id), cam: a.cam || "", sup: isSup(a), crew: isCrew(a) && !a.lock, map: this.mapAllowed(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "" },
-      roles: this.roles, prog: a.lock ? undefined : this.progPublic(), progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
+      me: { id: a.id, name: a.name, av: a.av, perm: a.perm, pub: a.pub, overlay: !!a.overlay, obsKey: hasPerm(a, "program") && !a.lock && this.env.OVERLAY_KEY ? this.env.OVERLAY_KEY : undefined, lock: !!a.lock, guest: !!a.guest, tribute: this.tributeOf(a.id), cam: a.cam || "", sup: isSup(a), crew: isCrew(a) && !a.lock, map: this.mapAllowed(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "" },
+      roles: this.roles, prog: a.lock || !(isCrew(a) || a.overlay) ? undefined : this.progPublic(), progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
       media: isCrew(a) ? this.media : undefined, srvCams: isCrew(a) ? this.srvCams : undefined,
-      pubs: this.pubsFor(a), rtc: { on: this.rtcOn(), pub: false, vq: { trib: this.vqCap("t:"), cam: this.vqCap("c:") }, vpref: isCrew(a) && !a.lock ? this.vpref : undefined },
+      pubs: this.pubsFor(a), rtc: { on: this.rtcOn(), pub: false, use: isCrew(a) || a.overlay ? this.useInfo() : undefined, vq: { trib: this.vqCap("t:"), cam: this.vqCap("c:") }, vpref: isCrew(a) && !a.lock ? this.vpref : undefined },
       talk: this.talkSup(a) ? this.talkState() : undefined, clips: this.clipsFor(a),
       skeys: hasPerm(a, "program") || a.perm === "admin" ? this.allKeys() : undefined,
       mykeys: a.guest || a.overlay ? undefined : this.myKeys(a.id),
@@ -682,7 +684,7 @@ export class Game extends DurableObject {
         this.broadcast({ t: "alerts", all: {} }, x => isCrew(x) && !x.lock); this.modcast({ t: "alerts", all: {} }); reply(true); break;
       }
       case "team": case "setRole": case "roles": return this.onRolesOp(a, m, reply);
-      case "progSave": case "progTake": case "progSfx": case "progGfx": case "progQueue": case "progReplay": case "progAuto": case "progClip": return this.onProgOp(a, m, reply);
+      case "progApply": case "progMode": case "progSave": case "progTake": case "progSfx": case "progGfx": case "progQueue": case "progReplay": case "progAuto": case "progClip": return this.onProgOp(a, m, reply);
       case "skeyNew": {
         if (!hasPerm(a, "program") && !admin) return deny();
         const src = String(m.src || ""); if (!/^[tc]:[\w-]{1,40}$/.test(src)) return reply(false, { msg: "Source inconnue." });
@@ -690,6 +692,24 @@ export class Game extends DurableObject {
         const key = this.keyFor(src);
         if (this.pubs[src]) { delete this.pubs[src]; this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); }
         reply(true, { key }); this.broadcast({ t: "skeys", keys: this.allKeys() }, x => hasPerm(x, "program") || x.perm === "admin"); break;
+      }
+      case "rtcUse": {
+        // compteur de consommation vidéo (ce que Cloudflare facture : données envoyées aux écrans)
+        if (!(isCrew(a) || a.overlay)) return;
+        const mo = new Date().toISOString().slice(0, 7), b = Math.max(0, Math.min(5e10, +m.b || 0));
+        if (this.usage.m !== mo) this.usage = { m: mo, b: 0 };
+        const was = this.useInfo().save;
+        this.usage.b += b; this.ctx.storage.put("usage", this.usage);
+        const now = Date.now(), info = this.useInfo();
+        if (was !== info.save || now - (this.useAt || 0) > 30000) { this.useAt = now; this.crewcast({ t: "rtcUse", use: info }, x => !x.mod); for (const ws of this.sockets()) { const o = this.att(ws); if (o && o.overlay) this.send(ws, { t: "rtcUse", use: info }); } }
+        break;
+      }
+      case "rtcBudget": {
+        if (!admin) return deny();
+        this.board.useBudget = Math.max(50, Math.min(100000, Math.round(+m.gb || 900)));
+        this.ctx.storage.put("board", this.board);
+        this.crewcast({ t: "rtcUse", use: this.useInfo() }, x => !x.mod);
+        return reply(true);
       }
       case "rtcCfg": {
         if (!admin) return deny();
@@ -797,6 +817,7 @@ export class Game extends DurableObject {
       for (const [k, v] of Object.entries(p.set)) if (SCALARS.includes(k)) b[k] = v;
       if (p.set.flash && typeof p.set.flash === "object") b.flash = { ...p.set.flash, ts: now };
       if (p.set.fund && typeof p.set.fund === "object") { b.fund = { goal: Math.max(0, +p.set.fund.goal || 0), cur: String(p.set.fund.cur || "€").slice(0, 4), show: p.set.fund.show !== false, raised: 0 }; this.recalcFund(); }
+      if (b.theme) { const t = b.theme || {}, hx = v => /^#[0-9a-f]{6}$/i.test(v || "") ? v : ""; b.theme = { name: String(t.name || "").slice(0, 40), gold: hx(t.gold), red: hx(t.red) }; }
       b.publicAccess = !!b.publicAccess;
       b.map = { on: !!(b.map && b.map.on), staffOnly: !(b.map && b.map.staffOnly === false) };
       b.delay = Math.max(0, Math.min(900, parseInt(b.delay, 10) || 0));
@@ -911,30 +932,40 @@ export class Game extends DurableObject {
     if (it.k === "media") { const md = this.media.find(x => x.id === it.ref); return md ? { media: md.id, name: md.name, sub: md.kind === "video" ? "Vidéo" : md.kind === "image" ? "Image" : "Son", kind: md.kind, mime: md.mime, dur: md.dur || 0 } : null; }
     return null;
   }
+  /* ce qui est réellement à l'antenne : en mode manuel, l'état figé au dernier « Appliquer » */
+  liveItems() {
+    const sc = this.prog.scenes.find(x => x.id === this.prog.live); if (!sc) return [];
+    return this.prog.apply === "manual" && Array.isArray(this.prog.airItems) && this.prog.airScene === sc.id ? this.prog.airItems : sc.items;
+  }
+  liveGfx() { return (this.prog.apply === "manual" && this.prog.airGfx ? this.prog.airGfx : this.prog.gfx) || {}; }
+  freezeAir() {
+    const sc = this.prog.scenes.find(x => x.id === this.prog.live);
+    this.prog.airScene = sc ? sc.id : ""; this.prog.airItems = sc ? JSON.parse(JSON.stringify(sc.items)) : [];
+    this.prog.airGfx = JSON.parse(JSON.stringify(this.prog.gfx || {}));
+  }
   progPublic() {
     const sc = this.prog.scenes.find(x => x.id === this.prog.live);
     const starts = this.prog.starts || {};
-    const items = sc ? sc.items.map(it => { const s = this.srcOf(it); return s ? { id: it.id, k: it.k, ref: it.ref, x: it.x, y: it.y, w: it.w, h: it.h, z: it.z, label: it.label !== false, audio: !!it.audio, loop: !!it.loop, vol: it.vol == null ? 100 : it.vol, at: starts[it.ref] || 0, ...s } : null; }).filter(Boolean) : [];
+    const items = sc ? this.liveItems().map(it => { const s = this.srcOf(it); return s ? { id: it.id, k: it.k, ref: it.ref, x: it.x, y: it.y, w: it.w, h: it.h, z: it.z, label: it.label !== false, audio: !!it.audio, loop: !!it.loop, vol: it.vol == null ? 100 : it.vol, d: it.d || 0, at: starts[it.ref] || 0, ...s } : null; }).filter(Boolean) : [];
     const fx = this.prog.sfx, md = fx && this.media.find(x => x.id === fx.id);
     return { seq: this.prog.seq, scene: sc ? sc.name : "", items, trans: this.prog.trans, title: this.prog.title || "", on: !!sc,
-      gfx: this.prog.gfx || {}, replay: this.prog.replay && Date.now() < this.prog.replay.end ? this.prog.replay : null, next: this.prog.next || null,
+      gfx: this.liveGfx(), replay: this.prog.replay && Date.now() < this.prog.replay.end ? this.prog.replay : null, next: this.prog.next || null,
       clip: this.prog.clip && Date.now() < this.prog.clip.end ? this.prog.clip : null,
       sfx: md ? { id: md.id, name: md.name, kind: md.kind, at: fx.at, vol: fx.vol, loop: !!fx.loop, dur: md.dur || 0 } : null };
   }
   onAirCams() {
-    const sc = this.prog.scenes.find(x => x.id === this.prog.live);
-    return sc ? [...new Set(sc.items.filter(it => it.k === "cam").map(it => it.ref))] : [];
+    return [...new Set(this.liveItems().filter(it => it.k === "cam").map(it => it.ref))];
   }
   cleanProg(p) {
     const num = (v, d, lo, hi) => { v = +v; return isFinite(v) ? Math.max(lo, Math.min(hi, Math.round(v * 100) / 100)) : d; };
     const scenes = (Array.isArray(p.scenes) ? p.scenes : []).slice(0, 40).map((sc, i) => ({
       id: String(sc.id || "s" + i).replace(/[^a-z0-9_-]/gi, "").slice(0, 20) || "s" + i,
       name: String(sc.name || "Plan " + (i + 1)).slice(0, 40),
-      items: (Array.isArray(sc.items) ? sc.items : []).slice(0, 16).map((it, j) => ({
+      items: (Array.isArray(sc.items) ? sc.items : []).slice(0, MAX_ITEMS).map((it, j) => ({
         id: String(it.id || "i" + j).replace(/[^a-z0-9_-]/gi, "").slice(0, 20) || "i" + j,
         k: ["cam", "media"].includes(it.k) ? it.k : "trib", ref: String(it.ref || "").slice(0, 40), loop: !!it.loop, vol: num(it.vol, 100, 0, 100),
         x: num(it.x, 0, -50, 150), y: num(it.y, 0, -50, 150), w: num(it.w, 50, 2, 200), h: num(it.h, 50, 2, 200), z: num(it.z, j, 0, 99),
-        label: it.label !== false, audio: !!it.audio
+        label: it.label !== false, audio: !!it.audio, d: num(it.d, 0, 0, 4000)
       }))
     }));
     if (!scenes.length) scenes.push({ id: "s1", name: "Plan 1", items: [] });
@@ -942,11 +973,13 @@ export class Game extends DurableObject {
     return { scenes, live: scenes.some(x => x.id === this.prog.live) ? this.prog.live : "", preview: scenes.some(x => x.id === p.preview) ? p.preview : scenes[0].id,
       trans: { type: ["logo", "fade", "cut"].includes(t.type) ? t.type : "logo", ms: num(t.ms, 1400, 300, 4000) }, seq: this.prog.seq, title: String(p.title || "").slice(0, 80),
       starts: this.prog.starts || {}, sfx: this.prog.sfx || null,
-      gfx: this.prog.gfx || {}, queue: this.prog.queue || [], qrun: this.prog.qrun || null, next: this.prog.next || null, replay: this.prog.replay || null, autoBack: this.prog.autoBack !== false, prevLive: this.prog.prevLive || "" };
+      gfx: this.prog.gfx || {}, queue: this.prog.queue || [], qrun: this.prog.qrun || null, next: this.prog.next || null, replay: this.prog.replay || null, autoBack: this.prog.autoBack !== false, prevLive: this.prog.prevLive || "",
+      apply: this.prog.apply === "manual" ? "manual" : "auto", airScene: this.prog.airScene || "", airItems: this.prog.airItems || null, airGfx: this.prog.airGfx || null };
   }
   pushProg(newShot) {
     const pub = JSON.stringify({ t: "prog", p: this.progPublic(), cut: !!newShot });
-    for (const ws of this.sockets()) { const a = this.att(ws); if (a && !a.mod && !a.server && !a.lock) this.send(ws, pub); }
+    // la page Direct est réservée à l'équipe et au lien OBS
+    for (const ws of this.sockets()) { const a = this.att(ws); if (a && !a.mod && !a.server && !a.lock && (isCrew(a) || a.overlay)) this.send(ws, pub); }
     this.pushOnAir(true);
   }
   prepCams() {
@@ -1065,6 +1098,7 @@ export class Game extends DurableObject {
     this.prog.starts = starts;
     if (this.prog.live && this.prog.live !== sc.id) this.prog.prevLive = this.prog.live;
     this.prog.live = sc.id; this.prog.seq = (this.prog.seq || 0) + 1;
+    this.freezeAir();
     if (!fromQueue) this.prog.qrun = null;
     this.planNext(sc, now);
   }
@@ -1164,6 +1198,11 @@ export class Game extends DurableObject {
     } catch (e) {
       return new Response("Erreur de diffusion : " + e.message, { status: 502, headers: H() });
     }
+  }
+  useInfo() {
+    const mo = new Date().toISOString().slice(0, 7), b = this.usage && this.usage.m === mo ? this.usage.b : 0;
+    const gb = Math.round(b / 1e8) / 10, budget = this.board.useBudget || 900;
+    return { gb, budget, save: gb >= budget };
   }
   /* plafond de qualité fixé par la régie (par type de flux) */
   vqCap(src) {
@@ -1449,6 +1488,12 @@ export class Game extends DurableObject {
         breaking: { on: !!(g.breaking && g.breaking.on), text: str(g.breaking && g.breaking.text, 200) },
         alive: { on: !!(g.alive && g.alive.on) }, map: { on: !!(g.map && g.map.on) }, poll: { on: !!(g.poll && g.poll.on) }, bets: { on: !!(g.bets && g.bets.on) }
       };
+    } else if (m.t === "progApply") {
+      // mode manuel : toutes les modifications du plan à l'antenne (et de l'habillage) partent d'un coup
+      this.freezeAir();
+    } else if (m.t === "progMode") {
+      this.prog.apply = m.apply === "manual" ? "manual" : "auto";
+      this.freezeAir();
     } else if (m.t === "progAuto") {
       this.prog.autoBack = !!m.on;
     } else if (m.t === "progQueue") {
@@ -1480,6 +1525,7 @@ export class Game extends DurableObject {
       this.prog.starts = starts;
       if (this.prog.live && this.prog.live !== (sc ? sc.id : "")) this.prog.prevLive = this.prog.live;
       this.prog.live = sc ? sc.id : "";
+      this.freezeAir();
       if (!m.fromQueue && this.prog.qrun) { this.prog.qrun = null; }
       this.planNext(sc, now);
       this.prog.seq = (this.prog.seq || 0) + 1;
@@ -1608,6 +1654,19 @@ export class Game extends DurableObject {
         this.srvCams = (Array.isArray(m.names) ? m.names : []).map(n => String(n).replace(/[^A-Za-z0-9_]/g, "").slice(0, 16)).filter(Boolean).slice(0, 60);
         this.ctx.storage.put("srvcams", this.srvCams);
         this.crewcast({ t: "srvCams", names: this.srvCams }, x => !x.mod);
+        return;
+      }
+      if (m.t === "pkeys") {
+        // le mod serveur demande la clé de diffusion des joueurs connectés : aucune manipulation côté joueur
+        const out = {};
+        for (const raw of (Array.isArray(m.names) ? m.names : []).slice(0, 200)) {
+          const n = String(raw || "").replace(/[^A-Za-z0-9_]/g, "").slice(0, 16), low = n.toLowerCase(); if (!n) continue;
+          const t = this.tribByMc(n) || this.board.tributes.find(x => !x.mc && (x.login === low || String(x.name || "").toLowerCase() === low));
+          const cam = !t && (this.team.find(x => x.mc && x.mc.toLowerCase() === low) || null);
+          const src = t ? "t:" + t.id : cam ? "c:" + cam.id : "";
+          if (src) out[n] = { key: this.keyFor(src), who: t ? t.name : cam.name, kind: t ? "trib" : "cam", pref: this.vpref[src] || "" };
+        }
+        this.send(ws, { t: "pkeys", keys: out });
         return;
       }
       if (m.t === "seen") this.ingestSeen(Array.isArray(m.list) ? m.list : [], "serveur", true);

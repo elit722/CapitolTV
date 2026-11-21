@@ -172,6 +172,25 @@ Le dossier `mod/` contient un mod Fabric pour les caméramans. Le fichier `.jar`
 
 **Carte du site** : onglet **Carte** pour l'équipe (positions en direct). Régie › **Carte & caméras** › *Ouvrir la carte* puis *Rendre publique* / *Verrouiller : équipe seulement*. Le public voit les positions **avec le différé**, et les comptes des tributs encore en vie n'y ont jamais accès.
 
+## Vidéo : POV des joueurs et caméras → régie → OBS
+
+**Chemin de l'image** : chaque joueur et chaque caméra envoie son écran (le monde seulement, sans HUD ni chat) au serveur vidéo de Cloudflare (Realtime). La régie compose les plans sur la page **Réalisation**, la page **Direct** les affiche, et le streamer la capture dans OBS (source *Navigateur*, lien donné par le bouton **Lien OBS**). Le public du site ne voit que les POV Twitch.
+
+**Joueurs : aucune manipulation.** Avec le mod installé sur le serveur de l'event (clé serveur renseignée), chaque joueur dont le **pseudo Minecraft** est rempli dans sa fiche reçoit automatiquement sa clé. À la première connexion, une fenêtre lui demande son accord et sa qualité (Éco 480p, Standard 720p, HD 1080p, Max 1080p 60 i/s, ou Sans POV). Touche **K** pour changer d'avis. L'option *Anti-lag* baisse la qualité toute seule si le jeu ralentit.
+
+**Coût pour les joueurs** : la carte graphique réduit l'image et la recopie en arrière-plan, sans bloquer le jeu ; l'encodage vidéo se fait hors du fil principal.
+
+**Régie** : moniteurs Aperçu et Antenne en image réelle (vidéo + habillage), son activable, modifs *immédiates* ou *manuelles* (bouton **Appliquer**, touche A, et **Simuler les modifs**), 12 dispositions dont la **Mosaïque** (n POV choisis par pseudo, apparition une par une).
+
+**Lien OBS sans compte** : `npx wrangler secret put OVERLAY_KEY` (une longue phrase aléatoire), puis Réalisation › **Lien OBS**.
+
+## Réutiliser le site pour un autre event
+
+1. *Fork* du dépôt, puis étapes 1 à 4 ci-dessus (Discord, `wrangler.jsonc`, `npx wrangler deploy`).
+2. Vidéo : crée une application Cloudflare Realtime (tableau de bord › Realtime › SFU) et enregistre `RTC_APP_ID` et `RTC_APP_SECRET` avec `npx wrangler secret put`. Crée le bucket des clips : `npx wrangler r2 bucket create capitol-tv-clips`.
+3. Apparence : Réglages › **Apparence** (nom de l'émission, couleurs), logo dans `public/logo.png`, nom par défaut dans `CONFIG` en haut de `public/index.html`.
+4. Mod : le même `.jar` côté joueurs et côté serveur ; `url` du site dans `config/capitoltv-server.json` (serveur) et dans les réglages du mod (équipe).
+
 ## L'équipe et les accès
 
 - **Page Équipe** : onglet « Équipe » en haut, ou touche `E`. Elle est visible par tout le monde.
@@ -207,6 +226,9 @@ SESSION_SECRET=...
 ```
 
 ## Coûts et limites
+
+- **Vidéo** : Cloudflare facture uniquement ce que le serveur vidéo *envoie* aux écrans (régie, page OBS) ; ce que les joueurs envoient est gratuit. 1 000 Go gratuits par mois, puis 0,05 $ par Go. Le compteur et le budget sont dans Réglages › **Carte & caméras** : au-delà du budget, la régie passe en qualité légère, la sortie OBS reste en pleine qualité.
+- Les petites vignettes (grilles, mosaïques, moniteurs de la régie) utilisent automatiquement une version 360p de chaque flux.
 
 - Tout tient dans l'offre gratuite de Cloudflare pour un event de quelques jours. Au-delà d'environ 100 000 requêtes par jour, le forfait payant coûte 5 $/mois.
 - Le compteur « en ligne » affiche tout le monde. La liste détaillée est limitée aux 600 premières personnes, pour rester fluide même avec beaucoup de monde.
