@@ -40,7 +40,7 @@ public final class GameAudio {
 
     public static boolean active() { return running && loop != 0L; }
 
-    static long openLoopback() {
+    public static long openLoopback() {
         if (!wanted()) return 0L;
         try {
             long d = SOFTLoopback.alcLoopbackOpenDeviceSOFT((CharSequence) null);
@@ -58,10 +58,10 @@ public final class GameAudio {
         }
     }
 
-    static boolean isLoopback(long device) { return device != 0L && device == loop; }
+    public static boolean isLoopback(long device) { return device != 0L && device == loop; }
 
     /** ajoute le format de rendu (stéréo, 16 bits, 48 kHz) aux attributs du contexte OpenAL */
-    static IntBuffer withFormat(MemoryStack stack, IntBuffer in) {
+    public static IntBuffer withFormat(MemoryStack stack, IntBuffer in) {
         IntBuffer out = stack.callocInt(in.capacity() + 8);
         for (int i = 0; i + 1 < in.limit(); i += 2) { int k = in.get(i); if (k == 0) break; out.put(k).put(in.get(i + 1)); }
         out.put(SOFTLoopback.ALC_FORMAT_CHANNELS_SOFT).put(SOFTLoopback.ALC_STEREO_SOFT);
@@ -70,7 +70,7 @@ public final class GameAudio {
         return out.put(0).flip();
     }
 
-    static void started(long device) {
+    public static void started(long device) {
         if (!isLoopback(device)) return;
         running = true;
         thread = new Thread(() -> render(device), "CapitolTV-son");
@@ -79,7 +79,7 @@ public final class GameAudio {
         thread.start();
     }
 
-    static void stopping(long device) {
+    public static void stopping(long device) {
         if (!isLoopback(device)) return;
         running = false;
         Thread t = thread;
