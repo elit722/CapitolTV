@@ -20,7 +20,7 @@ public class StreamScreen extends Screen {
     private final boolean first;
     private TextFieldWidget keyField;
     private String keyDraft;
-    private int px, py, pw, ph;
+    private int px, py, pw, ph, step = 26;
     private String msg = "";
     private long msgUntil;
 
@@ -39,7 +39,9 @@ public class StreamScreen extends Screen {
         ClientConfig c = ClientConfig.get();
         pw = Math.min(360, width - 20);
         int cards = Quality.ALL.size();
-        ph = Math.min(height - 16, 74 + cards * 26 + 58);
+        // hauteur des cartes adaptée aux petits écrans
+        step = Math.max(20, Math.min(26, (height - 16 - 108) / cards));
+        ph = 108 + cards * step;
         px = (width - pw) / 2; py = (height - ph) / 2;
         int x = px + 12, w = pw - 24, y = py + 40;
 
@@ -66,7 +68,7 @@ public class StreamScreen extends Screen {
         for (Quality.Level l : Quality.ALL) {
             final String id = l.id();
             boolean over = !"off".equals(id) && Quality.rank(id) > capRank;
-            CtvButton b = new CtvButton(x, y, w, 22, l.name() + "   " + l.spec(), () -> {
+            CtvButton b = new CtvButton(x, y, w, step - 4, l.name() + "   " + l.spec(), () -> {
                 saveKey();
                 Quality.choose(id);
                 say("off".equals(id) ? "Aucune image ne sera envoyée" : "Qualité enregistrée : " + Quality.of(id).name());
@@ -75,7 +77,7 @@ public class StreamScreen extends Screen {
             b.selected = id.equals(cur);
             if (over) b.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(Text.literal("Au-dessus du maximum fixé par la régie : tu enverras " + Quality.of(Quality.cap).spec())));
             addDrawableChild(b);
-            y += 26;
+            y += step;
         }
         y += 4;
         int bw = (w - 6) / 2;
@@ -133,7 +135,7 @@ public class StreamScreen extends Screen {
             st = "● En direct vers la régie" + ap; col = Ui.GREEN;
         } else { st = Streamer.status(); col = Ui.GOLD_HI; }
         if (System.currentTimeMillis() < msgUntil) { st = msg; col = Ui.GOLD_HI; }
-        ctx.drawText(textRenderer, textRenderer.trimToWidth(st, w), x, py + ph - 14, col, false);
+        ctx.drawText(textRenderer, textRenderer.trimToWidth(st, w), x, py + ph - 13, col, false);
         // pastilles « conseillé » / « limite régie »
         int y = py + 66;
         int capRank = Quality.cap.isEmpty() ? 99 : Quality.rank(Quality.cap);
@@ -141,9 +143,9 @@ public class StreamScreen extends Screen {
             String tag = "std".equals(l.id()) ? "CONSEILLÉ" : !"off".equals(l.id()) && Quality.rank(l.id()) > capRank ? "LIMITÉ" : "";
             if (!tag.isEmpty()) {
                 int tw = textRenderer.getWidth(tag) + 8;
-                Ui.pill(ctx, tag, x + w - tw - 4, y + 5, tag.startsWith("C") ? 0xFF2A2620 : 0xFF3A1A1C, tag.startsWith("C") ? Ui.GOLD_HI : 0xFFE89A90);
+                Ui.pill(ctx, tag, x + w - tw - 4, y + (step - 4 - 12) / 2, tag.startsWith("C") ? 0xFF2A2620 : 0xFF3A1A1C, tag.startsWith("C") ? Ui.GOLD_HI : 0xFFE89A90);
             }
-            y += 26;
+            y += step;
         }
     }
 }
