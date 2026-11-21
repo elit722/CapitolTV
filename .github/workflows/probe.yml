@@ -24,7 +24,7 @@ jobs:
           for J in $(find ~/.gradle .gradle -name "*sources*.jar" 2>/dev/null | grep -i minecraft | grep -iv "fabric-api\|loader" ); do
             echo "$J" >> ../probe/mc/jars.txt
             unzip -l "$J" | awk '{print $4}' | grep -iE "tracy|ScreenshotRecorder|blaze3d/systems/(CommandEncoder|GpuDevice|RenderPass|RenderSystem)\.java|blaze3d/buffers/GpuBuffer|textures/GpuTexture\.java|client/gl/(Framebuffer|SimpleFramebuffer|RenderPipelines)\.java|opengl/GlCommandEncoder|GpuFence|blaze3d/opengl/GlStateManager" >> ../probe/mc/list.txt || true
-            for f in $(unzip -l "$J" | awk '{print $4}' | grep -iE "tracy|ScreenshotRecorder\.java|blaze3d/systems/(CommandEncoder|GpuDevice|RenderPass)\.java|blaze3d/buffers/(GpuBuffer|GpuFence)\.java|textures/GpuTexture\.java|client/gl/(Framebuffer|SimpleFramebuffer)\.java|opengl/GlCommandEncoder\.java"); do
+            for f in $(unzip -l "$J" | awk '{print $4}' | grep -iE "client/sound/(SoundEngine|SoundSystem|SoundManager|AlUtil|Source|SoundListener)\.java"); do
               unzip -o -q "$J" "$f" -d ../probe/mc/src || true
             done
           done
@@ -33,4 +33,4 @@ jobs:
         working-directory: .
         run: |
           git config user.name ci; git config user.email ci@users.noreply.github.com
-          git add probe && git commit -m "sonde sources [skip ci]" && git pull --rebase && git push
+          git add probe && git commit -m "sonde sources son [skip ci]" && git pull --rebase && git push
