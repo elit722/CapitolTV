@@ -152,7 +152,17 @@ audio.em-md{display:none}
 .gx-poll h5,.gx-bets h5{margin:0 0 .3em;font-size:.72em;letter-spacing:.2em;color:var(--gold)} .gx-poll>b{display:block;font-family:var(--sans);font-size:1.05em;margin-bottom:.4em}
 .gx-poll .op,.gx-bets .op{position:relative;display:flex;justify-content:space-between;padding:.25em .5em;margin-top:.25em;background:rgba(255,255,255,.06);font-family:var(--sans);font-weight:600;overflow:hidden}
 .gx-poll .op i,.gx-bets .op i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,rgba(212,175,55,.55),rgba(212,175,55,.25));z-index:0;transition:width .8s} .gx-poll .op span,.gx-poll .op em,.gx-bets .op span,.gx-bets .op em{position:relative;z-index:1;font-style:normal}
-.gx-map{position:absolute;right:2.2%;bottom:12%;width:min(22%,300px);height:auto;aspect-ratio:1;animation:gxIn .5s ease both}
+.gx-map{position:absolute;right:2.2%;bottom:12%;width:min(22%,300px);height:auto;aspect-ratio:1;animation:gxIn .5s ease both;border-radius:.4cqw;box-shadow:0 0 0 .2cqw rgba(214,178,97,.8),0 .5cqw 1.5cqw rgba(0,0,0,.6)}
+.em-head{position:absolute;right:3%;top:4%;width:9%;max-width:96px;min-width:18px;aspect-ratio:1;image-rendering:pixelated;z-index:3;border-radius:6%;box-shadow:0 0 0 .15cqw rgba(214,178,97,.85),0 .3cqw 1cqw rgba(0,0,0,.6);pointer-events:none;animation:gxIn .5s ease both}
+.em-scr{position:absolute;inset:0;z-index:80;display:grid;place-items:center;text-align:center;color:#f6e2a6;background:radial-gradient(60% 60% at 50% 42%,rgba(214,178,97,.16),transparent 70%),#050506;animation:gxIn .6s ease both}
+.em-scr .in{display:flex;flex-direction:column;align-items:center;gap:1.4cqw}
+.em-scr img{height:22cqh;filter:drop-shadow(0 0 2cqw rgba(214,178,97,.35))}
+.em-scr h2{margin:0;font-family:var(--brand);font-size:4.2cqw;letter-spacing:.22em;background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,var(--gold-lo));-webkit-background-clip:text;background-clip:text;color:transparent}
+.em-scr p{margin:0;font-family:var(--serif);font-size:1.8cqw;letter-spacing:.14em;color:#e8dcc2;text-transform:uppercase}
+.em-scr .cd{font-family:var(--serif);font-size:5cqw;font-weight:700;color:#fff;letter-spacing:.06em;font-variant-numeric:tabular-nums}
+.em-scr .bar{width:34cqw;height:.3cqw;background:rgba(214,178,97,.2);overflow:hidden;border-radius:9px} .em-scr .bar i{display:block;height:100%;width:30%;background:var(--gold);animation:scrBar 2.4s ease-in-out infinite}
+.em-scr.maint h2{font-size:3.4cqw} .em-scr.off .bar{display:none}
+@keyframes scrBar{0%{transform:translateX(-100%)}100%{transform:translateX(340%)}}
 @keyframes gxIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes gxSlide{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:none}}
 @keyframes gxTick{from{transform:translateX(0)}to{transform:translateX(-100%)}}
@@ -235,6 +245,11 @@ audio.em-md{display:none}
 .ci.sel{outline:2px solid var(--gold-hi);z-index:60!important}
 .ci .nm{position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.75);color:#fff;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:3px;white-space:nowrap;max-width:90%;overflow:hidden;text-overflow:ellipsis}
 .ci .au{position:absolute;right:4px;top:4px;font-size:10px;background:var(--gold);color:#140f05;border-radius:3px;padding:0 4px;font-weight:800}
+.ci .snd{border:0;cursor:pointer;font-size:12px;line-height:18px;padding:0 4px;background:rgba(0,0,0,.7);color:#fff;z-index:3} .ci .snd.on{background:var(--gold);color:#140f05}
+.src.blocked{opacity:.55;cursor:not-allowed} .src.blocked .th{filter:grayscale(1)}
+.sec-q{padding:0 8px 6px} .sec-q .inp{height:30px} .sec-s.on{color:var(--gold-hi)}
+.bg-hits{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.swap{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px} .swap .inp{width:150px;height:30px}
 .ci .hd{position:absolute;width:11px;height:11px;background:var(--gold-hi);border:1px solid #000;border-radius:2px;display:none}
 .ci.sel .hd{display:block}
 .ci .hd.nw{left:-6px;top:-6px;cursor:nwse-resize} .ci .hd.ne{right:-6px;top:-6px;cursor:nesw-resize} .ci .hd.sw{left:-6px;bottom:-6px;cursor:nesw-resize} .ci .hd.se{right:-6px;bottom:-6px;cursor:nwse-resize}
@@ -838,7 +853,7 @@ body.overlay #flashLayer{top:40px}
   </div>
   <div class="hactions">
     <button class="btn online-btn" id="onlineBtn" title="Qui est sur Capitol TV en ce moment"><span class="dot"></span><b id="onlineN">0</b><span class="lbl-txt">en ligne</span></button>
-    <button class="btn icon" id="helpBtn" title="Raccourcis clavier (?)"><span data-ic="help"></span></button>
+    <button class="btn icon" id="helpBtn" title="Tips (?)"><span data-ic="help"></span></button>
     <button class="btn icon set-only" id="setBtn" title="Réglages de la régie"><span data-ic="gear"></span></button>
     <a class="btn primary hide" id="guestLogin" href="/auth/login" title="Se connecter avec Discord pour signaler des actions">Se connecter</a>
     <button class="userchip" id="meBtn" title="Mon compte"><img class="av" id="meAv" alt=""><span id="meName">…</span></button>
@@ -1036,6 +1051,7 @@ body.overlay #flashLayer{top:40px}
           <button data-s="sponsors" class="admin-only"><span data-ic="gift"></span>Sponsors</button>
           <button data-s="fund" class="admin-only"><span data-ic="plus"></span>Cagnotte</button>
           <button data-s="theme" class="admin-only"><span data-ic="eye"></span>Apparence</button>
+          <button data-s="secours" class="admin-only"><span data-ic="alert"></span>Secours</button>
           <button data-s="twitch" class="admin-only"><span data-ic="tv"></span>Twitch</button>
           <button data-s="cams" class="admin-only"><span data-ic="map"></span>Carte & caméras</button>
           <button data-s="roles" class="roles-only"><span data-ic="crown"></span>Rôles & permissions</button>
@@ -1406,6 +1422,10 @@ const NET = {
       case 'talk': TALK.onState(m.talk); break;
       case 'banned': S.banned = m.list || {}; refreshSettings('access'); break;
       case 'kicked': this.kicked = true; break;
+      // bascule vers le site de secours : recharger la page suffit (l'ancien site redirige, session comprise)
+      case 'moved': this.moved = true; toastInfo('Changement de serveur', 'Capitol TV passe sur le site de secours…'); setTimeout(() => location.reload(), 1200); break;
+      case 'reload': setTimeout(() => location.reload(), 800); break;
+      case 'perf': RTC.perf = m.perf || {}; if (S.page === 'regie') PROG.renderSources(); break;
       case 'auth': this.auth = true; break;
       case 'fundUp': fundPop(m.amount); break;
       case 'feed': case 'msg': case 'req': case 'reqDel': case 'cams': case 'srv': case 'pos': case 'map': case 'commsClear': CAM.onMsg(m); break;
@@ -2165,12 +2185,13 @@ function renderAlerts() {
     const t = byLogin(a.ch), veiled = S.veil && !S.revealed.has(id);
     return `<div class="al ${a.urgent ? 'urgent' : ''} ${a.handled ? 'done' : ''} ${S.fresh && S.fresh.has(id) ? 'new' : ''}" data-id="${esc(id)}">
       <div class="al-h"><span class="type">${a.urgent ? 'Urgent · ' : ''}${esc(a.type || 'Autre')}${a.src === 'mod' ? ' · en jeu' : ''}</span>${CAM.air(a.ts)}<span class="t">${hhmm(a.ts)}</span></div>
-      <div class="al-who">${t ? `<span style="color:var(--gold)">${pad3(t.num)}</span> ` : ''}${esc(t ? t.name : a.ch)}<small>${t && t.district ? 'District ' + t.district : '@' + esc(a.ch)}</small></div>
+      <div class="al-who">${t ? `<span style="color:var(--gold)">${pad3(t.num)}</span> ` : ''}${esc(t ? t.name : a.who || a.ch)}<small>${t && t.district ? 'District ' + t.district : '@' + esc(a.ch)}</small></div>
       <div class="al-d ${veiled ? 'veiled' : ''}" data-act="reveal" title="${veiled ? 'Cliquer pour afficher' : ''}">${esc(a.detail || '')}</div>
       <div class="al-f">${a.av ? `<img class="av" src="${avSrc(a)}" alt="" style="width:18px;height:18px">` : ''}<span class="by">${a.claimedBy ? `<span class="claim">✓ ${esc(a.claimedBy)}</span>` : 'par ' + esc(a.by || 'Anonyme')}</span>
         ${isStaff() && a.uid && a.uid !== (S.me && S.me.id) ? `<button class="btn xs icon ghost" data-act="ban" title="Retirer l'accès à ${esc(a.by)}">${ic('ban')}</button>` : ''}
         ${!a.claimedBy && !a.handled ? `<button class="btn xs ghost" data-act="claim" title="Indiquer à l'équipe que tu t'en occupes">Je prends</button>` : ''}
-        <button class="btn xs" data-act="watch">${ic('play')}Voir</button>
+        ${a.perf && isStaff() ? `<button class="btn xs" data-act="cutpov" style="color:var(--red-hi)" title="Ne plus capturer la POV de ce joueur">Couper sa POV</button>` : ''}
+        ${a.ch ? `<button class="btn xs" data-act="watch">${ic('play')}Voir</button>` : ''}
         ${a.handled ? `<button class="btn xs ghost" data-act="undo">Rouvrir</button>` : `<button class="btn xs ghost" data-act="done">${ic('check')}Traité</button>`}</div>
     </div>`;
   }).join('') : `<div class="empty">${S.aFilter === 'pending' ? 'Aucune alerte en attente.<br>Les spectateurs signalent les actions depuis chaque flux.' : 'Aucune alerte reçue.'}</div>`;
@@ -2406,7 +2427,7 @@ function revive(t) {
 
 /* Parachute */
 function openGift(t) {
-  const m = modal(`<form id="fGift">${modalHead(`${ic('para')} Parachute argenté`, 'Annonce le cadeau d\'un sponsor à un tribut (les dons eux-mêmes se font sur la page de dons dédiée).' + delayNote())}
+  const m = modal(`<form id="fGift">${modalHead(`${ic('para')} Parachute argenté`, 'Annonce le cadeau d\'un sponsor à un tribut (les dons eux-mêmes se font sur la page de dons dédiée). Immédiat (sans différé).')}
     <div class="modal-b">
       <label class="f"><span class="lbl2">Tribut</span><select class="inp" id="gTo">${tributeOptions(t ? t.login : S.slots[S.active], x => !isDead(x))}</select></label>
       <div class="row"><label class="f"><span class="lbl2">Sponsor</span><input class="inp" id="gFrom" maxlength="40" placeholder="Pseudo du donateur" autofocus></label>
@@ -2427,7 +2448,7 @@ function openGift(t) {
 
 /* Flash info */
 function openFlash() {
-  const m = modal(`<form id="fFl">${modalHead(`${ic('mega')} Annonce à l'antenne`, 'S\'affiche en grand chez tous les spectateurs (et dans l\'overlay OBS).' + delayNote())}
+  const m = modal(`<form id="fFl">${modalHead(`${ic('mega')} Annonce à l'antenne`, 'S\'affiche en grand chez tous les spectateurs (et dans l\'overlay OBS). Immédiat (sans différé).')}
     <div class="modal-b">
       <label class="f"><span class="lbl2">Titre</span><input class="inp" id="flT" maxlength="80" autofocus placeholder="Le Festin aura lieu à l'aube"></label>
       <label class="f"><span class="lbl2">Texte <em>facultatif</em></span><textarea class="inp" id="flX" maxlength="240" placeholder="Chaque district trouvera à la Corne d'abondance ce dont il a désespérément besoin…"></textarea></label>
@@ -2450,7 +2471,7 @@ function openFlash() {
 function openHommage() {
   const dead = S.board.tributes.filter(isDead).sort((a, b) => (a.diedAt || 0) - (b.diedAt || 0));
   const since = S.board.lastHommage || 0;
-  const m = modal(`<form id="fHo">${modalHead(`${ic('moon')} Hommage aux tombés`, 'Ciel nocturne plein écran chez tous les spectateurs, comme à la fin de chaque journée des Jeux.' + delayNote())}
+  const m = modal(`<form id="fHo">${modalHead(`${ic('moon')} Hommage aux tombés`, 'Ciel nocturne plein écran chez tous les spectateurs, comme à la fin de chaque journée des Jeux. Immédiat (sans différé).')}
     <div class="modal-b">
       <label class="f"><span class="lbl2">Titre</span><input class="inp" id="hoT" maxlength="60" value="${S.board.day ? 'Ils sont tombés au jour ' + S.board.day : 'Ils sont tombés aujourd\'hui'}"></label>
       <div class="f"><span class="lbl2">Tributs affichés <em>cochés : tombés depuis le dernier hommage</em></span>
@@ -2483,7 +2504,7 @@ function openMark() {
 
 /* Aide */
 function openHelp() {
-  modal(`${modalHead('Raccourcis clavier', 'Comme une télécommande : tape un numéro de canal pour zapper.')}
+  modal(`${modalHead('Tips', 'Raccourcis clavier et astuces. Comme une télécommande : tape un numéro de canal pour zapper.')}
     <div class="modal-b"><div class="keys">
       <h5>Zapping</h5>
       <span><kbd>0</kbd>–<kbd>9</kbd></span><span>Taper un numéro de canal (jusqu'à 3 chiffres, validation auto ou <kbd>Entrée</kbd>)</span>
@@ -2504,6 +2525,11 @@ function openHelp() {
       <span><kbd>A</kbd></span><span>Onglet Alertes</span>
       <span><kbd>M</kbd></span><span>Marquer le moment</span>
       <span><kbd>Échap</kbd></span><span>Fermer</span>
+      <h5>Réalisation</h5>
+      <span><kbd>T</kbd> · <kbd>A</kbd></span><span>À l'antenne · Appliquer les modifs (mode manuel)</span>
+      <span><kbd>1</kbd>–<kbd>9</kbd></span><span>Choisir le plan dans l'aperçu</span>
+      <h5>OBS</h5>
+      <span>Clic droit</span><span>OBS : clic droit sur la source › <b>Interagir</b> pour accepter les demandes Twitch (contenu sensible…)</span>
     </div></div>
     <div class="modal-f"><button class="btn primary" data-close>Compris</button></div>`);
 }
@@ -2511,7 +2537,7 @@ function openHelp() {
 /* =====================================================================
    Réglages régie
    ===================================================================== */
-const ADMIN_SECTIONS = ['tributes', 'games', 'twitch', 'lock', 'sponsors', 'fund', 'cams', 'theme'];
+const ADMIN_SECTIONS = ['tributes', 'games', 'twitch', 'lock', 'sponsors', 'fund', 'cams', 'theme', 'secours'];
 function openSettings(sec) {
   if (!isStaff() && !hasPerm('roles')) return;
   if (sec) S.setSection = sec;
@@ -2617,6 +2643,22 @@ function renderSettings() {
       ${b.tributes.filter(t => !t.discordId).length ? `<p class="note" style="margin-bottom:0">Pas encore liés : ${b.tributes.filter(t => !t.discordId).slice(0, 30).map(t => esc(t.name)).join(', ')}${b.tributes.filter(t => !t.discordId).length > 30 ? '…' : ''}</p>` : ''}
     </div>
     <p class="note"><b style="color:var(--warn)">Limite :</b> Capitol TV ferme ses propres lecteurs, mais ne peut pas empêcher quelqu'un d'aller directement sur Twitch. Le reste relève du règlement de l'event.</p>`;
+  } else if (sec === 'secours') {
+    const saved = (() => { try { return localStorage.getItem('ctv_backup') || ''; } catch (e) { return ''; } })();
+    P.innerHTML = `<div class="sect"><h4>${ic('alert')} Site de secours (2e compte Cloudflare)</h4>
+      <p class="note" style="margin-top:0">Si les 1 000 Go vidéo gratuits sont épuisés : un clic bascule <b>tout le monde</b> vers le site de secours. L'état complet (tributs, équipe, plans, clés, réglages…) y est copié ; le site, les mods des joueurs et des caméras, le mod serveur et OBS changent d'adresse tout seuls, même ceux qui se reconnectent des jours plus tard. Personne n'a à se reconnecter.</p>
+      <p class="note">Préparer le 2e site une fois pour toutes : voir README, section « Site de secours » (même code, même <code>SESSION_SECRET</code>, même <code>OVERLAY_KEY</code>, son propre serveur vidéo).</p>
+      <label class="f"><span class="lbl2">Adresse du site de secours</span><input class="inp" id="foUrl" value="${esc(saved)}" placeholder="https://capitol-tv.compte2.workers.dev"></label>
+      <div class="gx-row"><button class="btn" id="foTest">Tester la liaison</button><span class="note" id="foSt" style="flex:1"></span></div>
+      <div class="gx-row" style="margin-top:12px"><button class="btn danger" id="foGo">Basculer tout le monde vers ce site</button></div>
+      <p class="note" style="margin-top:10px">Pour revenir plus tard : fais la même chose depuis le site de secours, avec l'adresse de ce site-ci (${esc(location.origin)}).</p></div>`;
+    const url = () => { const v = $('#foUrl').value.trim().replace(/\/+$/, ''); try { localStorage.setItem('ctv_backup', v); } catch (e) {} return v; };
+    $('#foTest').onclick = () => { $('#foSt').textContent = 'Test…'; NET.req({ t: 'failover', to: url() }).then(r => { const p = r.ping || {}; $('#foSt').innerHTML = `<span class="ok">Joignable ✓</span> · vidéo ${p.rtc ? 'prête' : '<b style="color:var(--red-hi)">non configurée</b>'} · clips ${p.clips ? 'ok' : 'non'} · médias ${p.media ? 'ok' : 'non'}`; }, e => { $('#foSt').innerHTML = `<span style="color:var(--red-hi)">${esc(e.message)}</span>`; }); };
+    $('#foGo').onclick = e => {
+      const b = e.currentTarget; if (!b.dataset.sure) { b.dataset.sure = 1; b.textContent = 'Confirmer : tout le monde part sur ' + url() + ' ?'; setTimeout(() => { if (b.isConnected) { b.dataset.sure = ''; b.textContent = 'Basculer tout le monde vers ce site'; } }, 5000); return; }
+      b.disabled = true; b.textContent = 'Copie et bascule…';
+      NET.req({ t: 'failover', to: url(), go: true, from: location.origin }).then(() => toastInfo('Bascule faite', 'Tout le monde passe sur le site de secours.'), er => { b.disabled = false; b.textContent = 'Basculer tout le monde vers ce site'; toastInfo('Bascule impossible', er.message, true); });
+    };
   } else if (sec === 'theme') {
     const t = b.theme || {};
     P.innerHTML = `<div class="sect"><h4>${ic('eye')} Apparence de l'émission</h4>
@@ -2775,6 +2817,7 @@ function renderSettings() {
       <p class="note" style="margin-bottom:0">Pour le jeton du site (comms, carte, actions) : chacun le génère depuis « Mon compte » et le colle dans le mod (touche K › Réglages).</p>
       ${isAdmin() ? `<h4 style="margin:14px 0 6px">Qualité maximale des flux Capitol TV</h4>
       <p class="note" style="margin-top:0">Chaque joueur choisit sa qualité dans le mod (touche K) ; ce plafond s'applique par-dessus. Les flux Capitol TV ne sont visibles que par l'équipe et la page OBS : les spectateurs du site voient les POV Twitch.</p>
+      <label class="switch" style="margin:0 0 10px"><input type="checkbox" id="capOn" ${RTC.capOff ? '' : 'checked'}> <b>Capture vidéo des joueurs et caméras</b> <span class="note">(décocher coupe toutes les POV du mod et d'OBS)</span></label>
       ${(() => { const u = RTC.use || { gb: 0, budget: 900 }, pc = Math.min(100, Math.round(u.gb / Math.max(1, u.budget) * 100)); return `<div class="use"><div class="use-t"><b>Ce mois-ci : ${u.gb.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} Go</b><span>${u.gb > 1000 ? 'au-delà des 1 000 Go gratuits : ≈ ' + ((u.gb - 1000) * 0.05).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' $' : 'gratuit jusqu\'à 1 000 Go'}</span></div><div class="bar"><i style="width:${pc}%;${u.save ? 'background:var(--warn)' : ''}"></i></div>
         <label class="f" style="margin:8px 0 0"><span class="lbl2">Budget : au-delà, la régie passe automatiquement en qualité légère (la sortie OBS reste en pleine qualité)</span><select class="inp" id="useBudget">${[300, 500, 700, 900, 1500, 2000, 5000].map(g => `<option value="${g}" ${u.budget === g ? 'selected' : ''}>${g.toLocaleString('fr-FR')} Go${g > 1000 ? ' (≈ ' + ((g - 1000) * 0.05) + ' $ max)' : ''}</option>`).join('')}</select></label>
         ${u.save ? '<p class="note" style="color:var(--warn);margin:6px 0 0">Budget atteint : économie activée.</p>' : ''}<p class="note" style="margin:6px 0 0">Mesuré par les écrans de la régie et la page OBS. Le compteur Cloudflare officiel est dans le tableau de bord, rubrique Realtime.</p></div>`; })()}
@@ -2815,6 +2858,7 @@ function settingsEvents() {
   });
   P.addEventListener('change', e => {
     if (e.target.id === 'useBudget') NET.req({ t: 'rtcBudget', gb: +e.target.value });
+    if (e.target.id === 'capOn') NET.req({ t: 'rtcCfg', capOff: !e.target.checked }).then(() => { RTC.capOff = !e.target.checked; toastInfo(e.target.checked ? 'Capture vidéo réactivée' : 'Capture vidéo coupée', e.target.checked ? 'Les POV reviennent d\'ici 30 secondes.' : 'Plus aucune POV n\'est envoyée.'); });
     if (e.target.matches('[data-vq]')) {
       const vq = {}; $$('[data-vq]', P).forEach(x => { vq[x.dataset.vq] = x.value; });
       NET.req({ t: 'rtcCfg', vq }).then(() => toastInfo('Réglage enregistré', 'Les flux suivent ce maximum dès leur prochaine connexion.'), x => toastInfo('Réglage', x.message, true));
@@ -3376,6 +3420,7 @@ const RTC = {
     this.pubs = m.pubs || {}; this.on = !!(m.rtc && m.rtc.on); this.pub = !!(m.rtc && m.rtc.pub);
     if (m.skeys) this.keys = m.skeys; this.mykeys = m.mykeys || {}; this.vpref = (m.rtc && m.rtc.vpref) || {};
     if (m.rtc && m.rtc.use) this.use = m.rtc.use;
+    this.perf = (m.rtc && m.rtc.perf) || {}; this.capOff = !!(m.rtc && m.rtc.capOff);
     this.prune();
     clearInterval(this.useT); this.useT = setInterval(() => this.report(), 60000);
   },
@@ -3891,6 +3936,7 @@ class Stage {
       this.trT1 = setTimeout(() => this.layout(true), ms * .45);
       this.trT2 = setTimeout(() => tr.classList.remove('go'), ms + 50);
     } else this.layout(shot);
+    this.renderScreen();
   }
   layout(newShot) {
     const st = this.el, p = this.pub;
@@ -3910,7 +3956,7 @@ class Stage {
       const md = it.k === 'media' ? '' : it.src ? RTC.mode(it.src, it.vsrc || 'auto', it.login) : 'twitch';
       const key = it.k === 'media' ? 'm:' + it.ref : (md && md !== 'twitch' ? 'r:' + it.src : 'tw:' + it.login); keep.add(key);
       let el = this.players.get(key);
-      const muted = !(this.o.sound && it.audio);
+      const muted = !(this.o.sound && it.audio) || !!(p.screen);
       if (!el) {
         el = document.createElement('div'); el.className = 'em-it gone';
         if (it.d) el.style.transitionDelay = '0s,0s,0s,0s,' + it.d + 'ms,' + it.d + 'ms';
@@ -3959,6 +4005,34 @@ class Stage {
     let le = el.querySelector('.em-lab');
     if (lab && (!le || le.dataset.h !== lab || newShot)) { if (le) le.remove(); le = document.createElement('div'); le.className = 'em-lab'; le.dataset.h = lab; le.innerHTML = lab; el.appendChild(le); }
     else if (!lab && le) le.remove();
+    // tête Minecraft du joueur en haut à droite de sa POV
+    let hd = el.querySelector(':scope > .em-head'); const want = it.head && it.mc ? 'https://mc-heads.net/avatar/' + encodeURIComponent(it.mc) + '/96' : '';
+    if (want && (!hd || hd.dataset.u !== want)) { if (hd) hd.remove(); hd = document.createElement('img'); hd.className = 'em-head'; hd.dataset.u = want; hd.src = want; hd.alt = ''; hd.onerror = () => hd.remove(); el.appendChild(hd); }
+    else if (!want && hd) hd.remove();
+  }
+  /* écran « hors antenne » / « maintenance » par-dessus l'émission */
+  renderScreen() {
+    const sc = this.pub && this.pub.screen, key = sc ? sc.kind + ':' + sc.at : '';
+    let box = this.el.querySelector(':scope > .em-scr');
+    if (key !== this.scrKey) {
+      const tr = this.el.querySelector(':scope > .em-tr');
+      if (this.scrKey !== undefined && tr && (this.pub.trans || {}).type !== 'cut') { tr.className = 'em-tr'; tr.style.setProperty('--d', '1400ms'); void tr.offsetWidth; tr.classList.add('go'); clearTimeout(this.scrT); this.scrT = setTimeout(() => tr.classList.remove('go'), 1450); }
+      this.scrKey = key;
+      const swap = () => {
+        box = this.el.querySelector(':scope > .em-scr'); if (box) box.remove();
+        if (!sc) { this.layout(false); return; }
+        box = document.createElement('div'); box.className = 'em-scr ' + sc.kind;
+        box.innerHTML = `<div class="in">${LOGO_OK ? `<img src="${esc(CONFIG.logoFull)}" alt="">` : logo(120)}<h2>${sc.kind === 'off' ? 'HORS ANTENNE' : 'MAINTENANCE EN COURS'}</h2>
+          <p>${esc(sc.msg || (sc.kind === 'off' ? brandName() + ' revient bientôt' : 'Retour du direct'))}</p>${sc.kind === 'maint' ? `<div class="cd"></div><div class="bar"><i></i></div>` : ''}</div>`;
+        this.el.appendChild(box); this.tickScreen(); this.layout(false);
+      };
+      if (this.scrKey && tr && tr.classList.contains('go')) setTimeout(swap, 600); else if (tr && tr.classList.contains('go')) setTimeout(swap, 600); else swap();
+    }
+  }
+  tickScreen() {
+    const sc = this.pub && this.pub.screen, cd = this.el.querySelector(':scope > .em-scr .cd'); if (!sc || !cd) return;
+    const left = sc.until ? Math.max(0, Math.ceil((sc.until - nowS()) / 1000)) : -1;
+    cd.textContent = left < 0 ? 'dès que possible' : left === 0 ? 'imminent' : 'dans ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
   }
   /* lecteurs Capitol TV gardés 90 s après la sortie d'antenne (pour les replays) */
   dpFor(src, layer) {
@@ -3997,7 +4071,7 @@ class Stage {
       G.map && G.map.on ? `<canvas class="gx-map" width="320" height="320"></canvas>` : ''
     ].join('');
     if (g.dataset.h !== html) { g.dataset.h = html; g.innerHTML = html; }
-    if (G.map && G.map.on) PROG.drawMini(g.querySelector('.gx-map'));
+    if (G.map && G.map.on) PROG.drawMini(g.querySelector('.gx-map'), this.mainTrib());
     if (this.o.extras) { this.renderReplay(); this.renderClip(); }
     else this.renderTags();
   }
@@ -4053,13 +4127,28 @@ class Stage {
       }
       PROG.syncOne(this.sfxEl, fx.at, fx.loop, fx.vol, this.o.sound, this);
     } else if (this.sfxEl) { this.sfxEl.pause(); this.sfxEl.remove(); this.sfxEl = null; }
+    // musique de fond (playlist en boucle, synchronisée pour tout le monde)
+    const bg = p && p.on && !p.screen ? p.bgm : null;
+    if (bg && bg.tracks.length) {
+      const durs = bg.tracks.map(t => Math.max(1, t.dur || 180)), tot = durs.reduce((a, b) => a + b, 0);
+      let t = ((nowS() - (bg.at || nowS())) / 1000) % tot; if (t < 0) t = 0; let i = 0;
+      while (t >= durs[i] && i < durs.length - 1) { t -= durs[i]; i++; }
+      const tr = bg.tracks[i], key = tr.id + ':' + bg.at + ':' + i;
+      if (!this.bgmEl || this.bgmEl.dataset.k !== key) {
+        if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); }
+        this.bgmEl = document.createElement('audio'); this.bgmEl.preload = 'auto'; this.bgmEl.dataset.k = key; this.bgmEl.src = PROG.mediaURL(tr.id); this.el.appendChild(this.bgmEl);
+      }
+      PROG.syncOne(this.bgmEl, nowS() - t * 1000, false, bg.vol, this.o.sound, this);
+    } else if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; }
   }
-  tick() { this.syncMedia(); const m = this.el.querySelector(':scope > .em-gfx .gx-map'); if (m) PROG.drawMini(m); }
+  tick() { this.syncMedia(); this.tickScreen(); const m = this.el.querySelector(':scope > .em-gfx .gx-map'); if (m) PROG.drawMini(m, this.mainTrib()); }
+  /* POV principale : la plus grande à l'écran */
+  mainTrib() { const p = this.pub, big = p && p.on ? (p.items || []).filter(i => i.k === 'trib').sort((a, b) => b.w * b.h - a.w * a.h)[0] : null; return big ? big.ref : ''; }
   destroy() {
     clearTimeout(this.trT1); clearTimeout(this.trT2);
     for (const el of this.players.values()) { const md = el.querySelector('.em-md'); if (md && md.pause) md.pause(); }
     for (const e of this.dps.values()) { clearTimeout(e.t); e.dp.destroy(); }
-    if (this.sfxEl) this.sfxEl.pause();
+    if (this.sfxEl) this.sfxEl.pause(); if (this.bgmEl) this.bgmEl.pause();
     this.players.clear(); this.dps.clear(); this.el.innerHTML = '';
   }
 }
@@ -4109,7 +4198,7 @@ const PROG = {
     if (m.t === 'prog') {
       this.pub = m.p; this.markNav();
       if (S.page === 'direct') { this.applyDirect(!!m.cut); CAM.mapSub(this.wantsMap()); }
-      if (S.page === 'regie') { this.renderPgm(); this.renderReplayPanel(); if (this.pgmStage) this.pgmStage.set(this.pub, !!m.cut); this.renderPv(); }
+      if (S.page === 'regie') { this.renderPgm(); this.renderReplayPanel(); this.renderScreenBtns(); if (document.activeElement && document.activeElement.id !== 'bgQ') this.renderBgm(); if (this.pgmStage) this.pgmStage.set(this.pub, !!m.cut); this.renderPv(); }
       if (IS_OVERLAY && !this.main) this.renderGfx();
       renderTeam(); CAM.renderTerrain();
     } else if (m.t === 'onair') {
@@ -4202,43 +4291,54 @@ const PROG = {
   mons() { return [this.pgmStage, this.pvStage].filter(Boolean); },
   /* carte incrustée : positions avec le différé (même pour l'équipe) */
   posHist: [],
-  drawMini(cv) {
+  /* carte carrée centrée sur la POV principale ; au changement de POV : dézoom puis zoom sur la nouvelle */
+  drawMini(cv, main) {
     if (!cv) return;
     const D = (S.board.delay || 0) * 1000, full = isCrew() && !S.presenter;
     let pos = CAM.pos || {};
     if (full && D) { const want = Date.now() - D; let best = null; for (const h of this.posHist) if (h.ts <= want) best = h; pos = best ? best.p : {}; }
-    const pts = Object.entries(pos).map(([id, q]) => [byId(id), q]).filter(([t, q]) => t && q && q.d === 'minecraft:overworld' && !isDead(t));
-    const c = cv.getContext('2d'), W = cv.width;
-    c.clearRect(0, 0, W, W);
-    c.fillStyle = 'rgba(8,8,10,.82)'; c.beginPath(); c.arc(W / 2, W / 2, W / 2 - 2, 0, Math.PI * 2); c.fill();
-    c.strokeStyle = 'rgba(212,175,55,.8)'; c.lineWidth = 3; c.stroke();
-    if (!pts.length) return;
-    const xs = pts.map(x => x[1].x), zs = pts.map(x => x[1].z);
-    const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cz = (Math.min(...zs) + Math.max(...zs)) / 2;
-    const span = Math.max(80, Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs)) * 1.3, k = (W - 40) / span;
-    c.font = '600 15px Barlow Condensed, sans-serif'; c.textAlign = 'center';
-    for (const [t, q] of pts) {
-      const x = W / 2 + (q.x - cx) * k, y = W / 2 + (q.z - cz) * k;
-      c.fillStyle = t.status === 'injured' ? '#e89a3c' : '#5fbf6a'; c.beginPath(); c.arc(x, y, 6, 0, Math.PI * 2); c.fill();
-      c.fillStyle = '#fff'; c.fillText(t.num ? pad3(t.num) : t.name.slice(0, 6), x, y - 10);
-    }
-  },
-  renderReplay() {
-    const st = $('#emStage'); if (!st) return;
-    const r = this.pub && this.pub.replay;
-    let box = st.querySelector('.em-replay');
-    if (!r) { if (box) box.remove(); this.rpKey = ''; return; }
-    const key = r.src + ':' + r.at;
-    if (this.rpKey === key) return;
-    this.rpKey = key; if (box) box.remove();
-    const e = this.dps.get(r.src), v = e && e.dp.replay(r.sec, r.rate);
-    if (!v) return;
-    box = document.createElement('div'); box.className = 'em-replay';
-    box.appendChild(v);
-    box.insertAdjacentHTML('beforeend', `<div class="rp-tag"><b>REPLAY</b><span>${esc(r.name || '')}${r.rate < 1 ? ' · ralenti ×' + r.rate : ''}</span></div>`);
-    st.appendChild(box);
-    const left = Math.max(1000, r.end - nowS());
-    setTimeout(() => { if (this.rpKey === key) { box.classList.add('gone'); setTimeout(() => box.remove(), 500); } }, left);
+    const pts = Object.entries(pos).map(([id, q]) => [byId(id), q, id]).filter(([t, q]) => t && q && q.d === 'minecraft:overworld' && !isDead(t));
+    const st = cv._st || (cv._st = { x: 0, z: 0, span: 200, anim: null, main: '' });
+    st.pts = pts; st.mainId = main;
+    const mp = main && pts.find(x => x[2] === main);
+    let tgt;
+    if (mp) tgt = { x: mp[1].x, z: mp[1].z, span: 160 };
+    else if (pts.length) { const xs = pts.map(x => x[1].x), zs = pts.map(x => x[1].z); tgt = { x: (Math.min(...xs) + Math.max(...xs)) / 2, z: (Math.min(...zs) + Math.max(...zs)) / 2, span: Math.max(80, Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs)) * 1.3 }; }
+    else tgt = { x: st.x, z: st.z, span: st.span };
+    if (main !== st.main && st.main && mp) {
+      // dézoom sur l'ancienne position puis zoom sur la nouvelle POV principale
+      const from = { x: st.x, z: st.z, span: st.span }, mid = { x: (from.x + tgt.x) / 2, z: (from.z + tgt.z) / 2, span: Math.max(320, Math.hypot(from.x - tgt.x, from.z - tgt.z) * 1.5, from.span, tgt.span) };
+      st.anim = { t0: performance.now(), dur: 1800, from, mid, to: tgt };
+    } else if (!st.anim) Object.assign(st, tgt);
+    else st.anim.to = tgt;
+    st.main = main;
+    const paint = () => {
+      const c = cv.getContext('2d'), W = cv.width;
+      if (st.anim) {
+        const k = Math.min(1, (performance.now() - st.anim.t0) / st.anim.dur), e = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        const A = k < .5 ? st.anim.from : st.anim.mid, B = k < .5 ? st.anim.mid : st.anim.to, f = e(k < .5 ? k * 2 : (k - .5) * 2);
+        st.x = A.x + (B.x - A.x) * f; st.z = A.z + (B.z - A.z) * f; st.span = A.span + (B.span - A.span) * f;
+        if (k >= 1) st.anim = null; else requestAnimationFrame(paint);
+      }
+      c.clearRect(0, 0, W, W);
+      c.fillStyle = 'rgba(8,8,10,.86)'; c.fillRect(0, 0, W, W);
+      c.strokeStyle = 'rgba(214,178,97,.14)'; c.lineWidth = 1;
+      const k2 = (W - 30) / st.span, grid = st.span > 600 ? 200 : st.span > 250 ? 100 : 50;
+      for (let g = Math.floor((st.x - st.span) / grid) * grid; g < st.x + st.span; g += grid) { const x = W / 2 + (g - st.x) * k2; c.beginPath(); c.moveTo(x, 0); c.lineTo(x, W); c.stroke(); }
+      for (let g = Math.floor((st.z - st.span) / grid) * grid; g < st.z + st.span; g += grid) { const y = W / 2 + (g - st.z) * k2; c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
+      c.font = '600 15px Barlow Condensed, sans-serif'; c.textAlign = 'center';
+      for (const [t, q, id] of st.pts) {
+        const x = W / 2 + (q.x - st.x) * k2, y = W / 2 + (q.z - st.z) * k2;
+        if (x < -10 || y < -10 || x > W + 10 || y > W + 10) continue;
+        const isMain = id === st.mainId;
+        c.fillStyle = isMain ? '#f6e2a6' : t.status === 'injured' ? '#e89a3c' : '#5fbf6a';
+        c.beginPath(); c.arc(x, y, isMain ? 8 : 5.5, 0, Math.PI * 2); c.fill();
+        if (isMain) { c.strokeStyle = 'rgba(246,226,166,.5)'; c.lineWidth = 2; c.beginPath(); c.arc(x, y, 14, 0, Math.PI * 2); c.stroke(); }
+        c.fillStyle = '#fff'; c.fillText(t.num ? pad3(t.num) : t.name.slice(0, 6), x, y - 12);
+      }
+      c.strokeStyle = 'rgba(214,178,97,.85)'; c.lineWidth = 3; c.strokeRect(1.5, 1.5, W - 3, W - 3);
+    };
+    paint();
   },
   /* lecture synchronisée : tout le monde est au même endroit du média */
   syncOne(md, at, loop, vol, wantSound, stage) {
@@ -4262,7 +4362,7 @@ const PROG = {
   },
   sources() {
     const cams = S.team.filter(m => m.twitch || RTC.live('c:' + m.id)).map(m => ({ k: 'cam', ref: m.id, login: m.twitch, name: m.name, sub: (roleOf(m) || {}).name || 'Caméra', live: liveOf(m.twitch), ctv: RTC.live('c:' + m.id) && (m.vsrc || 'auto') !== 'twitch' }));
-    const tribs = sortedByNum().map(t => ({ k: 'trib', ref: t.id, login: t.login, name: t.name, sub: pad3(t.num) + (t.district ? ' · D' + t.district : '') + (isDead(t) ? ' · tombé' : ''), live: liveOf(t.login), dead: isDead(t), ctv: RTC.live('t:' + t.id) && (t.vsrc || 'auto') !== 'twitch' }));
+    const tribs = sortedByNum().map(t => ({ k: 'trib', ref: t.id, login: t.login, mc: t.mc || '', name: t.name, sub: pad3(t.num) + (t.district ? ' · D' + t.district : '') + (isDead(t) ? ' · tombé' : ''), live: liveOf(t.login), dead: isDead(t), ctv: RTC.live('t:' + t.id) && (t.vsrc || 'auto') !== 'twitch' }));
     tribs.sort((a, b) => a.dead - b.dead);
     return { cams, tribs };
   },
@@ -4281,9 +4381,10 @@ const PROG = {
       if (md) return f(md) ? this.mediaRow(md) : '';
       return `<div class="src smd vide" data-pick="${sl.slot}" data-accept="${sl.kind}/*" title="Cliquer pour importer le fichier (ou le déposer sur la liste)"><div class="th md">＋</div><div style="min-width:0"><b>${esc(sl.name)}</b><small>${sl.kind === 'video' ? 'Vidéo' : 'Son'} · à importer</small></div></div>`;
     }).join('');
-    const others = this.media.filter(x => !x.slot && f(x)).map(md => this.mediaRow(md)).join('');
+    const q2 = (this.secQ.media || '').toLowerCase(), f2 = md => f(md) && (!q2 || md.name.toLowerCase().includes(q2));
+    const others = this.media.filter(x => !x.slot && f2(x)).map(md => this.mediaRow(md)).join('');
     const free = this.ups[''] ? `<div class="src smd up"><div class="th md">⇪</div><div style="flex:1"><b>Envoi en cours</b><small>${this.ups['']}%</small><div class="pbar"><i style="width:${this.ups['']}%"></i></div></div></div>` : '';
-    return `<div class="cp-sec">${ic('live')} Médias <b>${this.media.length}</b><button class="btn sm ghost" data-pick="" data-accept="video/*,audio/*,image/*" style="margin-left:auto" title="Vidéo (mp4, webm), son (mp3, ogg, wav) ou image · 300 Mo max">${ic('plus')}Importer</button></div>${slotRows}${others}${free}`;
+    return `${this.secHead('media', ic('live') + ' Médias', this.media.length, `<button class="btn sm ghost" data-pick="" data-accept="video/*,audio/*,image/*" title="Vidéo (mp4, webm), son (mp3, ogg, wav) ou image · 300 Mo max">${ic('plus')}Importer</button>`)}${q2 ? '' : slotRows}${others}${free}`;
   },
   async upload(file, slot) {
     const key = slot || '';
@@ -4342,15 +4443,28 @@ const PROG = {
     if (x.ctv) return ' · Capitol TV' + (p && p.lvl && VQ.short[p.lvl] ? ' ' + VQ.short[p.lvl] : p && p.via === 'obs' ? ' (OBS)' : '');
     return pref === 'off' ? ' · <span style="color:var(--ink3)">sans POV</span>' : '';
   },
+  secQ: { media: '', cam: '', trib: '' }, secOpen: {},
+  /* barre de recherche propre à une liste (médias, caméras, tributs) */
+  secHead(k, label, n, extra = '') {
+    const open = this.secOpen[k] || this.secQ[k];
+    return `<div class="cp-sec">${label} <b>${n}</b><button class="btn xs icon ghost sec-s ${open ? 'on' : ''}" data-secs="${k}" title="Rechercher dans cette liste" style="margin-left:auto">${ic('search')}</button>${extra}</div>${open ? `<div class="sec-q"><input class="inp" data-secq="${k}" value="${esc(this.secQ[k])}" placeholder="Rechercher (nom, pseudo, n°)…" autocomplete="off"></div>` : ''}`;
+  },
+  povBlocked(src) { return (RTC.vpref || {})[src] === 'blocked'; },
   renderSources() {
     const L = $('#rgSrc'); if (!L) return;
     const q = ($('#rgQ') && $('#rgQ').value || '').toLowerCase();
     const { cams, tribs } = this.sources();
-    const row = x => `<div class="src ${x.k === 'cam' ? 'scam' : ''}" draggable="true" data-k="${x.k}" data-ref="${esc(x.ref)}" title="Glisser sur l'aperçu · double-clic : plein écran${x.dead ? '' : ''}" style="${x.dead ? 'opacity:.5' : ''}">
-      <div class="th ${x.ctv ? 'ctv' : ''}" style="${x.ctv ? '' : `background-image:url('${thumbURL(x.login)}')`}">${x.ctv ? '<span>CTV</span>' : ''}${x.live || x.ctv ? '<i></i>' : ''}</div><div style="min-width:0"><b>${esc(x.name)}</b><small>${esc(x.sub)}${this.vqTag(x)}</small></div></div>`;
-    const f = list => list.filter(x => !q || (x.name + ' ' + x.sub + ' ' + x.login).toLowerCase().includes(q));
-    L.innerHTML = `${this.renderMediaSec(q)}<div class="cp-sec">${ic('cam')} Caméras <b>${cams.length}</b></div>${f(cams).map(row).join('') || '<div class="note" style="padding:4px 8px">Ajoute la chaîne Twitch des caméras dans leur fiche (page Équipe).</div>'}
-      <div class="cp-sec">${ic('users')} Tributs (POV) <b>${tribs.length}</b></div>${f(tribs).map(row).join('')}`;
+    const row = x => {
+      const src = (x.k === 'trib' ? 't:' : 'c:') + x.ref, bl = this.povBlocked(src), pf = (RTC.perf || {})[src];
+      const lag = pf && pf.base && pf.fps < pf.base * 0.75 && Date.now() - pf.at < 5 * 60000;
+      return `<div class="src ${x.k === 'cam' ? 'scam' : ''} ${bl ? 'blocked' : ''}" ${bl ? '' : 'draggable="true"'} data-k="${x.k}" data-ref="${esc(x.ref)}" title="${bl ? 'Capture coupée : POV inutilisable' : 'Glisser sur l\'aperçu · double-clic : plein écran'}" style="${x.dead ? 'opacity:.5' : ''}">
+      <div class="th ${x.ctv ? 'ctv' : ''}" style="${x.ctv ? '' : `background-image:url('${thumbURL(x.login)}')`}">${x.ctv ? '<span>CTV</span>' : ''}${x.live || x.ctv ? '<i></i>' : ''}</div><div style="min-width:0;flex:1"><b>${esc(x.name)}</b><small>${esc(x.sub)}${bl ? ' · <span style="color:var(--red-hi)">capture coupée</span>' : this.vqTag(x)}${lag ? ` · <span style="color:var(--warn)" title="La capture fait ramer ce joueur">⚠ ${pf.base}→${pf.fps} i/s</span>` : ''}</small></div>
+      ${bl ? `<button class="btn xs ghost" data-pov="unblock" data-src="${esc(src)}" title="Autoriser de nouveau sa capture">Réactiver</button>` : lag ? `<button class="btn xs ghost" data-pov="block" data-src="${esc(src)}" title="Couper la capture de ce joueur">Couper</button>` : ''}</div>`;
+    };
+    const f = (list, k) => { const q2 = (this.secQ[k] || '').toLowerCase(); return list.filter(x => { const h = (x.name + ' ' + x.sub + ' ' + x.login + ' ' + (x.mc || '')).toLowerCase(); return (!q || h.includes(q)) && (!q2 || h.includes(q2)); }); };
+    L.innerHTML = `${this.renderMediaSec(q)}${this.secHead('cam', ic('cam') + ' Caméras', cams.length)}${f(cams, 'cam').map(row).join('') || '<div class="note" style="padding:4px 8px">Ajoute la chaîne Twitch des caméras dans leur fiche (page Équipe).</div>'}
+      ${this.secHead('trib', ic('users') + ' Tributs (POV)', tribs.length)}${f(tribs, 'trib').map(row).join('') || '<div class="note" style="padding:4px 8px">Aucun résultat</div>'}`;
+    const fq = this.secFocus && L.querySelector(`[data-secq="${this.secFocus}"]`); if (fq) { fq.focus(); fq.setSelectionRange(fq.value.length, fq.value.length); }
   },
   renderEditor() {
     if (!hasPerm('program')) return;
@@ -4372,7 +4486,7 @@ const PROG = {
               <div class="rg-row" style="margin-top:10px">
                 <select class="mini-sel" id="rgTr"><option value="logo">Transition logo</option><option value="fade">Fondu</option><option value="cut">Cut</option></select>
                 <input class="inp" id="rgMs" type="number" min="300" max="4000" step="100" style="width:90px;height:30px" title="Durée (ms)">
-                <span style="flex:1"></span><button class="btn sm ghost" id="rgCut" title="Retirer l'émission de l'antenne">Hors antenne</button></div>
+                <span style="flex:1"></span><button class="btn sm ghost" id="rgOff" title="Écran « Hors antenne » par-dessus l'émission (avec transition)">Hors antenne</button><button class="btn sm ghost" id="rgMaint" title="Écran « Maintenance en cours, retour du direct… »">Maintenance…</button><button class="btn sm live hide" id="rgResume">▶ Reprendre le direct</button></div>
               <div class="rg-row" style="margin-top:8px"><span class="note" style="flex:none">Modifs du plan à l'antenne :</span><div class="seg sm" id="rgMode"><button data-mode="auto" title="Chaque déplacement ou ajout part tout de suite à l'antenne">Immédiates</button><button data-mode="manual" title="Rien ne change à l'antenne avant d'appuyer sur Appliquer">Manuelles</button></div></div>
               <button class="btn apply hide" id="rgApply" style="width:100%;margin-top:8px">APPLIQUER LES MODIFS À L'ANTENNE <span style="opacity:.7;font-size:11px;margin-left:6px">(A)</span></button>
               <button class="btn take" id="rgTake" style="width:100%;margin-top:8px">À L'ANTENNE ▶ <span style="opacity:.7;font-size:11px;margin-left:6px">(T)</span></button><div class="note" id="rgWarn" style="margin-top:6px;min-height:16px"></div></div>
@@ -4383,10 +4497,14 @@ const PROG = {
             <div class="sect rg-p"><h4>${ic('grid')} File de plans</h4><div id="rgQueue"></div></div>
             <div class="sect rg-p"><h4>⟲ Replay</h4><div id="rgReplay"></div></div>
             <div class="sect rg-p"><h4>${ic('mic')} Interphone caméras</h4><div id="rgTalk"></div></div>
+            <div class="sect rg-p"><h4>♪ Musique de fond</h4><div id="rgBgm"></div></div>
           </div>
           <div class="rg-row"><b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">PLANS</b><div class="scn" id="rgScenes"></div>
             <button class="btn sm" id="rgNew">${ic('plus')}Nouveau</button><button class="btn sm ghost" id="rgDup">Dupliquer</button><button class="btn sm ghost" id="rgDel" style="color:var(--red-hi)">${ic('trash')}</button></div>
           <div class="rg-row" style="flex-wrap:wrap"><b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">DISPOSITIONS</b>${Object.entries(this.PRESETS).map(([k, [l, L]]) => `<button class="btn sm ghost pre-b" data-pre="${k}" title="${L.length} source${L.length > 1 ? 's' : ''}">${this.preIcon(L)}${l}</button>`).join('')}<button class="btn sm pre-b" id="rgMosaic" title="Choisir combien de POV et lesquels (recherche par pseudo), avec effet d'apparition">${this.preIcon(this.gridOf(9))}Mosaïque…</button></div>
+          <div class="rg-row" style="flex-wrap:wrap"><b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">TOUTES LES POV DU PLAN</b>
+            <button class="btn sm ghost" data-all="rand">🎲 Au hasard</button><button class="btn sm ghost" data-all="next">▶ Suivants vivants</button><button class="btn sm ghost" data-all="near">◎ Plus proches</button>
+            <button class="btn sm ghost" data-all="heads">Têtes : oui / non</button><button class="btn sm ghost" data-all="snd" title="Seule la POV la plus grande a le son">🔊 Son : la principale seule</button></div>
           <div id="rgInsp"></div>
         </div></div>`;
       paintIcons($('#pageView'));
@@ -4394,7 +4512,7 @@ const PROG = {
     }
     $('#rgTitle').value === '' && ($('#rgTitle').value = this.ed.title || '');
     $('#rgTr').value = this.ed.trans.type; $('#rgMs').value = this.ed.trans.ms;
-    this.renderSources(); this.renderScenes(); this.renderCanvas(); this.renderPgm(); this.renderSfx(); this.renderWarn(); this.renderGfxPanel(); this.renderQueue(); this.renderReplayPanel(); TALK.render();
+    this.renderSources(); this.renderScenes(); this.renderCanvas(); this.renderPgm(); this.renderSfx(); this.renderWarn(); this.renderGfxPanel(); this.renderQueue(); this.renderReplayPanel(); TALK.render(); this.renderBgm(); this.renderScreenBtns();
   },
   gfx() { return JSON.parse(JSON.stringify((this.ed && this.ed.gfx) || {})); },
   sendGfx(g, quiet) { this.ed.gfx = g; this.dirty = Date.now(); NET.req({ t: 'progGfx', gfx: g }).catch(e => toastInfo('Habillage', e.message, true)); if (!quiet) this.renderGfxPanel(); this.renderPv(); this.renderMode(); },
@@ -4474,7 +4592,7 @@ const PROG = {
       const bg = !s ? 'background:#3a1016' : s.media || s.ctv ? '' : `background-image:url('${thumbURL(s.login)}')`;
       return `<div class="ci ${edit && it.id === this.sel ? 'sel' : ''} ${s && s.media ? 'cmd ' + s.media.kind : ''}" data-it="${esc(it.id)}" ${edit && it.k === 'cam' ? `data-cam="${esc(it.ref)}"` : ''} style="left:${it.x}%;top:${it.y}%;width:${it.w}%;height:${it.h}%;z-index:${1 + (it.z || 0)};${bg}">
         ${s && s.media ? `<span class="mdi">${s.media.kind === 'video' ? '▶' : s.media.kind === 'image' ? '▣' : '♪'}</span>` : s && s.ctv ? '<span class="mdi ctv">CTV</span>' : ''}
-        <span class="nm">${s ? esc(s.name) : 'Source introuvable'}${it.label === false && !(s && s.media) ? ' · sans nom' : ''}${it.loop ? ' · ⟲' : ''}</span>${it.audio ? '<span class="au">SON</span>' : ''}
+        <span class="nm">${s ? esc(s.name) : 'Source introuvable'}${it.label === false && !(s && s.media) ? ' · sans nom' : ''}${it.loop ? ' · ⟲' : ''}</span>${edit ? `<button class="au snd ${it.audio ? 'on' : ''}" data-snd="${esc(it.id)}" title="${it.audio ? 'Couper le son de cette source' : 'Activer le son de cette source'}">${it.audio ? '🔊' : '🔇'}</button>` : it.audio ? '<span class="au">SON</span>' : ''}
         ${edit ? '<i class="hd nw"></i><i class="hd ne"></i><i class="hd sw"></i><i class="hd se"></i>' : ''}</div>`;
     }).join('') + (!items.length ? `<div class="hint">${edit ? 'Glisse ici des caméras ou des tributs depuis la liste de gauche.' : 'Rien à l\'antenne'}</div>` : '');
   },
@@ -4510,8 +4628,8 @@ const PROG = {
   },
   /* source telle que la page Direct la reçoit du serveur */
   pubSrc(it) {
-    if (it.k === 'trib') { const t = byId(it.ref); return t ? { login: t.login, name: t.name, sub: t.district ? 'District ' + t.district : '', st: t.status, src: 't:' + t.id, vsrc: t.vsrc || 'auto' } : null; }
-    if (it.k === 'cam') { const m = S.team.find(x => x.id === it.ref); return m && (m.twitch || RTC.live('c:' + m.id)) ? { login: m.twitch || '', name: m.name, sub: 'Caméra', src: 'c:' + m.id, vsrc: m.vsrc || 'auto' } : null; }
+    if (it.k === 'trib') { const t = byId(it.ref); return t ? { login: t.login, name: t.name, sub: t.district ? 'District ' + t.district : '', st: t.status, src: 't:' + t.id, vsrc: t.vsrc || 'auto', mc: t.mc || '' } : null; }
+    if (it.k === 'cam') { const m = S.team.find(x => x.id === it.ref); return m && (m.twitch || RTC.live('c:' + m.id)) ? { login: m.twitch || '', name: m.name, sub: 'Caméra', src: 'c:' + m.id, vsrc: m.vsrc || 'auto', mc: m.mc || '' } : null; }
     const md = this.mediaById(it.ref); return md ? { media: md.id, name: md.name, sub: md.kind === 'video' ? 'Vidéo' : md.kind === 'image' ? 'Image' : 'Son', kind: md.kind, mime: md.mime, dur: md.dur || 0 } : null;
   },
   /* ce que donnerait ce plan à l'antenne, avec l'habillage en cours d'édition */
@@ -4566,7 +4684,9 @@ const PROG = {
       ${it.k === 'media' ? `<div class="rg-row" style="margin-top:10px"><label class="switch"><input type="checkbox" data-ib="loop" ${it.loop ? 'checked' : ''}> En boucle</label>
         <label class="f" style="margin:0;flex:0 0 220px;display:flex;align-items:center;gap:8px"><span class="lbl2" style="margin:0">Volume</span><input type="range" min="0" max="100" step="5" data-ik="vol" value="${it.vol == null ? 100 : it.vol}" style="flex:1"></label>
         <span style="flex:1"></span>${this.ed.live === this.ed.preview ? '<button class="btn sm ghost" data-ia="restart">⟲ Reprendre au début</button>' : ''}</div>` : ''}
-      <div class="rg-row" style="margin-top:10px"><label class="switch"><input type="checkbox" data-ib="label" ${it.label !== false ? 'checked' : ''}> Nom à l'écran</label><label class="switch"><input type="checkbox" data-ib="audio" ${it.audio ? 'checked' : ''}> Son de cette source (une seule à la fois)</label>
+      ${it.k === 'trib' ? `<div class="swap"><b style="font-size:11px;letter-spacing:.14em;color:var(--mute)">CHANGER DE POV</b><button class="btn sm ghost" data-sw="rand" title="Un tribut vivant au hasard (pas déjà dans le plan)">🎲 Au hasard</button><button class="btn sm ghost" data-sw="next" title="Tribut vivant suivant (par numéro)">▶ Suivant vivant</button><button class="btn sm ghost" data-sw="near" title="Le tribut le plus proche de celui-ci sur la carte">◎ Le plus proche</button>
+        <input class="inp" id="swIn" placeholder="N° ou pseudo" autocomplete="off"><button class="btn sm" data-sw="find">Afficher</button></div>` : ''}
+      <div class="rg-row" style="margin-top:10px"><label class="switch"><input type="checkbox" data-ib="label" ${it.label !== false ? 'checked' : ''}> Nom à l'écran</label><label class="switch"><input type="checkbox" data-ib="audio" ${it.audio ? 'checked' : ''}> Son de cette source</label>${it.k !== 'media' ? `<label class="switch"><input type="checkbox" data-ib="head" ${it.head ? 'checked' : ''}> Tête du joueur en haut à droite</label>` : ''}
         <span style="flex:1"></span><button class="btn sm ghost" data-ia="fit">Plein écran</button><button class="btn sm ghost" data-ia="ratio">Format 16:9</button></div></div>`;
   },
   addItem(k, ref, x, y) {
@@ -4577,7 +4697,7 @@ const PROG = {
     if (k === 'media') { sc.items.forEach(i => { if (i.k === 'media') i.audio = false; }); }
     const it = { id: 'i' + rid(), k, ref, label: k !== 'media', w, h: w, x: sc.items.length ? Math.max(0, Math.min(100 - w, x - w / 2)) : 0, y: sc.items.length ? Math.max(0, Math.min(100 - w, y - w / 2)) : 0, z, audio: k === 'media' || !sc.items.some(i => i.audio) };
     if (k === 'media') sc.items.forEach(i => { if (i.k !== 'media') i.audio = false; });
-    sc.items.push(it); this.sel = it.id; this.save();
+    sc.items.push(it); this.sel = it.id; this.autoAudio(sc); this.save();
   },
   applyPreset(k) {
     const sc = this.scene(); if (!sc || !sc.items.length) { toastInfo('Ajoute d\'abord des sources à l\'aperçu'); return; }
@@ -4588,7 +4708,87 @@ const PROG = {
       else { it.x = 100; it.y = 100; it.w = 20; it.h = 20; it.z = 0; }
     });
     sc.items = sc.items.filter(it => !(it.x >= 100 && it.y >= 100));
+    this.autoAudio(sc); this.save();
+  },
+  /* ---------- écrans « hors antenne » / « maintenance » ---------- */
+  screen(kind, min, msg) { NET.req({ t: 'progScreen', kind, min: min || 0, msg: msg || '' }).then(() => SND.blip(), e => toastInfo('Antenne', e.message, true)); },
+  openMaint() {
+    const m = modal(`<div class="modal-h"><h3>Maintenance en cours</h3><button class="btn icon ghost" data-close>${ic('x')}</button></div>
+      <div class="modal-b"><p class="note" style="margin-top:0">S'affiche par-dessus l'émission (page Direct et OBS) avec une transition. Le plan continue derrière, son coupé.</p>
+        <div class="gx-row"><b>Retour du direct :</b><button class="btn sm" data-mt="0">Dès que possible</button>${[2, 5, 10, 15, 30].map(n => `<button class="btn sm ghost" data-mt="${n}">dans ${n} min</button>`).join('')}</div>
+        <label class="f" style="margin-top:10px"><span class="lbl2">Message (facultatif)</span><input class="inp" id="mtMsg" maxlength="120" placeholder="Retour du direct"></label></div>`);
+    m.onclick = e => { const b = e.target.closest('[data-mt]'); if (!b) return; this.screen('maint', +b.dataset.mt, $('#mtMsg').value.trim()); closeModal(); };
+  },
+  renderScreenBtns() {
+    const sc = this.pub && this.pub.screen, r = $('#rgResume'); if (!r) return;
+    r.classList.toggle('hide', !sc); $('#rgOff').classList.toggle('live', !!sc && sc.kind === 'off'); $('#rgMaint').classList.toggle('live', !!sc && sc.kind === 'maint');
+  },
+  /* ---------- musique de fond (playlist) ---------- */
+  bgmDraft: null,
+  renderBgm() {
+    const box = $('#rgBgm'); if (!box || !this.ed) return;
+    const sc = this.scene(), scope = this.bgmScope || 'all';
+    const cur = scope === 'all' ? (this.ed.bgm || { ids: [], vol: 60 }) : ((sc && sc.bgm) || { ids: [], vol: 60 });
+    if (!this.bgmDraft || this.bgmDraft.scope !== scope + ':' + (sc && sc.id)) this.bgmDraft = { scope: scope + ':' + (sc && sc.id), ids: [...(cur.ids || [])], vol: cur.vol == null ? 60 : cur.vol };
+    const D = this.bgmDraft, q = (this.bgmQ || '').toLowerCase();
+    const audios = this.media.filter(x => x.kind === 'audio'), hits = q ? audios.filter(x => x.name.toLowerCase().includes(q)).slice(0, 8) : [];
+    const playing = this.pub && this.pub.bgm;
+    box.innerHTML = `<div class="gx-row"><select class="mini-sel" id="bgScope"><option value="all" ${scope === 'all' ? 'selected' : ''}>Tous les plans</option><option value="scene" ${scope === 'scene' ? 'selected' : ''}>Ce plan : ${esc(sc ? sc.name : '')}</option></select>
+        <label style="display:flex;align-items:center;gap:6px;flex:0 0 130px"><span class="note">Vol.</span><input type="range" id="bgVol" min="0" max="100" step="5" value="${D.vol}" style="flex:1"></label></div>
+      <div class="gx-row"><input class="inp" id="bgQ" value="${esc(this.bgmQ || '')}" placeholder="Chercher une musique par son nom…" autocomplete="off"></div>
+      ${hits.length ? `<div class="bg-hits">${hits.map(x => `<button class="btn xs ghost" data-bga="${esc(x.id)}">＋ ${esc(x.name)} <span class="note">${this.fmtDur(x.dur)}</span></button>`).join('')}</div>` : q ? '<p class="note" style="margin:4px 0">Aucune musique trouvée (importe-la dans Médias).</p>' : ''}
+      <ol class="qlist">${D.ids.map((id, i) => { const md = this.mediaById(id); return `<li><span>${esc(md ? md.name : '?')}</span><span class="note">${md ? this.fmtDur(md.dur) : ''}</span><button class="btn sm ghost" data-bgx="${i}">${ic('x')}</button></li>`; }).join('')}</ol>
+      <div class="gx-row"><button class="btn sm primary" id="bgGo" ${D.ids.length ? '' : 'disabled'}>▶ ${scope === 'all' ? 'Lancer sur tous les plans' : 'Lancer sur ce plan'}</button><button class="btn sm ghost" id="bgStop">■ Arrêter</button></div>
+      <p class="note" style="margin:6px 0 0">${playing ? `En cours (${playing.scope === 'all' ? 'tous les plans' : 'ce plan'}) : ${esc(playing.tracks.map(t => t.name).join(' → '))}` : 'Aucune musique de fond à l\'antenne.'} La musique d'un plan remplace celle de tous les plans.</p>`;
+    const send = ids => NET.req({ t: 'progBgm', scope: scope === 'all' ? 'all' : sc.id, ids, vol: D.vol }).then(() => toastInfo(ids.length ? 'Musique lancée' : 'Musique arrêtée'), e => toastInfo('Musique', e.message, true));
+    box.oninput = e => { if (e.target.id === 'bgQ') { this.bgmQ = e.target.value; this.renderBgm(); const i = $('#bgQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); } if (e.target.id === 'bgVol') D.vol = +e.target.value; };
+    box.onchange = e => { if (e.target.id === 'bgScope') { this.bgmScope = e.target.value; this.bgmDraft = null; this.renderBgm(); } if (e.target.id === 'bgVol' && playing) send(D.ids); };
+    box.onclick = e => {
+      const a = e.target.closest('[data-bga]'); if (a) { D.ids.push(a.dataset.bga); this.bgmQ = ''; this.renderBgm(); return; }
+      const x = e.target.closest('[data-bgx]'); if (x) { D.ids.splice(+x.dataset.bgx, 1); this.renderBgm(); return; }
+      if (e.target.closest('#bgGo')) send(D.ids);
+      if (e.target.closest('#bgStop')) { D.ids = []; send([]); this.renderBgm(); }
+    };
+  },
+  /* ---------- changer de POV (une ou toutes) ---------- */
+  povOk(t) { return t && !isDead(t) && !this.povBlocked('t:' + t.id) && (RTC.live('t:' + t.id) || liveOf(t.login) || !RTC.on); },
+  pickPov(cur, how, q, taken) {
+    const all = sortedByNum(), free = all.filter(t => this.povOk(t) && !taken.has(t.id) && t.id !== cur);
+    const curT = byId(cur);
+    if (how === 'rand') return free[Math.floor(Math.random() * free.length)] || null;
+    if (how === 'next') { const n = curT ? curT.num || 0 : 0; return free.find(t => (t.num || 0) > n) || free[0] || null; }
+    if (how === 'near') {
+      const p0 = CAM.pos && CAM.pos[cur]; if (!p0) return null;
+      return free.filter(t => CAM.pos && CAM.pos[t.id] && CAM.pos[t.id].d === p0.d).sort((a, b) => Math.hypot(CAM.pos[a.id].x - p0.x, CAM.pos[a.id].z - p0.z) - Math.hypot(CAM.pos[b.id].x - p0.x, CAM.pos[b.id].z - p0.z))[0] || null;
+    }
+    q = String(q || '').trim().toLowerCase(); if (!q) return null;
+    const n = parseInt(q, 10);
+    return all.find(t => /^\d+$/.test(q) && (t.num || 0) === n) || all.find(t => [t.name, t.login, t.mc].some(v => String(v || '').toLowerCase() === q)) || all.find(t => [t.name, t.login, t.mc].some(v => String(v || '').toLowerCase().includes(q))) || null;
+  },
+  swapPov(it, how, q) {
+    const sc = this.scene(), taken = new Set(sc.items.filter(i => i.k === 'trib' && i !== it).map(i => i.ref));
+    const t = this.pickPov(it.ref, how, q, taken);
+    if (!t) { toastInfo('Aucune POV trouvée', how === 'near' ? 'Position inconnue (carte)' : how === 'find' ? 'Vérifie le numéro ou le pseudo' : 'Aucun autre tribut disponible', true); return; }
+    if (this.povBlocked('t:' + t.id)) { toastInfo('Capture coupée', t.name, true); return; }
+    // déjà dans le plan : on échange les deux POV de place
+    const other = sc.items.find(i => i !== it && i.k === 'trib' && i.ref === t.id); if (other) other.ref = it.ref;
+    it.ref = t.id; this.save(); toastInfo('POV : ' + t.name);
+  },
+  allPov(how) {
+    const sc = this.scene(); if (!sc) return;
+    if (how === 'heads') { const on = !sc.items.some(i => i.head); sc.items.forEach(i => { if (i.k !== 'media') i.head = on; }); this.save(); return; }
+    if (how === 'snd') { sc.items.forEach(i => i.am = false); this.autoAudio(sc); this.save(); return; }
+    const items = sc.items.filter(i => i.k === 'trib'), used = new Set(items.map(i => i.ref));
+    for (const it of items) { used.delete(it.ref); const t = this.pickPov(it.ref, how, '', used); if (t) it.ref = t.id; used.add(it.ref); }
     this.save();
+  },
+  /* son par défaut : seule la source la plus grande (sauf choix manuel) */
+  autoAudio(sc) {
+    if (!sc) return;
+    const auto = sc.items.filter(i => !i.am && i.k !== 'media'); if (!auto.length) return;
+    const big = auto.slice().sort((a, b) => b.w * b.h - a.w * a.h || (b.z || 0) - (a.z || 0))[0];
+    const manual = sc.items.some(i => i.am && i.audio) || sc.items.some(i => i.k === 'media' && i.audio);
+    auto.forEach(i => { i.audio = !manual && i === big; });
   },
   /* ---------- mosaïque : n POV choisis par pseudo, apparition une par une ---------- */
   openMosaic() {
@@ -4630,6 +4830,7 @@ const PROG = {
       const items = f.list.slice(0, 30).map((x, i) => ({ id: 'i' + rid(), k: x.k, ref: x.ref, x: L[i][0], y: L[i][1], w: L[i][2], h: L[i][3], z: 0, label: lab, audio: false, d: anim ? Math.round(i * Math.min(160, 2400 / f.n)) : 0 }));
       if ($('#mzNew').checked) { const id = 's' + rid(); this.ed.scenes.push({ id, name: 'Mosaïque ' + f.n, items }); this.ed.preview = id; }
       else { const sc = this.scene(); sc.items = items; }
+      this.autoAudio(this.scene());
       this.sel = ''; closeModal(); this.save(); toastInfo('Mosaïque prête dans l\'aperçu', 'À L\'ANTENNE (T) pour la lancer.');
     };
     paintIcons(m); draw(); setTimeout(() => $('#mzQ') && $('#mzQ').focus(), 50);
@@ -4641,6 +4842,12 @@ const PROG = {
   bindEditor() {
     const pv = $('#cvPv');
     $('#rgQ').oninput = () => this.renderSources();
+    // recherche par liste + couper / réactiver une POV
+    $('#rgSrc').addEventListener('click', e => {
+      const sb = e.target.closest('[data-secs]'); if (sb) { const k = sb.dataset.secs; this.secOpen[k] = !this.secOpen[k]; if (!this.secOpen[k]) this.secQ[k] = ''; this.secFocus = this.secOpen[k] ? k : ''; this.renderSources(); return; }
+      const pv = e.target.closest('[data-pov]'); if (pv) { e.stopPropagation(); NET.req({ t: 'povBlock', src: pv.dataset.src, on: pv.dataset.pov === 'block' }).then(() => toastInfo(pv.dataset.pov === 'block' ? 'Capture coupée' : 'Capture réactivée'), er => toastInfo('POV', er.message, true)); }
+    });
+    $('#rgSrc').addEventListener('input', e => { const k = e.target.dataset.secq; if (!k) return; this.secQ[k] = e.target.value; this.secFocus = k; this.renderSources(); });
     $('#rgSrc').addEventListener('click', e => {
       const pk = e.target.closest('[data-pick]'); if (!pk) return;
       const inp = document.createElement('input'); inp.type = 'file'; inp.accept = pk.dataset.accept; inp.multiple = !pk.dataset.pick;
@@ -4662,7 +4869,10 @@ const PROG = {
     $('#pvImg').onclick = () => this.monToggle('pv', 'img'); $('#pgImg').onclick = () => this.monToggle('pg', 'img');
     $('#pvSnd').onclick = () => this.monToggle('pv', 'snd'); $('#pgSnd').onclick = () => this.monToggle('pg', 'snd');
     $('#rgMosaic').onclick = () => this.openMosaic();
-    $('#rgCut').onclick = () => this.take('');
+    $('#pageView').querySelector('.rg-main').addEventListener('click', e => { const b = e.target.closest('[data-all]'); if (b) this.allPov(b.dataset.all); });
+    $('#rgOff').onclick = () => this.screen('off');
+    $('#rgMaint').onclick = () => this.openMaint();
+    $('#rgResume').onclick = () => this.screen('');
     $('#rgOpenDirect').onclick = e => { e.preventDefault(); setPage('direct'); };
     $('#rgCopyObs').onclick = e => {
       if (S.me && S.me.obsKey) { copy(location.origin + '/overlay/' + encodeURIComponent(S.me.obsKey), e.currentTarget); toastInfo('Lien OBS copié', 'Dans OBS : Source › Navigateur, colle ce lien, taille 1920 × 1080, coche « Contrôler l\'audio via OBS ». Aucun compte nécessaire.'); }
@@ -4682,7 +4892,7 @@ const PROG = {
     // sources : glisser-déposer
     $('#rgSrc').addEventListener('dragstart', e => { const r = e.target.closest('.src'); if (!r) return; e.dataTransfer.setData('text/plain', JSON.stringify({ k: r.dataset.k, ref: r.dataset.ref })); e.dataTransfer.effectAllowed = 'copy'; });
     $('#rgSrc').addEventListener('dblclick', e => {
-      const r = e.target.closest('.src'); if (!r) return;
+      const r = e.target.closest('.src'); if (!r || r.classList.contains('blocked') || e.target.closest('.sec-q')) return;
       if (e.target.closest('[data-ma]')) return;
       const sc = this.scene(); sc.items = [{ id: 'i' + rid(), k: r.dataset.k, ref: r.dataset.ref, x: 0, y: 0, w: 100, h: 100, z: 0, label: r.dataset.k !== 'media', audio: true }];
       this.sel = sc.items[0].id; this.save(); if (e.shiftKey) setTimeout(() => this.take(), 350);
@@ -4692,11 +4902,14 @@ const PROG = {
     pv.addEventListener('drop', e => {
       e.preventDefault(); pv.classList.remove('drop');
       let d; try { d = JSON.parse(e.dataTransfer.getData('text/plain')); } catch (x) { return; }
+      if (d.k !== 'media' && this.povBlocked((d.k === 'trib' ? 't:' : 'c:') + d.ref)) { toastInfo('Capture coupée', 'Cette POV n\'est plus utilisable.', true); return; }
       const r = pv.getBoundingClientRect();
       this.addItem(d.k, d.ref, (e.clientX - r.left) / r.width * 100, (e.clientY - r.top) / r.height * 100);
     });
     // déplacement / redimensionnement
     pv.addEventListener('pointerdown', e => {
+      const sb = e.target.closest('[data-snd]');
+      if (sb) { e.preventDefault(); e.stopPropagation(); const it = this.scene().items.find(x => x.id === sb.dataset.snd); if (it) { it.audio = !it.audio; it.am = true; this.save(); } return; }
       const el = e.target.closest('.ci');
       if (!el) { this.sel = ''; this.renderCanvas(); return; }
       const sc = this.scene(), it = sc.items.find(x => x.id === el.dataset.it); if (!it) return;
@@ -4736,16 +4949,20 @@ const PROG = {
     pv.addEventListener('pointerup', end); pv.addEventListener('pointercancel', end);
     // inspecteur
     $('#rgInsp').addEventListener('change', e => {
+      if (e.target.id === 'swIn') return;
       const it = this.item(); if (!it) return;
       if (e.target.dataset.ik) it[e.target.dataset.ik] = +e.target.value || 0;
       if (e.target.dataset.ib === 'label') it.label = e.target.checked;
       if (e.target.dataset.ib === 'loop') it.loop = e.target.checked;
-      if (e.target.dataset.ib === 'audio') { this.scene().items.forEach(i => i.audio = false); it.audio = e.target.checked; }
+      if (e.target.dataset.ib === 'audio') { it.audio = e.target.checked; it.am = true; }
+      if (e.target.dataset.ib === 'head') it.head = e.target.checked;
       this.save();
     });
     $('#rgInsp').addEventListener('click', e => {
+      const sw = e.target.closest('[data-sw]'); if (sw) { const it = this.item(); if (it) this.swapPov(it, sw.dataset.sw, $('#swIn') && $('#swIn').value); return; }
       const b = e.target.closest('[data-ia]'); if (!b) return; this.itemAction(b.dataset.ia);
     });
+    $('#rgInsp').addEventListener('keydown', e => { if (e.target.id === 'swIn' && e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); const it = this.item(); if (it) this.swapPov(it, 'find', e.target.value); } });
   },
   itemAction(a) {
     const sc = this.scene(), it = this.item(); if (!it) return;
@@ -4894,7 +5111,8 @@ $('#aList').addEventListener('click', e => {
   const a = S.alerts[id];
   switch (act.dataset.act) {
     case 'reveal': S.revealed.add(id); renderAlerts(); break;
-    case 'watch': if (a) putOnStage(a.ch); break;
+    case 'watch': if (a && a.ch) putOnStage(a.ch); break;
+    case 'cutpov': if (a && a.perf) NET.req({ t: 'povBlock', src: a.perf, on: true }).then(() => { toastInfo('Capture coupée', 'Cette POV n\'est plus capturée ni utilisable en régie.'); NET.send({ t: 'alertUpd', id, p: { handled: true } }); }, er => toastInfo('POV', er.message, true)); break;
     case 'claim': NET.send({ t: 'alertUpd', id, p: { claimedBy: S.me.name } }); break;
     case 'done': NET.send({ t: 'alertUpd', id, p: { handled: true } }); break;
     case 'undo': NET.send({ t: 'alertUpd', id, p: { handled: false } }); break;

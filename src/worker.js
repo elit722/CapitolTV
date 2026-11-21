@@ -75,6 +75,15 @@ export default {
       if (p === "/auth/callback") return discordCallback(req, env, url);
       if (p === "/auth/logout") return redirect("/login", [setCookie(COOKIE, "", 0)]);
       if (p.startsWith("/overlay/")) return overlayLogin(env, p.slice(9));
+      if (p.startsWith("/failover/")) return failoverRoute(req, env, url);
+      // site de secours activé : tout le monde (site, mods, serveurs, OBS) est renvoyé vers le nouveau site
+      const mv = await movedTo(env);
+      if (mv && p !== "/ws" && p !== "/mod/ws") {
+        if (p.startsWith("/whip/")) return req.method === "GET" ? Response.json({ moved: mv }, { headers: WHIP_CORS }) : Response.json({ moved: mv }, { status: 409, headers: WHIP_CORS });
+        if (p.startsWith("/api/")) return Response.json({ moved: mv, msg: "Le site a déménagé : " + mv }, { status: 409 });
+        const c = getCookie(req, COOKIE);
+        return redirect(c ? `${mv}/failover/session?c=${encodeURIComponent(c)}&to=${encodeURIComponent(p + url.search)}` : mv + p + url.search);
+      }
       if (PUBLIC_PATHS.has(p)) return env.ASSETS.fetch(req);
       if (p.startsWith("/whip/")) {
         // diffusion vers Capitol TV (mod Minecraft ou OBS) : la clé de diffusion fait office d'accès
@@ -156,13 +165,16 @@ const VQ_LEVELS = {
   max: { h: 1080, kbps: 10000, fps: 60 }
 };
 const MAX_ITEMS = 30;
+const NOW_KINDS = ["flash", "gift", "tribute"];
+const cleanBgm = b => ({ ids: (Array.isArray(b && b.ids) ? b.ids : []).map(x => String(x).replace(/[^a-z0-9]/gi, "").slice(0, 40)).filter(Boolean).slice(0, 40), vol: Math.max(0, Math.min(100, Math.round(+(b && b.vol) || 60))) });
 const VQ_ORDER = ["eco", "std", "hd", "max"];
 const WHIP_CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, DELETE, PATCH, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization", "Access-Control-Expose-Headers": "Location" };
 const RTC_API = "https://rtc.live.cloudflare.com/v1/apps/";
 async function serveMedia(req, env, id) {
   if (!env.MEDIA) return new Response("Stockage des médias non configuré", { status: 503 });
   id = String(id).replace(/[^a-z0-9]/gi, "").slice(0, 40);
-  const meta = await env.MEDIA.get("meta:" + id, "json");
+  let meta = await env.MEDIA.get("meta:" + id, "json");
+  if (!meta) { const b = await pullFrom(env, "meta:" + id); if (b) try { meta = JSON.parse(new TextDecoder().decode(b)); } catch (e) {} }
   if (!meta) return new Response("Média introuvable", { status: 404 });
   const size = meta.size, cs = meta.cs || MEDIA_CHUNK;
   let start = 0, end = size - 1, status = 200;
@@ -182,7 +194,7 @@ async function serveMedia(req, env, id) {
     const w = writable.getWriter();
     try {
       for (let n = first; n <= last; n++) {
-        const buf = await env.MEDIA.get(`c:${id}:${n}`, "arrayBuffer");
+        const buf = (await env.MEDIA.get(`c:${id}:${n}`, "arrayBuffer")) || (await pullFrom(env, `c:${id}:${n}`));
         if (!buf) throw new Error("morceau manquant");
         const a = n === first ? start - n * cs : 0, b = n === last ? end - n * cs + 1 : buf.byteLength;
         await w.write(new Uint8Array(buf, a, b - a));
@@ -191,6 +203,49 @@ async function serveMedia(req, env, id) {
     } catch (e) { try { await w.abort(e); } catch (x) {} }
   })();
   return new Response(readable, { status, headers: h });
+}
+
+/* ---------- site de secours (2e compte Cloudflare) ---------- */
+const FO_SECRET = env => env.FAILOVER_SECRET || env.SESSION_SECRET || "";
+let MOVED = { url: "", t: 0 };
+async function movedTo(env) {
+  if (Date.now() - MOVED.t < 10000) return MOVED.url;
+  try { const j = await env.GAME.getByName("main").fetch("https://game/moved").then(r => r.json()); MOVED = { url: j.url || "", t: Date.now() }; }
+  catch (e) { MOVED.t = Date.now(); }
+  return MOVED.url;
+}
+async function failoverRoute(req, env, url) {
+  const p = url.pathname;
+  if (p === "/failover/session") {
+    // même SESSION_SECRET sur les deux sites : la session reste valable, personne n'a à se reconnecter
+    const c = url.searchParams.get("c") || "", to = url.searchParams.get("to") || "/";
+    const u = await verifyToken(c, env);
+    const dest = to.startsWith("/") && !to.startsWith("//") ? to : "/";
+    return u ? redirect(dest, [setCookie(COOKIE, c, Math.max(60, Math.round((u.exp - Date.now()) / 1000)))]) : redirect(dest);
+  }
+  const sec = FO_SECRET(env);
+  if (!sec || req.headers.get("X-CTV-Failover") !== sec) return new Response("Accès refusé", { status: 403 });
+  if (p === "/failover/kv") {
+    const k = url.searchParams.get("k") || "";
+    if (!env.MEDIA || !/^(meta|c):[a-z0-9:]+$/i.test(k)) return new Response(null, { status: 404 });
+    const v = await env.MEDIA.get(k, "arrayBuffer"); return v ? new Response(v) : new Response(null, { status: 404 });
+  }
+  if (p === "/failover/clip") {
+    const k = url.searchParams.get("k") || "";
+    if (!env.CLIPS || !/^clip\/[a-z0-9]+\/\d+$/i.test(k)) return new Response(null, { status: 404 });
+    const o = await env.CLIPS.get(k); return o ? new Response(o.body) : new Response(null, { status: 404 });
+  }
+  return env.GAME.getByName("main").fetch(new Request(new URL(p, "https://game"), { method: req.method, headers: req.headers, body: req.method === "POST" ? req.body : null }));
+}
+/* média absent du site de secours : on le reprend au site d'origine, une fois */
+async function pullFrom(env, k) {
+  try {
+    const j = await env.GAME.getByName("main").fetch("https://game/moved").then(r => r.json());
+    if (!j.from) return null;
+    const r = await fetch(j.from + "/failover/kv?k=" + encodeURIComponent(k), { headers: { "X-CTV-Failover": FO_SECRET(env) } });
+    if (!r.ok) return null;
+    const buf = await r.arrayBuffer(); await env.MEDIA.put(k, buf); return buf;
+  } catch (e) { return null; }
 }
 
 function discordLogin(env, url) {
@@ -348,7 +403,7 @@ export class Game extends DurableObject {
 
   load() {
     if (!this.loading) this.loading = (async () => {
-      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage"]);
+      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage", "moved", "from", "perf"]);
       this.board = { ...defaultBoard(), ...(m.get("board") || {}) };
       this.alerts = m.get("alerts") || {};
       this.team = m.get("team") || [];
@@ -372,6 +427,8 @@ export class Game extends DurableObject {
       this.pubs = m.get("pubs") || {};
       this.vpref = m.get("vpref") || {};
       this.usage = m.get("usage") || { m: "", b: 0 };
+      this.moved = m.get("moved") || null; this.from = m.get("from") || "";
+      this.perf = m.get("perf") || {};
       this.poll = m.get("poll") || null;
       this.bets = m.get("bets") || { open: true, users: {}, settled: null };
       this.clips = m.get("clips") || [];
@@ -406,6 +463,9 @@ export class Game extends DurableObject {
     await this.load();
     const path = new URL(req.url).pathname;
     if (path === "/public") return Response.json({ open: !!this.board.publicAccess });
+    if (path === "/moved") return Response.json({ url: this.moved ? this.moved.url : "", from: this.from || "" });
+    if (path === "/failover/ping") return Response.json({ ok: true, rtc: this.rtcOn(), clips: !!this.env.CLIPS, media: !!this.env.MEDIA, tributes: this.board.tributes.length, moved: this.moved ? this.moved.url : "" });
+    if (path === "/failover/import" && req.method === "POST") return this.foImport(req);
     if (path === "/mod") return this.modConnect(req);
     if (path.startsWith("/api/media")) return this.mediaApi(req, path);
     if (path.startsWith("/api/rtc")) return this.rtcApi(req, path);
@@ -419,6 +479,7 @@ export class Game extends DurableObject {
     const [client, server] = Object.values(pair);
     this.ctx.acceptWebSocket(server);
 
+    if (this.moved) { this.send(server, { t: "moved", url: this.moved.url }); server.close(4010, "Site déplacé"); return new Response(null, { status: 101, webSocket: client }); }
     if (user.guest && !this.board.publicAccess) {
       this.send(server, { t: "auth" }); server.close(4001, "Connexion requise");
       return new Response(null, { status: 101, webSocket: client });
@@ -456,7 +517,7 @@ export class Game extends DurableObject {
       me: { id: a.id, name: a.name, av: a.av, perm: a.perm, pub: a.pub, overlay: !!a.overlay, obsKey: hasPerm(a, "program") && !a.lock && this.env.OVERLAY_KEY ? this.env.OVERLAY_KEY : undefined, lock: !!a.lock, guest: !!a.guest, tribute: this.tributeOf(a.id), cam: a.cam || "", sup: isSup(a), crew: isCrew(a) && !a.lock, map: this.mapAllowed(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "" },
       roles: this.roles, prog: a.lock || !(isCrew(a) || a.overlay) ? undefined : this.progPublic(), progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
       media: isCrew(a) ? this.media : undefined, srvCams: isCrew(a) ? this.srvCams : undefined,
-      pubs: this.pubsFor(a), rtc: { on: this.rtcOn(), pub: false, use: isCrew(a) || a.overlay ? this.useInfo() : undefined, vq: { trib: this.vqCap("t:"), cam: this.vqCap("c:") }, vpref: isCrew(a) && !a.lock ? this.vpref : undefined },
+      pubs: this.pubsFor(a), rtc: { on: this.rtcOn(), pub: false, capOff: !!this.board.capOff, perf: isCrew(a) ? this.perf : undefined, use: isCrew(a) || a.overlay ? this.useInfo() : undefined, vq: { trib: this.vqCap("t:"), cam: this.vqCap("c:") }, vpref: isCrew(a) && !a.lock ? this.vpref : undefined },
       talk: this.talkSup(a) ? this.talkState() : undefined, clips: this.clipsFor(a),
       skeys: hasPerm(a, "program") || a.perm === "admin" ? this.allKeys() : undefined,
       mykeys: a.guest || a.overlay ? undefined : this.myKeys(a.id),
@@ -507,18 +568,18 @@ export class Game extends DurableObject {
       return x;
     });
     if (!D) return { ...b, tributes, events };
+    // annonces, parachutes et hommages : immédiats (pas de différé)
     return {
       ...b, tributes,
-      events: events.filter(e => e.ts <= cut).map(e => ({ ...e, ts: e.ts + D })),
-      flash: b.flash && b.flash.ts <= cut ? { ...b.flash, ts: b.flash.ts + D } : null
+      events: events.filter(e => NOW_KINDS.includes(e.k) || e.ts <= cut).map(e => NOW_KINDS.includes(e.k) ? e : ({ ...e, ts: e.ts + D })),
+      flash: b.flash || null
     };
   }
   revealTimes() {
     const b = this.board, D = (b.delay || 0) * 1000, out = [];
     if (!D) return out;
     for (const t of b.tributes) if (t.statusAt) out.push(t.statusAt + D);
-    for (const e of b.events) if (e.k !== "mark") out.push(e.ts + D);
-    if (b.flash && b.flash.ts) out.push(b.flash.ts + D);
+    for (const e of b.events) if (e.k !== "mark" && !NOW_KINDS.includes(e.k)) out.push(e.ts + D);
     return out;
   }
 
@@ -684,7 +745,7 @@ export class Game extends DurableObject {
         this.broadcast({ t: "alerts", all: {} }, x => isCrew(x) && !x.lock); this.modcast({ t: "alerts", all: {} }); reply(true); break;
       }
       case "team": case "setRole": case "roles": return this.onRolesOp(a, m, reply);
-      case "progApply": case "progMode": case "progSave": case "progTake": case "progSfx": case "progGfx": case "progQueue": case "progReplay": case "progAuto": case "progClip": return this.onProgOp(a, m, reply);
+      case "progScreen": case "progBgm": case "progApply": case "progMode": case "progSave": case "progTake": case "progSfx": case "progGfx": case "progQueue": case "progReplay": case "progAuto": case "progClip": return this.onProgOp(a, m, reply);
       case "skeyNew": {
         if (!hasPerm(a, "program") && !admin) return deny();
         const src = String(m.src || ""); if (!/^[tc]:[\w-]{1,40}$/.test(src)) return reply(false, { msg: "Source inconnue." });
@@ -704,6 +765,35 @@ export class Game extends DurableObject {
         if (was !== info.save || now - (this.useAt || 0) > 30000) { this.useAt = now; this.crewcast({ t: "rtcUse", use: info }, x => !x.mod); for (const ws of this.sockets()) { const o = this.att(ws); if (o && o.overlay) this.send(ws, { t: "rtcUse", use: info }); } }
         break;
       }
+      case "failover": {
+        if (!admin) return deny();
+        const to = String(m.to || "").trim().replace(/\/+$/, "");
+        if (!/^(https:\/\/[a-z0-9.-]+(:\d+)?|http:\/\/localhost:\d+)$/i.test(to)) return reply(false, { msg: "Adresse invalide (ex. https://capitol-tv.compte2.workers.dev)" });
+        const H = { "X-CTV-Failover": FO_SECRET(this.env), "Content-Type": "application/json" };
+        let ping;
+        try { const r = await fetch(to + "/failover/ping", { headers: H }); if (!r.ok) throw new Error(r.status === 403 ? "les deux sites n'ont pas le même SESSION_SECRET" : "réponse " + r.status); ping = await r.json(); }
+        catch (e) { return reply(false, { msg: "Site de secours injoignable : " + e.message }); }
+        if (!m.go) return reply(true, { ping });
+        // copie de tout l'état (tributs, équipe, clés, plans, réglages…) puis bascule de tout le monde
+        const all = await this.ctx.storage.list(), data = {};
+        for (const [k, v] of all) if (!["pubs", "moved", "from"].includes(k)) data[k] = v;
+        try { const r = await fetch(to + "/failover/import", { method: "POST", headers: H, body: JSON.stringify({ data, from: String(m.from || "").replace(/\/+$/, "") }) }); if (!r.ok) throw new Error("import refusé (" + r.status + ")"); }
+        catch (e) { return reply(false, { msg: "Copie impossible : " + e.message }); }
+        this.moved = { url: to, at: Date.now(), by: a.name }; await this.ctx.storage.put("moved", this.moved);
+        reply(true, { ping });
+        for (const ws of this.sockets()) { this.send(ws, { t: "moved", url: to }); }
+        setTimeout(() => { for (const ws of this.sockets()) try { ws.close(4010, "Site déplacé"); } catch (e) {} }, 1500);
+        return;
+      }
+      case "povBlock": {
+        if (!(admin || hasPerm(a, "program"))) return deny();
+        const src = String(m.src || "").slice(0, 44); if (!/^[tc]:/.test(src)) return reply(false);
+        if (m.on) { this.vpref[src] = "blocked"; if (this.pubs[src]) { delete this.pubs[src]; this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); } }
+        else if (this.vpref[src] === "blocked") delete this.vpref[src];
+        this.ctx.storage.put("vpref", this.vpref);
+        this.crewcast({ t: "vpref", vpref: this.vpref }, x => !x.mod && !x.lock);
+        return reply(true);
+      }
       case "rtcBudget": {
         if (!admin) return deny();
         this.board.useBudget = Math.max(50, Math.min(100000, Math.round(+m.gb || 900)));
@@ -714,6 +804,10 @@ export class Game extends DurableObject {
       case "rtcCfg": {
         if (!admin) return deny();
         this.board.rtcPublic = false;
+        if (m.capOff != null) {
+          this.board.capOff = !!m.capOff;
+          if (this.board.capOff && Object.keys(this.pubs).length) { this.pubs = {}; this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); }
+        }
         if (m.vq) { const c = (x, d) => VQ_LEVELS[x] && x !== "off" ? x : d; this.board.vq = { trib: c(m.vq.trib, "hd"), cam: c(m.vq.cam, "max") }; }
         await this.ctx.storage.put("board", this.board);
         this.broadcastHelloAll(); reply(true); break;
@@ -927,8 +1021,8 @@ export class Game extends DurableObject {
      Émission en direct : scènes multi-caméras composées par la réalisation
      ===================================================================== */
   srcOf(it) {
-    if (it.k === "trib") { const t = this.board.tributes.find(x => x.id === it.ref); return t ? { login: t.login, name: t.name, sub: t.district ? "District " + t.district : "", st: t.status, src: "t:" + t.id, vsrc: t.vsrc || "auto" } : null; }
-    if (it.k === "cam") { const m = this.team.find(x => x.id === it.ref); return m && (m.twitch || this.pubs["c:" + m.id]) ? { login: m.twitch || "", name: m.name, sub: "Caméra", src: "c:" + m.id, vsrc: m.vsrc || "auto" } : null; }
+    if (it.k === "trib") { const t = this.board.tributes.find(x => x.id === it.ref); return t ? { login: t.login, name: t.name, sub: t.district ? "District " + t.district : "", st: t.status, src: "t:" + t.id, vsrc: t.vsrc || "auto", mc: t.mc || "" } : null; }
+    if (it.k === "cam") { const m = this.team.find(x => x.id === it.ref); return m && (m.twitch || this.pubs["c:" + m.id]) ? { login: m.twitch || "", name: m.name, sub: "Caméra", src: "c:" + m.id, vsrc: m.vsrc || "auto", mc: m.mc || "" } : null; }
     if (it.k === "media") { const md = this.media.find(x => x.id === it.ref); return md ? { media: md.id, name: md.name, sub: md.kind === "video" ? "Vidéo" : md.kind === "image" ? "Image" : "Son", kind: md.kind, mime: md.mime, dur: md.dur || 0 } : null; }
     return null;
   }
@@ -946,12 +1040,21 @@ export class Game extends DurableObject {
   progPublic() {
     const sc = this.prog.scenes.find(x => x.id === this.prog.live);
     const starts = this.prog.starts || {};
-    const items = sc ? this.liveItems().map(it => { const s = this.srcOf(it); return s ? { id: it.id, k: it.k, ref: it.ref, x: it.x, y: it.y, w: it.w, h: it.h, z: it.z, label: it.label !== false, audio: !!it.audio, loop: !!it.loop, vol: it.vol == null ? 100 : it.vol, d: it.d || 0, at: starts[it.ref] || 0, ...s } : null; }).filter(Boolean) : [];
+    const items = sc ? this.liveItems().map(it => { const s = this.srcOf(it); return s ? { id: it.id, k: it.k, ref: it.ref, x: it.x, y: it.y, w: it.w, h: it.h, z: it.z, label: it.label !== false, audio: !!it.audio, head: !!it.head, loop: !!it.loop, vol: it.vol == null ? 100 : it.vol, d: it.d || 0, at: starts[it.ref] || 0, ...s } : null; }).filter(Boolean) : [];
     const fx = this.prog.sfx, md = fx && this.media.find(x => x.id === fx.id);
     return { seq: this.prog.seq, scene: sc ? sc.name : "", items, trans: this.prog.trans, title: this.prog.title || "", on: !!sc,
       gfx: this.liveGfx(), replay: this.prog.replay && Date.now() < this.prog.replay.end ? this.prog.replay : null, next: this.prog.next || null,
       clip: this.prog.clip && Date.now() < this.prog.clip.end ? this.prog.clip : null,
+      screen: this.prog.screen || null, bgm: this.bgmPublic(sc),
       sfx: md ? { id: md.id, name: md.name, kind: md.kind, at: fx.at, vol: fx.vol, loop: !!fx.loop, dur: md.dur || 0 } : null };
+  }
+  /* musique de fond : celle du plan à l'antenne, sinon celle de tous les plans */
+  bgmPublic(sc) {
+    const own = sc && sc.bgm && sc.bgm.ids.length ? { ...sc.bgm, at: this.prog.liveAt || 0, scope: "scene" } : null;
+    const g = this.prog.bgm && this.prog.bgm.ids && this.prog.bgm.ids.length ? { ...this.prog.bgm, scope: "all" } : null;
+    const b = own || g; if (!b) return null;
+    const tracks = b.ids.map(id => this.media.find(x => x.id === id)).filter(x => x && x.kind === "audio").map(x => ({ id: x.id, name: x.name, dur: x.dur || 0 }));
+    return tracks.length ? { tracks, at: b.at || 0, vol: b.vol == null ? 60 : b.vol, scope: b.scope } : null;
   }
   onAirCams() {
     return [...new Set(this.liveItems().filter(it => it.k === "cam").map(it => it.ref))];
@@ -965,8 +1068,9 @@ export class Game extends DurableObject {
         id: String(it.id || "i" + j).replace(/[^a-z0-9_-]/gi, "").slice(0, 20) || "i" + j,
         k: ["cam", "media"].includes(it.k) ? it.k : "trib", ref: String(it.ref || "").slice(0, 40), loop: !!it.loop, vol: num(it.vol, 100, 0, 100),
         x: num(it.x, 0, -50, 150), y: num(it.y, 0, -50, 150), w: num(it.w, 50, 2, 200), h: num(it.h, 50, 2, 200), z: num(it.z, j, 0, 99),
-        label: it.label !== false, audio: !!it.audio, d: num(it.d, 0, 0, 4000)
-      }))
+        label: it.label !== false, audio: !!it.audio, am: !!it.am, head: !!it.head, d: num(it.d, 0, 0, 4000)
+      })),
+      bgm: cleanBgm(sc.bgm)
     }));
     if (!scenes.length) scenes.push({ id: "s1", name: "Plan 1", items: [] });
     const t = p.trans || {};
@@ -974,7 +1078,7 @@ export class Game extends DurableObject {
       trans: { type: ["logo", "fade", "cut"].includes(t.type) ? t.type : "logo", ms: num(t.ms, 1400, 300, 4000) }, seq: this.prog.seq, title: String(p.title || "").slice(0, 80),
       starts: this.prog.starts || {}, sfx: this.prog.sfx || null,
       gfx: this.prog.gfx || {}, queue: this.prog.queue || [], qrun: this.prog.qrun || null, next: this.prog.next || null, replay: this.prog.replay || null, autoBack: this.prog.autoBack !== false, prevLive: this.prog.prevLive || "",
-      apply: this.prog.apply === "manual" ? "manual" : "auto", airScene: this.prog.airScene || "", airItems: this.prog.airItems || null, airGfx: this.prog.airGfx || null };
+      apply: this.prog.apply === "manual" ? "manual" : "auto", screen: this.prog.screen || null, bgm: this.prog.bgm || null, liveAt: this.prog.liveAt || 0, airScene: this.prog.airScene || "", airItems: this.prog.airItems || null, airGfx: this.prog.airGfx || null };
   }
   pushProg(newShot) {
     const pub = JSON.stringify({ t: "prog", p: this.progPublic(), cut: !!newShot });
@@ -1097,6 +1201,7 @@ export class Game extends DurableObject {
     for (const it of sc.items) if (it.k === "media") starts[it.ref] = was.has(it.ref) && prevStarts[it.ref] ? prevStarts[it.ref] : now;
     this.prog.starts = starts;
     if (this.prog.live && this.prog.live !== sc.id) this.prog.prevLive = this.prog.live;
+    if (this.prog.live !== sc.id) this.prog.liveAt = Date.now();
     this.prog.live = sc.id; this.prog.seq = (this.prog.seq || 0) + 1;
     this.freezeAir();
     if (!fromQueue) this.prog.qrun = null;
@@ -1164,8 +1269,11 @@ export class Game extends DurableObject {
     if (req.method === "PATCH") return new Response(null, { status: 204, headers: H() });
     if (req.method === "GET") {
       // le joueur annonce son niveau de qualité choisi (?lvl=…), on renvoie la qualité effective
-      const lvl = new URL(req.url).searchParams.get("lvl");
-      if (lvl && VQ_LEVELS[lvl] && this.vpref[src] !== lvl) {
+      const lvl0 = new URL(req.url).searchParams.get("lvl");
+      // le joueur n'indique plus que son accord : « off » (refus) ou n'importe quel autre niveau (accord)
+      const lvl = lvl0 === "off" ? "off" : lvl0 ? "on" : "";
+      if (this.vpref[src] === "blocked") return Response.json(this.vqFor(src), { headers: H() });
+      if (lvl && this.vpref[src] !== lvl && !(lvl === "on" && !this.vpref[src])) {
         this.vpref[src] = lvl; this.ctx.storage.put("vpref", this.vpref);
         if (lvl === "off" && this.pubs[src]) { delete this.pubs[src]; this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); }
         this.crewcast({ t: "vpref", vpref: this.vpref }, x => !x.mod && !x.lock);
@@ -1173,6 +1281,9 @@ export class Game extends DurableObject {
       return Response.json(this.vqFor(src), { headers: H() });
     }
     if (req.method !== "POST") return new Response("Méthode non prise en charge", { status: 405, headers: H() });
+    if (parts[2] === "perf") return this.perfReport(src, req, H);
+    if (this.board.capOff) return new Response("Capture vidéo coupée par la régie", { status: 503, headers: H() });
+    if (this.vpref[src] === "blocked") return new Response("Capture coupée par la régie", { status: 403, headers: H() });
     const sdp = await req.text();
     if (!sdp.includes("v=0") || sdp.length > 60000) return new Response("Offre SDP attendue", { status: 400, headers: H() });
     // sections média de l'offre : on publie chaque piste audio / vidéo
@@ -1199,6 +1310,36 @@ export class Game extends DurableObject {
       return new Response("Erreur de diffusion : " + e.message, { status: 502, headers: H() });
     }
   }
+  /* le mod signale que la capture fait trop ramer le joueur : alerte pour l'orga */
+  async perfReport(src, req, H) {
+    let j = {}; try { j = await req.json(); } catch (e) {}
+    const base = Math.round(+j.base || 0), fps = Math.round(+j.fps || 0), now = Date.now();
+    const prev = this.perf[src] || {};
+    this.perf[src] = { base, fps, h: Math.round(+j.h || 0), at: now, warned: prev.warned || 0 };
+    if (now - (prev.warned || 0) > 10 * 60000 && base > 0 && fps < base * 0.75) {
+      this.perf[src].warned = now;
+      const t = src[0] === "t" ? this.board.tributes.find(x => "t:" + x.id === src) : null, m = src[0] === "c" ? this.team.find(x => "c:" + x.id === src) : null;
+      const id = now.toString(36) + Math.random().toString(36).slice(2, 7);
+      const al = { ch: t ? t.login : "", who: t ? t.name : m ? m.name : src, type: "Capture POV", detail: `La capture fait ramer ${t ? t.name : m ? m.name : "ce joueur"} : ${base} → ${fps} images/s malgré l'anti-lag. Tu peux couper sa POV (elle ne sera plus utilisable en régie).`, urgent: false, by: "Capitol TV", uid: "", ts: now, handled: false, perf: src };
+      this.alerts[id] = al; await this.ctx.storage.put("alerts", this.alerts);
+      this.broadcast({ t: "alert", id, a: al }, x => isCrew(x) && !x.lock);
+    }
+    this.ctx.storage.put("perf", this.perf);
+    this.crewcast({ t: "perf", perf: this.perf }, x => !x.mod && !x.lock);
+    return Response.json({ ok: true }, { headers: H() });
+  }
+  async foImport(req) {
+    let j; try { j = await req.json(); } catch (e) { return new Response("JSON attendu", { status: 400 }); }
+    if (!j || typeof j.data !== "object") return new Response("Données manquantes", { status: 400 });
+    for (const ws of this.sockets()) { const a = this.att(ws); if (a && !a.mod && !a.server) this.send(ws, { t: "reload" }); try { ws.close(4011, "Mise à jour"); } catch (e) {} }
+    await this.ctx.storage.deleteAll();
+    const entries = Object.entries(j.data).filter(([k]) => !["pubs", "moved", "from"].includes(k));
+    for (let i = 0; i < entries.length; i += 100) await this.ctx.storage.put(Object.fromEntries(entries.slice(i, i + 100)));
+    await this.ctx.storage.put("from", String(j.from || ""));
+    this.loading = null; await this.load();
+    this.pubs = {}; this.moved = null; MOVED = { url: "", t: 0 };
+    return Response.json({ ok: true, keys: entries.length });
+  }
   useInfo() {
     const mo = new Date().toISOString().slice(0, 7), b = this.usage && this.usage.m === mo ? this.usage.b : 0;
     const gb = Math.round(b / 1e8) / 10, budget = this.board.useBudget || 900;
@@ -1212,11 +1353,11 @@ export class Game extends DurableObject {
   }
   /* qualité effective d'un flux : choix du joueur, limité par le plafond de la régie */
   vqFor(src) {
+    // plus de choix côté joueur : toujours la qualité maximale autorisée, le mod baisse seul si le PC souffre
     const cap = this.vqCap(src), pref = this.vpref[src] || "";
-    const want = VQ_LEVELS[pref] ? pref : "std";
-    const level = want === "off" ? "off" : VQ_ORDER.indexOf(want) > VQ_ORDER.indexOf(cap) ? cap : want;
-    const L = VQ_LEVELS[level];
-    return { level, pref, cap, h: L.h, kbps: L.kbps, fps: L.fps, low: { h: 360, kbps: 600 } };
+    const off = pref === "off" || pref === "blocked" || !!this.board.capOff;
+    const level = off ? "off" : cap, L = VQ_LEVELS[level];
+    return { level, pref, cap, h: L.h, kbps: L.kbps, fps: L.fps, low: { h: 360, kbps: 600 }, blocked: pref === "blocked", capOff: !!this.board.capOff };
   }
   srcName(src) {
     const id = src.slice(2);
@@ -1324,7 +1465,12 @@ export class Game extends DurableObject {
     if (parts[0] === "clip") {
       const c = this.clips.find(x => x.id === parts[1]);
       if (!c || !c.ready || !this.clipVisible(c, a) || !this.env.CLIPS) return new Response("Clip introuvable", { status: 404 });
-      const o = await this.env.CLIPS.get(`clip/${c.id}/${parseInt(parts[2], 10) || 0}`);
+      const ck = `clip/${c.id}/${parseInt(parts[2], 10) || 0}`;
+      let o = await this.env.CLIPS.get(ck);
+      if (!o && this.from) {
+        // site de secours : clip repris une fois au site d'origine
+        try { const r = await fetch(this.from + "/failover/clip?k=" + encodeURIComponent(ck), { headers: { "X-CTV-Failover": FO_SECRET(this.env) } }); if (r.ok) { const b = await r.arrayBuffer(); await this.env.CLIPS.put(ck, b); return new Response(b, { headers: { "Content-Type": c.mime || "video/webm" } }); } } catch (e) {}
+      }
       if (!o) return new Response("Morceau introuvable", { status: 404 });
       return new Response(o.body, { headers: { "Content-Type": c.mime || "video/webm", "Cache-Control": "private, max-age=86400" } });
     }
@@ -1488,6 +1634,14 @@ export class Game extends DurableObject {
         breaking: { on: !!(g.breaking && g.breaking.on), text: str(g.breaking && g.breaking.text, 200) },
         alive: { on: !!(g.alive && g.alive.on) }, map: { on: !!(g.map && g.map.on) }, poll: { on: !!(g.poll && g.poll.on) }, bets: { on: !!(g.bets && g.bets.on) }
       };
+    } else if (m.t === "progScreen") {
+      // écran « hors antenne » ou « maintenance » par-dessus l'émission
+      const k = ["off", "maint"].includes(m.kind) ? m.kind : "";
+      this.prog.screen = k ? { kind: k, until: k === "maint" && +m.min > 0 ? Date.now() + Math.min(600, +m.min) * 60000 : 0, msg: String(m.msg || "").slice(0, 120), at: Date.now() } : null;
+    } else if (m.t === "progBgm") {
+      const b = cleanBgm({ ids: m.ids, vol: m.vol });
+      if (m.scope === "all") this.prog.bgm = b.ids.length ? { ...b, at: Date.now() } : null;
+      else { const sc = this.prog.scenes.find(x => x.id === m.scope); if (!sc) return reply(false, { msg: "Plan introuvable." }); sc.bgm = b; }
     } else if (m.t === "progApply") {
       // mode manuel : toutes les modifications du plan à l'antenne (et de l'habillage) partent d'un coup
       this.freezeAir();
@@ -1524,6 +1678,7 @@ export class Game extends DurableObject {
       if (sc) for (const it of sc.items) if (it.k === "media") starts[it.ref] = was.has(it.ref) && !m.restart && prevStarts[it.ref] ? prevStarts[it.ref] : now;
       this.prog.starts = starts;
       if (this.prog.live && this.prog.live !== (sc ? sc.id : "")) this.prog.prevLive = this.prog.live;
+      if (!sc || this.prog.live !== sc.id) this.prog.liveAt = Date.now();
       this.prog.live = sc ? sc.id : "";
       this.freezeAir();
       if (!m.fromQueue && this.prog.qrun) { this.prog.qrun = null; }
@@ -1616,6 +1771,7 @@ export class Game extends DurableObject {
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
     this.ctx.acceptWebSocket(server);
+    if (this.moved) { this.send(server, { t: "moved", url: this.moved.url }); try { server.close(4010, "Site déplacé"); } catch (e) {} return new Response(null, { status: 101, webSocket: client }); }
     const refuse = (code, msg) => { this.send(server, { t: "err", msg }); try { server.close(code, msg); } catch (e) {} return new Response(null, { status: 101, webSocket: client }); };
     if (who.server) {
       if (!this.srvKey || who.key !== this.srvKey) return refuse(4003, "Clé serveur invalide (régie › Carte & caméras)");

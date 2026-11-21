@@ -184,6 +184,19 @@ Le dossier `mod/` contient un mod Fabric pour les caméramans. Le fichier `.jar`
 
 **Lien OBS sans compte** : `npx wrangler secret put OVERLAY_KEY` (une longue phrase aléatoire), puis Réalisation › **Lien OBS**.
 
+## Site de secours (2e compte Cloudflare)
+
+Si les 1 000 Go vidéo gratuits partent trop vite, un clic (Réglages › **Secours**) bascule tout le monde vers un 2e site : site, mods des joueurs et des caméras, mod serveur, OBS. Ceux qui étaient hors ligne basculent à leur prochaine connexion, même des jours plus tard (l'ancien site les redirige). Personne n'a à se reconnecter.
+
+**À préparer une fois, avant l'event :**
+1. Créer un 2e compte Cloudflare, puis `npx wrangler login` avec ce compte.
+2. `npx wrangler r2 bucket create capitol-tv-clips` et le namespace KV des médias (remplacer son id dans une copie de `wrangler.jsonc`), puis `npx wrangler deploy`.
+3. Secrets **identiques** au site principal : `SESSION_SECRET`, `DISCORD_CLIENT_SECRET`, `OVERLAY_KEY` ; et ceux de son propre serveur vidéo : `RTC_APP_ID`, `RTC_APP_SECRET` (Realtime › SFU du 2e compte).
+4. Discord › OAuth2 › Redirects : ajouter `https://…2e-site…/auth/callback`.
+5. Sur le site principal : Réglages › Secours › coller l'adresse du 2e site › **Tester la liaison**.
+
+Le jour J : **Basculer tout le monde vers ce site**. Pour revenir, même bouton depuis le site de secours avec l'adresse du site principal. Les médias et clips sont recopiés à la demande depuis l'ancien site.
+
 ## Réutiliser le site pour un autre event
 
 1. *Fork* du dépôt, puis étapes 1 à 4 ci-dessus (Discord, `wrangler.jsonc`, `npx wrangler deploy`).
