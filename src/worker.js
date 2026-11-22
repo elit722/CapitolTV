@@ -457,7 +457,7 @@ export class Game extends DurableObject {
 
   load() {
     if (!this.loading) this.loading = (async () => {
-      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage", "moved", "from", "perf", "terrain", "tbot", "phist", "dvrtok", "mix"]);
+      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage", "moved", "from", "perf", "terrain", "tbot", "phist", "dvrtok", "mix", "tstats"]);
       this.board = { ...defaultBoard(), ...(m.get("board") || {}) };
       this.alerts = m.get("alerts") || {};
       this.team = m.get("team") || [];
@@ -468,7 +468,7 @@ export class Game extends DurableObject {
       this.camSt = m.get("camst") || {};
       this.srvKey = m.get("srvkey") || "";
       this.terrain = m.get("terrain") || {};
-      this.phist = m.get("phist") || []; this.dvrTok = m.get("dvrtok") || ""; this.mix = m.get("mix") || {};
+      this.phist = m.get("phist") || []; this.dvrTok = m.get("dvrtok") || ""; this.mix = m.get("mix") || {}; this.tstats = m.get("tstats") || {};
       this.tbot = { on: false, channel: "", ann: { poll: true, result: true, death: true, victor: true, bets: true }, cmds: true, ...(m.get("tbot") || {}) };
       this.roles = m.get("roles") || null;
       if (!this.roles) {
@@ -759,6 +759,8 @@ export class Game extends DurableObject {
         this.send(ws, this.hello(a)); break;
       }
       case "alert": return this.onAlert(ws, a, m.a || {}, reply);
+      case "tstats": this.statTick(); return reply(true, this.statsFor(a));
+      case "progTake": this.statTick(); return this.onProgOp(a, m, reply);
       case "progMix": {
         // volumes de l'émission (général, musique, effets, chaque source), avec fondus : appliqués tout de suite sur le Direct
         if (!hasPerm(a, "program") || a.lock) return deny();
@@ -1195,6 +1197,7 @@ export class Game extends DurableObject {
     return { scenes, live: scenes.some(x => x.id === this.prog.live) ? this.prog.live : "", preview: scenes.some(x => x.id === p.preview) ? p.preview : scenes[0].id,
       trans: { type: ["logo", "fade", "cut"].includes(t.type) ? t.type : "logo", ms: num(t.ms, 1400, 300, 4000) }, seq: this.prog.seq, title: String(p.title || "").slice(0, 80),
       starts: this.prog.starts || {}, sfx: this.prog.sfx || null,
+      favs: (Array.isArray(p.favs) ? p.favs : []).slice(0, 12).map(x => scenes.some(sc => sc.id === x) ? x : ""),
       gfx: this.prog.gfx || {}, queue: this.prog.queue || [], qrun: this.prog.qrun || null, next: this.prog.next || null, replay: this.prog.replay || null, autoBack: this.prog.autoBack !== false, prevLive: this.prog.prevLive || "",
       apply: this.prog.apply === "manual" ? "manual" : "auto", screen: this.prog.screen || null, bgm: this.prog.bgm || null, liveAt: this.prog.liveAt || 0, airScene: this.prog.airScene || "", airItems: this.prog.airItems || null, airGfx: this.prog.airGfx || null };
   }
@@ -1650,7 +1653,7 @@ export class Game extends DurableObject {
     return c.kind === "twitch" || Date.now() >= (c.at || 0) + (this.board.delay || 0) * 1000;
   }
   clipsFor(a) {
-    return this.clips.filter(c => c.ready && this.clipVisible(c, a)).map(c => ({ id: c.id, title: c.title, kind: c.kind, slug: c.slug || "", tid: c.tid || "", tname: c.tname || "", by: c.byName, mine: a && c.by === a.id, at: c.at, dur: c.dur || 0, parts: c.parts ? c.parts.length : 0, mime: c.mime || "", pinned: !!c.pinned, size: c.size || 0 }));
+    return this.clips.filter(c => c.ready && this.clipVisible(c, a)).map(c => ({ id: c.id, title: c.title, kind: c.kind, slug: c.slug || "", tid: c.tid || "", tname: c.tname || "", by: c.byName, mine: a && c.by === a.id, at: c.at, dur: c.dur || 0, parts: c.parts ? c.parts.length : 0, mime: c.mime || "", pinned: !!c.pinned, size: c.size || 0, trim: c.trim, pt: c.pt }));
   }
   pushClips() {
     clearTimeout(this.clipT);
@@ -1710,7 +1713,9 @@ export class Game extends DurableObject {
       const b = await req.json().catch(() => ({}));
       const n = Math.max(1, Math.min(40, parseInt(b.n, 10) || 0));
       const t = this.board.tributes.find(x => x.id === b.tid), cm = this.team.find(x => "c:" + x.id === b.src);
-      const c = { id: rid8(), kind: "ctv", title: String(b.title || "Clip").slice(0, 90), src: String(b.src || "").slice(0, 44), tid: t ? t.id : "", tname: t ? t.name : cm ? cm.name : "", by: a.id, byName: a.name || "Régie", at: Math.min(Date.now(), +b.at || Date.now()), dur: Math.max(1, Math.min(120, +b.dur || 30)), mime: String(b.mime || "video/webm").slice(0, 60), parts: new Array(n).fill(0), size: 0, ready: false };
+      const c = { id: rid8(), kind: "ctv", title: String(b.title || "Clip").slice(0, 90), src: String(b.src || "").slice(0, 44), tid: t ? t.id : "", tname: t ? t.name : cm ? cm.name : "", by: a.id, byName: a.name || "Régie", at: Math.min(Date.now(), +b.at || Date.now()), dur: Math.max(1, Math.min(120, +b.dur || 30)), mime: String(b.mime || "video/webm").slice(0, 60), parts: new Array(n).fill(0), size: 0, ready: false,
+        trim: b.trim && isFinite(+b.trim.in) ? { in: Math.max(0, Math.min(30, +b.trim.in)), dur: Math.max(1, Math.min(120, +b.trim.dur || +b.dur || 30)) } : undefined,
+        pt: b.pt && isFinite(+b.pt.x) ? { x: Math.max(0, Math.min(1, +b.pt.x)), z: Math.max(1, Math.min(3, +b.pt.z || 1)) } : undefined };
       this.clips.push(c); this.ctx.storage.put("clips", this.clips);
       return J({ id: c.id });
     }
@@ -2014,13 +2019,15 @@ export class Game extends DurableObject {
     } else if (m.t === "progReplay") {
       if (m.stop) this.prog.replay = null;
       else {
-        const src = String(m.src || "").slice(0, 44), sec = Math.max(5, Math.min(60, +m.sec || 30)), rate = Math.max(0.25, Math.min(1, +m.rate || 0.5));
+        const src = String(m.src || "").slice(0, 44), rate = Math.max(0.25, Math.min(1, +m.rate || 0.5)), now = Date.now();
+        const from = +m.from > now - 15 * 60000 && +m.from < now ? +m.from : 0, to = from && +m.to > from ? Math.min(+m.to, from + 60000) : 0;
+        const sec = from ? Math.max(1, (to - from) / 1000) : Math.max(5, Math.min(60, +m.sec || 30));
         const nm = String(m.name || "").slice(0, 60);
-        this.prog.replay = { src, sec, rate, name: nm, at: Date.now(), end: Date.now() + sec / rate * 1000 + 800 };
+        this.prog.replay = { src, sec, rate, name: nm, at: now, end: now + sec / rate * 1000 + 800, from: from || undefined, to: to || undefined };
       }
     } else if (m.t === "progClip") {
       const c = m.id && this.clips.find(x => x.id === m.id);
-      this.prog.clip = c ? { id: c.id, kind: c.kind, slug: c.slug || "", parts: c.parts ? c.parts.length : 0, mime: c.mime || "", title: c.title, name: c.tname || "", at: Date.now(), end: Date.now() + (c.dur || 30) * 1000 + 1500 } : null;
+      this.prog.clip = c ? { id: c.id, kind: c.kind, slug: c.slug || "", parts: c.parts ? c.parts.length : 0, mime: c.mime || "", title: c.title, name: c.tname || "", trim: c.trim, at: Date.now(), end: Date.now() + ((c.trim && c.trim.dur) || c.dur || 30) * 1000 + 1500 } : null;
     } else if (m.t === "progSfx") {
       const md = m.id && this.media.find(x => x.id === m.id);
       this.prog.sfx = md ? { id: md.id, at: Date.now(), vol: Math.max(0, Math.min(100, +m.vol || 100)), loop: !!m.loop } : null;
@@ -2456,6 +2463,7 @@ export class Game extends DurableObject {
     const last = arr[arr.length - 1];
     const q = { x: Math.round(+p.x * 10) / 10, y: Math.round(+p.y * 10) / 10, z: Math.round(+p.z * 10) / 10, d: String(p.d || "minecraft:overworld").slice(0, 60), ts: now, src };
     if (isFinite(+p.hp)) q.hp = Math.round(+p.hp * 10) / 10;
+    if (last && last.d === q.d && t.status !== "dead") { const dd = Math.hypot(q.x - last.x, q.z - last.z); if (dd > 0.3 && dd < 60) this.stat(t.id).dist += dd; }
     if (last && last.d === q.d && Math.abs(last.x - q.x) < 0.6 && Math.abs(last.z - q.z) < 0.6 && Math.abs(last.y - q.y) < 0.6 && last.hp === q.hp && now - last.ts < 5000) { last.ts = now; last.src = src; }
     else arr.push(q);
     const keep = now - Math.max(20 * 60000, (this.board.delay || 0) * 1000 + 5 * 60000);
@@ -2503,6 +2511,31 @@ export class Game extends DurableObject {
         }
       } else if (d > 40 && this.near.has(key)) this.near.delete(key);
     }
+  }
+  /* statistiques de fin (équitables : visibles seulement une fois le tribut tombé ou les Jeux finis) */
+  stat(id) { return this.tstats[id] || (this.tstats[id] = { dist: 0, air: 0, vmin: 0, peak: 0 }); }
+  statTick() {
+    const now = Date.now(), dt = Math.min(120000, now - (this.statAt || now)); this.statAt = now;
+    if (!dt) return;
+    const live = this.prog && this.prog.live && !this.prog.screen ? this.liveItems() : [];
+    for (const it of live) if (it.k === "trib" && !it.hide) this.stat(it.ref).air += dt / 1000;
+    const cnt = this.presence(false).counts, tw = (this.live && this.live.data) || {};
+    for (const t of this.board.tributes) {
+      if (t.status === "dead") continue;
+      const v = (cnt[t.login] || 0) + ((tw[t.login] || {}).v || 0); if (!v) continue;
+      const st = this.stat(t.id); st.vmin += v * dt / 60000; if (v > st.peak) st.peak = v;
+    }
+    if (now - (this.statSave || 0) > 60000) { this.statSave = now; this.ctx.storage.put("tstats", this.tstats); }
+  }
+  statsFor(a) {
+    const b = this.publicBoard(), over = !!this.victorEvent(), crew = isCrew(a) && !a.lock, out = {}, st0 = this.board.startTs || 0;
+    for (const t of (crew ? this.board : b).tributes) {
+      if (!crew && !over && t.status !== "dead") continue;
+      const s = this.tstats[t.id] || { dist: 0, air: 0, vmin: 0, peak: 0 };
+      const end = t.status === "dead" ? t.diedAt || 0 : (over ? (this.victorEvent() || {}).ts || Date.now() : Date.now());
+      out[t.id] = { dist: Math.round(s.dist), air: Math.round(s.air), vmin: Math.round(s.vmin), peak: s.peak, alive: st0 && end ? Math.max(0, Math.round((end - st0) / 1000)) : 0 };
+    }
+    return { stats: out, over };
   }
   flushPosSoon() {
     if (this.posT || !this.posDirty) return;
@@ -2622,6 +2655,7 @@ export class Game extends DurableObject {
       const last = (this.live && this.live.ts) || 0;
       t = Math.min(t, Math.max(now + 1000, last + 60000));
     }
+    if (this.prog && this.prog.live && this.sockets().length) t = Math.min(t, now + 30000);
     if (this.board.lock && this.board.lock.mode === "schedule" && this.sockets().length && this.board.tributes.some(x => x.discordId))
       t = Math.min(t, (Math.floor(now / 60000) + 1) * 60000 + 1000);
     if (this.prog && this.prog.next && this.prog.next.at) t = Math.min(t, Math.max(now + 200, this.prog.next.at));
@@ -2649,7 +2683,7 @@ export class Game extends DurableObject {
     if (this.bets.settled) { const r = this.bets.settled.at + (this.board.delay || 0) * 1000; if (r <= now + 500 && r > now - 60000) this.pushBets(); }
     if (this.poll && this.poll.end && this.poll.end <= now + 300 && this.poll.end > now - 5000) this.pushPoll();
     if (this.tbot && this.tbot.on && this.tbot.channel) { if (!this.botWs) this.botStart(); else if (now - (this.botLast || 0) > 360000) { this.botClose(); this.botStart(); } }
-    this.botTick();
+    this.botTick(); this.statTick();
     await this.scheduleAlarm();
   }
   async twitchToken(force) {

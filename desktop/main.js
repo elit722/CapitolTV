@@ -44,8 +44,8 @@ function guard(win) {
   });
   win.webContents.on('before-input-event', (e, inp) => {
     if (inp.type !== 'keyDown') return;
-    if (inp.key === 'F11') { win.setFullScreen(!win.isFullScreen()); e.preventDefault(); }
-    if (inp.key === 'F5' || (inp.control && inp.key.toLowerCase() === 'r')) { win.webContents.reload(); e.preventDefault(); }
+    if (inp.key === 'F11' && !inp.shift) { win.setFullScreen(!win.isFullScreen()); e.preventDefault(); }
+    if ((inp.key === 'F5' && !inp.shift) || (inp.control && inp.key.toLowerCase() === 'r')) { win.webContents.reload(); e.preventDefault(); }
     if (inp.control && inp.shift && inp.key.toLowerCase() === 'i') { win.webContents.toggleDevTools(); e.preventDefault(); }
     if (inp.control && (inp.key === '+' || inp.key === '=')) { win.webContents.setZoomLevel(win.webContents.getZoomLevel() + .5); e.preventDefault(); }
     if (inp.control && inp.key === '-') { win.webContents.setZoomLevel(win.webContents.getZoomLevel() - .5); e.preventDefault(); }
