@@ -354,8 +354,6 @@ public final class ServerBridge {
 
     private static void onTick(MinecraftServer s) {
         TerrainScan.tick(s);
-
-        }
         if (sock == null || !sock.online()) { if (events.size() > 200) events.clear(); return; }
         tick++;
         if (cfg.giveStreamKeys && !wantKeys.isEmpty() && tick % 20 == 0) {
