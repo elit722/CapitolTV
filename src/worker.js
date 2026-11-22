@@ -322,7 +322,7 @@ async function overlayLogin(env, key) {
    Durable Object : la régie centrale
    ===================================================================== */
 const TYPES = ["Combat", "Alliance", "Trahison", "Mort imminente", "Cadeau sponsor", "Moment drôle", "Révélation", "Autre"];
-const SCALARS = ["ticker", "don", "fund", "day", "startTs", "cooldown", "lastHommage", "flash", "delay", "hideChat", "lock", "sponsor", "publicAccess", "map", "theme"];
+const SCALARS = ["ticker", "don", "fund", "day", "startTs", "cooldown", "lastHommage", "flash", "delay", "hideChat", "lock", "sponsor", "publicAccess", "map", "theme", "autoCanon", "tick"];
 const STATUSES = ["alive", "injured", "missing", "dead"];
 const PERMS = ["admin", "mod", "member"];
 const LOGIN_RE = /^[a-z0-9_]{3,25}$/;
@@ -335,6 +335,39 @@ function dvrStore(env) {
   const b = env.CLIPS; if (!b) return null;
   return { put: (k, v, o) => b.put("dvr/" + k, v, o), get: k => b.get("dvr/" + k), delete: k => b.delete(Array.isArray(k) ? k.map(x => "dvr/" + x) : "dvr/" + k),
     list: async o => { const r = await b.list({ ...o, prefix: "dvr/" + (o.prefix || "") }); return { ...r, objects: r.objects.map(x => ({ ...x, key: x.key.slice(4) })) }; } };
+}
+/* volume (en %) d'une entrée du mixeur à l'instant t, fondu compris */
+/* YouTube : identifiant d'une vidéo dans un lien (ou l'identifiant seul) */
+function ytId(s) {
+  s = String(s || "").trim();
+  if (/^[\w-]{11}$/.test(s) && /[A-Z0-9_-]/.test(s) && /[a-z]/i.test(s)) return s;
+  const m = s.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/|music\.youtube\.com\/watch\?(?:.*&)?v=)([\w-]{11})/i);
+  return m ? m[1] : "";
+}
+const ytDur = t => String(t || "").split(":").reduce((a, x) => a * 60 + (parseInt(x, 10) || 0), 0);
+async function ytScrape(q) {
+  const r = await fetch("https://www.youtube.com/results?hl=fr&gl=FR&sp=EgIQAQ%253D%253D&search_query=" + encodeURIComponent(q), {
+    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36", "Accept-Language": "fr-FR,fr;q=0.9,en;q=0.8", Cookie: "CONSENT=YES+cb; SOCS=CAI" } });
+  if (!r.ok) return [];
+  const h = await r.text(), i = h.indexOf("ytInitialData"); if (i < 0) return [];
+  const st = h.indexOf("{", i); let d = 0, e = st, inS = false, esc = false;
+  for (; e < h.length; e++) { const c = h[e]; if (inS) { if (esc) esc = false; else if (c === "\\") esc = true; else if (c === '"') inS = false; continue; } if (c === '"') inS = true; else if (c === "{") d++; else if (c === "}" && --d === 0) break; }
+  let data; try { data = JSON.parse(h.slice(st, e + 1)); } catch (x) { return []; }
+  const out = [], walk = o => { if (!o || typeof o !== "object" || out.length >= 15) return; if (o.videoRenderer && o.videoRenderer.videoId) { const v = o.videoRenderer; out.push({ yt: v.videoId, title: String(((v.title || {}).runs || [{}])[0].text || "").slice(0, 100), creator: String(((v.ownerText || v.longBylineText || {}).runs || [{}])[0].text || "").slice(0, 60), dur: ytDur((v.lengthText || {}).simpleText) }); return; } for (const k in o) walk(o[k]); };
+  walk(data);
+  return out.filter(x => x.dur > 0 && x.dur < 3 * 3600);
+}
+async function ytApiSearch(q, key) {
+  const r = await fetch("https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&maxResults=15&q=" + encodeURIComponent(q) + "&key=" + key);
+  const j = await r.json(); const ids = (j.items || []).map(x => x.id.videoId).filter(Boolean); if (!ids.length) return [];
+  const d = await (await fetch("https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=" + ids.join(",") + "&key=" + key)).json();
+  const iso = s => { const m = String(s || "").match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/) || []; return (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0); };
+  return (d.items || []).map(v => ({ yt: v.id, title: String(v.snippet.title || "").slice(0, 100), creator: String(v.snippet.channelTitle || "").slice(0, 60), dur: iso(v.contentDetails.duration) }));
+}
+function mixAt(e, t = Date.now()) {
+  if (!e) return 100;
+  if (!e.dur || t >= e.at + e.dur) return e.v;
+  return e.v0 + (e.v - e.v0) * Math.max(0, (t - e.at) / e.dur);
 }
 function hash32(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
 const rid8 = () => crypto.randomUUID().replace(/-/g, "").slice(0, 10);
@@ -354,7 +387,7 @@ const defaultRoles = () => [
 const SLUG = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 24);
 const defaultBoard = () => ({
   tributes: [], ticker: "", don: { label: "Sponsoriser", url: "" }, fund: { raised: 0, goal: 0, cur: "€" },
-  day: 0, startTs: null, cooldown: 20, lastHommage: 0, events: [], flash: null, delay: 0, hideChat: true, publicAccess: false,
+  day: 0, startTs: null, cooldown: 20, lastHommage: 0, events: [], flash: null, delay: 0, hideChat: true, publicAccess: false, autoCanon: true,
   fund: { raised: 0, goal: 0, cur: "€", show: true }, fundLog: [],
   lock: { mode: "off", tz: "Europe/Paris", windows: [], msg: "" },
   sponsor: { url: "", label: "Sponsoriser un tribut", text: "", partners: [] },
@@ -424,7 +457,7 @@ export class Game extends DurableObject {
 
   load() {
     if (!this.loading) this.loading = (async () => {
-      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage", "moved", "from", "perf", "terrain", "tbot", "phist", "dvrtok"]);
+      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage", "moved", "from", "perf", "terrain", "tbot", "phist", "dvrtok", "mix"]);
       this.board = { ...defaultBoard(), ...(m.get("board") || {}) };
       this.alerts = m.get("alerts") || {};
       this.team = m.get("team") || [];
@@ -435,7 +468,7 @@ export class Game extends DurableObject {
       this.camSt = m.get("camst") || {};
       this.srvKey = m.get("srvkey") || "";
       this.terrain = m.get("terrain") || {};
-      this.phist = m.get("phist") || []; this.dvrTok = m.get("dvrtok") || "";
+      this.phist = m.get("phist") || []; this.dvrTok = m.get("dvrtok") || ""; this.mix = m.get("mix") || {};
       this.tbot = { on: false, channel: "", ann: { poll: true, result: true, death: true, victor: true, bets: true }, cmds: true, ...(m.get("tbot") || {}) };
       this.roles = m.get("roles") || null;
       if (!this.roles) {
@@ -544,7 +577,7 @@ export class Game extends DurableObject {
       t: "hello", now: Date.now(),
       me: { id: a.id, name: a.name, av: a.av, perm: a.perm, pub: a.pub, overlay: !!a.overlay, obsKey: hasPerm(a, "program") && !a.lock && this.env.OVERLAY_KEY ? this.env.OVERLAY_KEY : undefined, lock: !!a.lock, guest: !!a.guest, tribute: this.tributeOf(a.id), cam: a.cam || "", sup: isSup(a), crew: isCrew(a) && !a.lock, map: this.mapAllowed(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "" },
       roles: this.roles, prog: a.lock || !(isCrew(a) || a.overlay) ? undefined : this.progPub(), progHist: a.lock || !(isCrew(a) || a.overlay) ? undefined : this.progHistFor(),
-      dvrBase: isCrew(a) || a.overlay ? (this.env.DVR_PUBLIC || "") : undefined, progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
+      dvrBase: isCrew(a) || a.overlay ? (this.env.DVR_PUBLIC || "") : undefined, mix: isCrew(a) || a.overlay ? this.mix : undefined, progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
       terrain: this.terrain || {}, bot: isStaff(a) ? this.botPublic() : undefined, media: isCrew(a) ? this.media : undefined, srvCams: isCrew(a) ? this.srvCams : undefined,
       pubs: this.pubsFor(a), rtc: { on: this.rtcOn(), pub: false, capOff: !!this.board.capOff, perf: isCrew(a) ? this.perf : undefined, use: isCrew(a) || a.overlay ? this.useInfo() : undefined, vq: { trib: this.vqCap("t:"), cam: this.vqCap("c:") }, vpref: isCrew(a) && !a.lock ? this.vpref : undefined },
       talk: this.talkSup(a) ? this.talkState() : undefined, clips: this.clipsFor(a),
@@ -586,7 +619,7 @@ export class Game extends DurableObject {
   publicBoard(now = Date.now()) {
     let b = this.board; const D = (b.delay || 0) * 1000, cut = now - D;
     const events = b.events.filter(e => e.k !== "mark");
-    b = { ...b, fundLog: undefined };
+    b = { ...b, fundLog: undefined, flashQ: undefined };
     const tributes = b.tributes.map(t => {
       const x = { ...t }; delete x.discordId;
       // différé : le dernier changement de statut n'est pas encore « passé à l'antenne »
@@ -600,7 +633,7 @@ export class Game extends DurableObject {
     // annonces, parachutes et hommages : immédiats (pas de différé)
     return {
       ...b, tributes,
-      events: events.filter(e => NOW_KINDS.includes(e.k) || e.ts <= cut).map(e => NOW_KINDS.includes(e.k) ? e : ({ ...e, ts: e.ts + D })),
+      events: events.filter(e => NOW_KINDS.includes(e.k) || e.now || e.ts <= cut).map(e => NOW_KINDS.includes(e.k) || e.now ? e : ({ ...e, ts: e.ts + D })),
       flash: b.flash || null
     };
   }
@@ -608,7 +641,8 @@ export class Game extends DurableObject {
     const b = this.board, D = (b.delay || 0) * 1000, out = [];
     if (!D) return out;
     for (const t of b.tributes) if (t.statusAt) out.push(t.statusAt + D);
-    for (const e of b.events) if (e.k !== "mark" && !NOW_KINDS.includes(e.k)) out.push(e.ts + D);
+    for (const e of b.events) if (e.k !== "mark" && !NOW_KINDS.includes(e.k) && !e.now) out.push(e.ts + D);
+    for (const q of b.flashQ || []) out.push(q.at);
     return out;
   }
 
@@ -725,6 +759,22 @@ export class Game extends DurableObject {
         this.send(ws, this.hello(a)); break;
       }
       case "alert": return this.onAlert(ws, a, m.a || {}, reply);
+      case "progMix": {
+        // volumes de l'émission (général, musique, effets, chaque source), avec fondus : appliqués tout de suite sur le Direct
+        if (!hasPerm(a, "program") || a.lock) return deny();
+        const keys = Array.isArray(m.keys) ? m.keys : [m.key], now = Date.now(), dur = Math.max(0, Math.min(600000, Math.round(+m.dur || 0)));
+        for (const raw of keys.slice(0, 40)) {
+          const k = String(raw || "").slice(0, 60); if (!/^(master|bgm|sfx|(trib|cam|media)\|[\w-]{1,40})$/.test(k)) continue;
+          const cur = mixAt(this.mix[k], now), to = m.rel != null ? Math.round(cur * (1 + Math.max(-1, Math.min(2, +m.rel || 0)))) : m.v != null ? Math.round(+m.v) : Math.round(cur);
+          if (!isFinite(to)) continue;
+          const v = Math.max(0, Math.min(150, to));
+          if (v === 100 && !dur) delete this.mix[k]; else this.mix[k] = { v0: cur, v, at: now, dur };
+          if (m.mute !== undefined) { if (!this.mix[k]) this.mix[k] = { v0: 100, v: 100, at: now, dur: 0 }; this.mix[k].mute = !!m.mute; }
+        }
+        this.broadcast({ t: "mix", mix: this.mix }, x => (isCrew(x) && !x.lock) || x.overlay);
+        clearTimeout(this.mixT); this.mixT = setTimeout(() => this.ctx.storage.put("mix", this.mix), 1500);
+        reply(true); break;
+      }
       case "fund": {
         if (!admin) return deny();
         const amount = Math.round((parseFloat(m.amount) || 0) * 100) / 100;
@@ -979,6 +1029,8 @@ export class Game extends DurableObject {
       if (p.set.fund && typeof p.set.fund === "object") { b.fund = { goal: Math.max(0, +p.set.fund.goal || 0), cur: String(p.set.fund.cur || "€").slice(0, 4), show: p.set.fund.show !== false, raised: 0 }; this.recalcFund(); }
       if (b.theme) { const t = b.theme || {}, hx = v => /^#[0-9a-f]{6}$/i.test(v || "") ? v : ""; b.theme = { name: String(t.name || "").slice(0, 40), gold: hx(t.gold), red: hx(t.red), font: ["unbounded", "syne", "grotesk", "oswald", "cinzel"].includes(t.font) ? t.font : "" }; }
       b.publicAccess = !!b.publicAccess;
+      b.autoCanon = b.autoCanon !== false;
+      if (b.tick) { const t = b.tick; b.tick = { msgs: (Array.isArray(t.msgs) ? t.msgs : []).filter(m => m && m.text).slice(0, 12).map(m => ({ id: String(m.id || "").slice(0, 20), text: String(m.text).slice(0, 200), until: +m.until || 0 })), off: (Array.isArray(t.off) ? t.off : []).map(String).slice(0, 10) }; if (p.set.tick) b.ticker = ""; }
       b.map = { on: !!(b.map && b.map.on), staffOnly: !(b.map && b.map.staffOnly === false) };
       b.delay = Math.max(0, Math.min(900, parseInt(b.delay, 10) || 0));
       b.cooldown = Math.max(0, Math.min(600, parseInt(b.cooldown, 10) || 0));
@@ -992,7 +1044,7 @@ export class Game extends DurableObject {
       t.mc = String(t.mc || "").replace(/[^A-Za-z0-9_]/g, "").slice(0, 16);
       // horodatage serveur des changements de statut (sert au différé)
       if (prev && prev.status === t.status) { t.statusAt = prev.statusAt || 0; t.prevStatus = prev.prevStatus || ""; t.diedAt = prev.diedAt || t.diedAt || 0; }
-      else { t.prevStatus = prev ? prev.status : t.status; t.statusAt = prev ? now : 0; }
+      else { t.prevStatus = t.status; t.statusAt = prev ? now : 0; }
       if (t.status === "dead" && (!prev || prev.status !== "dead")) t.diedAt = now;
       if (t.status === "injured" && (!prev || prev.status !== "injured")) t.injAt = now;
       if (i >= 0) b.tributes[i] = t; else if (b.tributes.length < 999) b.tributes.push(t);
@@ -1000,7 +1052,7 @@ export class Game extends DurableObject {
     if (Array.isArray(p.delTributes)) { const d = new Set(p.delTributes); b.tributes = b.tributes.filter(t => !d.has(t.id)); }
     if (Array.isArray(p.events)) {
       const have = new Set(b.events.map(e => e.id));
-      for (const e of p.events) if (e && e.id && !have.has(e.id)) b.events.push({ ...e, ts: now, text: String(e.text || "").slice(0, 400) });
+      for (const e of p.events) if (e && e.id && !have.has(e.id)) b.events.push({ ...e, ts: now, now: true, text: String(e.text || "").slice(0, 400) });
     }
     if (Array.isArray(p.delEvents)) { const d = new Set(p.delEvents); b.events = b.events.filter(e => !d.has(e.id)); }
     b.events.sort((x, y) => x.ts - y.ts);
@@ -1106,7 +1158,7 @@ export class Game extends DurableObject {
   progPublic() {
     const sc = this.prog.scenes.find(x => x.id === this.prog.live);
     const starts = this.prog.starts || {};
-    const items = sc ? this.liveItems().map(it => { const s = this.srcOf(it); return s ? { id: it.id, k: it.k, ref: it.ref, x: it.x, y: it.y, w: it.w, h: it.h, z: it.z, label: it.label !== false, audio: !!it.audio, head: !!it.head, loop: !!it.loop, vol: it.vol == null ? 100 : it.vol, d: it.d || 0, at: starts[it.ref] || 0, ...s } : null; }).filter(Boolean) : [];
+    const items = sc ? this.liveItems().map(it => { const s = this.srcOf(it); return s ? { id: it.id, k: it.k, ref: it.ref, x: it.x, y: it.y, w: it.w, h: it.h, z: it.z, label: it.label !== false, audio: !!it.audio, head: !!it.head, hide: !!it.hide, loop: !!it.loop, vol: it.vol == null ? 100 : it.vol, d: it.d || 0, at: starts[it.ref] || 0, ...s } : null; }).filter(Boolean) : [];
     const fx = this.prog.sfx, md = fx && this.media.find(x => x.id === fx.id);
     return { seq: this.prog.seq, scene: sc ? sc.name : "", items, trans: this.prog.trans, title: this.prog.title || "", on: !!sc,
       gfx: this.liveGfx(), replay: this.prog.replay && Date.now() < this.prog.replay.end ? this.prog.replay : null, next: this.prog.next || null,
@@ -1119,7 +1171,7 @@ export class Game extends DurableObject {
     const own = sc && sc.bgm && sc.bgm.ids.length ? { ...sc.bgm, at: this.prog.liveAt || 0, scope: "scene" } : null;
     const g = this.prog.bgm && this.prog.bgm.ids && this.prog.bgm.ids.length ? { ...this.prog.bgm, scope: "all" } : null;
     const b = own || g; if (!b) return null;
-    const tracks = b.ids.map(id => this.media.find(x => x.id === id)).filter(x => x && x.kind === "audio").map(x => ({ id: x.id, name: x.name, dur: x.dur || 0, credit: x.credit || "" }));
+    const tracks = b.ids.map(id => this.media.find(x => x.id === id)).filter(x => x && x.kind === "audio").map(x => ({ id: x.id, name: x.name, dur: x.dur || 0, credit: x.credit || "", yt: x.yt || undefined }));
     return tracks.length ? { tracks, at: b.at || 0, vol: b.vol == null ? 60 : b.vol, scope: b.scope } : null;
   }
   onAirCams() {
@@ -1134,7 +1186,7 @@ export class Game extends DurableObject {
         id: String(it.id || "i" + j).replace(/[^a-z0-9_-]/gi, "").slice(0, 20) || "i" + j,
         k: ["cam", "media"].includes(it.k) ? it.k : "trib", ref: String(it.ref || "").slice(0, 40), loop: !!it.loop, vol: num(it.vol, 100, 0, 100),
         x: num(it.x, 0, -50, 150), y: num(it.y, 0, -50, 150), w: num(it.w, 50, 2, 200), h: num(it.h, 50, 2, 200), z: num(it.z, j, 0, 99),
-        label: it.label !== false, audio: !!it.audio, am: !!it.am, head: !!it.head, d: num(it.d, 0, 0, 4000)
+        label: it.label !== false, audio: !!it.audio, am: !!it.am, head: !!it.head, hide: !!it.hide, d: num(it.d, 0, 0, 4000)
       })),
       bgm: cleanBgm(sc.bgm)
     }));
@@ -1205,6 +1257,36 @@ export class Game extends DurableObject {
     const parts = path.split("/").filter(Boolean); // api, media, id?, n?
     const id = String(parts[2] || "").replace(/[^a-z0-9]/gi, "");
     const pushList = () => { this.ctx.storage.put("media", this.media); this.crewcast({ t: "media", list: this.media }, x => !x.mod); };
+    // n'importe quelle musique : recherche YouTube (lue ensuite par le lecteur YouTube intégré, rien n'est téléchargé)
+    if (req.method === "GET" && id === "yt") {
+      const q = (new URL(req.url).searchParams.get("q") || "").trim().slice(0, 100);
+      if (q.length < 2) return J({ list: [] });
+      const one = ytId(q);
+      if (one) {
+        const o = await fetch("https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent("https://www.youtube.com/watch?v=" + one)).then(r => r.ok ? r.json() : null).catch(() => null);
+        return J({ list: o ? [{ yt: one, title: String(o.title || "Vidéo YouTube").slice(0, 100), creator: String(o.author_name || "").slice(0, 60), dur: 0 }] : [] });
+      }
+      const ck = "yts:" + q.toLowerCase();
+      const hit = await this.env.MEDIA.get(ck, "json").catch(() => null);
+      if (hit && Date.now() - hit.at < 86400000) return J({ list: hit.list });
+      let list = [];
+      if (this.env.YT_API_KEY) list = await ytApiSearch(q, this.env.YT_API_KEY).catch(() => []);
+      if (!list.length) list = await ytScrape(q).catch(() => []);
+      if (!list.length) return J({ list: [], msg: "YouTube ne répond pas pour le moment : colle directement le lien d'une vidéo." });
+      await this.env.MEDIA.put(ck, JSON.stringify({ at: Date.now(), list }), { expirationTtl: 172800 }).catch(() => {});
+      return J({ list });
+    }
+    if (req.method === "POST" && id === "addyt") {
+      const b = await req.json().catch(() => ({})), v = ytId(String(b.yt || ""));
+      if (!v) return J({ msg: "Vidéo YouTube invalide." }, 400);
+      const have = this.media.find(x => x.yt === v); if (have) return J({ ok: true, media: have });
+      const nid = crypto.randomUUID().replace(/-/g, "").slice(0, 20);
+      const meta = { id: nid, name: String(b.name || "Musique").slice(0, 100), mime: "video/youtube", kind: "audio", yt: v, size: 0, dur: Math.max(0, +b.dur || 0), slot: "", by: user.name, at: Date.now(), n: 0, credit: String(b.credit || "").slice(0, 160) };
+      await this.env.MEDIA.put("meta:" + nid, JSON.stringify(meta));
+      this.media = [...this.media, meta].slice(-120);
+      pushList();
+      return J({ ok: true, media: meta });
+    }
     // recherche de musiques libres de droits (Openverse : Jamendo, Freesound, Wikimedia…), sans rien télécharger
     if (req.method === "GET" && id === "search") {
       const q = (new URL(req.url).searchParams.get("q") || "").trim().slice(0, 80);
@@ -2205,6 +2287,8 @@ export class Game extends DurableObject {
           const cam = !t && (this.team.find(x => x.mc && x.mc.toLowerCase() === low) || null);
           const src = t ? "t:" + t.id : cam ? "c:" + cam.id : "";
           if (src) out[n] = { key: this.keyFor(src), who: t ? t.name : cam.name, kind: t ? "trib" : "cam", pref: this.vpref[src] || "" };
+          // caméras : jeton du site (comms, carte, actions) fourni aussi, plus rien à copier depuis « Mon compte »
+          if (cam && CAMROLES.includes(this.camOf(cam.id)) && this.env.SESSION_SECRET) out[n].tok = await signSession({ id: cam.id, name: cam.name, av: cam.av || "", mod: 1, exp: Date.now() + 60 * 864e5 }, this.env.SESSION_SECRET);
         }
         this.send(ws, { t: "pkeys", keys: out });
         return;
@@ -2465,9 +2549,31 @@ export class Game extends DurableObject {
       if (dup) { if (!dup.amt && ev.amt) { dup.amt = ev.amt; dup.hp = ev.hp; dup.text = this.evText(dup); this.crewcast({ t: "feed", list: [dup] }); } continue; }
       ev.key = key;
       this.addFeed(ev);
+      if (k === "death" && (isServer || !srvOn)) this.autoKill(t, ev);
       if (isFinite(ev.hp) && ev.x != null) this.setPos(t, { x: ev.x, y: ev.y, z: ev.z, d: ev.d, hp: ev.hp }, src);
     }
     this.flushPosSoon();
+  }
+  autoKill(t, ev) {
+    const b = this.board; if (!b.autoCanon || t.status === "dead") return;
+    const now = Date.now(), D = (b.delay || 0) * 1000;
+    const place = b.tributes.filter(x => x.status !== "dead").length;
+    t.prevStatus = t.status; t.status = "dead"; t.statusAt = now; t.diedAt = now;
+    t.killer = ev.byTr || (ev.by ? "arena" : ""); t.cause = String(CAUSE_FR[ev.cause] || ev.cause || "").slice(0, 60); t.place = place;
+    const kn = ev.byTr ? ev.by : ev.by ? "l'arène" : "";
+    b.events.push({ id: now.toString(36) + "a", k: "death", tid: t.id, ts: now, auto: true, text: `${t.name}${t.district ? " (D" + t.district + ")" : ""} est tombé${kn ? " face à " + kn : ""}${t.cause ? " — " + t.cause : ""} · ${place}e place` });
+    b.flashQ = [...(b.flashQ || []), { id: now.toString(36) + "c", k: "death", tid: t.id, dur: 10, at: now + D }].slice(-20);
+    if (!D) this.flushFlashQ(now);
+    this.ctx.storage.put("board", b);
+    this.broadcastBoard(); this.botTick(); this.scheduleAlarm();
+  }
+  flushFlashQ(now = Date.now()) {
+    const b = this.board, due = (b.flashQ || []).filter(q => q.at <= now + 300);
+    if (!due.length) return false;
+    b.flashQ = b.flashQ.filter(q => q.at > now + 300);
+    const q = due[due.length - 1];
+    b.flash = { id: q.id, k: q.k, tid: q.tid, dur: q.dur, ts: q.at };
+    return true;
   }
   addFeed(ev) {
     const now = Date.now();
@@ -2535,7 +2641,8 @@ export class Game extends DurableObject {
     this.refreshLocks();
     const revealed = this.revealTimes().some(r => r > this.revealCursor - 1500 && r <= now + 500);
     this.revealCursor = now;
-    if (revealed) this.broadcastBoard({ viewersOnly: true });
+    if (this.flushFlashQ(now)) { await this.ctx.storage.put("board", this.board); this.broadcastBoard(); }
+    else if (revealed) this.broadcastBoard({ viewersOnly: true });
     if (this.prog.next && now >= this.prog.next.at - 200) await this.runNext();
     if (this.prog.replay && now >= this.prog.replay.end) { this.prog.replay = null; this.pushProg(false); }
     if (this.prog.clip && now >= this.prog.clip.end) { this.prog.clip = null; this.pushProg(false); }

@@ -632,6 +632,7 @@ button:focus{outline:none} button:focus-visible{outline:2px solid var(--gold-b);
 .rk-h{margin:14px 8px 6px;font-size:10.5px;font-weight:800;letter-spacing:.2em;color:var(--mute);text-transform:uppercase}
 
 /* ---------- ticker ---------- */
+.tk-list{display:flex;flex-direction:column;gap:4px;margin-top:8px}.tk-row{display:flex;align-items:center;gap:10px;padding:6px 10px;border:1px solid var(--hair);border-radius:8px}.tk-row>span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tk-row.exp{opacity:.5}
 .ticker{display:flex;align-items:stretch;border-top:1px solid var(--hair);background:var(--side);overflow:hidden}
 .ticker .lbl{display:flex;align-items:center;gap:9px;padding:0 16px 0 12px;border-right:1px solid var(--hair);white-space:nowrap}
 .ticker .lbl .word{font-size:11.5px;letter-spacing:.24em}
@@ -877,6 +878,41 @@ body.overlay{display:flex;flex-direction:column;justify-content:flex-end;backgro
 body.overlay header,body.overlay main,body.overlay #toasts,body.overlay #pageView,body.overlay #lockView,body.overlay #conn{display:none!important}
 body.overlay .ticker{height:38px;flex:none}
 body.overlay #flashLayer{top:40px}
+body.em-full #flashLayer{z-index:96;top:5vh}
+.em-it.em-hid{opacity:0!important;pointer-events:none}
+/* mixeurs */
+.mixbtn{width:100%;margin-top:8px;justify-content:center;gap:8px}.mixbtn.on{border-color:var(--gold-b);color:var(--gold-hi);background:rgba(var(--gold-rgb),.08)}
+.mixico{display:inline-flex;align-items:flex-end;gap:2px;height:12px}.mixico i{display:block;width:3px;border-radius:1px;background:currentColor}.mixico i:nth-child(1){height:60%}.mixico i:nth-child(2){height:100%}.mixico i:nth-child(3){height:40%}
+.mixp{position:fixed;right:24px;bottom:24px;z-index:120;width:min(440px,calc(100vw - 32px));max-height:min(78vh,720px);display:flex;flex-direction:column;background:rgba(16,15,18,.97);border:1px solid var(--hair2);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.55);backdrop-filter:blur(8px)}
+.mixp-h{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--hair);cursor:move;user-select:none}.mixp-h b{font-size:13px;letter-spacing:.04em}.mixp-h .note{font-size:11px}
+.mixp-b{overflow:auto;padding:6px 6px 8px}
+.mx-row{display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(110px,1.1fr) 62px 28px;align-items:center;gap:6px;padding:7px 8px;border-radius:9px}
+.pmix .mx-row{grid-template-columns:minmax(0,1fr) 28px minmax(100px,1.2fr) 52px}
+.mx-row:hover{background:rgba(255,255,255,.03)}.mx-row.master{background:rgba(var(--gold-rgb),.06);margin-bottom:4px}
+.mx-n{min-width:0}.mx-n b{display:block;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mx-n small{display:block;font-size:10.5px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mx-v{font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--ink2);text-align:right;white-space:nowrap}
+.mx-b{width:28px;height:28px;display:grid;place-items:center;border-radius:7px;border:1px solid var(--hair2);background:transparent;color:var(--ink2);cursor:pointer;font-size:13px}.mx-b:hover{color:var(--gold-hi);border-color:var(--gold-b)}
+.mx-b svg{width:15px;height:15px}
+.mx-row.mu .mx-b[data-mm],.mx-row.mu .mx-b[data-pm]{color:var(--red-hi);border-color:rgba(224,81,74,.5);background:rgba(224,81,74,.1)}.mx-row.mu input[type=range]{opacity:.35}.mx-row.mu .mx-v{color:var(--red-hi)}
+.mx-row.off .mx-n b{color:var(--ink2)}.mx-row.ramp .mx-v{color:var(--gold-hi)}
+.mx-row input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--gold) 0,var(--gold-hi) var(--p,100%),rgba(255,255,255,.1) var(--p,100%));cursor:pointer;margin:0}
+.mx-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:#f4ead2;border:2px solid var(--gold);box-shadow:0 1px 4px rgba(0,0,0,.5)}
+.mx-row input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:#f4ead2;border:2px solid var(--gold)}
+.mx-row.tw input[type=range]{background:linear-gradient(90deg,#7c4dff 0,#a970ff var(--p,100%),rgba(255,255,255,.1) var(--p,100%))}
+.mx-fade{margin:0 8px 8px;padding:8px;border:1px dashed var(--hair2);border-radius:9px;display:flex;flex-direction:column;gap:6px}.mx-pre{display:flex;flex-wrap:wrap;gap:4px}
+.mx-cu{display:flex;align-items:center;gap:5px;font-size:12px}.mx-cu .inp{width:62px;height:28px;padding:0 6px}.mx-cu .mini-sel{height:28px}
+.mx-foot{padding:6px 10px 0;font-size:11px}.mx-sep{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);padding:10px 10px 4px}
+.pmix{position:fixed;right:398px;bottom:14px;z-index:110;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.pmix-btn{display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--hair2);background:rgba(16,15,18,.95);color:var(--ink);cursor:pointer;font-size:12.5px;box-shadow:0 8px 24px rgba(0,0,0,.4)}.pmix-btn.on,.pmix-btn:hover{border-color:var(--gold-b);color:var(--gold-hi)}
+.pmix-p{width:380px;max-height:60vh;display:flex;flex-direction:column;background:rgba(16,15,18,.97);border:1px solid var(--hair2);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.55)}.pmix-p .mixp-h{cursor:default}
+.s2-tw{background:#0e0b14}
+/* menu clic droit de la régie */
+.ctx{position:fixed;z-index:200;min-width:220px;padding:5px;background:rgba(18,17,20,.98);border:1px solid var(--hair2);border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,.55);display:flex;flex-direction:column}
+.ctx-t{padding:6px 10px 4px;font-weight:700;font-size:12.5px;color:var(--gold-hi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+.ctx-h{padding:7px 10px 2px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.ctx button{all:unset;padding:6px 10px;border-radius:6px;font-size:12.5px;color:var(--ink);cursor:pointer}.ctx button:hover{background:rgba(var(--gold-rgb),.12);color:var(--gold-hi)}
+.ctx hr{border:0;border-top:1px solid var(--hair);margin:4px 2px}
+.cv .ci.hid{opacity:.45;outline:1px dashed var(--hair2);background-image:none!important}.yt-prev{position:fixed;right:0;bottom:0;width:200px;height:200px;opacity:0;pointer-events:none;z-index:-1}.bw.bad{opacity:.55}.em-yt{position:absolute;right:0;bottom:0;width:200px;height:200px;opacity:0;pointer-events:none;z-index:0}body.em-full #hommage{z-index:97}
 
 @media (max-width:1500px){ .games{display:none} }
 @media (max-width:1280px){ .hs.opt{display:none} }
@@ -1317,7 +1353,7 @@ function brandName() { return (S.board && S.board.theme && S.board.theme.name) |
 const S = {
   board: null, alerts: {}, live: {}, liveTs: 0, hasLive: false,
   me: null, team: [], presence: { n: 0, counts: {}, team: {} }, banned: {}, skew: 0, oq: '', teamOpen: false, subbed: false, watchKey: '',
-  presenter: LS.get('ctv.presenter', false), synced: null,
+  presenter: false, synced: null,
   layout: String(LS.get('ctv.layout', '1')),
   slots: (() => { const a = LS.get('ctv.slots', []); while (a.length < 9) a.push(null); return a.slice(0, 9); })(),
   prev: Array(9).fill(null),
@@ -1404,12 +1440,22 @@ function normBoard(b) {
     flash: b.flash || null,
     delay: Math.max(0, Math.min(900, parseInt(b.delay, 10) || 0)),
     hideChat: b.hideChat !== false,
+    autoCanon: b.autoCanon !== false,
+    tick: normTick(b.tick, b.ticker),
     lock: (l => ({ mode: ['off', 'schedule', 'on'].includes(l.mode) ? l.mode : 'off', tz: String(l.tz || 'Europe/Paris'), msg: String(l.msg || ''),
       windows: (Array.isArray(l.windows) ? l.windows : []).map(w => ({ days: (Array.isArray(w.days) ? w.days : []).filter(d => d >= 0 && d <= 6), from: /^\d\d:\d\d$/.test(w.from) ? w.from : '20:00', to: /^\d\d:\d\d$/.test(w.to) ? w.to : '23:00' })) }))(b.lock || {}),
     theme: (t => ({ name: String(t.name || '').slice(0, 40), gold: /^#[0-9a-f]{6}$/i.test(t.gold || '') ? t.gold : '', red: /^#[0-9a-f]{6}$/i.test(t.red || '') ? t.red : '', font: FONTS[t.font] ? t.font : '' }))(b.theme || {}),
     sponsor: (s => ({ url: /^https?:\/\//i.test(s.url || '') ? s.url : '', label: String(s.label || 'Sponsoriser un tribut'), text: String(s.text || ''),
       partners: (Array.isArray(s.partners) ? s.partners : []).map(p => ({ name: String(p.name || ''), url: String(p.url || ''), img: String(p.img || '') })) }))(b.sponsor || {})
   };
+}
+/* bandeau défilant : messages de la régie (avec durée de vie) + infos automatiques désactivables */
+const TICK_AUTO = [['day', 'Jour des Jeux'], ['alive', 'Tributs en lice'], ['events', 'Dernières morts et parachutes (15 min)'], ['fund', 'Cagnotte'], ['sponsor', 'Appel aux dons'], ['slogan', '« Restez avec nous »']];
+function normTick(t, legacy) {
+  t = t && typeof t === 'object' ? t : {};
+  let msgs = (Array.isArray(t.msgs) ? t.msgs : []).filter(m => m && m.text).map(m => ({ id: String(m.id || rid()), text: String(m.text).slice(0, 200), until: +m.until || 0 })).slice(0, 12);
+  if (!t.msgs && legacy) msgs = [{ id: 'legacy', text: String(legacy).slice(0, 200), until: 0 }];
+  return { msgs, off: (Array.isArray(t.off) ? t.off : []).filter(k => TICK_AUTO.some(a => a[0] === k)) };
 }
 S.board = normBoard(null);
 const byLogin = l => S.board.tributes.find(t => t.login === l);
@@ -1496,6 +1542,7 @@ const NET = {
   },
   onMsg(m) {
     switch (m.t) {
+      case 'mix': MIX.set(m.mix); break;
       case 'hello': { this.tries = 0; this.everConnected = true; onHello(m); const q = this.q; this.q = []; q.forEach(o => this.send(o)); break; }
       case 'board': onBoard(m.board); break;
       case 'alert': S.alerts[m.id] = m.a; onAlerts(S.alerts); break;
@@ -1548,7 +1595,7 @@ function showConn(title, text, final) {
 function hideConn() { clearTimeout(showConn.t); $('#conn').classList.add('hide'); }
 
 /* Enregistrement : seules les modifications sont envoyées (plusieurs personnes peuvent être en régie) */
-const SCALARS = ['ticker', 'don', 'fund', 'day', 'startTs', 'cooldown', 'lastHommage', 'flash', 'delay', 'hideChat', 'lock', 'sponsor', 'publicAccess', 'map', 'theme'];
+const SCALARS = ['ticker', 'don', 'fund', 'day', 'startTs', 'cooldown', 'lastHommage', 'flash', 'delay', 'hideChat', 'lock', 'sponsor', 'publicAccess', 'map', 'theme', 'autoCanon', 'tick'];
 const clone = o => JSON.parse(JSON.stringify(o));
 function boardDiff(a, b) {
   const p = {}, set = {};
@@ -1611,7 +1658,7 @@ function applyRole() {
 function onHello(m) {
   S.me = m.me; S.skew = (m.now || Date.now()) - Date.now();
   S.team = m.team || []; S.banned = m.banned || {}; S.roles = m.roles || [];
-  TERRAIN.set(m.terrain); S.bot = m.bot || null; DVR.onHello(m); RTC.onHello(m); CAM.onHello(m); PROG.onHello(m); S.srvCams = m.srvCams || []; GAMES.onHello(m); CLIPS.onList(m.clips); TALK.onState(m.talk || null); RTC.vq = (m.rtc && m.rtc.vq) || null;
+  TERRAIN.set(m.terrain); S.bot = m.bot || null; DVR.onHello(m); if (m.mix) MIX.set(m.mix); RTC.onHello(m); CAM.onHello(m); PROG.onHello(m); S.srvCams = m.srvCams || []; GAMES.onHello(m); CLIPS.onList(m.clips); TALK.onState(m.talk || null); RTC.vq = (m.rtc && m.rtc.vq) || null;
   S.alertsReady = false; S.seen = new Set(); S.alerts = {};
   if (m.alerts) onAlerts(m.alerts);
   onPresence(m.presence || { n: 0, counts: {}, team: {} });
@@ -1962,7 +2009,7 @@ function openMe() {
         <p class="note" style="margin-top:0">Le mod (Fabric 1.21.8) relie ton jeu à Capitol TV : actions en cours, actes annonciateurs, carte avec TP, signalements et comms. Génère ton jeton, puis dans le jeu : touche <b>K</b> › Réglages › Coller › Connecter. Le jeton est personnel (valable 60 jours).</p>
         <div id="tokBox"><button class="btn primary" id="tokBtn">${ic('cam')}Générer mon jeton</button></div></div>` : ''}
       ${Object.keys(RTC.mykeys).length ? `<div class="sect" style="margin-bottom:14px"><h4 style="margin-top:0">${ic('live')} Diffuser ton image</h4><p class="note" style="margin-top:0">Avec le mod Minecraft : copie ta clé, puis en jeu touche <b>K</b> › colle-la et choisis ta qualité (de 480p à 1080p 60 i/s, ou sans POV). Modifiable à tout moment. OBS fonctionne aussi avec la même clé. Seule la régie voit ce flux.</p>${Object.keys(RTC.mykeys).map(k => keyBox(k, true)).join('')}</div>` : ''}
-      ${isStaff() ? `<label class="switch"><input type="checkbox" id="presIn" ${S.presenter ? 'checked' : ''}> <span><b style="color:var(--ink)">Mode présentateur</b> — voir l'antenne avec le différé, comme les spectateurs (idéal pour réagir en live sans te spoiler). L'édition est désactivée, les alertes restent visibles.</span></label>` : ''}
+
     </div>
     <div class="modal-f"><a class="btn ghost" href="/auth/logout" style="margin-right:auto">${ic('logout')}Se déconnecter</a><button class="btn primary" data-close>Fermer</button></div>`);
   bindKeyBox(m);
@@ -2433,27 +2480,35 @@ function renderTabs() {
 
 /* Bandeau */
 let lastTick = '';
+/* au plus 7 infos à l'écran : messages de la régie d'abord, puis le reste ; rien de périmé */
+function tickParts() {
+  const b = S.board, ts = b.tributes, alive = ts.filter(t => !isDead(t)), T = b.tick, on = k => !T.off.includes(k), now = nowS();
+  const parts = T.msgs.filter(m => !m.until || m.until > now).map(m => '<b>' + esc(m.text) + '</b>');
+  if (on('day') && b.day) parts.push(`<b>Jour ${b.day}</b> des Jeux`);
+  if (on('alive')) parts.push(ts.length ? `<b>${alive.length}</b> tribut${alive.length > 1 ? 's' : ''} encore en lice sur ${ts.length}` : 'Les Jeux vont bientôt commencer');
+  if (on('events')) b.events.filter(e => (e.k === 'death' || e.k === 'gift') && now - e.ts < 15 * 60000).slice(-2).reverse().forEach(e => parts.push(esc(e.text)));
+  if (on('fund') && b.fund.show && (b.fund.raised || b.fund.goal)) parts.push(`Cagnotte pour l'association : <b>${money(b.fund.raised)}</b>${b.fund.goal ? ' sur ' + money(b.fund.goal) : ''}`);
+  if (on('sponsor')) parts.push(b.sponsor.url ? 'Soutenez votre tribut favori : rubrique <b>Sponsors</b>, les dons vont à l\'association' : 'Les dons des sponsors sont reversés à l\'association');
+  if (on('slogan')) parts.push('Restez avec nous sur ' + esc(brandName()));
+  return parts.slice(0, 7);
+}
 function renderTicker() {
-  const b = S.board, ts = b.tributes, alive = ts.filter(t => !isDead(t));
-  const dead = ts.filter(isDead).sort((a, c) => (c.diedAt || 0) - (a.diedAt || 0));
-  const parts = [];
-  if (b.ticker) parts.push('<b>' + esc(b.ticker) + '</b>');
-  if (b.day) parts.push(`<b>Jour ${b.day}</b> des Jeux`);
-  parts.push(ts.length ? `<b>${alive.length}</b> tribut${alive.length > 1 ? 's' : ''} encore en lice sur ${ts.length}` : 'Les Jeux vont bientôt commencer');
-  const recent = b.events.filter(e => e.k === 'death' || e.k === 'gift').slice(-4).reverse();
-  recent.forEach(e => parts.push(esc(e.text)));
-  if (dead.length) parts.push('Tombés dans l\'arène : ' + dead.slice(0, 10).map(t => esc(t.name) + (t.district ? ' (D' + t.district + ')' : '')).join(', '));
-  if (b.fund.show && (b.fund.raised || b.fund.goal)) parts.push(`Cagnotte pour l'association : <b>${money(b.fund.raised)}</b>${b.fund.goal ? ' sur ' + money(b.fund.goal) : ''}`);
-  parts.push(b.sponsor.url ? 'Soutenez votre tribut favori : rubrique <b>Sponsors</b> — les dons sont reversés à l\'association' : 'Les dons des sponsors sont reversés à l\'association');
-  parts.push('Restez avec nous sur Capitol TV');
+  const parts = tickParts();
   const html = parts.join('<span class="dot"></span>');
   if (html === lastTick) return;
   lastTick = html;
   const run = $('#run'); run.innerHTML = html + '<span class="dot"></span>'; delete run.dataset.u;
   fillTick(run.parentElement, 0.06);
 }
+setInterval(() => { try { renderTicker(); if ($('#tkList')) renderTickList(); } catch (e) {} }, 20000);
 /* défilement en boucle continue : le texte repart derrière lui-même, sans attendre qu'il ait quitté l'écran.
    speed : fraction de la largeur visible parcourue par seconde */
+function renderTickList() {
+  const box = $('#tkList'); if (!box) return; const now = nowS(), T = S.board.tick;
+  box.innerHTML = T.msgs.length ? T.msgs.map(m => { const exp = m.until && m.until <= now; return `<div class="tk-row ${exp ? 'exp' : ''}"><span>${esc(m.text)}</span><span class="note">${!m.until ? 'permanent' : exp ? 'expiré' : 'encore ' + fmtDur(m.until - now)}</span>
+    ${m.until ? `<button class="btn xs ghost" data-a="tkUp" data-id="${esc(m.id)}" title="Prolonger de 30 min">+30 min</button>` : ''}<button class="btn xs icon ghost" data-a="tkDel" data-id="${esc(m.id)}" title="Supprimer">${ic('x')}</button></div>`; }).join('') : '<div class="note">Aucun message de la régie.</div>';
+  const n = tickParts().length; const c = $('#tkCount'); if (c) c.textContent = n + ' info' + (n > 1 ? 's' : '') + ' à l\'écran';
+}
 function fillTick(win, speed) {
   const tr = win && win.firstElementChild; if (!tr) return;
   const unit = tr.dataset.u != null ? tr.dataset.u : (tr.dataset.u = tr.innerHTML);
@@ -2525,7 +2580,7 @@ function toastInfo(title, text, bad) {
 /* ---------- 2e écran de la régie : grands moniteurs, plans, multiview ---------- */
 const SCREEN2 = {
   bc: (() => { try { return new BroadcastChannel('ctv-regie'); } catch (e) { return null; } })(),
-  pins: LS.get('ctv.s2pins', []), n: LS.get('ctv.s2n', 9), q: '', tiles: new Map(),
+  tiles: new Map(),
   open() {
     const u = location.origin + location.pathname + '#ecran2';
     if (window.ctvApp && window.ctvApp.openScreen2) { window.ctvApp.openScreen2(u); return; }
@@ -2546,10 +2601,10 @@ const SCREEN2 = {
           <div class="s2-mon s2-main"><h4><b style="color:var(--red-hi)" id="s2DirL">● DIRECT</b> <span class="note" id="s2PgN"></span><span style="flex:1"></span>
             <button class="btn xs ghost mon-b" data-act="pg">Interagir</button><button class="btn xs ghost mon-b ${V.dir ? 'on' : ''}" data-img="dir" title="Afficher ou cacher l'image (économise les données)">Image</button><button class="btn xs ghost mon-b" id="s2Snd" title="Écouter">${ic('vol')}</button></h4>
             <div class="cvw"><div class="stg" id="s2Pg"></div><div class="s2-off ${V.dir ? 'hide' : ''}" id="s2PgOff">Image cachée</div></div></div>
-          <div class="s2-mon s2-side"><h4><b>APERÇU</b> <span class="note" id="s2PvN"></span><span style="flex:1"></span><button class="btn xs ghost mon-b" data-act="pv">Interagir</button><button class="btn xs ghost mon-b ${V.pv ? 'on' : ''}" data-img="pv">Image</button></h4>
-            <div class="cvw"><div class="stg" id="s2Pv"></div><div class="s2-off ${V.pv ? 'hide' : ''}" id="s2PvOff">Image cachée</div></div>
-            <div class="s2-bar"><div class="scn" id="s2Sc"></div><button class="btn take" id="s2Take">À L'ANTENNE ▶</button></div>
-            <div class="s2-quick"><button class="btn sm ghost" id="s2Off">Hors antenne</button><button class="btn sm ghost" id="s2Set">${ic('gear')}Paramètres</button><button class="btn sm ghost" id="s2Main">Fenêtre principale</button></div></div>
+          <div class="s2-mon s2-side"><h4><b style="color:#a970ff">TWITCH</b> <span class="note" id="s2TwN"></span><span style="flex:1"></span><button class="btn xs ghost" id="s2TwSet" title="Afficher une autre chaîne">Changer de chaîne</button></h4>
+            <div class="cvw"><div class="stg s2-tw" id="s2Tw"></div></div>
+            <div class="s2-bar"><span class="note" style="flex:none">Aperçu :</span><div class="scn" id="s2Sc"></div><button class="btn take" id="s2Take">À L'ANTENNE ▶</button></div>
+            <div class="s2-quick"><button class="btn sm mixbtn" id="s2Mix"><span class="mixico"><i></i><i></i><i></i></span>Mixeur de l'émission</button><button class="btn sm ghost" id="s2Off">Hors antenne</button><button class="btn sm ghost" id="s2Set">${ic('gear')}Paramètres</button><button class="btn sm ghost" id="s2Main">Fenêtre principale</button></div></div>
         </div>
         <div class="s2-tabs" id="s2Tabs">${[['util', 'Outils'], ['carte', 'Carte'], ['jeux', 'Sondages & pronostics']].map(([k, l]) => `<button class="btn sm ${V.tab === k ? 'on' : ''}" data-tab2="${k}">${l}</button>`).join('')}</div>
         <div class="s2-pane s2-util ${V.tab === 'util' ? '' : 'hide'}" data-pane="util">
@@ -2563,12 +2618,15 @@ const SCREEN2 = {
       </div>`;
       this.tiles.forEach(t => t.st.destroy()); this.tiles.clear();
       this.mkStages();
-      pv.querySelectorAll('[data-act]').forEach(b => b.onclick = () => { const w = $('#s2' + (b.dataset.act === 'pv' ? 'Pv' : 'Pg')).closest('.cvw'), on = !w.classList.contains('act'); w.classList.toggle('act', on); b.classList.toggle('on', on); });
-      pv.querySelectorAll('[data-img]').forEach(b => b.onclick = () => { const k = b.dataset.img; V[k] = !V[k]; this.saveView(); b.classList.toggle('on', V[k]); $(k === 'dir' ? '#s2PgOff' : '#s2PvOff').classList.toggle('hide', V[k]); this.mkStages(); this.update(false); });
-      $('#s2Snd').onclick = () => { this.snd = !this.snd; $('#s2Snd').classList.toggle('on', this.snd); if (this.pg) this.pg.setSound(this.snd); };
+      pv.querySelectorAll('[data-act]').forEach(b => b.onclick = () => { const w = $('#s2Pg').closest('.cvw'), on = !w.classList.contains('act'); w.classList.toggle('act', on); b.classList.toggle('on', on); });
+      pv.querySelectorAll('[data-img]').forEach(b => b.onclick = () => { const k = b.dataset.img; V[k] = !V[k]; this.saveView(); b.classList.toggle('on', V[k]); $('#s2PgOff').classList.toggle('hide', V[k]); this.mkStages(); this.update(false); });
+      $('#s2Snd').onclick = () => { this.snd = !this.snd; $('#s2Snd').classList.toggle('on', this.snd); if (this.pg) this.pg.setSound(this.snd); PMIX.render(); };
       $('#s2Tabs').onclick = e => { const b = e.target.closest('[data-tab2]'); if (!b) return; V.tab = b.dataset.tab2; this.saveView(); $$('#s2Tabs [data-tab2]').forEach(x => x.classList.toggle('on', x === b)); $$('#s2Box [data-pane]').forEach(x => x.classList.toggle('hide', x.dataset.pane !== V.tab)); this.panes(); };
       $('#s2Sc').onclick = e => { const b = e.target.closest('[data-sc]'); if (!b || !PROG.ed) return; PROG.ed.preview = b.dataset.sc; PROG.dirty = Date.now(); NET.req({ t: 'progSave', prog: PROG.ed }); this.update(false); };
       $('#s2Take').onclick = () => PROG.take();
+      $('#s2Mix').onclick = () => MIXUI.toggle();
+      $('#s2TwSet').onclick = () => { const c = prompt('Chaîne Twitch à afficher (pseudo ou lien)', this.twCh()); if (c == null) return; const v = c.trim().toLowerCase().replace(/^.*twitch\.tv\//, '').replace(/[^a-z0-9_]/g, '').slice(0, 25); if (!v) return; LS.set('ctv.s2tw', v); this.twMount(true); };
+      this.twMount(); PMIX.mount();
       $('#s2Off').onclick = () => PROG.screen ? PROG.screen('off') : NET.req({ t: 'progScreen', kind: 'off' });
       $('#s2Set').onclick = () => openSettings();
       $('#s2Main').onclick = () => { if (this.bc) this.bc.postMessage({ t: 's2focus' }); };
@@ -2587,49 +2645,36 @@ const SCREEN2 = {
     const V = this.view;
     if (V.dir && !this.pg && $('#s2Pg')) { this.pg = new Stage($('#s2Pg'), { delay: null, layer: 'auto', sound: !!this.snd, extras: true, record: true }); DVR.candidate(2); }
     if (!V.dir && this.pg) { this.pg.destroy(); this.pg = null; }
-    if (V.pv && !this.pv && $('#s2Pv')) this.pv = new Stage($('#s2Pv'), { delay: 'board', layer: 'auto', sound: false });
-    if (!V.pv && this.pv) { this.pv.destroy(); this.pv = null; }
+    if (this.pg) this.pg.setMon(PMIX.get('dir'));
     const l = $('#s2DirL'); if (l) l.textContent = '● DIRECT' + (S.board.delay ? ' · différé ' + fmtDelay(S.board.delay) : '');
+  },
+  /* lecteur Twitch (chaîne du présentateur par défaut) */
+  twCh() { return LS.get('ctv.s2tw', 'pierreshow'); },
+  twMount(force) {
+    const box = $('#s2Tw'); if (!box) return; const ch = this.twCh(); $('#s2TwN').textContent = ch;
+    if (this.tw && this.tw.ch === ch && !force && box.querySelector('iframe')) return;
+    box.innerHTML = ''; const d = document.createElement('div'); d.id = 'tw2' + rid(); d.style.cssText = 'position:absolute;inset:0'; box.appendChild(d);
+    const w = this.tw = { ch, ready: false };
+    if (TW && TW.Player && HOST) {
+      try {
+        w.pl = new TW.Player(d.id, { channel: ch, parent: [HOST], width: '100%', height: '100%', muted: PMIX.muted('tw'), autoplay: true });
+        w.pl.addEventListener(TW.Player.READY, () => { w.ready = true; PMIX.applyTw(); });
+        if (TW.Player.PLAYING) w.pl.addEventListener(TW.Player.PLAYING, () => PMIX.applyTw());
+      } catch (e) { w.pl = null; }
+    }
+    if (!w.pl) d.innerHTML = `<iframe src="${playerURL(ch, PMIX.muted('tw'))}" allow="autoplay; fullscreen" style="width:100%;height:100%;border:0" title="Twitch"></iframe>`;
   },
   /* carte et sondages : les vraies pages, intégrées */
   panes() {
     const V = this.view, p = $(`#s2Box [data-pane="${V.tab}"]`);
     if (p && (V.tab === 'carte' || V.tab === 'jeux') && !p.querySelector('iframe')) p.innerHTML = `<iframe class="s2-frame" src="${location.pathname}#embed-${V.tab}" title="${V.tab}"></iframe>`;
   },
-  pin(k, ref, only) { const key = k + '|' + ref, i = this.pins.indexOf(key); if (i >= 0 && !only) this.pins.splice(i, 1); else if (i < 0) this.pins.unshift(key); this.pins = this.pins.slice(0, 32); LS.set('ctv.s2pins', this.pins); this.renderGrid(); },
   update(cut) {
-    if (S.page !== 'regie2' || !$('#s2Pv') || !PROG.ed) return;
+    if (S.page !== 'regie2' || !$('#s2Pg') || !PROG.ed) return;
     if (this.view.tab === 'mv') { this.view.tab = 'util'; this.saveView(); }
-    const sc = PROG.ed.scenes.find(x => x.id === PROG.ed.preview);
-    if (this.pv) this.pv.set(PROG.pubFromScene(sc), false); if (this.pg) this.pg.set(PROG.pub, cut);
-    $('#s2PvN').textContent = sc ? sc.name : ''; $('#s2PgN').textContent = PROG.pub && PROG.pub.on ? PROG.pub.scene : 'hors antenne';
+    if (this.pg) this.pg.set(PROG.pub, cut);
+    $('#s2PgN').textContent = PROG.pub && PROG.pub.on ? PROG.pub.scene : 'hors antenne';
     $('#s2Sc').innerHTML = PROG.ed.scenes.map((x, i) => `<button class="btn sm ${x.id === PROG.ed.preview ? 'on' : ''} ${x.id === PROG.ed.live ? 'live' : ''}" data-sc="${esc(x.id)}">${esc(x.name)} <span class="note">${x.items.length}</span></button>`).join('');
-    this.renderGrid();
-  },
-  /* sources du multiview : épinglées, puis celles des plans Antenne et Aperçu, puis les autres POV en ligne */
-  list() {
-    const out = [], seen = new Set(), add = (k, ref) => { const key = k + '|' + ref; if (seen.has(key)) return; const it = { k, ref, x: 0, y: 0, w: 100, h: 100, id: 'mv' + key }; if (!PROG.pubSrc(it)) return; seen.add(key); out.push(it); };
-    for (const p of this.pins) { const [k, ref] = p.split('|'); add(k, ref); }
-    for (const id of [PROG.ed.live, PROG.ed.preview]) { const sc = PROG.ed.scenes.find(x => x.id === id); if (sc) sc.items.forEach(i => i.k !== 'media' && add(i.k, i.ref)); }
-    for (const m of S.team) if (RTC.live('c:' + m.id)) add('cam', m.id);
-    for (const t of sortedByNum()) if (!isDead(t) && (RTC.live('t:' + t.id) || liveOf(t.login)) && !PROG.povBlocked('t:' + t.id)) add('trib', t.id);
-    return out.slice(0, this.n);
-  },
-  renderGrid() {
-    const g = $('#s2Grid'); if (!g) return;
-    const L = this.list(), keys = new Set(L.map(i => i.k + '|' + i.ref)), cols = this.n <= 4 ? 2 : this.n <= 9 ? 3 : 4;
-    g.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
-    for (const [key, t] of this.tiles) if (!keys.has(key)) { t.st.destroy(); t.el.remove(); this.tiles.delete(key); }
-    const live = new Set(), prev = new Set();
-    const lsc = PROG.ed.scenes.find(x => x.id === PROG.ed.live), psc = PROG.ed.scenes.find(x => x.id === PROG.ed.preview);
-    (lsc ? lsc.items : []).forEach(i => live.add(i.k + '|' + i.ref)); (psc ? psc.items : []).forEach(i => prev.add(i.k + '|' + i.ref));
-    L.forEach((it, idx) => {
-      const key = it.k + '|' + it.ref; let t = this.tiles.get(key);
-      if (!t) { const el = document.createElement('div'); el.className = 's2-tile'; el.dataset.tile = key; el.innerHTML = '<div class="stg"></div><button class="s2-pin" data-pin="' + esc(key) + '" title="Épingler">★</button>'; t = { el, st: new Stage(el.querySelector('.stg'), { delay: this.view.live ? 0 : 'board', layer: 'q', sound: false }) }; this.tiles.set(key, t); }
-      if (g.children[idx] !== t.el) g.insertBefore(t.el, g.children[idx] || null);
-      t.el.classList.toggle('onair', live.has(key)); t.el.classList.toggle('inpv', prev.has(key)); t.el.querySelector('.s2-pin').classList.toggle('on', this.pins.includes(key));
-      t.st.set(PROG.pubFromScene({ id: 'mv', name: '', items: [it] }), false);
-    });
   }
 };
 /* fond de carte : relevé du terrain envoyé par le mod serveur (/capitol carte) */
@@ -2848,14 +2893,14 @@ function openFlash() {
       <label class="f"><span class="lbl2">Titre</span><input class="inp" id="flT" maxlength="80" autofocus placeholder="Le Festin aura lieu à l'aube"></label>
       <label class="f"><span class="lbl2">Texte <em>facultatif</em></span><textarea class="inp" id="flX" maxlength="240" placeholder="Chaque district trouvera à la Corne d'abondance ce dont il a désespérément besoin…"></textarea></label>
       <div class="row"><label class="f"><span class="lbl2">Durée</span><select class="inp" id="flD"><option value="8">8 secondes</option><option value="12" selected>12 secondes</option><option value="20">20 secondes</option><option value="40">40 secondes</option></select></label>
-      <label class="switch f" style="height:38px;margin-top:0"><input type="checkbox" id="flTk"> Garder aussi dans le bandeau</label></div>
+      <label class="switch f" style="height:38px;margin-top:0"><input type="checkbox" id="flTk"> Garder aussi 30 min dans le bandeau</label></div>
     </div>
     <div class="modal-f"><button type="button" class="btn ghost" data-close>Annuler</button><button type="submit" class="btn danger">${ic('mega')}Diffuser</button></div></form>`);
   m.querySelector('#fFl').addEventListener('submit', e => {
     e.preventDefault();
     const title = $('#flT').value.trim(); if (!title) { $('#flT').classList.add('bad'); return; }
     const text = $('#flX').value.trim();
-    if ($('#flTk').checked) S.board.ticker = title;
+    if ($('#flTk').checked) S.board.tick = { ...S.board.tick, msgs: [{ id: rid(), text: title, until: nowS() + 30 * 60000 }, ...S.board.tick.msgs].slice(0, 12) };
     addEvent({ k: 'flash', text: title + (text ? ' — ' + text : '') });
     pushFlash({ k: 'flash', title, text, dur: +$('#flD').value });
     closeModal(); commit();
@@ -3015,8 +3060,9 @@ function renderSettings() {
           ${[0, 30, 60, 120, 180, 300, 420, 600, 900].includes(b.delay) ? '' : `<option value="${b.delay}" selected>${fmtDelay(b.delay)}</option>`}</select></label>
         <label class="switch" style="margin:22px 0 0"><input type="checkbox" id="hideChat" ${b.hideChat ? 'checked' : ''}> Masquer le chat Twitch aux spectateurs pendant le différé</label>
       </div>
-      <p class="note"><b style="color:var(--gold-hi)">Direct (OBS) :</b> le site retarde lui-même toute l'image de la page Direct du même délai pour tout le monde, rien à régler dans OBS. Quand tu passes un plan à l'antenne, il apparaît sur le Direct après le délai, avec ses POV déjà prêtes (pas d'attente).</p>
-      <p class="note">Pendant le différé, Capitol TV retient pour les spectateurs <b style="color:var(--ink2)">tout ce qu'il annonce</b> : coups de canon, parachutes, flashs, hommages, journal, statuts « blessé / tombé » et classement. Tout apparaît chez eux pile au moment où la scène passe dans les streams. La régie voit tout en temps réel (sauf en mode présentateur) ; sur la page Direct et sur la page Antenne, les POV Capitol TV ont le même différé pour tout le monde, équipe comprise.${b.delay ? ` <b style="color:var(--gold-hi)">${pending} annonce(s) en attente de diffusion.</b>` : ''}</p>
+      <p class="note"><b style="color:var(--gold-hi)">Comment ça marche :</b> la régie, le Direct (OBS) et la page Antenne montrent tous l'image avec ce retard, la même pour tout le monde. Ce que tu fais en régie (plans, canon à la main, flashs, statuts) part donc <b style="color:var(--ink2)">immédiatement</b>, puisque tu regardes déjà l'image retardée. Seuls le panneau « À venir », la carte et les comms sont en temps réel.</p>
+      <label class="switch"><input type="checkbox" id="autoCanon" ${b.autoCanon ? 'checked' : ''}> Coup de canon automatique quand le serveur détecte une mort</label>
+      <p class="note">Le tribut passe « tombé » et le canon retentit <b style="color:var(--ink2)">${b.delay ? fmtDelay(b.delay) + ' après la mort' : 'tout de suite'}</b>, au moment où la scène arrive à l'image. Décoche si tu préfères tout faire à la main (bouton « Tombé »).${b.delay && pending ? ` <b style="color:var(--gold-hi)">${pending} annonce(s) en attente.</b>` : ''}</p>
       <p class="note" style="margin-bottom:0"><b style="color:var(--warn)">Important :</b> un site ne peut pas retarder une vidéo Twitch. Chaque streamer doit régler <b style="color:var(--ink2)">le même délai</b> de son côté : Twitch › Gestionnaire de stream › <i>Délai du stream</i> (jusqu'à 15 min), ou OBS › Paramètres › Avancé › <i>Délai de diffusion</i>.</p>
     </div>
     <div class="sect"><h4>Déroulé des Jeux</h4>
@@ -3026,9 +3072,16 @@ function renderSettings() {
         <div><span class="lbl2">Chronomètre des Jeux</span><div class="stepper">${b.startTs ? `<span class="note" style="color:var(--ink)">Lancé à ${hhmm(b.startTs)}</span><button class="btn sm ghost" data-a="chronoReset">Réinitialiser</button>` : `<button class="btn sm primary" data-a="chronoStart">Lancer maintenant</button>`}</div></div>
       </div>
     </div>
-    <div class="sect"><h4>Antenne</h4>
-      <label class="f"><span class="lbl2">Flash info permanent <em>bandeau défilant</em></span><input class="inp" id="tickIn" maxlength="200" value="${esc(b.ticker)}" placeholder="Une tempête de feu approche du secteur 4…"></label>
+    <div class="sect"><h4>Bandeau défilant <span id="tkCount"></span></h4>
+      <div class="row"><input class="inp" id="tkIn" maxlength="200" placeholder="Une tempête de feu approche du secteur 4…" style="flex:1">
+        <select class="inp" id="tkDur" style="flex:0 0 150px"><option value="15">15 minutes</option><option value="30" selected>30 minutes</option><option value="60">1 heure</option><option value="180">3 heures</option><option value="0">Jusqu'à suppression</option></select>
+        <button class="btn primary" data-a="tkAdd">${ic('plus')}Ajouter</button></div>
+      <div class="tk-list" id="tkList"></div>
+      <span class="lbl2" style="margin-top:12px">Infos automatiques</span>
+      <div class="chips">${TICK_AUTO.map(([k, l]) => `<label class="switch" style="margin:0 14px 6px 0"><input type="checkbox" data-tkauto="${k}" ${b.tick.off.includes(k) ? '' : 'checked'}> ${l}</label>`).join('')}</div>
+      <p class="note" style="margin-bottom:0">Au plus 7 infos tournent en même temps, messages d'abord. Les messages expirés disparaissent seuls, les morts et parachutes après 15 min.</p>
     </div>`;
+    renderTickList();
   } else if (sec === 'lock') {
     const L = b.lock, now = nowS(), active = lockActive(L, now), nx = L.mode === 'schedule' ? nextLockChange(L, now) : null;
     const linked = b.tributes.filter(t => t.discordId), inGame = linked.filter(t => !isDead(t));
@@ -3233,7 +3286,7 @@ function renderSettings() {
         <li>les joueurs ajoutés en jeu par un admin : <code>/capitoltv camera add pseudo</code> (<code>remove</code>, <code>list</code>).</li></ul>
       <div class="note">${cams.length ? cams.map(m => `<b style="color:var(--ink2)">${esc(m.name)}</b> (${m.cam === 'chef' ? 'responsable' : 'caméra'}${m.mc ? ' · MC ' + esc(m.mc) : ' · <span style="color:var(--orange,#e89a3c)">compte Minecraft manquant</span>'})`).join(' · ') : 'Aucun membre n\'a encore le rôle caméra.'}</div>
       <div class="note" style="margin-top:6px">Ajoutées en jeu : ${(S.srvCams || []).length ? S.srvCams.map(n => '<b style="color:var(--ink2)">' + esc(n) + '</b>').join(' · ') : 'aucune'}</div>
-      <p class="note" style="margin-bottom:0">Pour le jeton du site (comms, carte, actions) : chacun le génère depuis « Mon compte » et le colle dans le mod (touche K › Réglages).</p>
+      <p class="note" style="margin-bottom:0">Jeton du site (comms, carte, actions) : <b style="color:var(--ink2)">automatique</b> dès qu'une caméra rejoint le serveur de l'event équipé du mod serveur (comme la clé de diffusion). Sans mod serveur, chacun le génère dans « Mon compte » et le colle dans le mod (touche K › Réglages).</p>
       ${isAdmin() ? `<h4 style="margin:14px 0 6px">Qualité maximale des flux Capitol TV</h4>
       <p class="note" style="margin-top:0">Chaque joueur choisit sa qualité dans le mod (touche K) ; ce plafond s'applique par-dessus. Les flux Capitol TV ne sont visibles que par l'équipe et la page OBS : les spectateurs du site voient les POV Twitch.</p>
       <label class="switch" style="margin:0 0 10px"><input type="checkbox" id="capOn" ${RTC.capOff ? '' : 'checked'}> <b>Capture vidéo des joueurs et caméras</b> <span class="note">(décocher coupe toutes les POV du mod et d'OBS)</span></label>
@@ -3311,7 +3364,8 @@ function settingsEvents() {
       saveBoard(); renderAll(); return;
     }
     const id = tg.id, b = S.board;
-    if (id === 'tickIn') { b.ticker = tg.value.trim().slice(0, 200); commit(false); }
+    if (tg.dataset.tkauto) { const k = tg.dataset.tkauto, off = b.tick.off.filter(x => x !== k); if (!tg.checked) off.push(k); b.tick = { ...b.tick, off }; commit(); renderTickList(); }
+    if (id === 'autoCanon') { b.autoCanon = tg.checked; commit(false); }
     if (id === 'lkMode' || id === 'lkTz' || id === 'lkMsg') { b.lock = { ...b.lock, mode: $('#lkMode').value, tz: $('#lkTz').value.trim() || 'Europe/Paris', msg: $('#lkMsg').value.trim() }; commit(); renderSettings(); }
     if (tg.dataset.lw) { const w = b.lock.windows[+tg.dataset.i]; if (w && /^\d\d:\d\d$/.test(tg.value)) { w[tg.dataset.lw] = tg.value; commit(); renderSettings(); } }
     if (id === 'spU' || id === 'spL' || id === 'spT') { const u = $('#spU').value.trim(); b.sponsor = { ...b.sponsor, url: /^https?:\/\//i.test(u) ? u : '', label: $('#spL').value.trim() || 'Sponsoriser un tribut', text: $('#spT').value.trim() }; commit(); }
@@ -3403,6 +3457,9 @@ function settingsEvents() {
         else { a.dataset.sure = 1; a.textContent = 'Vraiment tout supprimer ?'; }
         break;
       case 'dayP': b.day = Math.min(99, (b.day || 0) + 1); addEvent({ k: 'day', text: `Début du jour ${b.day}` }); commit(); renderSettings(); break;
+      case 'tkAdd': { const x = $('#tkIn').value.trim(); if (!x) { $('#tkIn').classList.add('bad'); break; } const d = +$('#tkDur').value; b.tick = { ...b.tick, msgs: [{ id: rid(), text: x.slice(0, 200), until: d ? nowS() + d * 60000 : 0 }, ...b.tick.msgs].slice(0, 12) }; $('#tkIn').value = ''; commit(); renderTickList(); break; }
+      case 'tkDel': b.tick = { ...b.tick, msgs: b.tick.msgs.filter(m => m.id !== a.dataset.id) }; commit(); renderTickList(); break;
+      case 'tkUp': b.tick = { ...b.tick, msgs: b.tick.msgs.map(m => m.id === a.dataset.id ? { ...m, until: (m.until && m.until > nowS() ? m.until : nowS()) + 30 * 60000 } : m) }; commit(); renderTickList(); break;
       case 'dayM': b.day = Math.max(0, (b.day || 0) - 1); commit(); renderSettings(); break;
       case 'dayAnn': pushFlash({ k: 'day', day: b.day, dur: 10 }); commit(); break;
       case 'chronoStart': b.startTs = Date.now(); if (!b.day) b.day = 1; addEvent({ k: 'day', text: 'Que les Jeux commencent !' }); pushFlash({ k: 'flash', title: 'Que les Jeux commencent !', text: 'Et puisse le sort vous être favorable.', dur: 12 }); commit(); renderSettings(); break;
@@ -4462,8 +4519,44 @@ class Stage {
     this.players = new Map(); this.dps = new Map(); this.pub = null; this.lastSeq = -1; this.sfxEl = null; this.rpKey = ''; this.clipKey = '';
     if (!el.querySelector(':scope > .em-tr')) el.insertAdjacentHTML('afterbegin', `<div class="em-tr"><div class="wipe"></div><div class="ray"></div><div class="ray" style="rotate:70deg"></div>${LOGO_OK ? `<img class="em-e" src="${esc(CONFIG.logo)}" alt="">` : ''}<div class="em-t word" style="font-size:3cqw;color:var(--gold-hi)">${esc(brandName())}</div></div>`);
     this.hold = document.createElement('div'); this.hold.className = 'hide'; el.appendChild(this.hold);
+    MIX.stages.add(this);
   }
   get sound() { return this.o.sound; }
+  /* volume effectif d'une source (0..1) : réglage de l'élément × mixeur de la régie × volume général × écoute perso */
+  volOf(key, base) { return Math.max(0, Math.min(1, (base == null ? 100 : base) / 100 * MIX.f(key) * MIX.f('master') * (this.o.mon != null ? this.o.mon : 1))); }
+  setMon(v) { this.o.mon = Math.max(0, Math.min(1, v)); this.applyMix(); }
+  applyMix() {
+    const p = this.pub;
+    for (const el of this.players.values()) {
+      const it = el._it2; if (!it) continue; const v = this.volOf(it.k + '|' + it.ref, it.k === 'media' ? it.vol : 100);
+      if (el._dp && el._dp.video) el._dp.video.volume = v;
+      if (el._tw && el._tw.ready && el._tw.player && Math.abs((el._tw.vol == null ? -1 : el._tw.vol) - v) > 0.01) { el._tw.vol = v; try { el._tw.player.setVolume(v); } catch (e) {} }
+      const md = el.querySelector('.em-md'); if (md && md.tagName !== 'IMG') md.volume = v;
+    }
+    if (this.sfxEl && p && p.sfx) this.sfxEl.volume = this.volOf('sfx', p.sfx.vol);
+    const bg = p && p.bgm; if (bg) { const v = this.volOf('bgm', bg.vol); if (this.bgmEl) this.bgmEl.volume = v; if (this.yt && this.yt.ready) try { this.yt.pl.setVolume(Math.round(v * 100)); } catch (e) {} }
+  }
+  /* musique YouTube (n'importe quel titre) : lecteur intégré invisible, calé sur la même position pour tout le monde */
+  ytSync(tr, t, v, sound) {
+    let y = this.yt;
+    if (!y || y.id !== tr.yt) {
+      this.ytStop(); y = this.yt = { id: tr.yt, ready: false, tr };
+      const box = document.createElement('div'); box.className = 'em-yt'; this.el.appendChild(box); y.box = box;
+      YTAPI.load().then(() => {
+        if (this.yt !== y) return; const d = document.createElement('div'); box.appendChild(d);
+        y.pl = new YT.Player(d, { width: 200, height: 200, videoId: tr.yt, playerVars: { autoplay: 1, controls: 0, disablekb: 1, playsinline: 1, rel: 0, start: Math.floor(t) },
+          events: { onReady: () => { y.ready = true; try { if (!sound) y.pl.mute(); y.pl.playVideo(); } catch (e) {} if (!tr.dur && PROG.ed) { const d2 = Math.round(y.pl.getDuration() || 0); if (d2 > 0) fetch('/api/media/' + tr.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dur: d2 }) }).catch(() => {}); } },
+            onError: e => { y.err = e.data; this.credit('♪ ' + (tr.name || '') + ' · lecture refusée par YouTube'); if (PROG.ed && !y.told) { y.told = 1; toastInfo('Musique illisible', '« ' + (tr.name || '') + ' » ne peut pas être lue hors de YouTube. Choisis une autre version (« audio », « lyrics », « topic »).', true); } } } });
+      });
+    }
+    if (!y.ready || y.err) return;
+    try {
+      const cur = y.pl.getCurrentTime() || 0; if (Math.abs(cur - t) > 2.5) y.pl.seekTo(t, true);
+      y.pl.setVolume(Math.round(v * 100)); if (sound) { if (y.pl.isMuted()) y.pl.unMute(); } else if (!y.pl.isMuted()) y.pl.mute();
+      if (y.pl.getPlayerState() !== 1 && y.pl.getPlayerState() !== 3) y.pl.playVideo();
+    } catch (e) {}
+  }
+  ytStop() { const y = this.yt; this.yt = null; if (!y) return; try { y.pl && y.pl.destroy(); } catch (e) {} if (y.box) y.box.remove(); }
   setSound(on) { this.o.sound = !!on; this.layout(false); }
   delay() { return this.o.delay == null || this.o.delay === 'board' ? (S.board.delay || 0) : this.o.delay; }
   /* petite vignette : couche légère du flux (économise la bande passante) */
@@ -4562,6 +4655,7 @@ class Stage {
         requestAnimationFrame(() => requestAnimationFrame(() => { el.classList.remove('gone'); if (it.d) setTimeout(() => { el.style.transitionDelay = ''; }, it.d + 700); }));
       }
       Object.assign(el.style, { left: it.x + '%', top: it.y + '%', width: it.w + '%', height: it.h + '%', zIndex: 1 + (it.z || 0) });
+      el._it2 = it; el.classList.toggle('em-hid', !!it.hide);
       if (it.k !== 'media' && md !== 'twitch') {
         const ly = this.layerFor(it), k2 = md + ':' + it.src + ':' + ly;
         if (el.dataset.rtc !== k2) {
@@ -4572,7 +4666,7 @@ class Stage {
           if (old) this.dpDrop(old);
           el.querySelectorAll(':scope > .em-aud, :scope > iframe, :scope > .tw').forEach(x => { if (md === 'rtc') x.remove(); }); if (md === 'rtc') el._tw = null;
         }
-        if (el._dp) el._dp.setMuted(muted);
+        if (el._dp) { el._dp.setMuted(muted); el._dp.video.volume = this.volOf(it.k + '|' + it.ref, 100); }
         this.label(el, it, newShot);
         return;
       }
@@ -4612,14 +4706,14 @@ class Stage {
           if (TW.Player.PLAYING) w.player.addEventListener(TW.Player.PLAYING, () => this.twApply(w));
         } catch (e) { w.player = null; }
       }
-      if (w.player) { w.muted = muted; this.twApply(w); return; }
+      if (w.player) { w.muted = muted; w.vol = this.volOf(it.k + '|' + it.ref, 100); this.twApply(w); return; }
     }
     if (el.dataset.muted !== String(muted)) { el.dataset.muted = String(muted); const f = el.querySelector(':scope > iframe'); const html = `<iframe src="${playerURL(it.login, muted)}" allow="autoplay; fullscreen" title="${esc(it.name)}"></iframe>`; if (f) f.outerHTML = html; else el.insertAdjacentHTML('afterbegin', html); }
   }
   /* impose le son voulu (le lecteur Twitch garde sinon son propre réglage muet / volume) */
   twApply(w) {
     if (!w || !w.ready || !w.player) return;
-    try { if (w.player.getMuted() !== w.muted) w.player.setMuted(w.muted); if (!w.muted && w.player.getVolume() < .05) w.player.setVolume(1); } catch (e) {}
+    try { if (w.player.getMuted() !== w.muted) w.player.setMuted(w.muted); const v = w.vol == null ? 1 : w.vol; if (!w.muted && Math.abs(w.player.getVolume() - v) > .02) w.player.setVolume(v); } catch (e) {}
   }
   label(el, it, newShot) {
     const lab = it.label ? `<b>${esc(it.name)}</b>${it.sub ? `<span>${esc(it.sub)}</span>` : ''}` : '';
@@ -4737,7 +4831,7 @@ class Stage {
     for (const el of this.players.values()) {
       const it = el._it; if (!it) continue;
       const md = el.querySelector('.em-md');
-      if (md && md.tagName !== 'IMG') PROG.syncOne(md, it.at || nowS(), it.loop, it.vol, this.o.sound && it.audio !== false, this);
+      if (md && md.tagName !== 'IMG') PROG.syncOne(md, it.at || nowS(), it.loop, this.volOf('media|' + it.ref, it.vol) * 100, this.o.sound && it.audio !== false, this);
     }
     const fx = p && p.on !== undefined ? p.sfx : null;
     if (fx) {
@@ -4746,7 +4840,7 @@ class Stage {
         this.sfxEl = document.createElement('audio'); this.sfxEl.preload = 'auto'; this.sfxEl.dataset.id = fx.id + ':' + fx.at;
         this.sfxEl.src = PROG.mediaURL(fx.id); this.el.appendChild(this.sfxEl);
       }
-      PROG.syncOne(this.sfxEl, fx.at, fx.loop, fx.vol, this.o.sound, this);
+      PROG.syncOne(this.sfxEl, fx.at, fx.loop, this.volOf('sfx', fx.vol) * 100, this.o.sound, this);
     } else if (this.sfxEl) { this.sfxEl.pause(); this.sfxEl.remove(); this.sfxEl = null; }
     // musique de fond (playlist en boucle, synchronisée pour tout le monde)
     const bg = p && p.on && !p.screen ? p.bgm : null;
@@ -4755,13 +4849,20 @@ class Stage {
       let t = ((nowS() - (bg.at || nowS())) / 1000) % tot; if (t < 0) t = 0; let i = 0;
       while (t >= durs[i] && i < durs.length - 1) { t -= durs[i]; i++; }
       const tr = bg.tracks[i], key = tr.id + ':' + bg.at + ':' + i;
-      if (!this.bgmEl || this.bgmEl.dataset.k !== key) {
-        if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); }
-        this.bgmEl = document.createElement('audio'); this.bgmEl.preload = 'auto'; this.bgmEl.dataset.k = key; this.bgmEl.src = PROG.mediaURL(tr.id); this.el.appendChild(this.bgmEl);
+      if (tr.yt) {
+        if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; }
+        this.ytSync(tr, t, this.volOf('bgm', bg.vol), this.o.sound);
+        if (!(this.yt && this.yt.err)) this.credit(tr.credit ? '♪ ' + tr.credit : '♪ ' + tr.name);
+      } else {
+        this.ytStop();
+        if (!this.bgmEl || this.bgmEl.dataset.k !== key) {
+          if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); }
+          this.bgmEl = document.createElement('audio'); this.bgmEl.preload = 'auto'; this.bgmEl.dataset.k = key; this.bgmEl.src = PROG.mediaURL(tr.id); this.el.appendChild(this.bgmEl);
+        }
+        PROG.syncOne(this.bgmEl, nowS() - t * 1000, false, this.volOf('bgm', bg.vol) * 100, this.o.sound, this);
+        this.credit(tr.credit ? '♪ ' + tr.credit : '');
       }
-      PROG.syncOne(this.bgmEl, nowS() - t * 1000, false, bg.vol, this.o.sound, this);
-      this.credit(tr.credit ? '♪ ' + tr.credit : '');
-    } else { if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; } this.credit(''); }
+    } else { if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; } this.ytStop(); this.credit(''); }
   }
   /* crédit de la musique libre de droits (obligatoire pour les licences CC BY) */
   credit(txt) {
@@ -4777,10 +4878,154 @@ class Stage {
     clearTimeout(this.trT1); clearTimeout(this.trT2); (this.q || []).forEach(e => clearTimeout(e.t)); this.q = [];
     for (const el of this.players.values()) { const md = el.querySelector('.em-md'); if (md && md.pause) md.pause(); }
     for (const e of this.dps.values()) { clearTimeout(e.t); e.dp.destroy(); }
-    if (this.sfxEl) this.sfxEl.pause(); if (this.bgmEl) this.bgmEl.pause();
+    if (this.sfxEl) this.sfxEl.pause(); if (this.bgmEl) this.bgmEl.pause(); this.ytStop(); MIX.stages.delete(this);
     this.players.clear(); this.dps.clear(); this.el.innerHTML = '';
   }
 }
+/* lecteur YouTube (API officielle), chargé seulement si une musique YouTube passe */
+const YTAPI = { p: null, load() { if (!this.p) this.p = new Promise(ok => { if (window.YT && window.YT.Player) return ok(); const prev = window.onYouTubeIframeAPIReady; window.onYouTubeIframeAPIReady = () => { try { prev && prev(); } catch (e) {} ok(); }; loadScript('https://www.youtube.com/iframe_api').catch(() => { this.p = null; }); }); return this.p; } };
+/* mixeur de l'émission : volumes réglés par la régie, appliqués tout de suite sur le Direct (fondus calculés chez chacun) */
+const MIX = {
+  st: {}, stages: new Set(), loopT: 0,
+  at(k, t = Date.now()) { const e = this.st[k]; if (!e) return 100; if (!e.dur || t >= e.at + e.dur) return e.v; return e.v0 + (e.v - e.v0) * Math.max(0, (t - e.at) / e.dur); },
+  muted(k) { const e = this.st[k]; return !!(e && e.mute); },
+  f(k) { return this.muted(k) ? 0 : this.at(k, nowS()) / 100; },
+  set(m) { this.st = m && typeof m === 'object' ? m : {}; this.kick(); if (typeof MIXUI !== 'undefined') MIXUI.render(true); },
+  ramping() { const now = nowS(); return Object.values(this.st).some(e => e && e.dur && now < e.at + e.dur + 200); },
+  kick() { this.apply(); if (this.loopT) return; const run = () => { this.apply(); if (typeof MIXUI !== 'undefined') MIXUI.render(true); if (this.ramping() || (typeof MIXUI !== 'undefined' && MIXUI.drag)) this.loopT = setTimeout(run, 60); else this.loopT = 0; }; this.loopT = setTimeout(run, 60); },
+  apply() { for (const st of this.stages) try { st.applyMix(); } catch (e) {} }
+};
+/* mixeur de la régie : fenêtre flottante, volumes en direct pendant le glissement, fondus « baisser de X % en Y s » */
+const MIXUI = {
+  open: false, drag: '', sentAt: 0, fadeK: '', pos: LS.get('ctv.mixpos', null),
+  rows() {
+    const out = [{ k: 'master', n: 'Volume général', tag: 'tout le son du Direct', cls: 'master' }];
+    const bg = PROG.pub && PROG.pub.bgm; out.push({ k: 'bgm', n: 'Musique de fond', tag: bg ? '♪ ' + (bg.tracks[0] || {}).name : 'aucune en cours' });
+    out.push({ k: 'sfx', n: 'Effets sonores', tag: PROG.pub && PROG.pub.sfx ? 'en cours' : '' });
+    const seen = new Set(), add = (it, tag) => { const k = it.k + '|' + it.ref; if (seen.has(k)) return; seen.add(k); const sI = PROG.srcInfo(it) || {}; out.push({ k, n: sI.name || '?', tag: tag + (it.audio ? '' : ' · son coupé dans le plan') + (it.hide ? ' · image cachée' : ''), off: !it.audio }); };
+    const ed = PROG.ed; if (ed) { const L = ed.scenes.find(x => x.id === ed.live), P = ed.scenes.find(x => x.id === ed.preview); (L ? L.items : []).forEach(i => add(i, 'à l\'antenne')); (P && P !== L ? P.items : []).forEach(i => add(i, 'aperçu')); }
+    return out;
+  },
+  toggle(on) {
+    this.open = on === undefined ? !this.open : on;
+    let el = $('#mixPanel');
+    if (!this.open) { if (el) el.remove(); $$('#rgMix, #s2Mix').forEach(b => b.classList.remove('on')); return; }
+    if (!el) {
+      el = document.createElement('div'); el.id = 'mixPanel'; el.className = 'mixp';
+      el.innerHTML = `<div class="mixp-h" id="mixH"><span class="mixico"><i></i><i></i><i></i></span><b>Mixeur de l'émission</b><span class="note">appliqué tout de suite sur le Direct</span><span style="flex:1"></span><button class="btn xs icon ghost" data-mx="close" title="Fermer">${ic('x')}</button></div><div class="mixp-b" id="mixB"></div>`;
+      document.body.appendChild(el);
+      if (this.pos) { el.style.left = Math.min(innerWidth - 120, this.pos.x) + 'px'; el.style.top = Math.min(innerHeight - 80, this.pos.y) + 'px'; el.style.right = 'auto'; el.style.bottom = 'auto'; }
+      $('#mixH').onpointerdown = e => { if (e.target.closest('button')) return; const r = el.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top; const mv = ev => { el.style.left = Math.max(0, Math.min(innerWidth - 80, ev.clientX - dx)) + 'px'; el.style.top = Math.max(0, Math.min(innerHeight - 40, ev.clientY - dy)) + 'px'; el.style.right = 'auto'; el.style.bottom = 'auto'; }; const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); const r2 = el.getBoundingClientRect(); this.pos = { x: r2.left, y: r2.top }; LS.set('ctv.mixpos', this.pos); }; addEventListener('pointermove', mv); addEventListener('pointerup', up); };
+      el.addEventListener('click', e => this.click(e));
+      el.addEventListener('input', e => this.input(e));
+      el.addEventListener('change', e => this.change(e));
+    }
+    $$('#rgMix, #s2Mix').forEach(b => b.classList.add('on'));
+    this.render();
+  },
+  val(k) { return Math.round(MIX.at(k, nowS())); },
+  render(soft) {
+    const B = $('#mixB'); if (!B || !this.open) return;
+    const R = this.rows(), sig = R.map(r => r.k + r.tag).join('|') + '|' + this.fadeK;
+    if (!soft || B.dataset.sig !== sig) {
+      B.dataset.sig = sig;
+      B.innerHTML = R.map(r => `<div class="mx-row ${r.cls || ''} ${r.off ? 'off' : ''}" data-k="${esc(r.k)}">
+        <div class="mx-n"><b>${esc(r.n)}</b><small>${esc(r.tag || '')}</small></div>
+        <button class="mx-b" data-mm title="Couper / remettre le son">${ic('vol')}</button>
+        <input type="range" min="0" max="100" step="1" data-mv>
+        <span class="mx-v"></span>
+        <button class="mx-b" data-mf title="Fondu : baisser ou monter progressivement">⤵</button></div>
+        ${this.fadeK === r.k ? `<div class="mx-fade" data-k="${esc(r.k)}"><div class="mx-pre"><button class="btn xs" data-fp="to:0:3">Couper en fondu (3 s)</button><button class="btn xs" data-fp="rel:-50:2">−50 % en 2 s</button><button class="btn xs" data-fp="rel:-25:1">−25 % en 1 s</button><button class="btn xs" data-fp="to:100:3">Retour à 100 % (3 s)</button></div>
+          <div class="mx-cu"><select class="mini-sel" id="fdMode"><option value="down">Baisser de</option><option value="up">Monter de</option><option value="to">Aller à</option></select><input class="inp" id="fdPct" type="number" min="0" max="100" value="50"><span>%</span><span>en</span><input class="inp" id="fdSec" type="number" min="0" max="600" step="0.5" value="3"><span>s</span><button class="btn xs primary" data-fgo>Lancer</button></div></div>` : ''}`).join('')
+        + `<div class="mx-foot note">Glisse : le Direct suit en temps réel. ⤵ : fondus. Les volumes s'appliquent à l'émission (OBS compris), pas seulement chez toi.</div>`;
+    }
+    B.querySelectorAll('.mx-row').forEach(row => {
+      const k = row.dataset.k, v = this.val(k), mu = MIX.muted(k), e = MIX.st[k], ramp = e && e.dur && nowS() < e.at + e.dur;
+      const sl = row.querySelector('[data-mv]'); if (this.drag !== k && +sl.value !== v) sl.value = v;
+      sl.style.setProperty('--p', (this.drag === k ? sl.value : v) + '%');
+      row.querySelector('.mx-v').textContent = mu ? 'coupé' : (this.drag === k ? sl.value : v) + ' %' + (ramp ? ' → ' + e.v + ' %' : '');
+      row.classList.toggle('mu', mu); row.classList.toggle('ramp', !!ramp);
+    });
+  },
+  send(keys, o) { NET.req({ t: 'progMix', keys: [].concat(keys), ...o }).catch(e => toastInfo('Mixeur', e.message, true)); },
+  local(k, v, dur) { const e = MIX.st[k]; MIX.st[k] = { v0: MIX.at(k, nowS()), v, at: nowS(), dur: dur || 0, mute: !!(e && e.mute) }; MIX.kick(); },
+  input(e) {
+    const sl = e.target.closest('[data-mv]'); if (!sl) return; const k = sl.closest('.mx-row').dataset.k, v = +sl.value;
+    this.drag = k; this.local(k, v, 0); this.render(true);
+    const now = Date.now(); if (now - this.sentAt > 110) { this.sentAt = now; this.send(k, { v, dur: 120 }); }
+    clearTimeout(this.trail); this.trail = setTimeout(() => this.send(k, { v, dur: 60 }), 140);
+  },
+  change(e) { const sl = e.target.closest('[data-mv]'); if (!sl) return; const k = sl.closest('.mx-row').dataset.k; clearTimeout(this.trail); this.send(k, { v: +sl.value, dur: 60 }); this.drag = ''; this.render(true); },
+  click(e) {
+    if (e.target.closest('[data-mx="close"]')) { this.toggle(false); return; }
+    const row = e.target.closest('[data-k]'); if (!row) return; const k = row.dataset.k;
+    if (e.target.closest('[data-mm]')) { this.send(k, { mute: !MIX.muted(k) }); return; }
+    if (e.target.closest('[data-mf]')) { this.fadeK = this.fadeK === k ? '' : k; this.render(); return; }
+    const fp = e.target.closest('[data-fp]'); if (fp) { const [m, x, sec] = fp.dataset.fp.split(':'); this.fade(k, m, +x, +sec); return; }
+    if (e.target.closest('[data-fgo]')) { const m = $('#fdMode').value, x = Math.max(0, Math.min(100, +$('#fdPct').value || 0)), sec = Math.max(0, Math.min(600, +$('#fdSec').value || 0)); this.fade(k, m === 'to' ? 'to' : 'rel', m === 'down' ? -x : x, sec); }
+  },
+  fade(k, mode, x, sec) {
+    const dur = Math.round(sec * 1000);
+    if (mode === 'to') this.send(k, { v: x, dur }); else this.send(k, { rel: x / 100, dur });
+    toastInfo('Fondu lancé', (mode === 'to' ? 'vers ' + x + ' %' : (x < 0 ? '−' : '+') + Math.abs(x) + ' %') + ' en ' + sec + ' s');
+  }
+};
+/* volumes perso du 2e écran : lecteur Twitch, écoute du Direct et autres logiciels du PC (app bureau, Windows) */
+const PMIX = {
+  v: LS.get('ctv.pmix', { tw: 80, dir: 100, twMute: false }), apps: [], appErr: '', pollT: 0, open: false, sentAt: {},
+  get(k) { return (this.v[k] == null ? 100 : this.v[k]) / 100; },
+  muted(k) { return k === 'tw' ? !!this.v.twMute : k === 'dir' ? !SCREEN2.snd : false; },
+  save() { LS.set('ctv.pmix', this.v); },
+  applyTw() { const w = SCREEN2.tw; if (!w || !w.pl || !w.ready) return; try { w.pl.setVolume(this.get('tw')); w.pl.setMuted(!!this.v.twMute); } catch (e) {} },
+  mount() {
+    if ($('#pmix')) return;
+    const el = document.createElement('div'); el.id = 'pmix'; el.className = 'pmix';
+    el.innerHTML = `<button class="pmix-btn" id="pmixBtn" title="Mes volumes : Twitch, Direct, jeu, Deezer…"><span class="mixico"><i></i><i></i><i></i></span>Mes volumes</button><div class="pmix-p hide" id="pmixP"></div>`;
+    document.body.appendChild(el);
+    $('#pmixBtn').onclick = () => { this.open = !this.open; $('#pmixP').classList.toggle('hide', !this.open); $('#pmixBtn').classList.toggle('on', this.open); if (this.open) { this.render(); this.poll(); } else clearTimeout(this.pollT); };
+    el.addEventListener('input', e => this.input(e)); el.addEventListener('click', e => this.click(e));
+  },
+  unmount() { const el = $('#pmix'); if (el) el.remove(); clearTimeout(this.pollT); this.open = false; },
+  poll() {
+    clearTimeout(this.pollT); if (!this.open) return;
+    const A = window.ctvApp && window.ctvApp.audio;
+    if (!A) { this.render(); return; }
+    A.list().then(r => { if (Array.isArray(r)) { this.apps = r; this.appErr = ''; } else this.appErr = (r && r.err) || 'indisponible'; if (!this.dragApp) this.render(); }, () => { this.appErr = 'indisponible'; this.render(); })
+      .finally(() => { this.pollT = setTimeout(() => this.poll(), 2500); });
+  },
+  row(k, name, sub, v, mute, cls) {
+    return `<div class="mx-row ${cls || ''} ${mute ? 'mu' : ''}" data-pk="${esc(k)}"><div class="mx-n"><b>${esc(name)}</b><small>${esc(sub || '')}</small></div>
+      <button class="mx-b" data-pm title="Couper / remettre">${ic('vol')}</button><input type="range" min="0" max="100" step="1" value="${Math.round(v)}" style="--p:${Math.round(v)}%" data-pv><span class="mx-v">${mute ? 'coupé' : Math.round(v) + ' %'}</span></div>`;
+  },
+  render() {
+    const P = $('#pmixP'); if (!P || !this.open) return;
+    const A = window.ctvApp && window.ctvApp.audio;
+    P.innerHTML = `<div class="mixp-h"><b>Mes volumes</b><span class="note">chez toi seulement</span></div><div class="mixp-b">
+      ${this.row('tw', 'Twitch', SCREEN2.twCh(), this.v.tw == null ? 80 : this.v.tw, !!this.v.twMute, 'tw')}
+      ${this.row('dir', 'Direct (mon écoute)', 'ne change pas l\'émission', this.v.dir == null ? 100 : this.v.dir, !SCREEN2.snd, 'master')}
+      <div class="mx-sep">Autres logiciels du PC</div>
+      ${A ? (this.apps.length ? this.apps.map(a => this.row('app:' + a.name, a.title && a.title.length < 40 ? a.title : a.name, a.name + (a.active ? ' · joue du son' : ''), a.vol * 100, a.mute)).join('') : `<div class="note" style="padding:6px 10px">${this.appErr ? 'Mélangeur Windows indisponible : ' + esc(this.appErr) : 'Aucun autre logiciel ne joue de son pour l\'instant.'}</div>`)
+        : '<div class="note" style="padding:6px 10px">Pour régler le jeu, Deezer, Discord… ouvre le 2e écran depuis l\'<b>app bureau Capitol TV</b> (Windows). Un navigateur n\'a pas le droit de toucher au son des autres logiciels.</div>'}</div>`;
+  },
+  input(e) {
+    const sl = e.target.closest('[data-pv]'); if (!sl) return; const k = sl.closest('[data-pk]').dataset.pk, v = +sl.value;
+    sl.style.setProperty('--p', v + '%'); sl.closest('.mx-row').querySelector('.mx-v').textContent = v + ' %';
+    if (k === 'tw') { this.v.tw = v; this.save(); this.applyTw(); return; }
+    if (k === 'dir') { this.v.dir = v; this.save(); if (SCREEN2.pg) SCREEN2.pg.setMon(v / 100); return; }
+    if (k.startsWith('app:')) {
+      const n = k.slice(4), a = this.apps.find(x => x.name === n); if (a) a.vol = v / 100; this.dragApp = true; clearTimeout(this.dragT); this.dragT = setTimeout(() => { this.dragApp = false; }, 1500);
+      const now = Date.now(); if (now - (this.sentAt[n] || 0) > 60) { this.sentAt[n] = now; window.ctvApp.audio.set(n, v / 100); }
+      clearTimeout(this.appT); this.appT = setTimeout(() => window.ctvApp.audio.set(n, v / 100), 120);
+    }
+  },
+  click(e) {
+    const b = e.target.closest('[data-pm]'); if (!b) return; const k = b.closest('[data-pk]').dataset.pk;
+    if (k === 'tw') { this.v.twMute = !this.v.twMute; this.save(); this.applyTw(); }
+    else if (k === 'dir') { const sb = $('#s2Snd'); if (sb) sb.click(); }
+    else if (k.startsWith('app:')) { const n = k.slice(4), a = this.apps.find(x => x.name === n); if (a) { a.mute = !a.mute; window.ctvApp.audio.set(n, null, a.mute); } }
+    this.render();
+  }
+};
 const PROG = {
   pub: null, ed: null, sound: IS_OVERLAY, main: null, pgmStage: null, pvStage: null, saveT: null, dirty: 0,
   sel: '', drag: null, wasFull: false, media: [], air: { ids: [], prep: [], since: {}, delay: 0 }, ups: {}, listen: null, sfxEl: null,
@@ -5030,7 +5275,7 @@ const PROG = {
       <div class="mda">${md.kind === 'audio' ? `<button class="btn sm ${playing ? 'live' : ''}" data-ma="sfx" title="${playing ? 'Arrêter' : 'Jouer par-dessus l\'antenne, sans changer de plan'}">${playing ? '■' : '▶'}</button><button class="btn sm ghost" data-ma="listen" title="Écouter ici seulement (casque de la régie)">${this.listen && this.listen.dataset.id === md.id ? '⏸' : '🎧'}</button>` : ''}<button class="btn sm ghost" data-ma="del" title="Supprimer">${ic('trash')}</button></div></div></div>`;
   },
   renderMediaSec(q) {
-    const f = md => !q || md.name.toLowerCase().includes(q);
+    const f = md => !md.yt && (!q || md.name.toLowerCase().includes(q));
     const slotRows = this.SLOTS.map(sl => {
       const md = this.media.find(x => x.slot === sl.slot), up = this.ups[sl.slot];
       if (up) return `<div class="src smd up"><div class="th md">⇪</div><div style="min-width:0;flex:1"><b>${esc(sl.name)}</b><small>Envoi… ${up}%</small><div class="pbar"><i style="width:${up}%"></i></div></div></div>`;
@@ -5136,7 +5381,7 @@ const PROG = {
                 <button class="btn sm ghost hide" id="pvSim" title="Afficher dans l'aperçu le plan à l'antenne avec les modifications en attente">${ic('eye')}Simuler les modifs</button>
                 <button class="btn sm ghost mon-b" id="pvImg" title="Image réelle (vidéo + habillage) ou simple schéma">${ic('eye')}Image</button><button class="btn sm ghost mon-b" id="pvSnd" title="Écouter l'aperçu">${ic('vol')}</button><button class="btn sm ghost mon-b" id="pvAct" title="Cliquer dans les lecteurs Twitch (accepter un avertissement, son, qualité…). Le glisser-déposer est suspendu tant que c'est actif.">Interagir</button></h4>
               <div class="cvw"><div class="stg" id="pvStg"></div><div class="cv" id="cvPv"></div></div>
-              <div class="note" style="margin-top:4px">Glisser-déposer · coins = taille (Maj : libre) · Suppr · flèches · <b>Habillage compris</b></div></div>
+              <div class="note" style="margin-top:4px">Glisser-déposer · coins = taille · <b>clic droit</b> : actions · survol d'une source à gauche + <b>F</b> plein écran, <b>1–9</b> grille 3×3, <b>Maj+1–4</b> quarts, <b>←/→</b> moitiés, <b>P</b> incrustation, <b>G</b> fond · <b>O</b> placement optimal</div></div>
             <div class="mon"><h4>ANTENNE <span class="em-live" id="pgmTag">● EN DIRECT</span><span id="pgmName" style="color:var(--ink2)"></span><span style="flex:1"></span>
                 <button class="btn sm ghost mon-b" id="pgImg" title="Image réelle ou schéma">${ic('eye')}Image</button><button class="btn sm ghost mon-b" id="pgSnd" title="Écouter l'antenne">${ic('vol')}</button><button class="btn sm ghost mon-b" id="pgAct" title="Cliquer dans les lecteurs Twitch de l'antenne (accepter un avertissement, son, qualité…)">Interagir</button></h4>
               <div class="cvw"><div class="stg" id="pgStg"></div><div class="cv pgm" id="cvPg"></div></div>
@@ -5146,7 +5391,8 @@ const PROG = {
                 <span style="flex:1"></span><button class="btn sm ghost" id="rgOff" title="Écran « Hors antenne » par-dessus l'émission (avec transition)">Hors antenne</button><button class="btn sm ghost" id="rgMaint" title="Écran « Maintenance en cours, retour du direct… »">Maintenance…</button><button class="btn sm live hide" id="rgResume">▶ Reprendre le direct</button></div>
               <div class="rg-row" style="margin-top:8px"><span class="note" style="flex:none">Modifs du plan à l'antenne :</span><div class="seg sm" id="rgMode"><button data-mode="auto" title="Chaque déplacement ou ajout part tout de suite à l'antenne">Immédiates</button><button data-mode="manual" title="Rien ne change à l'antenne avant d'appuyer sur Appliquer">Manuelles</button></div></div>
               <button class="btn apply hide" id="rgApply" style="width:100%;margin-top:8px">APPLIQUER LES MODIFS À L'ANTENNE <span style="opacity:.7;font-size:11px;margin-left:6px">(A)</span></button>
-              <button class="btn take" id="rgTake" style="width:100%;margin-top:8px">À L'ANTENNE ▶ <span style="opacity:.7;font-size:11px;margin-left:6px">(T)</span></button><div class="note" id="rgWarn" style="margin-top:6px;min-height:16px"></div></div>
+              <button class="btn take" id="rgTake" style="width:100%;margin-top:8px">À L'ANTENNE ▶ <span style="opacity:.7;font-size:11px;margin-left:6px">(T)</span></button>
+              <button class="btn sm mixbtn" id="rgMix" title="Volumes de l'émission (général, musique, chaque source) avec fondus"><span class="mixico"><i></i><i></i><i></i></span>Mixeur de l'émission</button><div class="note" id="rgWarn" style="margin-top:6px;min-height:16px"></div></div>
           </div>
           <div class="rg-row rg-sfx" id="rgSfx"></div>
           <div class="rg-panels">
@@ -5159,7 +5405,7 @@ const PROG = {
           <div class="rg-row"><b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">PLANS</b><div class="scn" id="rgScenes"></div>
             <button class="btn sm ghost" id="rgScr2" title="Ouvre une 2e fenêtre pour ton 2e écran : grands moniteurs Aperçu / Antenne, plans et multiview des POV. Clique une POV du multiview pour la mettre dans l'Aperçu.">${ic('side')}Double écran</button>
             <button class="btn sm" id="rgNew">${ic('plus')}Nouveau</button><button class="btn sm ghost" id="rgDup">Dupliquer</button><button class="btn sm ghost" id="rgDel" style="color:var(--red-hi)">${ic('trash')}</button></div>
-          <div class="rg-row" style="flex-wrap:wrap"><b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">DISPOSITIONS</b>${Object.entries(this.PRESETS).map(([k, [l, L]]) => `<button class="btn sm ghost pre-b" data-pre="${k}" title="${L.length} source${L.length > 1 ? 's' : ''}">${this.preIcon(L)}${l}</button>`).join('')}<button class="btn sm pre-b" id="rgMosaic" title="Choisir combien de POV et lesquels (recherche par pseudo), avec effet d'apparition">${this.preIcon(this.gridOf(9))}Mosaïque…</button></div>
+          <div class="rg-row" style="flex-wrap:wrap"><b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">DISPOSITIONS</b>${Object.entries(this.PRESETS).map(([k, [l, L]]) => `<button class="btn sm ghost pre-b" data-pre="${k}" title="${L.length} source${L.length > 1 ? 's' : ''}">${this.preIcon(L)}${l}</button>`).join('')}<button class="btn sm pre-b" id="rgMosaic" title="Choisir combien de POV et lesquels (recherche par pseudo), avec effet d'apparition">${this.preIcon(this.gridOf(9))}Mosaïque…</button><button class="btn sm primary pre-b" id="rgOpt" title="Range au mieux toutes les sources visibles du plan (la principale garde la plus grande place) · touche O">✦ Placement optimal</button></div>
           <div class="rg-row" id="rgAll" style="flex-wrap:wrap"><b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">TOUTES LES POV DU PLAN</b>
             <button class="btn sm ghost" data-all="rand">🎲 Au hasard</button><button class="btn sm ghost" data-all="next">▶ Suivants vivants</button><button class="btn sm ghost" data-all="near">◎ Plus proches</button>
             <button class="btn sm ghost" data-all="heads">Têtes : oui / non</button><button class="btn sm ghost" data-all="snd" title="Seule la POV la plus grande a le son">🔊 Son : la principale seule</button></div>
@@ -5265,13 +5511,13 @@ const PROG = {
     cv.innerHTML = items.map(it => {
       const s = this.srcInfo(it);
       const bg = !s ? 'background:#3a1016' : s.media || s.ctv ? '' : `background-image:url('${thumbURL(s.login)}')`;
-      return `<div class="ci ${edit && it.id === this.sel ? 'sel' : ''} ${s && s.media ? 'cmd ' + s.media.kind : ''}" data-it="${esc(it.id)}" ${edit && it.k === 'cam' ? `data-cam="${esc(it.ref)}"` : ''} style="left:${it.x}%;top:${it.y}%;width:${it.w}%;height:${it.h}%;z-index:${1 + (it.z || 0)};${bg}">
+      return `<div class="ci ${edit && it.id === this.sel ? 'sel' : ''} ${it.hide ? 'hid' : ''} ${s && s.media ? 'cmd ' + s.media.kind : ''}" data-it="${esc(it.id)}" ${edit && it.k === 'cam' ? `data-cam="${esc(it.ref)}"` : ''} style="left:${it.x}%;top:${it.y}%;width:${it.w}%;height:${it.h}%;z-index:${1 + (it.z || 0)};${bg}">
         ${s && s.media ? `<span class="mdi">${s.media.kind === 'video' ? '▶' : s.media.kind === 'image' ? '▣' : '♪'}</span>` : s && s.ctv ? '<span class="mdi ctv">CTV</span>' : ''}
-        <span class="nm">${s ? esc(s.name) : 'Source introuvable'}${it.label === false && !(s && s.media) ? ' · sans nom' : ''}${it.loop ? ' · ⟲' : ''}</span>${edit ? `<button class="au snd ${it.audio ? 'on' : ''}" data-snd="${esc(it.id)}" title="${it.audio ? 'Couper le son de cette source' : 'Activer le son de cette source'}">${it.audio ? '🔊' : '🔇'}</button>` : it.audio ? '<span class="au">SON</span>' : ''}
+        <span class="nm">${it.hide ? '🚫 ' : ''}${s ? esc(s.name) : 'Source introuvable'}${it.hide ? ' · son seul' : ''}${it.label === false && !(s && s.media) ? ' · sans nom' : ''}${it.loop ? ' · ⟲' : ''}</span>${edit ? `<button class="au snd ${it.audio ? 'on' : ''}" data-snd="${esc(it.id)}" title="${it.audio ? 'Couper le son de cette source' : 'Activer le son de cette source'}">${it.audio ? '🔊' : '🔇'}</button>` : it.audio ? '<span class="au">SON</span>' : ''}
         ${edit ? '<i class="hd nw"></i><i class="hd ne"></i><i class="hd sw"></i><i class="hd se"></i>' : ''}</div>`;
     }).join('') + (!items.length ? `<div class="hint">${edit ? 'Glisse ici des caméras ou des tributs depuis la liste de gauche.' : 'Rien à l\'antenne'}</div>` : '');
   },
-  renderCanvas() { this.drawItems($('#cvPv'), this.scene(), true); $$('#cvPv .ci[data-cam]').forEach(el => this.badge(el, el.dataset.cam)); this.renderInsp(); this.renderScenes(); this.renderWarn(); this.renderPv(); this.renderMode(); },
+  renderCanvas() { MIXUI.render(true); this.drawItems($('#cvPv'), this.scene(), true); $$('#cvPv .ci[data-cam]').forEach(el => this.badge(el, el.dataset.cam)); this.renderInsp(); this.renderScenes(); this.renderWarn(); this.renderPv(); this.renderMode(); },
   /* ---------- moniteurs : image réelle (vidéo + habillage), comme sur la page Direct ---------- */
   monPrefs: (() => { try { return JSON.parse(localStorage.getItem('ctv_mons')) || {}; } catch (e) { return {}; } })(),
   saveMon() { try { localStorage.setItem('ctv_mons', JSON.stringify(this.monPrefs)); } catch (e) {} },
@@ -5325,7 +5571,7 @@ const PROG = {
     const e = this.ed; if (!e || e.apply !== 'manual' || !e.live) return false;
     const sc = e.scenes.find(x => x.id === e.live); if (!sc) return false;
     const r = v => Math.round((+v || 0) * 100) / 100;
-    const norm = items => JSON.stringify((items || []).map(i => [i.id, i.k, i.ref, r(i.x), r(i.y), r(i.w), r(i.h), r(i.z), i.label !== false, !!i.audio, !!i.loop, i.vol == null ? 100 : r(i.vol)]));
+    const norm = items => JSON.stringify((items || []).map(i => [i.id, i.k, i.ref, r(i.x), r(i.y), r(i.w), r(i.h), r(i.z), i.label !== false, !!i.audio, !!i.loop, !!i.hide, i.vol == null ? 100 : r(i.vol)]));
     return norm(sc.items) !== norm(e.airItems) || JSON.stringify(e.gfx || {}) !== JSON.stringify(e.airGfx || {});
   },
   renderMode() {
@@ -5370,9 +5616,92 @@ const PROG = {
     const z = Math.max(0, ...sc.items.map(i => i.z || 0)) + 1;
     const w = sc.items.length ? 40 : 100;
     if (k === 'media') { sc.items.forEach(i => { if (i.k === 'media') i.audio = false; }); }
-    const it = { id: 'i' + rid(), k, ref, label: k !== 'media', w, h: w, x: sc.items.length ? Math.max(0, Math.min(100 - w, x - w / 2)) : 0, y: sc.items.length ? Math.max(0, Math.min(100 - w, y - w / 2)) : 0, z, audio: k === 'media' || !sc.items.some(i => i.audio) };
-    if (k === 'media') sc.items.forEach(i => { if (i.k !== 'media') i.audio = false; });
+    const md = k === 'media' ? this.mediaById(ref) : null;
+    const it = { id: 'i' + rid(), k, ref, label: k !== 'media', w, h: w, x: sc.items.length ? Math.max(0, Math.min(100 - w, x - w / 2)) : 0, y: sc.items.length ? Math.max(0, Math.min(100 - w, y - w / 2)) : 0, z, audio: k === 'media' || !sc.items.some(i => i.audio), hide: !!(md && md.kind === 'audio') };
+    if (it.hide) { it.w = 20; it.h = 20; it.x = 80; it.y = 0; toastInfo('Musique ajoutée au plan', 'Son seulement. Clic droit › « Afficher l\'image au direct » pour la montrer.'); }
+    if (k === 'media' && !it.hide) sc.items.forEach(i => { if (i.k !== 'media') i.audio = false; });
     sc.items.push(it); this.sel = it.id; this.autoAudio(sc); this.save();
+  },
+  /* ---------- placement rapide : survoler une source + touche ---------- */
+  SLOT_KEYS: { f: 'full', g: 'bg', p: 'pip' },
+  slotRect(slot) {
+    if (slot === 'full' || slot === 'bg') return [0, 0, 100, 100];
+    if (slot === 'pip') return [66, 63, 30, 30];
+    if (/^g\d$/.test(slot)) { const n = +slot[1] - 1, c = n % 3, r = Math.floor(n / 3); return [c * 33.333, r * 33.333, 33.333, 33.333]; }
+    if (/^q\d$/.test(slot)) { const n = +slot[1] - 1, c = n % 2, r = Math.floor(n / 2); return [c * 50, r * 50, 50, 50]; }
+    if (slot === 'l') return [0, 25, 50, 50]; if (slot === 'r') return [50, 25, 50, 50];
+    return null;
+  },
+  placeAt(k, ref, slot) {
+    const sc = this.scene(); if (!sc) return;
+    if (k !== 'media' && this.povBlocked((k === 'trib' ? 't:' : 'c:') + ref)) { toastInfo('Capture coupée', 'Cette POV n\'est plus utilisable.', true); return; }
+    const R = this.slotRect(slot); if (!R) return;
+    const near = (i, r) => Math.abs(i.x - r[0]) < 1.5 && Math.abs(i.y - r[1]) < 1.5 && Math.abs(i.w - r[2]) < 1.5 && Math.abs(i.h - r[3]) < 1.5;
+    let it = sc.items.find(i => i.k === k && i.ref === ref);
+    if (slot === 'full') { const keep = it || { id: 'i' + rid(), k, ref, label: k !== 'media', audio: true }; sc.items = [Object.assign(keep, { x: 0, y: 0, w: 100, h: 100, z: 0, hide: false })]; this.sel = keep.id; sc.items.forEach(i => i.am = false); this.autoAudio(sc); this.save(); return; }
+    const occ = sc.items.find(i => i !== it && near(i, R) && !i.hide);
+    if (occ && !it) { occ.k = k; occ.ref = ref; occ.label = k !== 'media'; this.sel = occ.id; this.save(); toastInfo('Remplacée', (this.srcInfo(occ) || {}).name || ''); return; }
+    if (!it) { if (sc.items.length >= 30) { toastInfo('30 sources maximum par plan', '', true); return; } it = { id: 'i' + rid(), k, ref, label: k !== 'media', audio: !sc.items.some(i => i.audio) }; sc.items.push(it); }
+    else if (occ) { [occ.x, occ.y, occ.w, occ.h] = [it.x, it.y, it.w, it.h]; }
+    [it.x, it.y, it.w, it.h] = R; it.hide = false;
+    const zs = sc.items.map(i => i.z || 0);
+    it.z = slot === 'bg' ? Math.min(0, ...zs) - 1 : Math.max(0, ...zs) + 1;
+    if (slot === 'bg') { const m = Math.min(...sc.items.map(i => i.z || 0)); sc.items.forEach(i => i.z = (i.z || 0) - m); }
+    this.sel = it.id; this.autoAudio(sc); this.save();
+  },
+  /* ---------- placement optimal : range toutes les sources visibles au mieux ---------- */
+  optimal() {
+    const sc = this.scene(); if (!sc) return;
+    const vis = sc.items.filter(i => !i.hide); if (!vis.length) { toastInfo('Aucune source à ranger'); return; }
+    const byArea = vis.slice().sort((a, b) => (b.w * b.h - a.w * a.h) || (b.audio - a.audio));
+    const n = byArea.length, main = byArea[0], second = byArea[1];
+    const featured = n >= 2 && (main.id === this.sel || main.audio || (second && main.w * main.h > 1.6 * second.w * second.h));
+    const P = this.PRESETS;
+    const L = n === 1 ? P.full[1] : featured ? (n === 2 ? P.pip[1] : n === 3 ? P.trio[1] : n === 4 ? P.one3[1] : n === 5 ? P.strip[1] : n === 6 ? P.one5[1] : this.gridOf(n))
+      : (n === 2 ? P.side[1] : n === 4 ? P.grid4[1] : this.gridOf(n));
+    byArea.forEach((it, i) => { [it.x, it.y, it.w, it.h] = L[i]; it.z = featured && n === 2 ? i : 0; it.d = 0; });
+    this.autoAudio(sc); this.save(); toastInfo('Placement optimal', n + ' source' + (n > 1 ? 's' : '') + (featured ? ', « ' + ((this.srcInfo(main) || {}).name || '') + ' » en principal' : ''));
+  },
+  /* ---------- clic droit sur une source : actions rapides ---------- */
+  ctxMenu(e, id) {
+    const sc = this.scene(), it = sc && sc.items.find(i => i.id === id); if (!it) return;
+    e.preventDefault(); this.sel = id; this.renderCanvas(); this.ctxClose();
+    const md = it.k === 'media' ? this.mediaById(it.ref) : null, s = this.srcInfo(it) || {};
+    const items = [
+      it.k === 'trib' && ['h', 'Changer la POV'], it.k === 'trib' && ['rand', '🎲 Au hasard'], it.k === 'trib' && ['next', '▶ Suivant vivant'], it.k === 'trib' && ['near', '◎ Le plus proche'], it.k === 'trib' && ['find', '🔎 Chercher…'],
+      ['h', 'Source'], ['main', '★ Mettre en principal'], ['full', '⛶ Plein écran (seule)'],
+      ['snd', it.audio ? '🔇 Couper le son' : '🔊 Activer le son'],
+      ['hide', it.hide ? (md && md.kind === 'audio' ? '👁 Afficher l\'image au direct' : '👁 Afficher') : '🚫 Cacher l\'image (le son continue)'],
+      it.k !== 'media' && ['label', it.label === false ? 'Afficher le nom' : 'Masquer le nom'],
+      ['h', 'Ordre'], ['front', '⤒ Premier plan'], ['up', '↑ Avancer'], ['down', '↓ Reculer'], ['back', '⤓ Arrière-plan'],
+      ['sep'], ['del', '✕ Retirer du plan']
+    ].filter(Boolean);
+    const m = document.createElement('div'); m.className = 'ctx'; m.innerHTML = `<div class="ctx-t">${esc(s.name || 'Source')}</div>` + items.map(([a, l]) => a === 'h' ? `<div class="ctx-h">${l}</div>` : a === 'sep' ? '<hr>' : `<button data-cx="${a}">${l}</button>`).join('');
+    document.body.appendChild(m);
+    const r = m.getBoundingClientRect(); m.style.left = Math.min(e.clientX, innerWidth - r.width - 8) + 'px'; m.style.top = Math.min(e.clientY, innerHeight - r.height - 8) + 'px';
+    m.onclick = ev => { const b = ev.target.closest('[data-cx]'); if (!b) return; this.ctxClose(); this.ctxDo(it.id, b.dataset.cx); };
+    this.ctxEl = m; setTimeout(() => document.addEventListener('pointerdown', this.ctxOff = ev => { if (!m.contains(ev.target)) this.ctxClose(); }), 0);
+  },
+  ctxClose() { if (this.ctxEl) { this.ctxEl.remove(); this.ctxEl = null; } if (this.ctxOff) { document.removeEventListener('pointerdown', this.ctxOff); this.ctxOff = null; } },
+  ctxDo(id, a) {
+    const sc = this.scene(), it = sc && sc.items.find(i => i.id === id); if (!it) return;
+    if (['rand', 'next', 'near'].includes(a)) { this.swapPov(it, a); return; }
+    if (a === 'find') { const q = prompt('N° ou pseudo du tribut'); if (q) this.swapPov(it, 'find', q); return; }
+    if (a === 'full') { this.placeAt(it.k, it.ref, 'full'); return; }
+    if (a === 'main') {
+      const big = sc.items.filter(i => !i.hide).sort((x, y) => y.w * y.h - x.w * x.h)[0];
+      if (big && big !== it) { const r = [big.x, big.y, big.w, big.h, big.z]; [big.x, big.y, big.w, big.h, big.z] = [it.x, it.y, it.w, it.h, it.z]; [it.x, it.y, it.w, it.h, it.z] = r; }
+      sc.items.forEach(i => { if (i.k !== 'media' || !i.hide) { i.audio = i === it; i.am = true; } }); it.hide = false; this.save(); return;
+    }
+    if (a === 'snd') { it.audio = !it.audio; it.am = true; }
+    if (a === 'hide') it.hide = !it.hide;
+    if (a === 'label') it.label = it.label === false;
+    if (a === 'up' || a === 'down') {
+      const ord = sc.items.slice().sort((x, y) => (x.z || 0) - (y.z || 0)); const i = ord.indexOf(it), j = a === 'up' ? i + 1 : i - 1;
+      if (j >= 0 && j < ord.length) { ord.splice(i, 1); ord.splice(j, 0, it); ord.forEach((x, n) => x.z = n); }
+    }
+    if (['front', 'back', 'del'].includes(a)) { this.itemAction(a); return; }
+    this.save();
   },
   applyPreset(k) {
     const sc = this.scene(); if (!sc || !sc.items.length) { toastInfo('Ajoute d\'abord des sources à l\'aperçu'); return; }
@@ -5410,17 +5739,19 @@ const PROG = {
     const playing = this.pub && this.pub.bgm;
     box.innerHTML = `<div class="gx-row"><select class="mini-sel" id="bgScope"><option value="all" ${scope === 'all' ? 'selected' : ''}>Tous les plans</option><option value="scene" ${scope === 'scene' ? 'selected' : ''}>Ce plan : ${esc(sc ? sc.name : '')}</option></select>
         <label style="display:flex;align-items:center;gap:6px;flex:0 0 130px"><span class="note">Vol.</span><input type="range" id="bgVol" min="0" max="100" step="5" value="${D.vol}" style="flex:1"></label></div>
-      <div class="gx-row"><input class="inp" id="bgQ" value="${esc(this.bgmQ || '')}" placeholder="Chercher une musique (épique, suspense…) ou art:nom de l'artiste" autocomplete="off"></div>
+      <div class="gx-row"><input class="inp" id="bgQ" value="${esc(this.bgmQ || '')}" placeholder="Titre, artiste ou lien YouTube (ex. two steps from hell heart of courage)" autocomplete="off"></div>
       ${hits.length ? `<div class="bg-hits"><span class="note">Déjà dans tes médias</span>${hits.map(x => `<button class="btn xs ghost" data-bga="${esc(x.id)}">＋ ${esc(x.name)} <span class="note">${this.fmtDur(x.dur)}</span></button>`).join('')}</div>` : ''}
-      ${q.length >= 2 ? this.bgWebHtml() : ''}
+      ${q.length >= 2 ? this.bgYtHtml() + this.bgWebHtml() : ''}
       <ol class="qlist">${D.ids.map((id, i) => { const md = this.mediaById(id); return `<li><span>${esc(md ? md.name : '?')}</span><span class="note">${md ? this.fmtDur(md.dur) : ''}</span><button class="btn sm ghost" data-bgx="${i}">${ic('x')}</button></li>`; }).join('')}</ol>
       <div class="gx-row"><button class="btn sm primary" id="bgGo" ${D.ids.length ? '' : 'disabled'}>▶ ${scope === 'all' ? 'Lancer sur tous les plans' : 'Lancer sur ce plan'}</button><button class="btn sm ghost" id="bgStop">■ Arrêter</button></div>
       <p class="note" style="margin:6px 0 0">${playing ? `En cours (${playing.scope === 'all' ? 'tous les plans' : 'ce plan'}) : ${esc(playing.tracks.map(t => t.name).join(' → '))}` : 'Aucune musique de fond à l\'antenne.'} La musique d'un plan remplace celle de tous les plans.</p>`;
     const send = ids => NET.req({ t: 'progBgm', scope: scope === 'all' ? 'all' : sc.id, ids, vol: D.vol }).then(() => toastInfo(ids.length ? 'Musique lancée' : 'Musique arrêtée'), e => toastInfo('Musique', e.message, true));
-    box.oninput = e => { if (e.target.id === 'bgQ') { this.bgmQ = e.target.value; clearTimeout(this.bgWebT); this.bgWebT = setTimeout(() => this.bgWebSearch(), 650); this.renderBgm(); const i = $('#bgQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); } if (e.target.id === 'bgVol') D.vol = +e.target.value; };
+    box.oninput = e => { if (e.target.id === 'bgQ') { this.bgmQ = e.target.value; clearTimeout(this.bgWebT); this.bgWebT = setTimeout(() => { this.bgYtSearch(); this.bgWebSearch(); }, 650); this.renderBgm(); const i = $('#bgQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); } if (e.target.id === 'bgVol') D.vol = +e.target.value; };
     box.onchange = e => { if (e.target.id === 'bgScope') { this.bgmScope = e.target.value; this.bgmDraft = null; this.renderBgm(); } if (e.target.id === 'bgVol' && playing) send(D.ids); };
     box.onclick = e => {
       const a = e.target.closest('[data-bga]'); if (a) { D.ids.push(a.dataset.bga); this.bgmQ = ''; this.renderBgm(); return; }
+      const yp = e.target.closest('[data-byp]'); if (yp) { this.bgYtPlay(+yp.dataset.byp); return; }
+      const ya = e.target.closest('[data-bya]'); if (ya) { this.bgYtAdd(+ya.dataset.bya, D); return; }
       const pl = e.target.closest('[data-bwp]'); if (pl) { this.bgWebPlay(+pl.dataset.bwp); return; }
       const ad = e.target.closest('[data-bwa]'); if (ad) { this.bgWebAdd(+ad.dataset.bwa, D); return; }
       const x = e.target.closest('[data-bgx]'); if (x) { D.ids.splice(+x.dataset.bgx, 1); this.renderBgm(); return; }
@@ -5428,13 +5759,56 @@ const PROG = {
       if (e.target.closest('#bgStop')) { D.ids = []; send([]); this.renderBgm(); }
     };
   },
+  /* ---------- n'importe quelle musique : YouTube (lu par le lecteur YouTube intégré) ---------- */
+  bgYtHtml() {
+    const W = this.bgYt || {}, q = (this.bgmQ || '').trim();
+    if (W.q !== q || W.busy) return '<p class="note" style="margin:4px 0">Recherche sur YouTube…</p>';
+    if (W.err || !W.list.length) return `<p class="note" style="margin:4px 0">${esc(W.err || 'Rien trouvé sur YouTube.')}</p>`;
+    return `<div class="bg-web"><span class="note">YouTube : tout le catalogue</span>${W.list.map((x, i) => `<div class="bw ${W.bad && W.bad[x.yt] ? 'bad' : ''}"><button class="btn xs ghost" data-byp="${i}" title="Écouter ici (vérifie aussi que la vidéo peut être lue hors de YouTube)">${this.bgYtI === i ? '■' : '▶'}</button>
+      <span class="bw-t"><b>${esc(x.title)}</b><small>${esc(x.creator || '')}${W.bad && W.bad[x.yt] ? ' · <span style="color:var(--red-hi)">lecture hors YouTube refusée</span>' : ''}</small></span><span class="note">${x.dur ? this.fmtDur(x.dur) : ''}</span>
+      <button class="btn xs" data-bya="${i}" ${W.adding === i ? 'disabled' : ''}>${W.adding === i ? '…' : '＋ Ajouter'}</button></div>`).join('')}</div>`;
+  },
+  bgYtSearch() {
+    const q = (this.bgmQ || '').trim(); if (q.length < 2 || /^art(iste)?\s*:/i.test(q)) { this.bgYt = { q, list: [] }; return; }
+    this.bgYt = { q, list: [], busy: true, bad: (this.bgYt || {}).bad }; this.renderBgmKeep();
+    fetch('/api/media/yt?q=' + encodeURIComponent(q)).then(r => r.json().then(j => ({ ok: r.ok, j }))).then(({ ok, j }) => {
+      if ((this.bgmQ || '').trim() !== q) return;
+      this.bgYt = { q, list: ok ? j.list || [] : [], err: ok ? j.msg || '' : j.msg || 'Recherche YouTube impossible', bad: this.bgYt.bad }; this.renderBgmKeep();
+    }, () => { this.bgYt = { q, list: [], err: 'Recherche YouTube impossible (réseau)' }; this.renderBgmKeep(); });
+  },
+  /* écoute dans un petit lecteur : sert aussi à savoir si la vidéo accepte d'être lue hors de YouTube */
+  bgYtPlay(i) {
+    const W = this.bgYt, x = W && W.list[i]; if (!x) return;
+    if (this.bgPrev) this.bgPrev.pause(); this.bgPrevI = -1;
+    if (this.ytPrev) { try { this.ytPrev.destroy(); } catch (e) {} this.ytPrev = null; $$('.yt-prev').forEach(e => e.remove()); }
+    if (this.bgYtI === i) { this.bgYtI = -1; this.renderBgmKeep(); return; }
+    this.bgYtI = i; this.renderBgmKeep();
+    YTAPI.load().then(() => {
+      const box = document.createElement('div'); box.className = 'yt-prev'; document.body.appendChild(box); const d = document.createElement('div'); box.appendChild(d);
+      this.ytPrev = new YT.Player(d, { width: 200, height: 200, videoId: x.yt, playerVars: { autoplay: 1, controls: 0, playsinline: 1 }, events: {
+        onReady: e => { try { e.target.setVolume(70); e.target.playVideo(); } catch (er) {} if (!x.dur) x.dur = Math.round(e.target.getDuration() || 0); },
+        onError: () => { W.bad = { ...(W.bad || {}), [x.yt]: 1 }; this.bgYtI = -1; toastInfo('Vidéo illisible hors de YouTube', 'Prends une autre version (« audio », « lyrics », « topic »).', true); this.renderBgmKeep(); } } });
+    });
+  },
+  bgYtAdd(i, D) {
+    const W = this.bgYt, x = W && W.list[i]; if (!x) return;
+    if (W.bad && W.bad[x.yt]) { toastInfo('Cette vidéo ne peut pas être lue hors de YouTube', 'Choisis une autre version.', true); return; }
+    W.adding = i; this.renderBgmKeep();
+    fetch('/api/media/addyt', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ yt: x.yt, name: x.title, dur: x.dur, credit: x.title + (x.creator ? ' — ' + x.creator : '') }) })
+      .then(r => r.json().then(j => ({ ok: r.ok, j }))).then(({ ok, j }) => {
+        W.adding = -1;
+        if (!ok) { toastInfo('Ajout impossible', j.msg || '', true); this.renderBgmKeep(); return; }
+        if (!this.media.some(m => m.id === j.media.id)) this.media.push(j.media);
+        D.ids.push(j.media.id); toastInfo('Ajoutée à la playlist', x.title); this.renderBgmKeep();
+      }, () => { W.adding = -1; toastInfo('Ajout impossible', 'Réseau', true); this.renderBgmKeep(); });
+  },
   /* ---------- musiques en ligne (libres de droits, via Openverse) ---------- */
   bgWebHtml() {
     const W = this.bgWeb || {}, q = (this.bgmQ || '').trim();
-    if (W.q !== q || W.busy) return '<p class="note" style="margin:4px 0">Recherche en ligne…</p>';
+    if (W.q !== q || W.busy) return '<p class="note" style="margin:4px 0">Recherche libre de droits…</p>';
     if (W.err) return `<p class="note" style="margin:4px 0;color:var(--red-hi)">${esc(W.err)}</p>`;
-    if (!W.list.length) return /^art(iste)?\s*:/i.test(q) ? '<p class="note" style="margin:4px 0">Aucune musique libre de droits de cet artiste. Les artistes sous contrat (Two Steps From Hell, Hans Zimmer…) ne publient pas sous licence libre, et leur musique ferait couper ou bloquer le stream Twitch (DMCA). Essaie un style : art:Kevin MacLeod, ou « epic trailer ».</p>' : '<p class="note" style="margin:4px 0">Rien trouvé en ligne : essaie un mot en anglais (epic, suspense, ambient…) ou art:nom de l\'artiste.</p>';
-    return `<div class="bg-web"><span class="note">En ligne, libres de droits (crédit à afficher)</span>${W.list.map((x, i) => `<div class="bw"><button class="btn xs ghost" data-bwp="${i}" title="Écouter ici">${this.bgPrevI === i ? '■' : '▶'}</button>
+    if (!W.list.length) return '';
+    return `<div class="bg-web"><span class="note">Libres de droits (aucun risque pour la VOD)</span>${W.list.map((x, i) => `<div class="bw"><button class="btn xs ghost" data-bwp="${i}" title="Écouter ici">${this.bgPrevI === i ? '■' : '▶'}</button>
       <span class="bw-t"><b>${esc(x.title)}</b><small>${esc(x.creator || 'Auteur inconnu')} · ${esc(x.license)}${x.src ? ' · ' + esc(x.src) : ''}</small></span><span class="note">${this.fmtDur(x.dur)}</span>
       <button class="btn xs" data-bwa="${i}" ${W.adding === i ? 'disabled' : ''}>${W.adding === i ? 'Import…' : '＋ Ajouter'}</button></div>`).join('')}</div>`;
   },
@@ -5620,6 +5994,12 @@ const PROG = {
       const sc = this.scene(); sc.items = [{ id: 'i' + rid(), k: r.dataset.k, ref: r.dataset.ref, x: 0, y: 0, w: 100, h: 100, z: 0, label: r.dataset.k !== 'media', audio: true }];
       this.sel = sc.items[0].id; this.save(); if (e.shiftKey) setTimeout(() => this.take(), 350);
     });
+    // survol d'une source : touches de placement rapide
+    $('#rgSrc').addEventListener('mouseover', e => { const r = e.target.closest('.src[data-k]'); this.hover = r && !r.classList.contains('blocked') && !r.classList.contains('vide') ? { k: r.dataset.k, ref: r.dataset.ref } : null; });
+    $('#rgSrc').addEventListener('mouseleave', () => { this.hover = null; });
+    pv.addEventListener('contextmenu', e => { const el = e.target.closest('.ci'); if (el) this.ctxMenu(e, el.dataset.it); else e.preventDefault(); });
+    $('#rgOpt').onclick = () => this.optimal();
+    $('#rgMix').onclick = () => MIXUI.toggle();
     pv.addEventListener('dragover', e => { e.preventDefault(); pv.classList.add('drop'); });
     pv.addEventListener('dragleave', () => pv.classList.remove('drop'));
     pv.addEventListener('drop', e => {
@@ -5631,6 +6011,7 @@ const PROG = {
     });
     // déplacement / redimensionnement
     pv.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
       const sb = e.target.closest('[data-snd]');
       if (sb) { e.preventDefault(); e.stopPropagation(); const it = this.scene().items.find(x => x.id === sb.dataset.snd); if (it) { it.audio = !it.audio; it.am = true; this.save(); } return; }
       const el = e.target.closest('.ci');
@@ -5700,6 +6081,12 @@ const PROG = {
   },
   onKey(e) {
     const it = this.item(), k = e.key;
+    if (this.hover && !e.repeat) {
+      const dg = e.code.match(/^(?:Digit|Numpad)([1-9])$/), lk = k.toLowerCase();
+      const slot = dg ? (e.shiftKey && +dg[1] <= 4 ? 'q' : 'g') + dg[1] : this.SLOT_KEYS[lk] || (k === 'ArrowLeft' ? 'l' : k === 'ArrowRight' ? 'r' : '');
+      if (slot) { e.preventDefault(); this.placeAt(this.hover.k, this.hover.ref, slot); return; }
+    }
+    if (k.toLowerCase() === 'o' && !e.repeat) { e.preventDefault(); this.optimal(); return; }
     if ((k === 'Delete' || k === 'Backspace') && it) { e.preventDefault(); this.itemAction('del'); return; }
     if (k.startsWith('Arrow') && it) {
       e.preventDefault(); const st = e.shiftKey ? 5 : .5;

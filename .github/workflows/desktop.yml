@@ -22,6 +22,8 @@ jobs:
           node-version: "22"
       - name: Installation
         run: npm install --no-audit --no-fund
+      - name: Test du mélangeur Windows (compilation du code audio)
+        run: node -e "const w=require('./winaudio');w.list().then(r=>{console.log('liste',JSON.stringify(r));w.stop()},e=>{console.log('erreur',e.message);w.stop();if(/ne répond pas/.test(e.message))process.exit(1)})"
       - name: Construction (installateur + version portable)
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"

@@ -129,7 +129,7 @@ public final class ServerBridge {
                 if (!keys.has(n)) continue;
                 JsonObject k = keys.getAsJsonObject(n);
                 if (ServerPlayNetworking.canSend(p, StreamKeyPayload.ID))
-                    ServerPlayNetworking.send(p, new StreamKeyPayload(k.get("key").getAsString(), cfg.url, k.has("who") ? k.get("who").getAsString() : n));
+                    ServerPlayNetworking.send(p, new StreamKeyPayload(k.get("key").getAsString(), cfg.url, k.has("who") ? k.get("who").getAsString() : n, k.has("tok") ? k.get("tok").getAsString() : ""));
             }
         });
     }

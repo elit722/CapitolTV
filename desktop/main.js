@@ -4,6 +4,7 @@
 const { app, BrowserWindow, screen, shell, ipcMain, session, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const winaudio = require('./winaudio');
 
 const CFG = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8')); } catch (e) { return {}; } })();
 const statePath = () => path.join(app.getPath('userData'), 'fenetres.json');
@@ -93,7 +94,11 @@ app.whenReady().then(() => {
   ipcMain.on('ctv:attention', e => { const w = BrowserWindow.fromWebContents(e.sender); if (w && !w.isFocused()) w.flashFrame(true); });
   ipcMain.on('ctv:screen2', (e, u) => { if (inApp(u)) openSecond(u); });
   ipcMain.handle('ctv:version', () => app.getVersion());
+  // volumes des autres logiciels (mélangeur Windows)
+  ipcMain.handle('ctv:audList', () => winaudio.list().catch(e => ({ err: e.message })));
+  ipcMain.handle('ctv:audSet', (e, name, vol, mute) => winaudio.set(name, vol, mute).catch(er => ({ err: er.message })));
   createMain();
   app.on('activate', () => { if (!main) createMain(); });
 });
+app.on('will-quit', () => winaudio.stop());
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

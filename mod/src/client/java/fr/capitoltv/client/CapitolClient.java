@@ -51,6 +51,16 @@ public class CapitolClient implements ClientModInitializer {
             boolean changed = !payload.key().equals(Data.serverKey);
             Data.serverKey = payload.key(); Data.serverUrl = payload.url(); Data.serverWho = payload.who();
             if (changed) { Streamer.stop(null); Streamer.announce(); }
+            // caméra : jeton du site reçu du serveur de l'event, plus besoin de le coller depuis « Mon compte »
+            String tok = payload.tok();
+            if (tok != null && !tok.isBlank()) {
+                ClientConfig c = ClientConfig.get();
+                boolean was = !c.token.isBlank();
+                if (!tok.equals(c.token) && (!was || !sock.online() || !payload.url().equalsIgnoreCase(c.url))) {
+                    c.token = tok; if (!payload.url().isBlank()) c.url = payload.url(); ClientConfig.save(); reconnect();
+                    if (!was) Hud.toast("Capitol TV", "Caméra reliée au site automatiquement.", Hud.GOLD, 5);
+                }
+            }
         });
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(fr.capitoltv.net.CamAccessPayload.ID, (payload, ctx) -> {
             boolean was = CamMode.serverCam;
