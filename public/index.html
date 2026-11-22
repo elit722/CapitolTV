@@ -4795,7 +4795,7 @@ class Stage {
       const md = el.querySelector('.em-md'); if (md && md.tagName !== 'IMG') md.volume = v;
     }
     if (this.sfxEl && p && p.sfx) this.sfxEl.volume = this.volOf('sfx', p.sfx.vol);
-    const bg = p && p.bgm; if (bg) { const v = this.volOf('bgm', bg.vol); if (this.bgmEl) this.bgmEl.volume = v; if (this.yt && this.yt.ready) try { this.yt.pl.setVolume(Math.round(v * 100)); } catch (e) {} }
+    const bg = p && p.bgm; if (bg) { const v = this.volOf('bgm', bg.vol); if (this.bgmEl) this.bgmEl.volume = v; if (this.yt && this.yt.ready) try { this.yt.pl.setVolume(Math.round(v * 100)); } catch (e) {} if (this.sc && this.sc.ready) try { this.sc.api.setVolume(this.o.sound ? Math.round(v * 100) : 0); } catch (e) {} }
   }
   /* musique YouTube (n'importe quel titre) : lecteur intégré invisible, calé sur la même position pour tout le monde */
   ytSync(tr, t, v, sound) {
@@ -4817,6 +4817,26 @@ class Stage {
       if (y.pl.getPlayerState() !== 1 && y.pl.getPlayerState() !== 3) y.pl.playVideo();
     } catch (e) {}
   }
+  /* musique SoundCloud : widget invisible, calé sur la même position pour tout le monde */
+  scSync(tr, t, v, sound) {
+    let w = this.sc;
+    if (!w || w.id !== tr.sc) {
+      this.scStop(); w = this.sc = { id: tr.sc, ready: false };
+      const f = document.createElement('iframe'); f.className = 'em-yt'; f.allow = 'autoplay'; f.src = SCW.src(tr.sc, true); this.el.appendChild(f); w.f = f;
+      SCW.load().then(() => {
+        if (this.sc !== w) return; w.api = SC.Widget(f);
+        w.api.bind(SC.Widget.Events.READY, () => { w.ready = true; w.api.play(); });
+        w.api.bind(SC.Widget.Events.ERROR, () => { w.err = 1; this.credit('♪ ' + (tr.name || '') + ' · lecture impossible'); });
+      }).catch(() => {});
+    }
+    if (!w.ready) return;
+    try {
+      w.api.setVolume(sound ? Math.round(v * 100) : 0);
+      w.api.getPosition(ms => { if (this.sc === w && Math.abs(ms / 1000 - t) > 2.5) w.api.seekTo(Math.round(t * 1000)); });
+      w.api.isPaused(p => { if (p && this.sc === w) w.api.play(); });
+    } catch (e) {}
+  }
+  scStop() { const w = this.sc; this.sc = null; if (w && w.f) w.f.remove(); }
   ytStop() { const y = this.yt; this.yt = null; if (!y) return; try { y.pl && y.pl.destroy(); } catch (e) {} if (y.box) y.box.remove(); }
   setSound(on) { this.o.sound = !!on; this.layout(false); }
   delay() { return this.o.delay == null || this.o.delay === 'board' ? (S.board.delay || 0) : this.o.delay; }
@@ -5094,7 +5114,7 @@ class Stage {
     for (const el of this.players.values()) {
       const it = el._it; if (!it) continue;
       const md = el.querySelector('.em-md');
-      if (md && md.tagName !== 'IMG') PROG.syncOne(md, it.at || nowS(), it.loop, this.volOf('media|' + it.ref, it.vol) * 100, this.o.sound && it.audio !== false, this);
+      if (md && md.tagName !== 'IMG') PROG.syncOne(md, it.at || el._at0 || (el._at0 = nowS()), it.loop, this.volOf('media|' + it.ref, it.vol) * 100, this.o.sound && it.audio !== false, this);
     }
     const fx = p && p.on !== undefined ? p.sfx : null;
     if (fx) {
@@ -5112,12 +5132,16 @@ class Stage {
       let t = ((nowS() - (bg.at || nowS())) / 1000) % tot; if (t < 0) t = 0; let i = 0;
       while (t >= durs[i] && i < durs.length - 1) { t -= durs[i]; i++; }
       const tr = bg.tracks[i], key = tr.id + ':' + bg.at + ':' + i;
-      if (tr.yt) {
-        if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; }
+      if (tr.sc) {
+        if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; } this.ytStop();
+        this.scSync(tr, t, this.volOf('bgm', bg.vol), this.o.sound);
+        if (!(this.sc && this.sc.err)) this.credit('♪ ' + (tr.credit || tr.name));
+      } else if (tr.yt) {
+        if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; } this.scStop();
         this.ytSync(tr, t, this.volOf('bgm', bg.vol), this.o.sound);
         if (!(this.yt && this.yt.err)) this.credit(tr.credit ? '♪ ' + tr.credit : '♪ ' + tr.name);
       } else {
-        this.ytStop();
+        this.ytStop(); this.scStop();
         if (!this.bgmEl || this.bgmEl.dataset.k !== key) {
           if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); }
           this.bgmEl = document.createElement('audio'); this.bgmEl.preload = 'auto'; this.bgmEl.dataset.k = key; this.bgmEl.src = PROG.mediaURL(tr.id); this.el.appendChild(this.bgmEl);
@@ -5125,7 +5149,7 @@ class Stage {
         PROG.syncOne(this.bgmEl, nowS() - t * 1000, false, this.volOf('bgm', bg.vol) * 100, this.o.sound, this);
         this.credit(tr.credit ? '♪ ' + tr.credit : '');
       }
-    } else { if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; } this.ytStop(); this.credit(''); }
+    } else { if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; } this.ytStop(); this.scStop(); this.credit(''); }
   }
   /* crédit de la musique libre de droits (obligatoire pour les licences CC BY) */
   credit(txt) {
@@ -5141,10 +5165,16 @@ class Stage {
     clearTimeout(this.trT1); clearTimeout(this.trT2); (this.q || []).forEach(e => clearTimeout(e.t)); this.q = [];
     for (const el of this.players.values()) { const md = el.querySelector('.em-md'); if (md && md.pause) md.pause(); }
     for (const e of this.dps.values()) { clearTimeout(e.t); e.dp.destroy(); }
-    if (this.sfxEl) this.sfxEl.pause(); if (this.bgmEl) this.bgmEl.pause(); this.ytStop(); MIX.stages.delete(this);
+    if (this.sfxEl) this.sfxEl.pause(); if (this.bgmEl) this.bgmEl.pause(); this.ytStop(); this.scStop(); MIX.stages.delete(this);
     this.players.clear(); this.dps.clear(); this.el.innerHTML = '';
   }
 }
+/* lecteur SoundCloud (API du widget officiel), chargé seulement si une musique SoundCloud passe */
+const SCW = {
+  p: null,
+  load() { if (!this.p) this.p = new Promise((ok, ko) => { if (window.SC && window.SC.Widget) return ok(); loadScript('https://w.soundcloud.com/player/api.js').then(ok, () => { this.p = null; ko(); }); }); return this.p; },
+  src(id, auto) { return 'https://w.soundcloud.com/player/?url=' + encodeURIComponent('https://api.soundcloud.com/tracks/' + id) + '&auto_play=' + (auto ? 'true' : 'false') + '&visual=false&show_comments=false&show_teaser=false&sharing=false&download=false&buying=false&show_artwork=false&hide_related=true&single_active=false'; }
+};
 /* lecteur YouTube (API officielle), chargé seulement si une musique YouTube passe */
 const YTAPI = { p: null, load() { if (!this.p) this.p = new Promise(ok => { if (window.YT && window.YT.Player) return ok(); const prev = window.onYouTubeIframeAPIReady; window.onYouTubeIframeAPIReady = () => { try { prev && prev(); } catch (e) {} ok(); }; loadScript('https://www.youtube.com/iframe_api').catch(() => { this.p = null; }); }); return this.p; } };
 /* mixeur de l'émission : volumes réglés par la régie, appliqués tout de suite sur le Direct (fondus calculés chez chacun) */
@@ -5538,7 +5568,7 @@ const PROG = {
       <div class="mda">${md.kind === 'audio' ? `<button class="btn sm ${playing ? 'live' : ''}" data-ma="sfx" title="${playing ? 'Arrêter' : 'Jouer par-dessus l\'antenne, sans changer de plan'}">${playing ? '■' : '▶'}</button><button class="btn sm ghost" data-ma="listen" title="Écouter ici seulement (casque de la régie)">${this.listen && this.listen.dataset.id === md.id ? '⏸' : '🎧'}</button>` : ''}<button class="btn sm ghost" data-ma="del" title="Supprimer">${ic('trash')}</button></div></div></div>`;
   },
   renderMediaSec(q) {
-    const f = md => !md.yt && (!q || md.name.toLowerCase().includes(q));
+    const f = md => !md.yt && !md.sc && (!q || md.name.toLowerCase().includes(q));
     const slotRows = this.SLOTS.map(sl => {
       const md = this.media.find(x => x.slot === sl.slot), up = this.ups[sl.slot];
       if (up) return `<div class="src smd up"><div class="th md">⇪</div><div style="min-width:0;flex:1"><b>${esc(sl.name)}</b><small>Envoi… ${up}%</small><div class="pbar"><i style="width:${up}%"></i></div></div></div>`;
@@ -6022,25 +6052,62 @@ const PROG = {
     const playing = this.pub && this.pub.bgm;
     box.innerHTML = `<div class="gx-row"><select class="mini-sel" id="bgScope"><option value="all" ${scope === 'all' ? 'selected' : ''}>Tous les plans</option><option value="scene" ${scope === 'scene' ? 'selected' : ''}>Ce plan : ${esc(sc ? sc.name : '')}</option></select>
         <label style="display:flex;align-items:center;gap:6px;flex:0 0 130px"><span class="note">Vol.</span><input type="range" id="bgVol" min="0" max="100" step="5" value="${D.vol}" style="flex:1"></label></div>
-      <div class="gx-row"><input class="inp" id="bgQ" value="${esc(this.bgmQ || '')}" placeholder="Titre ou artiste (ex. heart of courage, art:two steps from hell)" autocomplete="off"></div>
+      <div class="gx-row"><input class="inp" id="bgQ" value="${esc(this.bgmQ || '')}" placeholder="Titre, artiste ou lien SoundCloud (ex. two steps from hell heart of courage)" autocomplete="off"></div>
       ${hits.length ? `<div class="bg-hits"><span class="note">Déjà dans tes médias</span>${hits.map(x => `<button class="btn xs ghost" data-bga="${esc(x.id)}">＋ ${esc(x.name)} <span class="note">${this.fmtDur(x.dur)}</span></button>`).join('')}</div>` : ''}
-      ${q.length >= 2 ? this.bgDzHtml() + this.bgWebHtml() : ''}
+      ${q.length >= 2 ? this.bgScHtml() + this.bgWebHtml() : ''}
       <ol class="qlist">${D.ids.map((id, i) => { const md = this.mediaById(id); return `<li><span>${esc(md ? md.name : '?')}</span><span class="note">${md ? this.fmtDur(md.dur) : ''}</span><button class="btn sm ghost" data-bgx="${i}">${ic('x')}</button></li>`; }).join('')}</ol>
       <div class="gx-row"><button class="btn sm primary" id="bgGo" ${D.ids.length ? '' : 'disabled'}>▶ ${scope === 'all' ? 'Lancer sur tous les plans' : 'Lancer sur ce plan'}</button><button class="btn sm ghost" id="bgStop">■ Arrêter</button></div>
       <p class="note" style="margin:6px 0 0">${playing ? `En cours (${playing.scope === 'all' ? 'tous les plans' : 'ce plan'}) : ${esc(playing.tracks.map(t => t.name).join(' → '))}` : 'Aucune musique de fond à l\'antenne.'} La musique d'un plan remplace celle de tous les plans.</p>`;
     const send = ids => NET.req({ t: 'progBgm', scope: scope === 'all' ? 'all' : sc.id, ids, vol: D.vol }).then(() => toastInfo(ids.length ? 'Musique lancée' : 'Musique arrêtée'), e => toastInfo('Musique', e.message, true));
-    box.oninput = e => { if (e.target.id === 'bgQ') { this.bgmQ = e.target.value; clearTimeout(this.bgWebT); this.bgWebT = setTimeout(() => { this.bgDzSearch(); this.bgWebSearch(); }, 650); this.renderBgm(); const i = $('#bgQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); } if (e.target.id === 'bgVol') D.vol = +e.target.value; };
+    box.oninput = e => { if (e.target.id === 'bgQ') { this.bgmQ = e.target.value; clearTimeout(this.bgWebT); this.bgWebT = setTimeout(() => { this.bgScSearch(); this.bgWebSearch(); }, 650); this.renderBgm(); const i = $('#bgQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); } if (e.target.id === 'bgVol') D.vol = +e.target.value; };
     box.onchange = e => { if (e.target.id === 'bgScope') { this.bgmScope = e.target.value; this.bgmDraft = null; this.renderBgm(); } if (e.target.id === 'bgVol' && playing) send(D.ids); };
     box.onclick = e => {
       const a = e.target.closest('[data-bga]'); if (a) { D.ids.push(a.dataset.bga); this.bgmQ = ''; this.renderBgm(); return; }
-      const dp = e.target.closest('[data-bdp]'); if (dp) { this.bgDzPlay(+dp.dataset.bdp); return; }
-      const dd = e.target.closest('[data-bdo]'); if (dd) { this.bgDzOpen(+dd.dataset.bdo); return; }
+      const sp = e.target.closest('[data-bsp]'); if (sp) { this.bgScPlay(+sp.dataset.bsp); return; }
+      const sa = e.target.closest('[data-bsa]'); if (sa) { this.bgScAdd(+sa.dataset.bsa, D); return; }
       const pl = e.target.closest('[data-bwp]'); if (pl) { this.bgWebPlay(+pl.dataset.bwp); return; }
       const ad = e.target.closest('[data-bwa]'); if (ad) { this.bgWebAdd(+ad.dataset.bwa, D); return; }
       const x = e.target.closest('[data-bgx]'); if (x) { D.ids.splice(+x.dataset.bgx, 1); this.renderBgm(); return; }
       if (e.target.closest('#bgGo')) send(D.ids);
       if (e.target.closest('#bgStop')) { D.ids = []; send([]); this.renderBgm(); }
     };
+  },
+  /* ---------- n'importe quelle musique : SoundCloud, lue en entier dans le site par le lecteur SoundCloud (sans pub) ---------- */
+  bgScHtml() {
+    const W = this.bgSc || {}, q = (this.bgmQ || '').trim();
+    if (W.q !== q || W.busy) return '<p class="note" style="margin:4px 0">Recherche sur SoundCloud…</p>';
+    if (W.err || !W.list.length) return `<p class="note" style="margin:4px 0">${esc(W.err || 'Rien trouvé sur SoundCloud en écoute complète.')}</p>`;
+    return `<div class="bg-web"><span class="note">SoundCloud · titres en écoute complète seulement</span>${W.list.map((x, i) => `<div class="bw">${x.cover ? `<img src="${esc(x.cover)}" alt="" class="bw-c">` : ''}<button class="btn xs ghost" data-bsp="${i}" title="Écouter ici">${this.bgScI === i ? '■' : '▶'}</button>
+      <span class="bw-t"><b>${esc(x.title)}</b><small>${esc(x.creator)}</small></span><span class="note">${this.fmtDur(x.dur)}</span>
+      <button class="btn xs" data-bsa="${i}" ${W.adding === i ? 'disabled' : ''}>${W.adding === i ? '…' : '＋ Ajouter'}</button></div>`).join('')}</div>`;
+  },
+  bgScSearch() {
+    const q = (this.bgmQ || '').trim(); if (q.length < 2) { this.bgSc = { q, list: [] }; return; }
+    this.bgSc = { q, list: [], busy: true }; this.renderBgmKeep();
+    fetch('/api/media/sc?q=' + encodeURIComponent(q)).then(r => r.json().then(j => ({ ok: r.ok, j }))).then(({ ok, j }) => {
+      if ((this.bgmQ || '').trim() !== q) return;
+      this.bgSc = { q, list: ok ? j.list || [] : [], err: j.msg || (ok ? '' : 'Recherche SoundCloud impossible') }; this.renderBgmKeep();
+    }, () => { this.bgSc = { q, list: [], err: 'Recherche SoundCloud impossible (réseau)' }; this.renderBgmKeep(); });
+  },
+  bgScPlay(i) {
+    const x = (this.bgSc || {}).list && this.bgSc.list[i]; if (!x) return;
+    if (this.bgPrev) this.bgPrev.pause(); this.bgPrevI = -1;
+    const old = $('#scPrev'); if (old) old.remove();
+    if (this.bgScI === i) { this.bgScI = -1; this.renderBgmKeep(); return; }
+    this.bgScI = i; this.renderBgmKeep();
+    const f = document.createElement('iframe'); f.id = 'scPrev'; f.className = 'yt-prev'; f.allow = 'autoplay'; f.src = SCW.src(x.sc, true); document.body.appendChild(f);
+    SCW.load().then(() => { const w = SC.Widget(f); w.bind(SC.Widget.Events.READY, () => { w.setVolume(70); w.play(); }); w.bind(SC.Widget.Events.FINISH, () => { f.remove(); this.bgScI = -1; this.renderBgmKeep(); }); });
+  },
+  bgScAdd(i, D) {
+    const W = this.bgSc, x = W && W.list[i]; if (!x) return;
+    W.adding = i; this.renderBgmKeep();
+    fetch('/api/media/addsc', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sc: x.sc, name: x.title, dur: x.dur, credit: x.title + (x.creator ? ' — ' + x.creator : '') }) })
+      .then(r => r.json().then(j => ({ ok: r.ok, j }))).then(({ ok, j }) => {
+        W.adding = -1;
+        if (!ok) { toastInfo('Ajout impossible', j.msg || '', true); this.renderBgmKeep(); return; }
+        if (!this.media.some(m => m.id === j.media.id)) this.media.push(j.media);
+        D.ids.push(j.media.id); toastInfo('Ajoutée à la playlist', x.title); this.renderBgmKeep();
+      }, () => { W.adding = -1; toastInfo('Ajout impossible', 'Réseau', true); this.renderBgmKeep(); });
   },
   /* ---------- musique sous droits : Deezer (extrait ici, lecture complète dans l'appli Deezer, sans pub avec un compte) ---------- */
   bgDzHtml() {

@@ -337,6 +337,27 @@ function dvrStore(env) {
     list: async o => { const r = await b.list({ ...o, prefix: "dvr/" + (o.prefix || "") }); return { ...r, objects: r.objects.map(x => ({ ...x, key: x.key.slice(4) })) }; } };
 }
 /* volume (en %) d'une entrée du mixeur à l'instant t, fondu compris */
+/* SoundCloud : identifiant client public (lu sur le site, gardé en cache), recherche et liens collés */
+async function scClientId(env, force) {
+  if (!force) { const c = await env.MEDIA.get("sc:cid").catch(() => null); if (c) return c; }
+  const UA = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36" };
+  const h = await (await fetch("https://soundcloud.com/", { headers: UA })).text();
+  const urls = [...h.matchAll(/<script[^>]+src="(https:\/\/a-v2\.sndcdn\.com\/assets\/[^"]+\.js)"/g)].map(m => m[1]).reverse();
+  for (const u of urls.slice(0, 8)) { const js = await (await fetch(u, { headers: UA })).text(); const m = js.match(/client_id\s*[:=]\s*"([a-zA-Z0-9]{32})"/); if (m) { await env.MEDIA.put("sc:cid", m[1], { expirationTtl: 86400 }).catch(() => {}); return m[1]; } }
+  throw new Error("client_id introuvable");
+}
+async function scSearch(env, q, retry = true) {
+  const cid = await scClientId(env, !retry);
+  const link = /^https?:\/\/(www\.|m\.|on\.)?soundcloud\.com\//i.test(q);
+  const u = link ? "https://api-v2.soundcloud.com/resolve?url=" + encodeURIComponent(q) + "&client_id=" + cid : "https://api-v2.soundcloud.com/search/tracks?limit=20&q=" + encodeURIComponent(q.replace(/^art(iste)?\s*:/i, "")) + "&client_id=" + cid;
+  const r = await fetch(u, { headers: { Accept: "application/json" } });
+  if ((r.status === 401 || r.status === 403) && retry) return scSearch(env, q, false);
+  if (!r.ok) throw new Error("SoundCloud " + r.status);
+  const d = await r.json(), arr = link ? (d.kind === "track" ? [d] : (d.tracks || [])) : (d.collection || []);
+  return arr.filter(t => t && t.kind === "track" && t.streamable !== false && t.policy !== "BLOCK" && t.policy !== "SNIP").slice(0, 15).map(t => ({
+    sc: String(t.id), title: String(t.title || "").slice(0, 100), creator: String((t.publisher_metadata && t.publisher_metadata.artist) || (t.user || {}).username || "").slice(0, 60),
+    dur: Math.round((t.full_duration || t.duration || 0) / 1000), cover: String(t.artwork_url || (t.user || {}).avatar_url || ""), url: String(t.permalink_url || "") }));
+}
 /* YouTube : identifiant d'une vidéo dans un lien (ou l'identifiant seul) */
 function ytId(s) {
   s = String(s || "").trim();
@@ -1164,7 +1185,9 @@ export class Game extends DurableObject {
   }
   progPublic() {
     const sc = this.prog.scenes.find(x => x.id === this.prog.live);
-    const starts = this.prog.starts || {};
+    const starts = this.prog.starts || (this.prog.starts = {});
+    // média ajouté au plan déjà à l'antenne : il démarre maintenant (sinon chacun le relançait en boucle)
+    if (sc) for (const it of this.liveItems()) if (it.k === "media" && !starts[it.ref]) { starts[it.ref] = Date.now(); this.ctx.storage.put("prog", this.prog); }
     const items = sc ? this.liveItems().map(it => { const s = this.srcOf(it); return s ? { id: it.id, k: it.k, ref: it.ref, x: it.x, y: it.y, w: it.w, h: it.h, z: it.z, label: it.label !== false, audio: !!it.audio, head: !!it.head, hide: !!it.hide, loop: !!it.loop, vol: it.vol == null ? 100 : it.vol, d: it.d || 0, at: starts[it.ref] || 0, ...s } : null; }).filter(Boolean) : [];
     const fx = this.prog.sfx, md = fx && this.media.find(x => x.id === fx.id);
     return { seq: this.prog.seq, scene: sc ? sc.name : "", items, trans: this.prog.trans, title: this.prog.title || "", on: !!sc,
@@ -1178,7 +1201,7 @@ export class Game extends DurableObject {
     const own = sc && sc.bgm && sc.bgm.ids.length ? { ...sc.bgm, at: this.prog.liveAt || 0, scope: "scene" } : null;
     const g = this.prog.bgm && this.prog.bgm.ids && this.prog.bgm.ids.length ? { ...this.prog.bgm, scope: "all" } : null;
     const b = own || g; if (!b) return null;
-    const tracks = b.ids.map(id => this.media.find(x => x.id === id)).filter(x => x && x.kind === "audio").map(x => ({ id: x.id, name: x.name, dur: x.dur || 0, credit: x.credit || "", yt: x.yt || undefined }));
+    const tracks = b.ids.map(id => this.media.find(x => x.id === id)).filter(x => x && x.kind === "audio").map(x => ({ id: x.id, name: x.name, dur: x.dur || 0, credit: x.credit || "", yt: x.yt || undefined, sc: x.sc || undefined }));
     return tracks.length ? { tracks, at: b.at || 0, vol: b.vol == null ? 60 : b.vol, scope: b.scope } : null;
   }
   onAirCams() {
@@ -1283,6 +1306,29 @@ export class Game extends DurableObject {
       if (!list.length) return J({ list: [], msg: "YouTube ne répond pas pour le moment : colle directement le lien d'une vidéo." });
       await this.env.MEDIA.put(ck, JSON.stringify({ at: Date.now(), list }), { expirationTtl: 172800 }).catch(() => {});
       return J({ list });
+    }
+    // SoundCloud : recherche et lecture complète dans le site (lecteur SoundCloud intégré, sans pub)
+    if (req.method === "GET" && id === "sc") {
+      const q = (new URL(req.url).searchParams.get("q") || "").trim().slice(0, 200);
+      if (q.length < 2) return J({ list: [] });
+      const ck = "scs:" + q.toLowerCase();
+      const hit = await this.env.MEDIA.get(ck, "json").catch(() => null);
+      if (hit && Date.now() - hit.at < 6 * 3600000) return J({ list: hit.list });
+      let list = [];
+      try { list = await scSearch(this.env, q); } catch (e) { return J({ list: [], msg: "SoundCloud ne répond pas pour le moment : colle directement le lien d'un titre SoundCloud." }); }
+      await this.env.MEDIA.put(ck, JSON.stringify({ at: Date.now(), list }), { expirationTtl: 43200 }).catch(() => {});
+      return J({ list });
+    }
+    if (req.method === "POST" && id === "addsc") {
+      const b = await req.json().catch(() => ({})), sid = String(b.sc || "").replace(/\D/g, "").slice(0, 20);
+      if (!sid) return J({ msg: "Titre SoundCloud invalide." }, 400);
+      const have = this.media.find(x => x.sc === sid); if (have) return J({ ok: true, media: have });
+      const nid = crypto.randomUUID().replace(/-/g, "").slice(0, 20);
+      const meta = { id: nid, name: String(b.name || "Musique").slice(0, 100), mime: "audio/soundcloud", kind: "audio", sc: sid, size: 0, dur: Math.max(0, +b.dur || 0), slot: "", by: user.name, at: Date.now(), n: 0, credit: String(b.credit || "").slice(0, 160) };
+      await this.env.MEDIA.put("meta:" + nid, JSON.stringify(meta));
+      this.media = [...this.media, meta].slice(-120);
+      pushList();
+      return J({ ok: true, media: meta });
     }
     // Deezer : recherche dans tout le catalogue (extrait de 30 s pour écouter ; la lecture complète se fait dans l'appli Deezer)
     if (req.method === "GET" && id === "dz") {
