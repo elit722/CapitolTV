@@ -158,6 +158,9 @@ public final class Streamer {
         long now = System.currentTimeMillis();
         if (now - adaptAt < 1000) return;
         adaptAt = now;
+        // jeu en arrière-plan (autre appli, menu Échap) : Minecraft se bride lui-même à quelques images/s,
+        // ce n'est pas du lag → on ne baisse rien et on ne prévient personne
+        if (inactive()) { lowSec = 0; highSec = 0; badSec = 0; return; }
         // anti-lag toujours actif : la qualité suit les performances du joueur
         // comparé aux images/s du joueur sans diffusion (un petit PC n'est pas « en retard » à 35 i/s)
         int fps = MinecraftClient.getInstance().getCurrentFps();
@@ -168,12 +171,24 @@ public final class Streamer {
         else if (highSec >= 25 && step > firstStep()) { step--; highSec = 0; applyStep(); status = "en direct · " + curH + "p " + curFps + " i/s"; }
     }
 
+    private static long activeSince;
+    /** fenêtre pas au premier plan, réduite ou jeu en pause : les images/s ne veulent rien dire (+ 5 s pour repartir) */
+    static boolean inactive() {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        boolean bg = !mc.isWindowFocused() || mc.isPaused() || mc.currentScreen instanceof net.minecraft.client.gui.screen.GameMenuScreen
+                || org.lwjgl.glfw.GLFW.glfwGetWindowAttrib(mc.getWindow().getHandle(), org.lwjgl.glfw.GLFW.GLFW_ICONIFIED) != 0;
+        long now = System.currentTimeMillis();
+        if (bg) { activeSince = now; return true; }
+        return now - activeSince < 5000;
+    }
+
     private static double baseFps = 60;
     private static long baseAt;
     private static void baseline() {
         long now = System.currentTimeMillis();
         if (now - baseAt < 1000) return;
         baseAt = now;
+        if (inactive()) return;
         int f = MinecraftClient.getInstance().getCurrentFps();
         if (f > 0) baseFps = baseFps * 0.75 + f * 0.25;
     }

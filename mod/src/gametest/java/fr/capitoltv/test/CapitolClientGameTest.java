@@ -94,6 +94,21 @@ public class CapitolClientGameTest implements FabricClientGameTest {
             context.waitTicks(10);
             context.takeScreenshot("ctv-04-prep");
             context.runOnClient(c -> { fr.capitoltv.client.Data.prepIds.clear(); ClientConfig.get().cameraMode = false; c.setScreen(null); });
+            // hommage dans le ciel, de nuit
+            sp.getServer().runCommand("time set 18000");
+            context.runOnClient(c -> { c.player.setYaw(0f); c.player.setPitch(-28f); });
+            context.waitTicks(20);
+            context.runOnClient(c -> fr.capitoltv.client.Overlays.onServerMsg("{\"t\":\"sky\",\"per\":6,\"title\":\"Ils sont tombés\",\"list\":[{\"name\":\"Rue\",\"d\":11,\"num\":3,\"mc\":\"" + c.player.getGameProfile().getName() + "\"}]}"));
+            context.waitTicks(40 + 20 * 2);
+            context.takeScreenshot("ctv-30-hommage-intro");
+            context.waitTicks(20 * 5);
+            context.takeScreenshot("ctv-31-hommage-visage");
+            context.runOnClient(c -> c.player.setPitch(-10f));
+            context.waitTicks(5);
+            context.takeScreenshot("ctv-32-hommage-bas");
+            context.runOnClient(c -> fr.capitoltv.client.Overlays.onServerMsg("{\"t\":\"recap\",\"n\":\"x\",\"name\":\"Rue\",\"district\":11,\"place\":3,\"lines\":[\"3e place sur 24\",\"Tombée face à Cato\",\"Temps de survie : 1 h 12\"]}"));
+            context.waitTicks(10);
+            context.takeScreenshot("ctv-33-recap");
         }
     }
 }

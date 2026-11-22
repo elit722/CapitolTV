@@ -44,6 +44,8 @@ public class CapitolClient implements ClientModInitializer {
         try { CamMode.install(); } catch (Throwable t) { fr.capitoltv.CapitolTV.LOG.warn("Capitol TV : HUD vanilla non géré ({})", t.toString()); }
         ClientTickEvents.START_CLIENT_TICK.register(mc -> { if (!CamMoves.startTick(mc)) CamMode.startTick(mc); });
         ClientTickEvents.END_CLIENT_TICK.register(mc -> { CamMoves.endTick(mc); CamDrone.endTick(mc); CamPath.endTick(mc); });
+        // hommage projeté dans le ciel : dessiné dans le monde, après les blocs (les arbres passent devant)
+        net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.AFTER_TRANSLUCENT.register(SkyShow::render);
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(fr.capitoltv.net.CtvMsgPayload.ID, (payload, ctx) -> Overlays.onServerMsg(payload.json()));
         // récap de mort affiché par-dessus l'écran « Vous êtes mort »
         net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.AFTER_INIT.register((client, screen, w, h) -> {
@@ -53,7 +55,7 @@ public class CapitolClient implements ClientModInitializer {
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(mc -> Streamer.stop(null));
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((h, sender, client) -> { CamMode.resetSpectatorTries(); stDirty = true; });
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((h, client) -> {
-            CamMode.serverCam = false;
+            CamMode.serverCam = false; SkyShow.stop();
             if (!Data.serverKey.isEmpty()) { Data.serverKey = ""; Data.serverUrl = ""; Data.serverWho = ""; Streamer.stop("déconnecté du serveur"); }
         });
         // clé de diffusion donnée par le serveur de l'event : rien à copier pour le joueur

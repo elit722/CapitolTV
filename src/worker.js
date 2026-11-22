@@ -102,6 +102,8 @@ export default {
           user = { id: "g_" + gid, name: "Invité", av: "", guest: true, exp: Date.now() + 864e5 };
         }
       }
+      // hymne de l'hommage : lu aussi par le mod en jeu (sans compte), seulement le son choisi
+      if (p === "/hymn") return env.GAME.getByName("main").fetch(new Request(new URL("/hymn", "https://game"), { headers: req.headers }));
       if (p === "/mod/ws") {
         if (req.headers.get("Upgrade") !== "websocket") return new Response("WebSocket attendu", { status: 426 });
         const key = req.headers.get("X-CTV-Server-Key");
@@ -322,7 +324,7 @@ async function overlayLogin(env, key) {
    Durable Object : la régie centrale
    ===================================================================== */
 const TYPES = ["Combat", "Alliance", "Trahison", "Mort imminente", "Cadeau sponsor", "Moment drôle", "Révélation", "Autre"];
-const SCALARS = ["ticker", "don", "fund", "day", "startTs", "cooldown", "lastHommage", "flash", "delay", "hideChat", "lock", "sponsor", "publicAccess", "map", "theme", "autoCanon", "tick", "banOnDeath", "skyHommage"];
+const SCALARS = ["ticker", "don", "fund", "day", "startTs", "cooldown", "lastHommage", "flash", "delay", "hideChat", "lock", "sponsor", "publicAccess", "map", "theme", "autoCanon", "tick", "skyHommage", "hymn"];
 const STATUSES = ["alive", "injured", "missing", "dead"];
 const PERMS = ["admin", "mod", "member"];
 const LOGIN_RE = /^[a-z0-9_]{3,25}$/;
@@ -357,6 +359,37 @@ async function scSearch(env, q, retry = true) {
   return arr.filter(t => t && t.kind === "track" && t.streamable !== false && t.policy !== "BLOCK" && t.policy !== "SNIP").slice(0, 15).map(t => ({
     sc: String(t.id), title: String(t.title || "").slice(0, 100), creator: String((t.publisher_metadata && t.publisher_metadata.artist) || (t.user || {}).username || "").slice(0, 60),
     dur: Math.round((t.full_duration || t.duration || 0) / 1000), cover: String(t.artwork_url || (t.user || {}).avatar_url || ""), url: String(t.permalink_url || "") }));
+}
+/* hymne joué pendant l'hommage (Direct + en jeu) : un son des médias (OGG conseillé : lu aussi par le jeu) */
+function normHymn(h) { h = h && typeof h === "object" ? h : {}; return { on: h.on !== false, vol: Math.max(0, Math.min(100, Math.round(h.vol == null ? 70 : +h.vol || 0))), id: String(h.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 40) }; }
+/* SoundCloud : flux audio d'un titre (MP3 direct si possible, sinon segments HLS mis bout à bout) */
+async function scTrack(env, sid, retry = true) {
+  const cid = await scClientId(env, !retry);
+  const r = await fetch("https://api-v2.soundcloud.com/tracks/" + sid + "?client_id=" + cid, { headers: { Accept: "application/json" } });
+  if ((r.status === 401 || r.status === 403) && retry) return scTrack(env, sid, false);
+  if (!r.ok) throw new Error("SoundCloud " + r.status);
+  return { t: await r.json(), cid };
+}
+async function scSource(env, sid) {
+  const { t, cid } = await scTrack(env, sid);
+  const tcs = ((t.media || {}).transcodings || []).filter(x => x && x.url && x.format && !/encrypted/.test(x.format.protocol || "") && !x.snipped);
+  const rank = x => (x.format.protocol === "progressive" ? 0 : 10) + (/mpeg/.test(x.format.mime_type) ? 0 : /mp4|aac/.test(x.format.mime_type) ? 1 : 5);
+  tcs.sort((a, b) => rank(a) - rank(b));
+  const tc = tcs[0];
+  if (!tc || rank(tc) >= 15) throw new Error("Ce titre n'est pas lisible hors de SoundCloud");
+  const j = await fetch(tc.url + (tc.url.includes("?") ? "&" : "?") + "client_id=" + cid + (t.track_authorization ? "&track_authorization=" + t.track_authorization : "")).then(r => r.ok ? r.json() : null);
+  if (!j || !j.url) throw new Error("Flux SoundCloud refusé");
+  const mime = /mpeg/.test(tc.format.mime_type) ? "audio/mpeg" : /ogg|opus/.test(tc.format.mime_type) ? "audio/ogg" : "audio/mp4";
+  const dur = Math.round((t.full_duration || t.duration || 0) / 1000);
+  if (tc.format.protocol === "progressive") return { mime, dur, urls: [j.url], prog: true };
+  const m3 = await fetch(j.url).then(r => r.ok ? r.text() : "");
+  const urls = [];
+  for (const line of m3.split("\n").map(x => x.trim())) {
+    const mp = line.match(/^#EXT-X-MAP:.*URI="([^"]+)"/); if (mp) { urls.push(new URL(mp[1], j.url).toString()); continue; }
+    if (line && !line.startsWith("#")) urls.push(new URL(line, j.url).toString());
+  }
+  if (!urls.length) throw new Error("Flux SoundCloud vide");
+  return { mime, dur, urls, prog: false };
 }
 /* YouTube : identifiant d'une vidéo dans un lien (ou l'identifiant seul) */
 function ytId(s) {
@@ -408,7 +441,7 @@ const defaultRoles = () => [
 const SLUG = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 24);
 const defaultBoard = () => ({
   tributes: [], ticker: "", don: { label: "Sponsoriser", url: "" }, fund: { raised: 0, goal: 0, cur: "€" },
-  day: 0, startTs: null, cooldown: 20, lastHommage: 0, events: [], flash: null, delay: 0, hideChat: true, publicAccess: false, autoCanon: true, banOnDeath: true, skyHommage: true,
+  day: 0, startTs: null, cooldown: 20, lastHommage: 0, events: [], flash: null, delay: 0, hideChat: true, publicAccess: false, autoCanon: true, skyHommage: true,
   fund: { raised: 0, goal: 0, cur: "€", show: true }, fundLog: [],
   lock: { mode: "off", tz: "Europe/Paris", windows: [], msg: "" },
   sponsor: { url: "", label: "Sponsoriser un tribut", text: "", partners: [] },
@@ -478,7 +511,7 @@ export class Game extends DurableObject {
 
   load() {
     if (!this.loading) this.loading = (async () => {
-      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage", "moved", "from", "perf", "terrain", "tbot", "phist", "dvrtok", "mix", "tstats", "kbs", "zones"]);
+      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage", "moved", "from", "perf", "terrain", "tbot", "phist", "dvrtok", "mix", "tstats", "kbs", "zones", "scjobs"]);
       this.board = { ...defaultBoard(), ...(m.get("board") || {}) };
       this.alerts = m.get("alerts") || {};
       this.team = m.get("team") || [];
@@ -489,7 +522,9 @@ export class Game extends DurableObject {
       this.camSt = m.get("camst") || {};
       this.srvKey = m.get("srvkey") || "";
       this.terrain = m.get("terrain") || {};
-      this.phist = m.get("phist") || []; this.dvrTok = m.get("dvrtok") || ""; this.mix = m.get("mix") || {}; this.tstats = m.get("tstats") || {}; this.kbs = m.get("kbs") || {}; this.zones = m.get("zones") || [];
+      this.phist = m.get("phist") || []; this.dvrTok = m.get("dvrtok") || ""; this.mix = m.get("mix") || {}; this.tstats = m.get("tstats") || {}; this.kbs = m.get("kbs") || {}; this.zones = m.get("zones") || []; this.scJobs = m.get("scjobs") || [];
+      // anciens titres SoundCloud (lecteur intégré) : copiés dans les médias au prochain réveil
+      for (const x of this.media) if (x.sc && !x.n && !x.dl && !this.scJobs.some(j => j.id === x.id)) { x.dl = 1; this.scJobs.push({ id: x.id, i: 0, parts: 0, size: 0 }); }
       this.tbot = { on: false, channel: "", ann: { poll: true, result: true, death: true, victor: true, bets: true }, cmds: true, ...(m.get("tbot") || {}) };
       this.roles = m.get("roles") || null;
       if (!this.roles) {
@@ -547,6 +582,7 @@ export class Game extends DurableObject {
     if (path === "/mod") return this.modConnect(req);
     if (path.startsWith("/api/media")) return this.mediaApi(req, path);
     if (path.startsWith("/terrain/")) return this.terrainGet(path);
+    if (path === "/hymn") { const h = normHymn(this.board.hymn); return h.id ? serveMedia(req, this.env, h.id) : new Response("Aucun hymne choisi", { status: 404 }); }
     if (path === "/dvr/up") return this.dvrUpload(req);
     if (path === "/twitchbot/start" || path === "/twitchbot/cb") return this.botOAuth(req, path);
     if (this.tbot && this.tbot.on && this.tbot.channel && !this.botWs && !this.botConnecting && Date.now() - (this.botTry || 0) > 20000) { this.botTry = Date.now(); this.botStart(); }
@@ -1065,13 +1101,14 @@ export class Game extends DurableObject {
         b.flash = { ...p.set.flash, ts: now };
         if (b.flash.k === "tribute" && b.skyHommage) {
           const list = (Array.isArray(b.flash.ids) ? b.flash.ids : []).map(id => b.tributes.find(t => t.id === id)).filter(Boolean).slice(0, 24).map(t => ({ name: t.name, d: t.district || 0, num: t.num || 0, mc: t.mc || "" }));
-          this.sendServers({ t: "sky", list, title: String(b.flash.title || "").slice(0, 80), per: 7 });
+          const hy = normHymn(p.set.hymn || b.hymn);
+          this.sendServers({ t: "sky", list, title: String(b.flash.title || "").slice(0, 80), per: 7, hymn: hy.on && hy.id ? { path: "/hymn?v=" + hy.id, vol: hy.vol } : undefined });
         }
       }
       if (p.set.fund && typeof p.set.fund === "object") { b.fund = { goal: Math.max(0, +p.set.fund.goal || 0), cur: String(p.set.fund.cur || "€").slice(0, 4), show: p.set.fund.show !== false, raised: 0 }; this.recalcFund(); }
       if (b.theme) { const t = b.theme || {}, hx = v => /^#[0-9a-f]{6}$/i.test(v || "") ? v : ""; b.theme = { name: String(t.name || "").slice(0, 40), gold: hx(t.gold), red: hx(t.red), font: ["unbounded", "syne", "grotesk", "oswald", "cinzel"].includes(t.font) ? t.font : "" }; }
       b.publicAccess = !!b.publicAccess;
-      b.autoCanon = b.autoCanon !== false; b.banOnDeath = b.banOnDeath !== false; b.skyHommage = b.skyHommage !== false;
+      b.autoCanon = b.autoCanon !== false; b.skyHommage = b.skyHommage !== false; b.hymn = normHymn(b.hymn);
       if (b.tick) { const t = b.tick; b.tick = { msgs: (Array.isArray(t.msgs) ? t.msgs : []).filter(m => m && m.text).slice(0, 12).map(m => ({ id: String(m.id || "").slice(0, 20), text: String(m.text).slice(0, 200), until: +m.until || 0 })), off: (Array.isArray(t.off) ? t.off : []).map(String).slice(0, 10) }; if (p.set.tick) b.ticker = ""; }
       b.map = { on: !!(b.map && b.map.on), staffOnly: !(b.map && b.map.staffOnly === false) };
       b.delay = Math.max(0, Math.min(900, parseInt(b.delay, 10) || 0));
@@ -1088,7 +1125,6 @@ export class Game extends DurableObject {
       if (prev && prev.status === t.status) { t.statusAt = prev.statusAt || 0; t.prevStatus = prev.prevStatus || ""; t.diedAt = prev.diedAt || t.diedAt || 0; }
       else { t.prevStatus = t.status; t.statusAt = prev ? now : 0; }
       if (t.status === "dead" && (!prev || prev.status !== "dead")) t.diedAt = now;
-      if (prev && prev.status === "dead" && t.status !== "dead" && t.mc) this.sendServers({ t: "pardon", n: t.mc });
       if (t.status === "injured" && (!prev || prev.status !== "injured")) t.injAt = now;
       if (i >= 0) b.tributes[i] = t; else if (b.tributes.length < 999) b.tributes.push(t);
     }
@@ -1216,7 +1252,7 @@ export class Game extends DurableObject {
     const own = sc && sc.bgm && sc.bgm.ids.length ? { ...sc.bgm, at: this.prog.liveAt || 0, scope: "scene" } : null;
     const g = this.prog.bgm && this.prog.bgm.ids && this.prog.bgm.ids.length ? { ...this.prog.bgm, scope: "all" } : null;
     const b = own || g; if (!b) return null;
-    const tracks = b.ids.map(id => this.media.find(x => x.id === id)).filter(x => x && x.kind === "audio").map(x => ({ id: x.id, name: x.name, dur: x.dur || 0, credit: x.credit || "", yt: x.yt || undefined, sc: x.sc || undefined }));
+    const tracks = b.ids.map(id => this.media.find(x => x.id === id)).filter(x => x && x.kind === "audio" && !x.dl).map(x => ({ id: x.id, name: x.name, dur: x.dur || 0, credit: x.credit || "", yt: x.yt || undefined, sc: x.sc && !x.n ? x.sc : undefined }));
     return tracks.length ? { tracks, at: b.at || 0, vol: b.vol == null ? 60 : b.vol, scope: b.scope } : null;
   }
   onAirCams() {
@@ -1334,15 +1370,27 @@ export class Game extends DurableObject {
       await this.env.MEDIA.put(ck, JSON.stringify({ at: Date.now(), list }), { expirationTtl: 43200 }).catch(() => {});
       return J({ list });
     }
+    // écoute avant ajout : le son passe par le site (lecteur audio normal, rien d'extérieur)
+    if (req.method === "GET" && id === "scplay") {
+      const sid = String(new URL(req.url).searchParams.get("s") || "").replace(/\D/g, "").slice(0, 20);
+      let src; try { src = await scSource(this.env, sid); } catch (e) { return new Response(e.message, { status: 502 }); }
+      if (src.prog) { const r = await fetch(src.urls[0]); return new Response(r.body, { headers: { "Content-Type": src.mime, "Cache-Control": "no-store" } }); }
+      const { readable, writable } = new TransformStream();
+      (async () => { const w = writable.getWriter(); try { for (const u of src.urls.slice(0, 45)) { const r = await fetch(u); if (!r.ok) break; await w.write(new Uint8Array(await r.arrayBuffer())); } await w.close(); } catch (e) { try { await w.abort(e); } catch (x) {} } })();
+      return new Response(readable, { headers: { "Content-Type": src.mime, "Cache-Control": "no-store" } });
+    }
+    // ajout : le titre est copié dans les médias du site → il se lit comme un MP3 importé (Direct, régie, mixeur)
     if (req.method === "POST" && id === "addsc") {
       const b = await req.json().catch(() => ({})), sid = String(b.sc || "").replace(/\D/g, "").slice(0, 20);
       if (!sid) return J({ msg: "Titre SoundCloud invalide." }, 400);
-      const have = this.media.find(x => x.sc === sid); if (have) return J({ ok: true, media: have });
-      const nid = crypto.randomUUID().replace(/-/g, "").slice(0, 20);
-      const meta = { id: nid, name: String(b.name || "Musique").slice(0, 100), mime: "audio/soundcloud", kind: "audio", sc: sid, size: 0, dur: Math.max(0, +b.dur || 0), slot: "", by: user.name, at: Date.now(), n: 0, credit: String(b.credit || "").slice(0, 160) };
-      await this.env.MEDIA.put("meta:" + nid, JSON.stringify(meta));
-      this.media = [...this.media, meta].slice(-120);
+      const have = this.media.find(x => x.sc === sid);
+      if (have && have.n && !have.dl) return J({ ok: true, media: have });
+      const meta = have || { id: crypto.randomUUID().replace(/-/g, "").slice(0, 20), name: String(b.name || "Musique").slice(0, 100), kind: "audio", sc: sid, size: 0, dur: Math.max(0, +b.dur || 0), slot: "", by: user.name, at: Date.now(), n: 0, credit: String(b.credit || "").slice(0, 160) };
+      meta.mime = "audio/mpeg"; meta.dl = 1; meta.n = 0;
+      if (!have) this.media = [...this.media, meta].slice(-120);
+      await this.env.MEDIA.put("meta:" + meta.id, JSON.stringify(meta));
       pushList();
+      try { await this.scStart(meta); } catch (e) { return J({ msg: "SoundCloud : " + e.message }, 502); }
       return J({ ok: true, media: meta });
     }
     // Deezer : recherche dans tout le catalogue (extrait de 30 s pour écouter ; la lecture complète se fait dans l'appli Deezer)
@@ -1549,6 +1597,7 @@ export class Game extends DurableObject {
   }
   pushPubs() {
     for (const ws of this.sockets()) { const a = this.att(ws); if (!a || a.mod || a.server) continue; this.send(ws, { t: "pubs", pubs: this.pubsFor(a) }); }
+    this.dvrWantPush();
   }
   broadcastHelloAll() { for (const ws of this.sockets()) { const a = this.att(ws); if (a && !a.mod && !a.server) this.send(ws, this.hello(a)); } }
   async whip(req, path) {
@@ -2216,7 +2265,7 @@ export class Game extends DurableObject {
     if (who.server) {
       if (!this.srvKey || who.key !== this.srvKey) return refuse(4003, "Clé serveur invalide (régie › Carte & caméras)");
       server.serializeAttachment({ id: "server", name: "Serveur Minecraft", server: true, at: Date.now() });
-      this.send(server, { t: "hello", server: true, now: Date.now(), names: this.camNames() });
+      this.send(server, { t: "hello", server: true, now: Date.now(), names: this.camNames(), terrain: Object.fromEntries(Object.entries(this.terrain || {}).map(([d, x]) => [d, x.id])) });
       this.crewcast({ t: "srv", on: true });
       return new Response(null, { status: 101, webSocket: client });
     }
@@ -2264,6 +2313,10 @@ export class Game extends DurableObject {
     if (!D) return w;
     const add = (src, ly, until) => { if (!src) return; const o = w[src]; if (!o || o.until < until || (ly === "f" && o.ly !== "f")) w[src] = { ly: o && o.ly === "f" ? "f" : ly, until: Math.max(until, o ? o.until : 0) }; };
     const big = it => (+it.w || 0) * (+it.h || 0) >= 1600;
+    // toutes les POV en direct sont enregistrées dès qu'elles émettent : une source posée en régie montre
+    // tout de suite l'image d'il y a un différé (même horloge pour tout le monde), sans nouveau compte à rebours
+    const live = Object.keys(this.pubs || {}).filter(k => /^[tc]:/.test(k));
+    for (const src of live) add(src, live.length <= 10 ? "f" : "q", now + D + 3600000);
     for (const id of [this.prog.live, this.prog.preview]) {
       const sc = (this.prog.scenes || []).find(x => x.id === id); if (!sc) continue;
       for (const it of sc.items || []) { if (it.k === "media") continue; const x = this.srcOf(it); if (x && x.src) add(x.src, big(it) ? "f" : "q", now + D + 3600000); }
@@ -2664,14 +2717,14 @@ export class Game extends DurableObject {
     }
     this.flushPosSoon();
   }
-  /* récap affiché au tribut sur son écran de mort, puis exclusion du serveur (réglage) */
+  /* récap affiché au tribut sur son écran de mort */
   sendRecap(t, ev) {
     const b = this.board, now = Date.now(), st = this.tstats[t.id] || { dist: 0, air: 0, peak: 0 };
     const place = t.place || b.tributes.filter(x => x.id !== t.id && x.status !== "dead").length + 1;
     const dur = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? h + " h " + String(m).padStart(2, "0") : m + " min"; };
     const lines = [place ? place + (place === 1 ? "re" : "e") + " place sur " + b.tributes.length : "", ev.by ? "Tombé·e face à " + ev.by : ev.cause ? "Cause : " + ev.cause : "", b.startTs ? "Temps de survie : " + dur((now - b.startTs) / 1000) : "",
       st.dist ? "Distance parcourue : " + (st.dist >= 1000 ? (st.dist / 1000).toFixed(1).replace(".", ",") + " km" : Math.round(st.dist) + " m") : "", st.air ? "Temps à l'antenne : " + dur(st.air) : "", st.peak ? "Jusqu'à " + st.peak + " spectateurs" : ""].filter(Boolean);
-    this.sendServers({ t: "recap", n: ev.nmc || t.mc, name: t.name, district: t.district || 0, num: t.num || 0, place, lines, ban: b.banOnDeath !== false, delay: 15 });
+    this.sendServers({ t: "recap", n: ev.nmc || t.mc, name: t.name, district: t.district || 0, num: t.num || 0, place, lines });
   }
   autoKill(t, ev) {
     const b = this.board; if (!b.autoCanon || t.status === "dead") return;
@@ -2750,6 +2803,7 @@ export class Game extends DurableObject {
     if (this.bets && this.bets.settled) { const r = this.bets.settled.at + (this.board.delay || 0) * 1000; if (r > now) t = Math.min(t, r + 300); }
     if (this.poll && this.poll.end > now) t = Math.min(t, this.poll.end + 200);
     if (this.tbot && this.tbot.on && this.tbot.channel) t = Math.min(t, now + 45000);
+    if (this.scJobs && this.scJobs.length) t = Math.min(t, now + 400);
     if (t === Infinity) return;
     const cur = await this.ctx.storage.getAlarm();
     if (!cur || cur > t || cur < now) await this.ctx.storage.setAlarm(t);
@@ -2770,7 +2824,52 @@ export class Game extends DurableObject {
     if (this.poll && this.poll.end && this.poll.end <= now + 300 && this.poll.end > now - 5000) this.pushPoll();
     if (this.tbot && this.tbot.on && this.tbot.channel) { if (!this.botWs) this.botStart(); else if (now - (this.botLast || 0) > 360000) { this.botClose(); this.botStart(); } }
     this.botTick(); this.statTick();
+    if (this.scJobs && this.scJobs.length) await this.scWork();
     await this.scheduleAlarm();
+  }
+  /* ---------- copie d'un titre SoundCloud dans les médias (par lots : peu de requêtes à la fois) ---------- */
+  async scStart(meta) {
+    const src = await scSource(this.env, meta.sc);
+    meta.mime = src.mime; if (src.dur) meta.dur = src.dur;
+    this.scJobs = (this.scJobs || []).filter(j => j.id !== meta.id);
+    this.scJobs.push({ id: meta.id, urls: src.urls, i: 0, parts: 0, size: 0 });
+    await this.ctx.storage.put("scjobs", this.scJobs);
+    await this.scWork(30);
+  }
+  async scWork(budget = 40) {
+    const jobs = this.scJobs || []; if (!jobs.length) return;
+    const job = jobs[0], meta = this.media.find(x => x.id === job.id);
+    if (!meta) { jobs.shift(); await this.ctx.storage.put("scjobs", jobs); return; }
+    try {
+      if (!job.urls) { const src = await scSource(this.env, meta.sc); job.urls = src.urls; meta.mime = src.mime; if (src.dur) meta.dur = src.dur; budget -= 3; }
+      const bufs = [];
+      while (job.i < job.urls.length && budget-- > 0) {
+        const r = await fetch(job.urls[job.i]);
+        if (!r.ok) throw new Error("segment " + job.i + " : " + r.status);
+        bufs.push(new Uint8Array(await r.arrayBuffer())); job.i++;
+      }
+      const tot = bufs.reduce((a, b) => a + b.byteLength, 0), cat = new Uint8Array(tot); let o = 0;
+      for (const b of bufs) { cat.set(b, o); o += b.byteLength; }
+      if (tot) { await this.env.MEDIA.put(`scb:${job.id}:${job.parts}`, cat, { expirationTtl: 86400 }); job.parts++; job.size += tot; }
+      meta.dlp = Math.round(job.i / job.urls.length * 100);
+      if (job.i >= job.urls.length) {
+        // assemblage en morceaux de 8 Mo, comme un fichier importé
+        const all = new Uint8Array(job.size); let p = 0;
+        for (let k = 0; k < job.parts; k++) { const b = await this.env.MEDIA.get(`scb:${job.id}:${k}`, "arrayBuffer"); if (!b) throw new Error("lot perdu"); all.set(new Uint8Array(b), p); p += b.byteLength; }
+        const n = Math.ceil(job.size / MEDIA_CHUNK);
+        for (let i = 0; i < n; i++) await this.env.MEDIA.put(`c:${job.id}:${i}`, all.slice(i * MEDIA_CHUNK, (i + 1) * MEDIA_CHUNK));
+        for (let k = 0; k < job.parts; k++) this.env.MEDIA.delete(`scb:${job.id}:${k}`).catch(() => {});
+        Object.assign(meta, { size: job.size, n, cs: MEDIA_CHUNK }); delete meta.dl; delete meta.dlp;
+        jobs.shift();
+      }
+    } catch (e) {
+      meta.dl = 2; meta.dlErr = String(e.message || e).slice(0, 120); jobs.shift();
+    }
+    await this.env.MEDIA.put("meta:" + meta.id, JSON.stringify(meta));
+    await this.ctx.storage.put("scjobs", jobs);
+    await this.ctx.storage.put("media", this.media);
+    this.crewcast({ t: "media", list: this.media }, x => !x.mod);
+    if (jobs.length) await this.scheduleAlarm();
   }
   async twitchToken(force) {
     let tk = force ? null : (this.ttk || await this.ctx.storage.get("ttk"));

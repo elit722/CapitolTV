@@ -1460,7 +1460,7 @@ function normBoard(b) {
     flash: b.flash || null,
     delay: Math.max(0, Math.min(900, parseInt(b.delay, 10) || 0)),
     hideChat: b.hideChat !== false,
-    autoCanon: b.autoCanon !== false, banOnDeath: b.banOnDeath !== false, skyHommage: b.skyHommage !== false,
+    autoCanon: b.autoCanon !== false, skyHommage: b.skyHommage !== false,
     tick: normTick(b.tick, b.ticker),
     lock: (l => ({ mode: ['off', 'schedule', 'on'].includes(l.mode) ? l.mode : 'off', tz: String(l.tz || 'Europe/Paris'), msg: String(l.msg || ''),
       windows: (Array.isArray(l.windows) ? l.windows : []).map(w => ({ days: (Array.isArray(w.days) ? w.days : []).filter(d => d >= 0 && d <= 6), from: /^\d\d:\d\d$/.test(w.from) ? w.from : '20:00', to: /^\d\d:\d\d$/.test(w.to) ? w.to : '23:00' })) }))(b.lock || {}),
@@ -1616,7 +1616,7 @@ function showConn(title, text, final) {
 function hideConn() { clearTimeout(showConn.t); $('#conn').classList.add('hide'); }
 
 /* Enregistrement : seules les modifications sont envoyées (plusieurs personnes peuvent être en régie) */
-const SCALARS = ['ticker', 'don', 'fund', 'day', 'startTs', 'cooldown', 'lastHommage', 'flash', 'delay', 'hideChat', 'lock', 'sponsor', 'publicAccess', 'map', 'theme', 'autoCanon', 'tick', 'banOnDeath', 'skyHommage'];
+const SCALARS = ['ticker', 'don', 'fund', 'day', 'startTs', 'cooldown', 'lastHommage', 'flash', 'delay', 'hideChat', 'lock', 'sponsor', 'publicAccess', 'map', 'theme', 'autoCanon', 'tick', 'skyHommage', 'hymn'];
 const clone = o => JSON.parse(JSON.stringify(o));
 function boardDiff(a, b) {
   const p = {}, set = {};
@@ -2581,12 +2581,34 @@ function showHommage(f, ms) {
       <div class="d">${distLabel(t.district)}</div><div class="n">${esc(t.name)}</div><div class="s">${t.place ? t.place + 'e place' : ''}${killerName(t) ? (t.place ? ' · ' : '') + 'face à ' + esc(killerName(t)) : ''}</div></div>`).join('')
       : '<div class="note" style="font-size:15px">Aucun tribut n\'est tombé aujourd\'hui.</div>'}</div>`;
   h.classList.remove('hide');
-  SND.solemn();
+  const hy = S.board.hymn || {};
+  if (hy.on !== false && hy.id && S.sound) HYMN.play(hy.vol == null ? 70 : hy.vol, ms); else SND.solemn();
   clearTimeout(showHommage.t);
-  const close = () => h.classList.add('hide');
+  const close = () => { h.classList.add('hide'); HYMN.stop(1200); };
   h.onclick = close;
   showHommage.t = setTimeout(close, ms);
 }
+
+/* hymne de l'hommage : monte en douceur, redescend et s'arrête proprement à la fin */
+const HYMN = {
+  a: null, t: 0,
+  play(vol, ms) {
+    this.stop(0);
+    const a = this.a = new Audio('/hymn?v=' + encodeURIComponent((S.board.hymn || {}).id || '')), V = Math.max(0, Math.min(1, vol / 100));
+    a.volume = 0; a.play().catch(() => {});
+    this.ramp(a, V, 2500);
+    clearTimeout(this.t); this.t = setTimeout(() => this.stop(3500), Math.max(1000, ms - 3500));
+  },
+  ramp(a, to, dur, then) {
+    const from = a.volume, t0 = performance.now();
+    clearInterval(a._r); a._r = setInterval(() => { const k = Math.min(1, (performance.now() - t0) / Math.max(1, dur)); a.volume = Math.max(0, Math.min(1, from + (to - from) * k * k * (3 - 2 * k))); if (k >= 1) { clearInterval(a._r); then && then(); } }, 40);
+  },
+  stop(dur) {
+    const a = this.a; if (!a) return; this.a = null; clearTimeout(this.t);
+    if (!dur) { a.pause(); a.src = ''; return; }
+    this.ramp(a, 0, dur, () => { a.pause(); a.src = ''; });
+  }
+};
 
 /* =====================================================================
    Notifications
@@ -2936,6 +2958,11 @@ function openHommage() {
       <label class="f"><span class="lbl2">Titre</span><input class="inp" id="hoT" maxlength="60" value="${S.board.day ? 'Ils sont tombés au jour ' + S.board.day : 'Ils sont tombés aujourd\'hui'}"></label>
       <div class="f"><span class="lbl2">Tributs affichés <em>cochés : tombés depuis le dernier hommage</em></span>
         <div class="tblwrap" style="max-height:240px">${dead.length ? dead.map(t => `<label class="switch" style="margin:6px 0"><input type="checkbox" value="${esc(t.id)}" ${t.diedAt > since ? 'checked' : ''}> ${pad3(t.num)} — ${esc(t.name)} <span class="note">${distLabel(t.district)} · ${hhmm(t.diedAt)}</span></label>`).join('') : '<div class="note">Aucun tribut tombé pour l\'instant.</div>'}</div></div>
+      ${(() => { const hy = S.board.hymn || {}, au = (PROG.media || []).filter(x => x.kind === 'audio' && x.n && !x.dl); return `<div class="f"><span class="lbl2">Hymne en fond <em>sur le Direct et en jeu, fondu au début et à la fin</em></span>
+        <div class="gx-row"><label class="switch" style="margin:0"><input type="checkbox" id="hoHy" ${hy.on !== false ? 'checked' : ''}> Jouer</label>
+        <select class="inp" id="hoHyId" style="flex:1"><option value="">— choisir un son des médias —</option>${au.map(x => `<option value="${esc(x.id)}" ${hy.id === x.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>
+        <label style="display:flex;align-items:center;gap:6px;flex:0 0 140px"><span class="note">Vol.</span><input type="range" id="hoHyV" min="0" max="100" step="5" value="${hy.vol == null ? 70 : hy.vol}" style="flex:1"></label></div>
+        <p class="note" style="margin:4px 0 0">Importe l'hymne dans Réalisation → Médias (fichier .ogg conseillé : il est aussi joué dans Minecraft). Il est retenu pour les prochains hommages.</p></div>`; })()}
       <label class="f"><span class="lbl2">Durée</span><select class="inp" id="hoD"><option value="20">20 secondes</option><option value="30" selected>30 secondes</option><option value="45">45 secondes</option><option value="60">1 minute</option></select></label>
     </div>
     <div class="modal-f"><button type="button" class="btn ghost" data-close>Annuler</button><button type="submit" class="btn primary">${ic('moon')}Lancer l'hommage</button></div></form>`);
@@ -2943,6 +2970,7 @@ function openHommage() {
     e.preventDefault();
     const ids = $$('#fHo .tblwrap input:checked').map(i => i.value);
     S.board.lastHommage = Date.now();
+    S.board.hymn = { on: $('#hoHy').checked, id: $('#hoHyId').value, vol: +$('#hoHyV').value };
     addEvent({ k: 'tribute', text: `Hommage du Capitole : ${ids.map(id => (byId(id) || {}).name).filter(Boolean).join(', ') || 'aucun tribut tombé'}` });
     pushFlash({ k: 'tribute', ids, title: $('#hoT').value.trim(), dur: +$('#hoD').value });
     closeModal(); commit();
@@ -3122,8 +3150,6 @@ function renderSettings() {
       </div>
       <p class="note"><b style="color:var(--gold-hi)">Comment ça marche :</b> la régie, le Direct (OBS) et la page Antenne montrent tous l'image avec ce retard, la même pour tout le monde. Ce que tu fais en régie (plans, canon à la main, flashs, statuts) part donc <b style="color:var(--ink2)">immédiatement</b>, puisque tu regardes déjà l'image retardée. Seuls le panneau « À venir », la carte et les comms sont en temps réel.</p>
       <label class="switch"><input type="checkbox" id="autoCanon" ${b.autoCanon ? 'checked' : ''}> Coup de canon automatique quand le serveur détecte une mort</label>
-      <label class="switch"><input type="checkbox" id="banOnDeath" ${b.banOnDeath ? 'checked' : ''}> Tribut mort : récap sur son écran puis exclusion du serveur Minecraft 15 s après (il ne peut pas espionner pour un autre)</label>
-      <p class="note" style="margin-top:0">Pour le laisser revenir : remets-le « en lice » sur le site (il est débanni tout seul) ou <code>/pardon pseudo</code> en jeu.</p>
       <label class="switch"><input type="checkbox" id="skyHommage" ${b.skyHommage ? 'checked' : ''}> Hommage aussi dans le ciel en jeu (visages projetés au nord, comme dans les films)</label>
       <p class="note">Le tribut passe « tombé » et le canon retentit <b style="color:var(--ink2)">${b.delay ? fmtDelay(b.delay) + ' après la mort' : 'tout de suite'}</b>, au moment où la scène arrive à l'image. Décoche si tu préfères tout faire à la main (bouton « Tombé »).${b.delay && pending ? ` <b style="color:var(--gold-hi)">${pending} annonce(s) en attente.</b>` : ''}</p>
       <p class="note" style="margin-bottom:0"><b style="color:var(--warn)">Important :</b> un site ne peut pas retarder une vidéo Twitch. Chaque streamer doit régler <b style="color:var(--ink2)">le même délai</b> de son côté : Twitch › Gestionnaire de stream › <i>Délai du stream</i> (jusqu'à 15 min), ou OBS › Paramètres › Avancé › <i>Délai de diffusion</i>.</p>
@@ -3446,7 +3472,6 @@ function settingsEvents() {
     const id = tg.id, b = S.board;
     if (tg.dataset.tkauto) { const k = tg.dataset.tkauto, off = b.tick.off.filter(x => x !== k); if (!tg.checked) off.push(k); b.tick = { ...b.tick, off }; commit(); renderTickList(); }
     if (id === 'autoCanon') { b.autoCanon = tg.checked; commit(false); }
-    if (id === 'banOnDeath') { b.banOnDeath = tg.checked; commit(false); }
     if (id === 'skyHommage') { b.skyHommage = tg.checked; commit(false); }
     if (id === 'lkMode' || id === 'lkTz' || id === 'lkMsg') { b.lock = { ...b.lock, mode: $('#lkMode').value, tz: $('#lkTz').value.trim() || 'Europe/Paris', msg: $('#lkMsg').value.trim() }; commit(); renderSettings(); }
     if (tg.dataset.lw) { const w = b.lock.windows[+tg.dataset.i]; if (w && /^\d\d:\d\d$/.test(tg.value)) { w[tg.dataset.lw] = tg.value; commit(); renderSettings(); } }
@@ -4207,7 +4232,9 @@ class DelayPlayer {
   }
   status() {
     const c = this.conn, waiting = this.delay > 0 && !this.appended && (this.started || this.pos == null);
-    const left = waiting && this.started ? Math.max(0, Math.ceil((this.started + this.delay * 1000 - Date.now()) / 1000)) : 0;
+    // compte à rebours commun : depuis le début de la diffusion de la POV (heure du serveur), pas depuis l'ajout en régie
+    const pa = RTC.pubs[this.src] && RTC.pubs[this.src].at, t0 = pa ? pa - (S.skew || 0) : this.started;
+    const left = waiting && t0 ? Math.max(0, Math.ceil((t0 + this.delay * 1000 - Date.now()) / 1000)) : 0;
     const txt = this.appended ? '' : !c.ms.getTracks().length && !this.pool().length ? (c.state === 'erreur' ? 'Flux indisponible · nouvel essai…' : 'Connexion au flux…') : waiting ? 'Différé : image dans ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0') : '';
     this.badge.textContent = txt; this.badge.classList.toggle('hide', !txt);
   }
@@ -5592,7 +5619,7 @@ const PROG = {
       <div class="mda">${md.kind === 'audio' ? `<button class="btn sm ${playing ? 'live' : ''}" data-ma="sfx" title="${playing ? 'Arrêter' : 'Jouer par-dessus l\'antenne, sans changer de plan'}">${playing ? '■' : '▶'}</button><button class="btn sm ghost" data-ma="listen" title="Écouter ici seulement (casque de la régie)">${this.listen && this.listen.dataset.id === md.id ? '⏸' : '🎧'}</button>` : ''}<button class="btn sm ghost" data-ma="del" title="Supprimer">${ic('trash')}</button></div></div></div>`;
   },
   renderMediaSec(q) {
-    const f = md => !md.yt && !md.sc && (!q || md.name.toLowerCase().includes(q));
+    const f = md => !md.yt && !(md.sc && !md.n) && (!q || md.name.toLowerCase().includes(q));
     const slotRows = this.SLOTS.map(sl => {
       const md = this.media.find(x => x.slot === sl.slot), up = this.ups[sl.slot];
       if (up) return `<div class="src smd up"><div class="th md">⇪</div><div style="min-width:0;flex:1"><b>${esc(sl.name)}</b><small>Envoi… ${up}%</small><div class="pbar"><i style="width:${up}%"></i></div></div></div>`;
@@ -6079,7 +6106,7 @@ const PROG = {
       <div class="gx-row"><input class="inp" id="bgQ" value="${esc(this.bgmQ || '')}" placeholder="Titre, artiste ou lien SoundCloud (ex. two steps from hell heart of courage)" autocomplete="off"></div>
       ${hits.length ? `<div class="bg-hits"><span class="note">Déjà dans tes médias</span>${hits.map(x => `<button class="btn xs ghost" data-bga="${esc(x.id)}">＋ ${esc(x.name)} <span class="note">${this.fmtDur(x.dur)}</span></button>`).join('')}</div>` : ''}
       ${q.length >= 2 ? this.bgScHtml() + this.bgWebHtml() : ''}
-      <ol class="qlist">${D.ids.map((id, i) => { const md = this.mediaById(id); return `<li><span>${esc(md ? md.name : '?')}</span><span class="note">${md ? this.fmtDur(md.dur) : ''}</span><button class="btn sm ghost" data-bgx="${i}">${ic('x')}</button></li>`; }).join('')}</ol>
+      <ol class="qlist">${D.ids.map((id, i) => { const md = this.mediaById(id); return `<li><span>${esc(md ? md.name : '?')}</span><span class="note">${md && md.dl === 1 ? 'copie ' + (md.dlp || 0) + ' %' : md && md.dl === 2 ? '<span style="color:var(--red-hi)" title="' + esc(md.dlErr || '') + '">copie ratée</span>' : md ? this.fmtDur(md.dur) : ''}</span><button class="btn sm ghost" data-bgx="${i}">${ic('x')}</button></li>`; }).join('')}</ol>
       <div class="gx-row"><button class="btn sm primary" id="bgGo" ${D.ids.length ? '' : 'disabled'}>▶ ${scope === 'all' ? 'Lancer sur tous les plans' : 'Lancer sur ce plan'}</button><button class="btn sm ghost" id="bgStop">■ Arrêter</button></div>
       <p class="note" style="margin:6px 0 0">${playing ? `En cours (${playing.scope === 'all' ? 'tous les plans' : 'ce plan'}) : ${esc(playing.tracks.map(t => t.name).join(' → '))}` : 'Aucune musique de fond à l\'antenne.'} La musique d'un plan remplace celle de tous les plans.</p>`;
     const send = ids => NET.req({ t: 'progBgm', scope: scope === 'all' ? 'all' : sc.id, ids, vol: D.vol }).then(() => toastInfo(ids.length ? 'Musique lancée' : 'Musique arrêtée'), e => toastInfo('Musique', e.message, true));
@@ -6119,8 +6146,10 @@ const PROG = {
     const old = $('#scPrev'); if (old) old.remove();
     if (this.bgScI === i) { this.bgScI = -1; this.renderBgmKeep(); return; }
     this.bgScI = i; this.renderBgmKeep();
-    const f = document.createElement('iframe'); f.id = 'scPrev'; f.className = 'yt-prev'; f.allow = 'autoplay'; f.src = SCW.src(x.sc, true); document.body.appendChild(f);
-    SCW.load().then(() => { const w = SC.Widget(f); w.bind(SC.Widget.Events.READY, () => { w.setVolume(70); w.play(); }); w.bind(SC.Widget.Events.FINISH, () => { f.remove(); this.bgScI = -1; this.renderBgmKeep(); }); });
+    // écoute : le son passe par le site lui-même (lecteur audio normal)
+    if (!this.bgPrev) { this.bgPrev = new Audio(); this.bgPrev.onended = () => { this.bgPrevI = -1; this.bgDzI = -1; this.bgScI = -1; this.renderBgmKeep(); }; }
+    this.bgPrev.src = '/api/media/scplay?s=' + encodeURIComponent(x.sc); this.bgPrev.volume = .7;
+    this.bgPrev.play().catch(() => toastInfo('Écoute impossible', 'SoundCloud refuse ce titre', true));
   },
   bgScAdd(i, D) {
     const W = this.bgSc, x = W && W.list[i]; if (!x) return;

@@ -82,7 +82,6 @@ public final class Hud {
         TextRenderer tr = mc.textRenderer;
         ClientConfig c = ClientConfig.get();
         int sw = ctx.getScaledWindowWidth(), sh = ctx.getScaledWindowHeight();
-        Overlays.renderSky(ctx, sw, sh);
         if (mc.currentScreen == null) Overlays.renderRecap(ctx, sw, sh);
         CamDrone.render(ctx, tr, sw);
         CamPath.render(ctx, tr, sw);
