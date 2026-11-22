@@ -247,3 +247,19 @@ SESSION_SECRET=...
 
 - Tout tient dans l'offre gratuite de Cloudflare pour un event de quelques jours. Au-delà d'environ 100 000 requêtes par jour, le forfait payant coûte 5 $/mois.
 - Le compteur « en ligne » affiche tout le monde. La liste détaillée est limitée aux 600 premières personnes, pour rester fluide même avec beaucoup de monde.
+
+## Nouveautés de la régie
+
+- **Double écran** : bouton « Double écran » à côté des plans (page Réalisation). La 2e fenêtre affiche les grands moniteurs Aperçu / Antenne, les plans, le bouton « À l'antenne » et un multiview des POV (4 à 16 cases, épinglables). Un clic sur une POV du multiview la met dans l'Aperçu, à la place de la source sélectionnée. Dans l'application de bureau, la fenêtre s'ouvre directement en plein écran sur l'autre moniteur.
+- **Fond de carte** : en jeu, `/capitol carte <rayon>` (ou le bouton « Relever le terrain ici » de la page Carte) relève le terrain autour de soi : couleurs des blocs, relief et profondeur de l'eau. La carte du site et la mini-carte du Direct l'utilisent, en vue de dessus ou en vue 3D isométrique. À refaire si l'arène change.
+- **Musique de fond en ligne** : la recherche du panneau « Musique de fond » cherche aussi des musiques libres de droits (Openverse : Jamendo, Freesound, Wikimedia…). ▶ pour écouter, « Ajouter » l'importe et la met dans la playlist. Le crédit de l'auteur s'affiche en bas du Direct (obligatoire pour les licences CC BY).
+- **Notifications** : cloche en haut à droite (équipe) : alertes, messages, interphone, demandes de couverture, morts, captures qui font ramer. Elles arrivent quand la fenêtre est en arrière-plan.
+- **Panneau latéral partout** : bouton à côté de la cloche (tributs, alertes, comms, terrain…), y compris en régie.
+
+## Bot Twitch
+
+Réglages › Twitch › « Bot Twitch (chat) » : indique la chaîne du stream et active le bot. Les spectateurs votent au sondage avec `!1`, `!2`…, parient avec `!pari 7 200`, et peuvent taper `!points`, `!tributs` et `!aide`. Leurs votes et paris s'ajoutent à ceux du site. Sans compte, le bot lit seulement le chat. Pour qu'il réponde et annonce les sondages, les résultats, les morts (avec le différé) et le vainqueur, il faut l'application Twitch (`TWITCH_CLIENT_ID` + `TWITCH_CLIENT_SECRET`, avec en plus l'URL de redirection `https://<site>/twitchbot/cb`). Clique ensuite sur « Connecter le compte du bot » en étant connecté sur Twitch avec le compte du bot. Mets le bot modérateur de la chaîne.
+
+## Application de bureau
+
+Le dossier `desktop/` contient l'application Electron. GitHub la construit à chaque modification : release « app-bureau », installateur `CapitolTV-installation-*.exe` et version portable. Elle garde la connexion, lance le son et la vidéo sans clic, affiche les notifications Windows et fait clignoter la barre des tâches. Le double écran s'ouvre sur le 2e moniteur. Raccourcis : F11 plein écran, F5 recharger, Ctrl +/- zoom. L'application n'est pas signée : Windows affiche « Windows a protégé votre ordinateur », clique sur « Informations complémentaires » puis « Exécuter quand même ».

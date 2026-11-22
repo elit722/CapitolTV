@@ -130,6 +130,11 @@ export default {
         return new Response("Connexion requise", { status: 401 });
       }
       if (p.startsWith("/media/")) return serveMedia(req, env, p.slice(7));
+      if (p === "/twitchbot/start" || p === "/twitchbot/cb") {
+        const h = new Headers(); h.set("X-CTV-User", JSON.stringify(user)); h.set("X-CTV-Origin", url.origin);
+        return env.GAME.getByName("main").fetch(new Request(new URL(p + url.search, "https://game"), { headers: h }));
+      }
+      if (p.startsWith("/terrain/")) return env.GAME.getByName("main").fetch(new Request(new URL(p, "https://game"), { method: "GET" }));
       if (p.startsWith("/clip/")) {
         const h = new Headers(req.headers); h.set("X-CTV-User", JSON.stringify(user));
         return env.GAME.getByName("main").fetch(new Request(new URL(p, "https://game"), { method: "GET", headers: h }));
@@ -403,7 +408,7 @@ export class Game extends DurableObject {
 
   load() {
     if (!this.loading) this.loading = (async () => {
-      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage", "moved", "from", "perf"]);
+      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage", "moved", "from", "perf", "terrain", "tbot"]);
       this.board = { ...defaultBoard(), ...(m.get("board") || {}) };
       this.alerts = m.get("alerts") || {};
       this.team = m.get("team") || [];
@@ -413,6 +418,8 @@ export class Game extends DurableObject {
       this.camData = { feed: c.feed || [], comms: c.comms || [], reqs: c.reqs || {} };
       this.camSt = m.get("camst") || {};
       this.srvKey = m.get("srvkey") || "";
+      this.terrain = m.get("terrain") || {};
+      this.tbot = { on: false, channel: "", ann: { poll: true, result: true, death: true, victor: true, bets: true }, cmds: true, ...(m.get("tbot") || {}) };
       this.roles = m.get("roles") || null;
       if (!this.roles) {
         // première fois : rôles par défaut + migration des anciens accès
@@ -468,6 +475,9 @@ export class Game extends DurableObject {
     if (path === "/failover/import" && req.method === "POST") return this.foImport(req);
     if (path === "/mod") return this.modConnect(req);
     if (path.startsWith("/api/media")) return this.mediaApi(req, path);
+    if (path.startsWith("/terrain/")) return this.terrainGet(path);
+    if (path === "/twitchbot/start" || path === "/twitchbot/cb") return this.botOAuth(req, path);
+    if (this.tbot && this.tbot.on && this.tbot.channel && !this.botWs && !this.botConnecting && Date.now() - (this.botTry || 0) > 20000) { this.botTry = Date.now(); this.botStart(); }
     if (path.startsWith("/api/rtc")) return this.rtcApi(req, path);
     if (path.startsWith("/api/clips") || path.startsWith("/clip/")) return this.clipApi(req, path);
     if (path.startsWith("/whip/")) return this.whip(req, path);
@@ -516,7 +526,7 @@ export class Game extends DurableObject {
       t: "hello", now: Date.now(),
       me: { id: a.id, name: a.name, av: a.av, perm: a.perm, pub: a.pub, overlay: !!a.overlay, obsKey: hasPerm(a, "program") && !a.lock && this.env.OVERLAY_KEY ? this.env.OVERLAY_KEY : undefined, lock: !!a.lock, guest: !!a.guest, tribute: this.tributeOf(a.id), cam: a.cam || "", sup: isSup(a), crew: isCrew(a) && !a.lock, map: this.mapAllowed(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "" },
       roles: this.roles, prog: a.lock || !(isCrew(a) || a.overlay) ? undefined : this.progPublic(), progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
-      media: isCrew(a) ? this.media : undefined, srvCams: isCrew(a) ? this.srvCams : undefined,
+      terrain: this.terrain || {}, bot: isStaff(a) ? this.botPublic() : undefined, media: isCrew(a) ? this.media : undefined, srvCams: isCrew(a) ? this.srvCams : undefined,
       pubs: this.pubsFor(a), rtc: { on: this.rtcOn(), pub: false, capOff: !!this.board.capOff, perf: isCrew(a) ? this.perf : undefined, use: isCrew(a) || a.overlay ? this.useInfo() : undefined, vq: { trib: this.vqCap("t:"), cam: this.vqCap("c:") }, vpref: isCrew(a) && !a.lock ? this.vpref : undefined },
       talk: this.talkSup(a) ? this.talkState() : undefined, clips: this.clipsFor(a),
       skeys: hasPerm(a, "program") || a.perm === "admin" ? this.allKeys() : undefined,
@@ -724,6 +734,7 @@ export class Game extends DurableObject {
         this.refreshLocks();
         this.broadcastBoard();
         if (this.prog.live) this.pushProg(false);
+        this.botTick();
         await this.scheduleAlarm();
         reply(true); break;
       }
@@ -855,6 +866,30 @@ export class Game extends DurableObject {
         if (!this.env.SESSION_SECRET) return reply(false, { msg: "SESSION_SECRET manquant." });
         const token = await signSession({ id: a.id, name: a.name, av: a.av, mod: 1, exp: Date.now() + 60 * 864e5 }, this.env.SESSION_SECRET);
         reply(true, { token }); break;
+      }
+      case "botCfg": {
+        if (a.perm !== "admin") return reply(false, { msg: "Réservé aux administrateurs." });
+        const c = m.cfg || {}, T = this.tbot;
+        if (c.channel !== undefined) T.channel = String(c.channel || "").toLowerCase().replace(/^#|https?:\/\/(www\.)?twitch\.tv\//g, "").replace(/[^a-z0-9_]/g, "").slice(0, 25);
+        if (c.on !== undefined) T.on = !!c.on;
+        if (c.cmds !== undefined) T.cmds = !!c.cmds;
+        if (c.ann) for (const k of ["poll", "result", "death", "victor", "bets"]) if (c.ann[k] !== undefined) T.ann[k] = !!c.ann[k];
+        if (c.logout) delete T.auth;
+        await this.ctx.storage.put("tbot", T);
+        this.botClose(); if (T.on && T.channel) this.botStart();
+        this.botStatus(); reply(true, { st: this.botPublic() }); break;
+      }
+      case "botSay": {
+        if (a.perm !== "admin" && !hasPerm(a, "program")) return reply(false, { msg: "Réservé à la régie." });
+        if (!this.botCanSay()) return reply(false, { msg: "Le bot n'est pas connecté avec un compte (lecture seule)." });
+        this.botSay(String(m.text || "").slice(0, 450)); reply(true); break;
+      }
+      case "terrainScan": {
+        if (!isCrew(a) || a.lock) return reply(false, { msg: "Réservé à l'équipe." });
+        let on = false; for (const ws2 of this.sockets()) { const b = this.att(ws2); if (b && b.server) on = true; }
+        if (!on) return reply(false, { msg: "Le mod serveur n'est pas connecté (clé serveur dans Carte & caméras)." });
+        this.sendServers({ t: "scan", dim: String(m.dim || "minecraft:overworld").slice(0, 60), cx: Math.round(+m.cx || 0), cz: Math.round(+m.cz || 0), r: Math.max(16, Math.min(2048, Math.round(+m.r || 256))) });
+        reply(true); break;
       }
       case "srvKey": {
         if (!admin) return deny();
@@ -1053,7 +1088,7 @@ export class Game extends DurableObject {
     const own = sc && sc.bgm && sc.bgm.ids.length ? { ...sc.bgm, at: this.prog.liveAt || 0, scope: "scene" } : null;
     const g = this.prog.bgm && this.prog.bgm.ids && this.prog.bgm.ids.length ? { ...this.prog.bgm, scope: "all" } : null;
     const b = own || g; if (!b) return null;
-    const tracks = b.ids.map(id => this.media.find(x => x.id === id)).filter(x => x && x.kind === "audio").map(x => ({ id: x.id, name: x.name, dur: x.dur || 0 }));
+    const tracks = b.ids.map(id => this.media.find(x => x.id === id)).filter(x => x && x.kind === "audio").map(x => ({ id: x.id, name: x.name, dur: x.dur || 0, credit: x.credit || "" }));
     return tracks.length ? { tracks, at: b.at || 0, vol: b.vol == null ? 60 : b.vol, scope: b.scope } : null;
   }
   onAirCams() {
@@ -1113,6 +1148,45 @@ export class Game extends DurableObject {
     const parts = path.split("/").filter(Boolean); // api, media, id?, n?
     const id = String(parts[2] || "").replace(/[^a-z0-9]/gi, "");
     const pushList = () => { this.ctx.storage.put("media", this.media); this.crewcast({ t: "media", list: this.media }, x => !x.mod); };
+    // recherche de musiques libres de droits (Openverse : Jamendo, Freesound, Wikimedia…), sans rien télécharger
+    if (req.method === "GET" && id === "search") {
+      const q = (new URL(req.url).searchParams.get("q") || "").trim().slice(0, 80);
+      if (q.length < 2) return J({ list: [] });
+      const ck = "ovs:" + q.toLowerCase();
+      const hit = await this.env.MEDIA.get(ck, "json").catch(() => null);
+      if (hit && Date.now() - hit.at < 86400000) return J({ list: hit.list });
+      const ask = async extra => fetch("https://api.openverse.org/v1/audio/?page_size=20&q=" + encodeURIComponent(q) + extra, { headers: { "User-Agent": "CapitolTV/1.0 (charity Hunger Games show)", Accept: "application/json" } });
+      let r = await ask("&license_type=commercial&category=music").catch(() => null);
+      if (r && r.status === 400) r = await ask("&license_type=commercial").catch(() => null);
+      if (!r || !r.ok) return J({ msg: r && r.status === 429 ? "Trop de recherches d'un coup : réessaie dans une minute." : "Recherche en ligne indisponible pour le moment." }, 502);
+      const d = await r.json().catch(() => ({}));
+      const list = (d.results || []).filter(x => x && x.url && /^https:\/\//.test(x.url)).map(x => ({
+        ext: String(x.id || "").slice(0, 60), title: String(x.title || "Sans titre").slice(0, 80), creator: String(x.creator || "").slice(0, 60),
+        license: ("CC " + String(x.license || "").toUpperCase() + " " + String(x.license_version || "")).trim(), url: x.url, dur: Math.round((+x.duration || 0) / 1000),
+        src: String(x.source || x.provider || "").slice(0, 30), page: x.foreign_landing_url || "" }));
+      await this.env.MEDIA.put(ck, JSON.stringify({ at: Date.now(), list }), { expirationTtl: 172800 }).catch(() => {});
+      return J({ list });
+    }
+    // importe une musique trouvée en ligne dans les médias (le serveur la télécharge)
+    if (req.method === "POST" && id === "import") {
+      const b = await req.json().catch(() => ({}));
+      let u; try { u = new URL(String(b.url || "")); } catch (e) { return J({ msg: "Adresse invalide." }, 400); }
+      if (u.protocol !== "https:") return J({ msg: "Adresse invalide." }, 400);
+      const r = await fetch(u.toString(), { headers: { "User-Agent": "CapitolTV/1.0" }, redirect: "follow" }).catch(() => null);
+      if (!r || !r.ok) return J({ msg: "Téléchargement impossible depuis la source." }, 502);
+      const mime0 = (r.headers.get("content-type") || "").split(";")[0].trim();
+      if (mime0 && !/^audio\/|octet-stream|binary/.test(mime0)) return J({ msg: "Ce lien ne donne pas un fichier son." }, 400);
+      const mime = /^audio\//.test(mime0) ? mime0 : /\.ogg(\?|$)/i.test(u.pathname) ? "audio/ogg" : /\.wav(\?|$)/i.test(u.pathname) ? "audio/wav" : "audio/mpeg";
+      const buf = await r.arrayBuffer();
+      if (!buf.byteLength || buf.byteLength > 60 * 1024 * 1024) return J({ msg: "Fichier vide ou trop gros (60 Mo maximum)." }, 400);
+      const nid = crypto.randomUUID().replace(/-/g, "").slice(0, 20), n = Math.ceil(buf.byteLength / MEDIA_CHUNK);
+      for (let i = 0; i < n; i++) await this.env.MEDIA.put(`c:${nid}:${i}`, buf.slice(i * MEDIA_CHUNK, (i + 1) * MEDIA_CHUNK));
+      const meta = { id: nid, name: String(b.name || "Musique").slice(0, 80), mime, kind: "audio", size: buf.byteLength, dur: Math.max(0, +b.dur || 0), slot: "", by: user.name, at: Date.now(), n, cs: MEDIA_CHUNK, credit: String(b.credit || "").slice(0, 160), page: String(b.page || "").slice(0, 300) };
+      await this.env.MEDIA.put("meta:" + nid, JSON.stringify(meta));
+      this.media = [...this.media, meta].slice(-80);
+      pushList();
+      return J({ ok: true, media: meta });
+    }
     if (req.method === "POST" && id === "new") {
       const b = await req.json().catch(() => ({}));
       const size = Math.floor(+b.size || 0);
@@ -1139,7 +1213,7 @@ export class Game extends DurableObject {
       if (up.slot) {
         for (const old of this.media.filter(x => x.slot === up.slot)) await this.dropMedia(old.id);
       }
-      this.media = [...this.media.filter(x => x.id !== id), meta].slice(-60);
+      this.media = [...this.media.filter(x => x.id !== id), meta].slice(-80);
       pushList();
       return J({ ok: true, media: meta });
     }
@@ -1552,8 +1626,11 @@ export class Game extends DurableObject {
       if (!q || opts.length < 2) return reply(false, { msg: "Une question et au moins deux réponses." });
       const dur = Math.max(0, Math.min(3600, +m.dur || 0));
       this.poll = { id: rid8(), q, opts, at: Date.now(), end: dur ? Date.now() + dur * 1000 : 0, votes: {} };
+      if (this.tbot.ann.poll) this.botSay(`📊 SONDAGE : ${q} — ${opts.map((o, i) => "!" + (i + 1) + " " + o).join(" · ")}${dur ? " (" + (dur >= 60 ? Math.round(dur / 60) + " min" : dur + " s") + ")" : ""}`);
+      this.scheduleAlarm();
     } else if (m.t === "pollEnd") {
       if (!prog) return reply(false, { msg: "Réservé à la réalisation." });
+      if (!m.clear && this.poll && !this.poll.closed) this.botPollResult(this.poll);
       if (m.clear) this.poll = null; else if (this.poll) this.poll.closed = true;
     } else {
       const p = this.poll;
@@ -1565,6 +1642,142 @@ export class Game extends DurableObject {
     this.ctx.storage.put("poll", this.poll);
     this.pushPoll();
     return reply(true);
+  }
+
+  /* ---------- bot Twitch : sondages, pronostics et annonces dans le chat ---------- */
+  botPublic() {
+    const T = this.tbot || {};
+    return { on: !!T.on, channel: T.channel || "", cmds: T.cmds !== false, ann: T.ann || {}, account: T.auth ? T.auth.login : "", state: this.botState || "off", err: this.botErr || "", oauth: !!(this.env.TWITCH_CLIENT_ID && this.env.TWITCH_CLIENT_SECRET) };
+  }
+  botStatus() { const st = this.botPublic(); for (const ws of this.sockets()) { const a = this.att(ws); if (a && isStaff(a)) this.send(ws, { t: "bot", bot: st }); } }
+  botCanSay() { return !!(this.botWs && this.tbot.auth && this.botState === "on"); }
+  async botToken() {
+    const A = this.tbot.auth; if (!A) return null;
+    if (A.exp > Date.now() + 120000) return A.access;
+    if (!A.refresh || !this.env.TWITCH_CLIENT_ID) return A.access;
+    const r = await fetch("https://id.twitch.tv/oauth2/token", { method: "POST", body: new URLSearchParams({ client_id: this.env.TWITCH_CLIENT_ID, client_secret: this.env.TWITCH_CLIENT_SECRET, grant_type: "refresh_token", refresh_token: A.refresh }) }).catch(() => null);
+    const j = r ? await r.json().catch(() => ({})) : {};
+    if (!j.access_token) { this.botErr = "Le compte du bot doit être reconnecté (Réglages › Twitch)."; return null; }
+    Object.assign(A, { access: j.access_token, refresh: j.refresh_token || A.refresh, exp: Date.now() + (j.expires_in || 3600) * 1000 });
+    await this.ctx.storage.put("tbot", this.tbot);
+    return A.access;
+  }
+  async botStart() {
+    const T = this.tbot; if (!T.on || !T.channel || this.botWs || this.botConnecting) return;
+    this.botConnecting = true; this.botState = "connecting"; this.botErr = "";
+    try {
+      const tok = T.auth ? await this.botToken() : null;
+      const r = await fetch("https://irc-ws.chat.twitch.tv", { headers: { Upgrade: "websocket" } });
+      const ws = r.webSocket; if (!ws) throw new Error("connexion au chat refusée");
+      ws.accept(); this.botWs = ws; this.botLast = Date.now();
+      ws.send("CAP REQ :twitch.tv/tags twitch.tv/commands");
+      if (tok && T.auth) { ws.send("PASS oauth:" + tok); ws.send("NICK " + T.auth.login); }
+      else { ws.send("PASS SCHMOOPIIE"); ws.send("NICK justinfan" + (10000 + Math.floor(Math.random() * 80000))); }
+      ws.send("JOIN #" + T.channel);
+      ws.addEventListener("message", e => { this.botLast = Date.now(); String(e.data).split("\r\n").forEach(l => l && this.botLine(l)); });
+      const gone = why => { if (this.botWs !== ws) return; this.botWs = null; this.botState = T.on ? "retry" : "off"; if (why) this.botErr = why; this.botStatus(); if (T.on) setTimeout(() => this.botStart(), 15000); };
+      ws.addEventListener("close", () => gone(""));
+      ws.addEventListener("error", () => gone("connexion perdue"));
+    } catch (e) { this.botWs = null; this.botState = "retry"; this.botErr = String(e.message || e); }
+    finally { this.botConnecting = false; this.botStatus(); }
+  }
+  botClose() { const ws = this.botWs; this.botWs = null; this.botState = "off"; if (ws) try { ws.close(1000, "arrêt"); } catch (e) {} }
+  botSay(text) {
+    if (!text || !this.botCanSay()) return;
+    this.botQ = this.botQ || []; this.botQ.push(text.slice(0, 480)); if (this.botQ.length > 30) this.botQ.shift();
+    this.botFlush();
+  }
+  botFlush() {
+    if (this.botFT || !this.botQ || !this.botQ.length) return;
+    const ws = this.botWs; if (!ws) return;
+    try { ws.send("PRIVMSG #" + this.tbot.channel + " :" + this.botQ.shift()); } catch (e) {}
+    this.botFT = setTimeout(() => { this.botFT = null; this.botFlush(); }, 1600);
+  }
+  botLine(l) {
+    if (l.startsWith("PING")) { try { this.botWs.send("PONG" + l.slice(4)); } catch (e) {} return; }
+    const m = l.match(/^(?:@(\S+) )?:(\S+?)(?:!\S+)? (\S+)(?: (\S+))?(?: :(.*))?$/); if (!m) return;
+    const [, tagS, , cmd, , text] = m;
+    if (cmd === "001" || cmd === "JOIN" || cmd === "ROOMSTATE") { if (this.botState !== "on") { this.botState = "on"; this.botErr = ""; this.botStatus(); } return; }
+    if (cmd === "NOTICE" && /authentication failed|improperly formatted/i.test(text || "")) { this.botErr = "Connexion du compte refusée : reconnecte le compte du bot."; if (this.tbot.auth) this.tbot.auth.exp = 0; this.botStatus(); return; }
+    if (cmd !== "PRIVMSG" || !text) return;
+    const tags = {}; (tagS || "").split(";").forEach(kv => { const i = kv.indexOf("="); if (i > 0) tags[kv.slice(0, i)] = kv.slice(i + 1); });
+    if (this.tbot.cmds === false || text[0] !== "!") return;
+    const uid = tags["user-id"]; if (!uid) return;
+    this.botCmd({ id: "tw:" + uid, name: (tags["display-name"] || "viewer").replace(/\\s/g, " ").slice(0, 30) + " (Twitch)", nick: tags["display-name"] || "viewer" }, text.trim());
+  }
+  botCmd(u, text) {
+    const [c0, ...args] = text.slice(1).split(/\s+/), c = (c0 || "").toLowerCase();
+    const now = Date.now(), p = this.poll;
+    const voteIdx = /^\d$/.test(c) ? +c - 1 : c === "vote" && /^\d$/.test(args[0] || "") ? +args[0] - 1 : -1;
+    if (voteIdx >= 0) {
+      if (!p || p.closed || (p.end && now > p.end) || voteIdx >= p.opts.length) return;
+      p.votes[u.id] = voteIdx; this.ctx.storage.put("poll", p); this.pushPoll(); return;
+    }
+    if (c === "pari" || c === "parier" || c === "bet") {
+      const B = this.bets; if (!B.open || B.settled) return this.botReply(u, "les pronostics sont fermés.");
+      const q = (args[0] || "").toLowerCase(), t = /^\d+$/.test(q) ? this.board.tributes.find(x => x.num === +q) : this.board.tributes.find(x => x.login.toLowerCase() === q || String(x.name).toLowerCase() === q);
+      if (!t) return this.botReply(u, "tribut inconnu. Exemple : !pari 7 200");
+      if (t.status === "dead") return this.botReply(u, t.name + " est déjà tombé(e).");
+      const us = this.betUser({ id: u.id, name: u.name }), amt = Math.max(10, Math.min(us.pts, Math.round(+args[1] || 100)));
+      if (!us.pts) return this.botReply(u, "plus de points à miser.");
+      us.pts -= amt; us.b[t.id] = (us.b[t.id] || 0) + amt;
+      this.ctx.storage.put("bets", this.bets); this.pushBets();
+      return this.botReply(u, `${amt} points sur ${t.name} (n°${t.num}). Reste : ${us.pts}.`);
+    }
+    if (c === "points" || c === "score") {
+      const us = this.bets.users[u.id]; if (!us) return this.botReply(u, "tu n'as pas encore parié : 1000 points t'attendent, !pari <n°> <points>.");
+      const pub = this.betsPublic(u.id); return this.botReply(u, `${pub.me ? pub.me.pts : us.pts} points${pub.me && pub.me.rank ? " · " + pub.me.rank + "e sur " + pub.players : ""}.`);
+    }
+    if (c === "tributs" || c === "vivants") {
+      const pb = this.publicBoard(), alive = pb.tributes.filter(t => t.status !== "dead").length;
+      return this.botReply(u, `${alive} tribut${alive > 1 ? "s" : ""} encore en lice sur ${pb.tributes.length}.`);
+    }
+    if (c === "aide" || c === "capitol" || c === "commandes") return this.botReply(u, "!1 !2… voter au sondage · !pari <n° tribut> <points> · !points · !tributs");
+  }
+  botReply(u, msg) { const k = u.id; this.botCd = this.botCd || {}; if (Date.now() - (this.botCd[k] || 0) < 4000) return; this.botCd[k] = Date.now(); this.botSay("@" + u.nick + " " + msg); }
+  botPollResult(p) {
+    if (!this.tbot.ann.result) return;
+    const pub = this.pollPublic(null); if (!pub || !pub.total) return this.botSay("📊 Sondage terminé : " + p.q + " — aucun vote.");
+    const best = pub.counts.indexOf(Math.max(...pub.counts));
+    this.botSay(`📊 Résultat : ${p.q} → ${p.opts[best]} (${Math.round(pub.counts[best] / pub.total * 100)} %, ${pub.total} vote${pub.total > 1 ? "s" : ""})`);
+  }
+  /* annonces dans le chat, au rythme du différé (comme le site) */
+  botTick() {
+    if (!this.botCanSay()) return;
+    const T = this.tbot, D = (this.board.delay || 0) * 1000, now = Date.now();
+    if (this.botEvAt === undefined) { this.botEvAt = now - D; return; }
+    for (const e of this.board.events || []) {
+      if (!e.ts || e.ts + D > now || e.ts + D <= this.botEvAt) continue;
+      const t = e.tid && this.board.tributes.find(x => x.id === e.tid);
+      if (e.k === "death" && T.ann.death && t) this.botSay(`💀 Coup de canon : ${t.name}${t.district ? " (District " + t.district + ")" : ""} est tombé(e).`);
+      if (e.k === "victor" && T.ann.victor && t) this.botSay(`👑 ${t.name} remporte les Jeux !`);
+    }
+    this.botEvAt = now;
+    if (this.poll && this.poll.end && now > this.poll.end && !this.poll.botDone) { this.poll.botDone = true; this.botPollResult(this.poll); }
+  }
+  async botOAuth(req, path) {
+    let user = null; try { user = JSON.parse(req.headers.get("X-CTV-User") || "null"); } catch (e) {}
+    if (!user || this.permOf(user.id) !== "admin") return new Response("Réservé aux administrateurs.", { status: 403 });
+    const cid = this.env.TWITCH_CLIENT_ID, sec = this.env.TWITCH_CLIENT_SECRET;
+    if (!cid || !sec) return new Response("Ajoute d'abord TWITCH_CLIENT_ID et TWITCH_CLIENT_SECRET (voir README).", { status: 400 });
+    const u = new URL(req.url), origin = req.headers.get("X-CTV-Origin") || "";
+    if (path === "/twitchbot/start") {
+      this.botState0 = crypto.randomUUID();
+      const back = u.searchParams.get("o") || origin;
+      this.botBack = back;
+      const q = new URLSearchParams({ client_id: cid, redirect_uri: back + "/twitchbot/cb", response_type: "code", scope: "chat:read chat:edit", force_verify: "true", state: this.botState0 });
+      return Response.redirect("https://id.twitch.tv/oauth2/authorize?" + q, 302);
+    }
+    if (u.searchParams.get("state") !== this.botState0 || !u.searchParams.get("code")) return new Response("Lien expiré : recommence depuis Réglages › Twitch.", { status: 400 });
+    const r = await fetch("https://id.twitch.tv/oauth2/token", { method: "POST", body: new URLSearchParams({ client_id: cid, client_secret: sec, code: u.searchParams.get("code"), grant_type: "authorization_code", redirect_uri: this.botBack + "/twitchbot/cb" }) });
+    const j = await r.json().catch(() => ({}));
+    if (!j.access_token) return new Response("Twitch a refusé la connexion du bot.", { status: 400 });
+    const v = await fetch("https://id.twitch.tv/oauth2/validate", { headers: { Authorization: "OAuth " + j.access_token } }).then(x => x.json()).catch(() => ({}));
+    this.tbot.auth = { login: String(v.login || "").toLowerCase(), access: j.access_token, refresh: j.refresh_token || "", exp: Date.now() + (j.expires_in || 3600) * 1000 };
+    await this.ctx.storage.put("tbot", this.tbot);
+    this.botClose(); if (this.tbot.on && this.tbot.channel) this.botStart();
+    this.botStatus();
+    return Response.redirect(this.botBack + "/#reglages-twitch", 302);
   }
 
   /* ---------- pronostics « qui va gagner ? » (points fictifs) ---------- */
@@ -1803,9 +2016,39 @@ export class Game extends DurableObject {
     };
   }
 
+  /* fond de carte : images du relevé du terrain (couleurs, hauteurs) */
+  async terrainGet(path) {
+    const [, , dim, kind] = path.split("/"), d = decodeURIComponent(dim || ""), meta = (this.terrain || {})[d];
+    if (!meta || !["c", "h"].includes(kind) || !this.env.MEDIA) return new Response("Introuvable", { status: 404 });
+    const buf = await this.env.MEDIA.get("terrain:" + d + ":" + kind, "arrayBuffer");
+    if (!buf) return new Response("Introuvable", { status: 404 });
+    return new Response(buf, { headers: { "Content-Type": "image/png", "Cache-Control": "private, max-age=31536000, immutable" } });
+  }
+  async onTerrainPart(m) {
+    const id = String(m.id || "").slice(0, 20), parts = Math.max(1, Math.min(200, +m.parts || 1));
+    this.tbuf = this.tbuf || {};
+    for (const k of Object.keys(this.tbuf)) if (k !== id && Date.now() - this.tbuf[k].at > 600000) delete this.tbuf[k];
+    const b = this.tbuf[id] = this.tbuf[id] || { at: Date.now(), got: {}, n: 0 };
+    const k = +m.part; if (!(k >= 0 && k < parts) || b.got[k]) return;
+    b.got[k] = { kind: m.kind === "h" ? "h" : "c", data: String(m.data || "") }; b.n++;
+    if (b.n < parts) return;
+    delete this.tbuf[id];
+    const dim = String(m.dim || "minecraft:overworld").replace(/[^a-z0-9_:./-]/gi, "").slice(0, 60);
+    for (const kind of ["c", "h"]) {
+      let s64 = ""; for (let i = 0; i < parts; i++) if (b.got[i] && b.got[i].kind === kind) s64 += b.got[i].data;
+      const bin = Uint8Array.from(atob(s64), ch => ch.charCodeAt(0));
+      if (this.env.MEDIA) await this.env.MEDIA.put("terrain:" + dim + ":" + kind, bin);
+    }
+    const meta = { id, dim, x0: Math.round(+m.x0 || 0), z0: Math.round(+m.z0 || 0), step: Math.max(1, +m.step || 1), w: +m.w || 0, h: +m.h || 0, at: Date.now() };
+    this.terrain = { ...(this.terrain || {}), [dim]: meta };
+    await this.ctx.storage.put("terrain", this.terrain);
+    for (const ws of this.sockets()) { const a = this.att(ws); if (a && !a.mod && !a.server) this.send(ws, { t: "terrain", terrain: this.terrain }); }
+  }
   async onModMessage(ws, a, m) {
     const reply = (ok, extra = {}) => { if (m.rid) this.send(ws, { t: ok ? "ok" : "err", rid: m.rid, ...extra }); else if (!ok && extra.msg) this.send(ws, { t: "err", ...extra }); };
     if (a.server) {
+      if (m.t === "terrain") return this.onTerrainPart(m);
+      if (m.t === "terrainMsg") { this.crewcast({ t: "terrainMsg", msg: String(m.msg || "").slice(0, 300) }, x => !x.mod); return; }
       if (m.t === "srvCams") {
         this.srvCams = (Array.isArray(m.names) ? m.names : []).map(n => String(n).replace(/[^A-Za-z0-9_]/g, "").slice(0, 16)).filter(Boolean).slice(0, 60);
         this.ctx.storage.put("srvcams", this.srvCams);
@@ -2139,6 +2382,7 @@ export class Game extends DurableObject {
     if (this.prog && this.prog.clip && this.prog.clip.end > now) t = Math.min(t, this.prog.clip.end + 100);
     if (this.bets && this.bets.settled) { const r = this.bets.settled.at + (this.board.delay || 0) * 1000; if (r > now) t = Math.min(t, r + 300); }
     if (this.poll && this.poll.end > now) t = Math.min(t, this.poll.end + 200);
+    if (this.tbot && this.tbot.on && this.tbot.channel) t = Math.min(t, now + 45000);
     if (t === Infinity) return;
     const cur = await this.ctx.storage.getAlarm();
     if (!cur || cur > t || cur < now) await this.ctx.storage.setAlarm(t);
@@ -2156,6 +2400,8 @@ export class Game extends DurableObject {
     if (this.prog.clip && now >= this.prog.clip.end) { this.prog.clip = null; this.pushProg(false); }
     if (this.bets.settled) { const r = this.bets.settled.at + (this.board.delay || 0) * 1000; if (r <= now + 500 && r > now - 60000) this.pushBets(); }
     if (this.poll && this.poll.end && this.poll.end <= now + 300 && this.poll.end > now - 5000) this.pushPoll();
+    if (this.tbot && this.tbot.on && this.tbot.channel) { if (!this.botWs) this.botStart(); else if (now - (this.botLast || 0) > 360000) { this.botClose(); this.botStart(); } }
+    this.botTick();
     await this.scheduleAlarm();
   }
   async twitchToken(force) {

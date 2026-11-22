@@ -102,6 +102,13 @@ public final class ServerBridge {
             }
             return;
         }
+        if (t.equals("scan")) {
+            MinecraftServer s0 = server; if (s0 == null) return;
+            String dim = m.has("dim") ? m.get("dim").getAsString() : "minecraft:overworld";
+            int cx = m.has("cx") ? m.get("cx").getAsInt() : 0, cz = m.has("cz") ? m.get("cz").getAsInt() : 0, r = m.has("r") ? m.get("r").getAsInt() : 256;
+            s0.execute(() -> sayRemote(TerrainScan.start(s0, dim, cx, cz, r, ServerBridge::sayRemote)));
+            return;
+        }
         if (t.equals("hello")) { MinecraftServer s0 = server; if (s0 != null) for (ServerPlayerEntity p : s0.getPlayerManager().getPlayerList()) wantKeys.add(p.getGameProfile().getName()); }
         if (!(t.equals("hello") || t.equals("cams")) || !m.has("names")) return;
         remoteCams.clear();
@@ -137,6 +144,17 @@ public final class ServerBridge {
     }
 
     /** Signale au site les caméras ajoutées en jeu (pour les afficher côté régie). */
+    /** envoi au site (utilisé par le relevé du terrain) */
+    static boolean push(JsonObject o) {
+        if (sock == null || !sock.online()) return false;
+        sock.send(o); return true;
+    }
+
+    private static void sayRemote(String msg) {
+        CapitolTV.LOG.info("Capitol TV : {}", msg);
+        JsonObject o = new JsonObject(); o.addProperty("t", "terrainMsg"); o.addProperty("msg", msg); push(o);
+    }
+
     private static void reportLocalCams() {
         if (sock == null || !sock.online()) return;
         JsonObject o = new JsonObject();
@@ -268,12 +286,25 @@ public final class ServerBridge {
                             c.getSource().sendFeedback(() -> Text.literal("§6[Capitol TV]§r Liaison : " + st), false);
                             return 1;
                         }))
+                        .then(CommandManager.literal("carte")
+                                .executes(c -> scanCmd(c.getSource(), 256))
+                                .then(CommandManager.argument("rayon", com.mojang.brigadier.arguments.IntegerArgumentType.integer(16, 2048)).executes(c -> scanCmd(c.getSource(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "rayon")))))
                         .then(CommandManager.literal("reload").executes(c -> {
                             loadConfig(); connect();
                             c.getSource().sendFeedback(() -> Text.literal("§6[Capitol TV]§r Configuration rechargée."), false);
                             return 1;
                         }))
                 .then(cameraCmd());
+    }
+
+    /** /capitol carte [rayon] : relève le terrain autour de soi pour la carte du site */
+    private static int scanCmd(ServerCommandSource src, int r) {
+        var pos = src.getPosition();
+        String dim = src.getWorld().getRegistryKey().getValue().toString();
+        MinecraftServer s = src.getServer();
+        String msg = TerrainScan.start(s, dim, (int) Math.floor(pos.x), (int) Math.floor(pos.z), r, txt -> { src.sendFeedback(() -> Text.literal("§6[Capitol TV]§r " + txt), false); sayRemote(txt); });
+        src.sendFeedback(() -> Text.literal("§6[Capitol TV]§r " + msg), false);
+        return 1;
     }
 
     private static boolean mayTeleport(MinecraftServer s, ServerPlayerEntity p) {
@@ -309,6 +340,7 @@ public final class ServerBridge {
     }
 
     private static void onTick(MinecraftServer s) {
+        TerrainScan.tick(s);
         if (sock == null || !sock.online()) { if (events.size() > 200) events.clear(); return; }
         tick++;
         if (cfg.giveStreamKeys && !wantKeys.isEmpty() && tick % 20 == 0) {

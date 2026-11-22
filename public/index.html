@@ -483,6 +483,38 @@ body.theater aside{display:none}
 
 /* ---------- sidebar ---------- */
 aside{border-left:1px solid var(--hair);background:var(--side);display:flex;flex-direction:column;min-height:0}
+/* panneau latéral en tiroir (par-dessus les pages, dont la régie) */
+body.side-open aside{position:fixed;right:0;top:64px;bottom:38px;width:min(380px,92vw);z-index:60;display:flex!important;box-shadow:-18px 0 40px rgba(0,0,0,.55);animation:sideIn .18s ease-out}
+body.side-open.on-antenne:not(.theater) aside{position:static;box-shadow:none;animation:none;width:auto}
+body.side-hide.on-antenne main{grid-template-columns:1fr}
+body.side-hide.on-antenne aside{display:none}
+@keyframes sideIn{from{transform:translateX(30px);opacity:0}}
+.side-btn{position:relative}
+.rp-pair{display:inline-flex;gap:2px}
+.map-scan{display:inline-flex;gap:4px;margin-left:6px}
+/* 2e écran de la régie */
+.s2{display:flex;flex-direction:column;gap:10px;padding:12px 16px;min-height:100%}
+.s2-mons{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.s2-mon h4{display:flex;align-items:center;gap:8px;margin:0 0 6px;font-size:12px;letter-spacing:.16em}
+.s2-mon .stg,.s2-tile .stg{aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden;position:relative}
+.s2-mon .cvw{width:min(100%,calc(52vh*16/9));margin:0 auto}
+.s2-bar,.s2-mvh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.s2-bar .take{width:auto;margin:0;padding:0 26px}
+.s2-l{font-size:11px;letter-spacing:.16em;color:var(--mute)}
+.s2-grid{display:grid;gap:8px}
+.s2-tile{position:relative;cursor:pointer;border:2px solid transparent;border-radius:10px;transition:border-color .15s}
+.s2-tile:hover{border-color:var(--gold-b)}.s2-tile.inpv{border-color:rgba(95,191,138,.7)}.s2-tile.onair{border-color:var(--red)}.s2-tile.picked{border-color:var(--gold-hi);box-shadow:0 0 0 3px rgba(var(--gold-rgb),.35)}
+.s2-tile .stg *{pointer-events:none}
+.s2-pin{position:absolute;top:6px;right:6px;z-index:80;background:rgba(0,0,0,.6);border:1px solid var(--hair2);color:var(--mute);border-radius:6px;width:26px;height:26px;cursor:pointer}.s2-pin.on{color:var(--gold-hi);border-color:var(--gold-b)}
+body.screen2 #pageNav,body.screen2 .tick,body.screen2 #sideBtn{display:none}
+.em-credit{position:absolute;left:1.2%;bottom:1.2%;z-index:58;font:500 max(9px,.85cqw)/1.2 var(--sans);color:rgba(255,255,255,.75);background:rgba(0,0,0,.45);padding:.25cqw .6cqw;border-radius:.4cqw;pointer-events:none;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bg-web{display:flex;flex-direction:column;gap:4px;margin:6px 0;max-height:260px;overflow:auto}
+.bg-web .bw{display:flex;align-items:center;gap:6px;padding:4px 6px;border:1px solid var(--hair);border-radius:8px}
+.bw-t{flex:1;min-width:0;display:flex;flex-direction:column}.bw-t b{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bw-t small{color:var(--mute);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.em-replay.pv .rp-act{position:absolute;right:2%;bottom:3%;display:flex;gap:6px;z-index:5}
+.em-replay.pv{z-index:70;pointer-events:auto;border-radius:inherit;overflow:hidden}
+.notif-box{position:fixed;z-index:400;width:290px;background:var(--panel);border:1px solid var(--hair2);border-radius:12px;padding:14px;box-shadow:0 18px 44px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:4px}
+.side-btn .cnt{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font:700 10px/16px var(--sans);font-style:normal;padding:0 4px}
+.side-btn.on{border-color:var(--gold-b);color:var(--gold-hi)}
 .tabs{display:flex;gap:2px;padding:10px 10px 0;border-bottom:1px solid var(--hair);overflow-x:auto;scrollbar-width:none}
 .tab{position:relative;padding:8px 8px 11px;background:none;border:0;color:var(--mute);font-weight:700;font-size:12.5px;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .tab:hover{color:var(--ink2)}
@@ -827,7 +859,7 @@ body.overlay #flashLayer{top:40px}
 }
 </style>
 </head>
-<body>
+<body class="on-antenne">
 
 <header class="top">
   <div class="brand" id="brand"></div>
@@ -857,6 +889,8 @@ body.overlay #flashLayer{top:40px}
   </div>
   <div class="hactions">
     <button class="btn online-btn" id="onlineBtn" title="Qui est sur Capitol TV en ce moment"><span class="dot"></span><b id="onlineN">0</b><span class="lbl-txt">en ligne</span></button>
+    <button class="btn icon side-btn crew-only" id="notifBtn" title="Notifications"><span data-ic="bell"></span></button>
+    <button class="btn icon side-btn" id="sideBtn" title="Panneau latéral : tributs, alertes, comms, terrain, journal…"><span data-ic="side"></span><i class="cnt hide" id="sideCnt">0</i></button>
     <button class="btn icon" id="helpBtn" title="Tips (?)"><span data-ic="help"></span></button>
     <button class="btn icon set-only" id="setBtn" title="Réglages de la régie"><span data-ic="gear"></span></button>
     <a class="btn primary hide" id="guestLogin" href="/auth/login" title="Se connecter avec Discord pour signaler des actions">Se connecter</a>
@@ -1129,6 +1163,7 @@ const ICONS = {
   grid: '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>',
   shuffle: '<path d="M4 7h3.5c4 0 5 10 9 10H20M4 17h3.5c1.6 0 2.7-1.6 3.6-3.4M14.6 9.6C15.5 8.1 16.5 7 18 7h2M17.5 4.5 20 7l-2.5 2.5M17.5 14.5 20 17l-2.5 2.5"/>',
   tour: '<path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v4.5h-4.5"/>',
+  bell: '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
   side: '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M14.5 4.5v15"/>',
   mega: '<path d="M4 10v4h3l7 4V6L7 10H4Z"/><path d="M17.5 9a4 4 0 0 1 0 6"/>',
   para: '<path d="M3 11a9 7 0 0 1 18 0"/><path d="M3 11c1.5-1.5 3-1.5 4.5 0 1.5-1.5 3-1.5 4.5 0 1.5-1.5 3-1.5 4.5 0 1.5-1.5 3-1.5 4.5 0"/><path d="M3 11l7.5 7.5M21 11l-7.5 7.5M12 11v7.5"/><rect x="10" y="18.5" width="4" height="3" rx=".6"/>',
@@ -1225,7 +1260,7 @@ function applyTheme() {
   r.setProperty('--gold-rgb', g ? (n => [n >> 16, n >> 8 & 255, n & 255].join(','))(parseInt(g.slice(1), 16)) : '214,178,97');
   for (const [k, v] of Object.entries(g ? { '--gold': g, '--gold-hi': mix(g, .55), '--gold-lo': mix(g, -.4), '--gold-a': a(g, .10), '--gold-b': a(g, .24) } : { '--gold': '', '--gold-hi': '', '--gold-lo': '', '--gold-a': '', '--gold-b': '' })) v ? r.setProperty(k, v) : r.removeProperty(k);
   for (const [k, v] of Object.entries(rd ? { '--red': rd, '--red-hi': mix(rd, .35), '--red-a': a(rd, .10), '--red-b': a(rd, .30) } : { '--red': '', '--red-hi': '', '--red-a': '', '--red-b': '' })) v ? r.setProperty(k, v) : r.removeProperty(k);
-  document.title = brandName() + ' — Couverture des Jeux';
+  NOTIF.title();
   const up = brandName().toUpperCase();
   for (const el of document.querySelectorAll('#brand .word, #tickLbl .word, .em-bar h3')) if (el.textContent !== up) el.textContent = up;
 }
@@ -1261,6 +1296,7 @@ const canMap = () => { if (S.me && IS_OVERLAY) return !!(PROG.pub && PROG.pub.gf
 const nowS = () => Date.now() + (S.skew || 0);
 const wOf = l => ((S.presence && S.presence.counts) || {})[l] || 0;
 const fmtDelay = s => !s ? 'direct' : s % 60 === 0 ? (s / 60) + ' min' : s < 60 ? s + ' s' : Math.floor(s / 60) + ' min ' + (s % 60) + ' s';
+const fmtDur = ms => { const s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 const AV0 = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="#202026"/><circle cx="20" cy="15.5" r="7" fill="#77736b"/><path d="M6 37c1.5-8 7-12 14-12s12.5 4 14 12z" fill="#77736b"/></svg>');
 const avSrc = x => esc((x && x.av) || AV0);
 const PERM_LABEL = { admin: 'Régie', mod: 'Modération', member: 'Équipe', viewer: 'Spectateur' };
@@ -1421,6 +1457,9 @@ const NET = {
       case 'team': S.team = m.team || []; if (m.roles) S.roles = m.roles; renderTeam(); renderOnline(); refreshSettings('access'); refreshSettings('roles'); PROG.renderSources(); CAM.renderComms(); break;
       case 'prog': case 'progEd': case 'onair': case 'media': PROG.onMsg(m); break;
       case 'srvCams': S.srvCams = m.names || []; refreshSettings('cams'); break;
+      case 'terrain': TERRAIN.set(m.terrain); break;
+      case 'bot': S.bot = m.bot; refreshSettings('twitch'); break;
+      case 'terrainMsg': toastInfo('Relevé du terrain', m.msg || ''); if (S.page === 'carte') CAM.renderTools(); break;
       case 'pubs': RTC.onPubs(m.pubs); break;
       case 'vpref': RTC.vpref = m.vpref || {}; if (S.page === 'regie') PROG.renderSources(); break;
       case 'rtcUse': { const was = RTC.saving(); RTC.use = m.use; refreshSettings('cams'); if (was !== RTC.saving()) { RTC.prune(); PROG.layout(); renderStage(); } break; }
@@ -1522,13 +1561,14 @@ function applyRole() {
 function onHello(m) {
   S.me = m.me; S.skew = (m.now || Date.now()) - Date.now();
   S.team = m.team || []; S.banned = m.banned || {}; S.roles = m.roles || [];
-  RTC.onHello(m); CAM.onHello(m); PROG.onHello(m); S.srvCams = m.srvCams || []; GAMES.onHello(m); CLIPS.onList(m.clips); TALK.onState(m.talk || null); RTC.vq = (m.rtc && m.rtc.vq) || null;
+  TERRAIN.set(m.terrain); S.bot = m.bot || null; RTC.onHello(m); CAM.onHello(m); PROG.onHello(m); S.srvCams = m.srvCams || []; GAMES.onHello(m); CLIPS.onList(m.clips); TALK.onState(m.talk || null); RTC.vq = (m.rtc && m.rtc.vq) || null;
   S.alertsReady = false; S.seen = new Set(); S.alerts = {};
   if (m.alerts) onAlerts(m.alerts);
   onPresence(m.presence || { n: 0, counts: {}, team: {} });
   onLive(m.live);
   S.boardReady = false; onBoard(m.board);
   applyRole(); hideConn();
+  if (H0 === 'reglages-twitch' && isAdmin() && !S.botOpened) { S.botOpened = true; history.replaceState(null, '', location.pathname); setTimeout(() => openSettings('twitch'), 300); }
   S.watchKey = ''; sendWatch();
   if (S.subbed) NET.send({ t: 'sub', on: true });
   if (isStaff() && S.presenter !== !!S.me.pub) NET.send({ t: 'view', pub: S.presenter });
@@ -1585,11 +1625,25 @@ function setPage(p) {
   S.page = p; S.teamOpen = p === 'equipe'; S.shell = '';
   $$('#pageNav [data-page]').forEach(b => b.classList.toggle('on', b.dataset.page === p));
   $('#pageView').classList.toggle('hide', p === 'antenne');
+  document.body.classList.toggle('on-antenne', p === 'antenne'); sideSync();
   $('#pageView').scrollTop = 0;
   if (p !== 'antenne') closeWall();
   renderPage();
 }
-function renderPage() { $('#pageView').onclick = null; if (S.page === 'equipe') renderTeam(); else if (S.page === 'tributs') renderTributesPage(); else if (S.page === 'sponsors') renderSponsors(); else if (S.page === 'carte') CAM.renderMap(); else if (S.page === 'direct') PROG.renderDirect(); else if (S.page === 'regie') PROG.renderEditor(); else if (S.page === 'jeux') GAMES.render(); else if (S.page === 'memorial') renderMemorial(); else if (S.page === 'alliances') renderAlliances(); else if (S.page === 'clips') CLIPS.render(); CAM.mapSub(S.page === 'carte' || (S.page === 'direct' && PROG.wantsMap())); PROG.leave(); }
+function renderPage() { $('#pageView').onclick = null; if (S.page === 'equipe') renderTeam(); else if (S.page === 'tributs') renderTributesPage(); else if (S.page === 'sponsors') renderSponsors(); else if (S.page === 'carte') CAM.renderMap(); else if (S.page === 'direct') PROG.renderDirect(); else if (S.page === 'regie') PROG.renderEditor(); else if (S.page === 'regie2') SCREEN2.render(); else if (S.page === 'jeux') GAMES.render(); else if (S.page === 'memorial') renderMemorial(); else if (S.page === 'alliances') renderAlliances(); else if (S.page === 'clips') CLIPS.render(); CAM.mapSub(S.page === 'carte' || (S.page === 'direct' && PROG.wantsMap())); PROG.leave(); }
+/* bouton du panneau latéral : sur l'antenne il le masque/affiche, ailleurs il l'ouvre en tiroir */
+function sideSync() {
+  const ant = S.page === 'antenne' && !S.theater, b = $('#sideBtn'); if (!b) return;
+  b.classList.toggle('on', ant ? !document.body.classList.contains('side-hide') : document.body.classList.contains('side-open'));
+  const n = (+($('#tabCnt') && !$('#tabCnt').classList.contains('hide') ? $('#tabCnt').textContent : 0)) + (() => { try { return CAM.unread || 0; } catch (e) { return 0; } })();
+  $('#sideCnt').textContent = n; $('#sideCnt').classList.toggle('hide', !n || (ant && !document.body.classList.contains('side-hide')) || document.body.classList.contains('side-open'));
+}
+function toggleSide(force) {
+  const ant = S.page === 'antenne' && !S.theater;
+  if (ant) { document.body.classList.remove('side-open'); document.body.classList.toggle('side-hide', force === undefined ? !document.body.classList.contains('side-hide') : !force); }
+  else document.body.classList.toggle('side-open', force === undefined ? !document.body.classList.contains('side-open') : force);
+  sideSync();
+}
 function openTeam() { S.page = ''; setPage('equipe'); }
 function closeTeam() { S.page = ''; setPage('antenne'); }
 
@@ -2204,7 +2258,7 @@ function renderAlerts() {
     </div>`;
   }).join('') : `<div class="empty">${S.aFilter === 'pending' ? 'Aucune alerte en attente.<br>Les spectateurs signalent les actions depuis chaque flux.' : 'Aucune alerte reçue.'}</div>`;
   const n = pendingAll().length;
-  $('#tabCnt').textContent = n; $('#tabCnt').classList.toggle('hide', !n);
+  $('#tabCnt').textContent = n; $('#tabCnt').classList.toggle('hide', !n); sideSync();
 }
 const EV_ICON = { death: 'fall', gift: 'para', flash: 'mega', mark: 'mark', day: 'sun', victor: 'crown', revive: 'undo', status: 'band', tribute: 'moon' };
 function evMatches(e, f) {
@@ -2346,6 +2400,184 @@ function toastInfo(title, text, bad) {
   el.innerHTML = `<div class="type">${esc(title)}</div>${text ? `<small>${esc(text)}</small>` : ''}`;
   el.onclick = () => el.remove(); toastBox(el, 5000);
 }
+/* ---------- 2e écran de la régie : grands moniteurs, plans, multiview ---------- */
+const SCREEN2 = {
+  bc: (() => { try { return new BroadcastChannel('ctv-regie'); } catch (e) { return null; } })(),
+  pins: LS.get('ctv.s2pins', []), n: LS.get('ctv.s2n', 9), q: '', tiles: new Map(),
+  open() {
+    const u = location.origin + location.pathname + '#ecran2';
+    if (window.ctvApp && window.ctvApp.openScreen2) { window.ctvApp.openScreen2(u); return; }
+    const w = window.open(u, 'ctv-ecran2', 'popup,width=1600,height=900');
+    if (!w) toastInfo('Fenêtre bloquée', 'Autorise les fenêtres pop-up pour ce site, puis réessaie.', true);
+    else toastInfo('2e écran ouvert', 'Glisse la fenêtre sur ton 2e écran puis passe-la en plein écran (F11). Coupe l\'image des moniteurs ici pour économiser les données.');
+  },
+  init() { if (this.bc) this.bc.onmessage = e => { const m = e.data || {}; if (m.t === 's2pick' && S.page === 'regie' && PROG.ed) PROG.pickFromScreen2(m.k, m.ref); if (m.t === 's2pick' && S.page !== 'regie' && !/^ecran2/i.test(H0)) toastInfo('2e écran', 'Ouvre la page Réalisation dans la fenêtre principale pour placer les POV.', true); }; },
+  render() {
+    const pv = $('#pageView');
+    if (!hasPerm('program')) { pv.innerHTML = '<div class="team-in"><div class="empty">Réservé à la réalisation.</div></div>'; return; }
+    if (!$('#s2Pv')) {
+      pv.innerHTML = `<div class="s2">
+        <div class="s2-mons">
+          <div class="s2-mon"><h4><b>APERÇU</b> <span class="note" id="s2PvN"></span><span style="flex:1"></span><button class="btn sm ghost mon-b" data-act="pv">Interagir</button></h4><div class="cvw"><div class="stg" id="s2Pv"></div></div></div>
+          <div class="s2-mon"><h4><b style="color:var(--red-hi)">● ANTENNE</b> <span class="note" id="s2PgN"></span><span style="flex:1"></span><button class="btn sm ghost mon-b" data-act="pg">Interagir</button></h4><div class="cvw"><div class="stg" id="s2Pg"></div></div></div>
+        </div>
+        <div class="s2-bar"><b class="s2-l">PLANS</b><div class="scn" id="s2Sc"></div><span style="flex:1"></span><button class="btn take" id="s2Take">À L'ANTENNE ▶</button></div>
+        <div class="s2-mvh"><b class="s2-l">MULTIVIEW</b><span class="note">clic : dans l'Aperçu (à la place de la source sélectionnée) · ★ : épingler</span><span style="flex:1"></span>
+          <input class="inp" id="s2Q" placeholder="Ajouter une POV : n° ou pseudo…" style="width:220px;height:30px" autocomplete="off"><select class="mini-sel" id="s2N">${[4, 6, 9, 12, 16].map(n => `<option value="${n}" ${n === this.n ? 'selected' : ''}>${n} cases</option>`).join('')}</select></div>
+        <div class="s2-grid" id="s2Grid"></div></div>`;
+      this.pv = new Stage($('#s2Pv'), { delay: 0, layer: 'auto', sound: false });
+      this.pg = new Stage($('#s2Pg'), { delay: 0, layer: 'auto', sound: false, record: true });
+      this.tiles.forEach(t => t.st.destroy()); this.tiles.clear();
+      pv.querySelectorAll('[data-act]').forEach(b => b.onclick = () => { const w = $('#s2' + (b.dataset.act === 'pv' ? 'Pv' : 'Pg')).closest('.cvw'), on = !w.classList.contains('act'); w.classList.toggle('act', on); b.classList.toggle('on', on); });
+      $('#s2Sc').onclick = e => { const b = e.target.closest('[data-sc]'); if (!b || !PROG.ed) return; PROG.ed.preview = b.dataset.sc; PROG.dirty = Date.now(); NET.req({ t: 'progSave', prog: PROG.ed }); this.update(false); };
+      $('#s2Take').onclick = () => PROG.take();
+      $('#s2N').onchange = e => { this.n = +e.target.value; LS.set('ctv.s2n', this.n); this.renderGrid(); };
+      $('#s2Q').onkeydown = e => { if (e.key !== 'Enter') return; const q = e.target.value.trim().toLowerCase(), t = /^\d+$/.test(q) ? byNum(+q) : S.board.tributes.find(x => x.login.toLowerCase() === q || x.name.toLowerCase().includes(q)); if (!t) { e.target.classList.add('bad'); return; } e.target.classList.remove('bad'); e.target.value = ''; this.pin('trib', t.id, true); };
+      $('#s2Grid').onclick = e => {
+        const pn = e.target.closest('[data-pin]'); if (pn) { const [k, ref] = pn.dataset.pin.split('|'); this.pin(k, ref); return; }
+        const t = e.target.closest('[data-tile]'); if (!t) return; const [k, ref] = t.dataset.tile.split('|');
+        if (this.bc) this.bc.postMessage({ t: 's2pick', k, ref }); else toastInfo('2e écran', 'Ce navigateur ne relie pas les deux fenêtres.', true);
+        t.classList.add('picked'); setTimeout(() => t.classList.remove('picked'), 600);
+      };
+    }
+    this.update(false);
+  },
+  pin(k, ref, only) { const key = k + '|' + ref, i = this.pins.indexOf(key); if (i >= 0 && !only) this.pins.splice(i, 1); else if (i < 0) this.pins.unshift(key); this.pins = this.pins.slice(0, 32); LS.set('ctv.s2pins', this.pins); this.renderGrid(); },
+  update(cut) {
+    if (S.page !== 'regie2' || !$('#s2Pv') || !PROG.ed) return;
+    const sc = PROG.ed.scenes.find(x => x.id === PROG.ed.preview);
+    this.pv.set(PROG.pubFromScene(sc), false); this.pg.set(PROG.pub, cut);
+    $('#s2PvN').textContent = sc ? sc.name : ''; $('#s2PgN').textContent = PROG.pub && PROG.pub.on ? PROG.pub.scene : 'hors antenne';
+    $('#s2Sc').innerHTML = PROG.ed.scenes.map((x, i) => `<button class="btn sm ${x.id === PROG.ed.preview ? 'on' : ''} ${x.id === PROG.ed.live ? 'live' : ''}" data-sc="${esc(x.id)}">${esc(x.name)} <span class="note">${x.items.length}</span></button>`).join('');
+    this.renderGrid();
+  },
+  /* sources du multiview : épinglées, puis celles des plans Antenne et Aperçu, puis les autres POV en ligne */
+  list() {
+    const out = [], seen = new Set(), add = (k, ref) => { const key = k + '|' + ref; if (seen.has(key)) return; const it = { k, ref, x: 0, y: 0, w: 100, h: 100, id: 'mv' + key }; if (!PROG.pubSrc(it)) return; seen.add(key); out.push(it); };
+    for (const p of this.pins) { const [k, ref] = p.split('|'); add(k, ref); }
+    for (const id of [PROG.ed.live, PROG.ed.preview]) { const sc = PROG.ed.scenes.find(x => x.id === id); if (sc) sc.items.forEach(i => i.k !== 'media' && add(i.k, i.ref)); }
+    for (const m of S.team) if (RTC.live('c:' + m.id)) add('cam', m.id);
+    for (const t of sortedByNum()) if (!isDead(t) && (RTC.live('t:' + t.id) || liveOf(t.login)) && !PROG.povBlocked('t:' + t.id)) add('trib', t.id);
+    return out.slice(0, this.n);
+  },
+  renderGrid() {
+    const g = $('#s2Grid'); if (!g) return;
+    const L = this.list(), keys = new Set(L.map(i => i.k + '|' + i.ref)), cols = this.n <= 4 ? 2 : this.n <= 9 ? 3 : 4;
+    g.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+    for (const [key, t] of this.tiles) if (!keys.has(key)) { t.st.destroy(); t.el.remove(); this.tiles.delete(key); }
+    const live = new Set(), prev = new Set();
+    const lsc = PROG.ed.scenes.find(x => x.id === PROG.ed.live), psc = PROG.ed.scenes.find(x => x.id === PROG.ed.preview);
+    (lsc ? lsc.items : []).forEach(i => live.add(i.k + '|' + i.ref)); (psc ? psc.items : []).forEach(i => prev.add(i.k + '|' + i.ref));
+    L.forEach((it, idx) => {
+      const key = it.k + '|' + it.ref; let t = this.tiles.get(key);
+      if (!t) { const el = document.createElement('div'); el.className = 's2-tile'; el.dataset.tile = key; el.innerHTML = '<div class="stg"></div><button class="s2-pin" data-pin="' + esc(key) + '" title="Épingler">★</button>'; t = { el, st: new Stage(el.querySelector('.stg'), { delay: 0, layer: 'q', sound: false }) }; this.tiles.set(key, t); }
+      if (g.children[idx] !== t.el) g.insertBefore(t.el, g.children[idx] || null);
+      t.el.classList.toggle('onair', live.has(key)); t.el.classList.toggle('inpv', prev.has(key)); t.el.querySelector('.s2-pin').classList.toggle('on', this.pins.includes(key));
+      t.st.set(PROG.pubFromScene({ id: 'mv', name: '', items: [it] }), false);
+    });
+  }
+};
+/* fond de carte : relevé du terrain envoyé par le mod serveur (/capitol carte) */
+const TERRAIN = {
+  meta: {}, cache: {}, HS: 0.8,
+  set(t) { this.meta = t || {}; for (const d of Object.keys(this.cache)) if (!this.meta[d] || this.cache[d].id !== this.meta[d].id) delete this.cache[d]; try { if (S.page === 'carte') CAM.draw(); } catch (e) {} },
+  get(dim) {
+    const m = this.meta[dim]; if (!m) return null;
+    let c = this.cache[dim];
+    if (c && c.id === m.id) return c.ready ? c : null;
+    c = this.cache[dim] = { id: m.id, ready: false };
+    const load = k => new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = '/terrain/' + encodeURIComponent(dim) + '/' + k + '?v=' + m.id; });
+    Promise.all([load('c'), load('h')]).then(([ci, hi]) => { if (this.cache[dim] !== c) return; this.build(c, m, ci, hi); c.ready = true; try { CAM.draw(); } catch (e) {} }).catch(() => { c.err = true; });
+    return null;
+  },
+  px(img) { const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height; const g = cv.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0); return g.getImageData(0, 0, img.width, img.height).data; },
+  build(c, m, ci, hi) {
+    const w = m.w, h = m.h, C = this.px(ci), H = this.px(hi), n = w * h;
+    const hy = new Float32Array(n), dp = new Uint8Array(n), col = new Uint32Array(n);
+    let ymin = 1e9, ymax = -1e9;
+    for (let i = 0; i < n; i++) {
+      const y = (H[i * 4] << 8 | H[i * 4 + 1]) - 64; hy[i] = y; dp[i] = H[i * 4 + 2];
+      col[i] = C[i * 4] << 16 | C[i * 4 + 1] << 8 | C[i * 4 + 2];
+      if (y < ymin) ymin = y; if (y > ymax) ymax = y;
+    }
+    const at = (i, j) => hy[Math.max(0, Math.min(h - 1, j)) * w + Math.max(0, Math.min(w - 1, i))];
+    const rgb = (k, f, d) => { let r = col[k] >> 16 & 255, g = col[k] >> 8 & 255, b = col[k] & 255; if (!col[k]) { r = 30; g = 30; b = 34; } if (d) { const t = Math.min(1, d / 14); r = r * (1 - t * .55); g = g * (1 - t * .45); b = b * (1 - t * .2) + 30 * t; } return [Math.min(255, r * f), Math.min(255, g * f), Math.min(255, b * f)]; };
+    // vue de dessus, ombrage du relief (lumière au nord-ouest)
+    const top = document.createElement('canvas'); top.width = w; top.height = h;
+    const tg = top.getContext('2d'), ti = tg.createImageData(w, h), T = new Uint32Array(ti.data.buffer);
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+      const k = j * w + i, dx = at(i + 1, j) - at(i - 1, j), dz = at(i, j + 1) - at(i, j - 1);
+      const f = dp[k] ? 1 : Math.max(.55, Math.min(1.35, 1 - (dx + dz) * .09 / m.step));
+      const [r, g, b] = rgb(k, f, dp[k]); T[k] = 255 << 24 | b << 16 | g << 8 | r;
+    }
+    tg.putImageData(ti, 0, 0);
+    // vue isométrique (2:1), dessinée de l'arrière vers l'avant
+    const HS = this.HS / m.step, off = Math.ceil(ymax * HS) + 2, IW = w + h, IH = Math.ceil((w + h) / 2 + (ymax - ymin) * HS) + 6;
+    const iso = document.createElement('canvas'); iso.width = IW; iso.height = IH;
+    const ig = iso.getContext('2d'), ii = ig.createImageData(IW, IH), I = new Uint32Array(ii.data.buffer);
+    const put = (x, y, r, g, b) => { if (x >= 0 && y >= 0 && x < IW && y < IH) I[y * IW + x] = 255 << 24 | (b | 0) << 16 | (g | 0) << 8 | (r | 0); };
+    for (let sIdx = 0; sIdx < w + h - 1; sIdx++) for (let i = Math.max(0, sIdx - h + 1); i <= Math.min(w - 1, sIdx); i++) {
+      const j = sIdx - i, k = j * w + i, y = hy[k];
+      const u = i - j + h - 1, v = Math.round((i + j) / 2 - y * HS + off);
+      const dx = at(i + 1, j) - at(i - 1, j), dz = at(i, j + 1) - at(i, j - 1), f = dp[k] ? 1.05 : Math.max(.6, Math.min(1.3, 1 - (dx + dz) * .07 / m.step));
+      const [r, g, b] = rgb(k, f, dp[k]);
+      put(u, v, r, g, b); put(u + 1, v, r, g, b); put(u, v + 1, r, g, b); put(u + 1, v + 1, r, g, b);
+      const dropL = Math.max(1, Math.round((y - at(i, j + 1)) * HS) + 1), dropR = Math.max(1, Math.round((y - at(i + 1, j)) * HS) + 1);
+      for (let d = 2; d <= dropL; d++) put(u, v + d, r * .62, g * .62, b * .62);
+      for (let d = 2; d <= dropR; d++) put(u + 1, v + d, r * .78, g * .78, b * .78);
+    }
+    ig.putImageData(ii, 0, 0);
+    Object.assign(c, { top, iso, w, h, step: m.step, x0: m.x0, z0: m.z0, ymin, ymax, off, U0: m.x0 - m.z0 - (h - 1) * m.step, V0: (m.x0 + m.z0) / 2 - off * m.step, hy });
+  },
+  /* hauteur du sol à une position (pour poser les caméras / repères en vue iso) */
+  yAt(c, x, z) { const i = Math.round((x - c.x0) / c.step), j = Math.round((z - c.z0) / c.step); return i < 0 || j < 0 || i >= c.w || j >= c.h ? null : c.hy[j * c.w + i]; }
+};
+/* notifications système (fenêtre en arrière-plan) + compteur dans le titre de l'onglet */
+const NOTIF = {
+  KINDS: [['alert', 'Alertes des spectateurs'], ['msg', 'Messages (comms)'], ['talk', 'Demandes d\'interphone'], ['req', 'Demandes de couverture'], ['death', 'Morts détectées'], ['perf', 'Captures qui font ramer']],
+  prefs: Object.assign({ alert: true, msg: true, talk: true, req: true, death: true, perf: true, sound: true }, LS.get('ctv.notif', {})),
+  unseen: 0,
+  supported() { return 'Notification' in window; },
+  granted() { return this.supported() && Notification.permission === 'granted'; },
+  ask() { if (this.supported() && Notification.permission === 'default') return Notification.requestPermission().then(() => this.render()); return Promise.resolve(); },
+  away() { return document.hidden || !document.hasFocus(); },
+  push(kind, title, body, go) {
+    if (!isCrew() || !this.prefs[kind]) return;
+    if (!this.away()) return;
+    this.unseen++; this.title();
+    try { if (window.ctvApp && window.ctvApp.attention) window.ctvApp.attention(); } catch (e) {}
+    if (!this.granted()) return;
+    try {
+      const n = new Notification(title, { body: String(body || '').slice(0, 180), icon: CONFIG.logo || undefined, tag: kind + ':' + title, renotify: true, silent: !this.prefs.sound });
+      n.onclick = () => { try { window.focus(); } catch (e) {} if (go) go(); n.close(); };
+    } catch (e) {}
+  },
+  title() { const base = brandName() + ' — Couverture des Jeux'; document.title = (this.unseen ? '(' + this.unseen + ') ' : '') + base; },
+  seen() { if (this.unseen) { this.unseen = 0; this.title(); } },
+  render() {
+    const box = $('#notifBox'); if (!box) return;
+    const perm = !this.supported() ? 'Ce navigateur ne gère pas les notifications.' : Notification.permission === 'granted' ? 'Notifications autorisées.' : Notification.permission === 'denied' ? 'Notifications bloquées : autorise-les dans les réglages du navigateur (icône à gauche de l\'adresse).' : '';
+    box.innerHTML = `<b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">NOTIFICATIONS</b>
+      <p class="note" style="margin:6px 0 8px">Quand la fenêtre est en arrière-plan.</p>
+      ${this.supported() && Notification.permission === 'default' ? '<button class="btn sm primary" data-nask style="margin-bottom:8px">Autoriser les notifications</button>' : `<p class="note" style="margin:0 0 8px">${perm}</p>`}
+      ${this.KINDS.map(([k, l]) => `<label class="switch"><input type="checkbox" data-nk="${k}" ${this.prefs[k] ? 'checked' : ''}> ${l}</label>`).join('')}
+      <label class="switch"><input type="checkbox" data-nk="sound" ${this.prefs.sound ? 'checked' : ''}> Son de notification</label>
+      <button class="btn sm ghost" data-ntest style="margin-top:8px">Tester</button>`;
+  },
+  init() {
+    const b = $('#notifBtn'); if (!b) return;
+    const box = document.createElement('div'); box.id = 'notifBox'; box.className = 'notif-box hide'; document.body.appendChild(box);
+    b.onclick = e => { e.stopPropagation(); box.classList.toggle('hide'); if (!box.classList.contains('hide')) { const r = b.getBoundingClientRect(); box.style.top = (r.bottom + 8) + 'px'; box.style.right = Math.max(8, innerWidth - r.right) + 'px'; this.render(); this.ask(); } };
+    document.addEventListener('click', e => { if (!box.contains(e.target) && e.target !== b) box.classList.add('hide'); });
+    box.addEventListener('change', e => { const k = e.target.dataset.nk; if (k) { this.prefs[k] = e.target.checked; LS.set('ctv.notif', this.prefs); } });
+    box.addEventListener('click', e => {
+      if (e.target.closest('[data-nask]')) this.ask();
+      if (e.target.closest('[data-ntest]')) { toastInfo('Test', 'Mets la fenêtre en arrière-plan : une notification arrive dans 4 s.'); setTimeout(() => { const f = this.away; this.away = () => true; this.push('alert', 'Test de notification', 'Tout fonctionne.'); this.away = f; }, 4000); }
+    });
+    const back = () => { if (!document.hidden && document.hasFocus()) this.seen(); };
+    document.addEventListener('visibilitychange', back); window.addEventListener('focus', back);
+  }
+};
 function toastAlert(id, a) {
   const t = byLogin(a.ch), el = document.createElement('div');
   el.className = 'toast' + (a.urgent ? ' urgent' : '');
@@ -2560,6 +2792,22 @@ function refreshSettings(sec) {
   const ae = document.activeElement; if (ae && $('#spane').contains(ae) && ae.matches('input,textarea,select')) return;
   renderSettings();
 }
+/* bot Twitch : sondages, pronostics et annonces dans le chat */
+function botSettingsHtml() {
+  const B = S.bot || {}, st = { on: '<span class="ok">● Connecté au chat</span>', connecting: 'Connexion…', retry: '<b style="color:var(--warn)">Reconnexion…</b>', off: 'Arrêté' }[B.state || 'off'] || '';
+  return `<div class="sect"><h4>${ic('mega')} Bot Twitch (chat)</h4>
+    <p class="note" style="margin-top:0">Les spectateurs du stream jouent depuis le chat Twitch : <code>!1</code> <code>!2</code>… votent au sondage en cours (comptés avec les votes du site), <code>!pari 7 200</code> mise 200 points sur le tribut n°7, <code>!points</code>, <code>!tributs</code>, <code>!aide</code>. Le bot annonce les sondages, leurs résultats, les morts et le vainqueur, au rythme du différé.</p>
+    <div class="row"><label class="f"><span class="lbl2">Chaîne Twitch du stream</span><input class="inp" id="botCh" value="${esc(B.channel || '')}" placeholder="pierreshow"></label>
+      <label class="switch" style="margin:22px 0 0"><input type="checkbox" id="botOn" ${B.on ? 'checked' : ''}> Bot actif</label>
+      <label class="switch" style="margin:22px 0 0"><input type="checkbox" id="botCmds" ${B.cmds !== false ? 'checked' : ''}> Commandes des spectateurs</label></div>
+    <p class="note">${st}${B.err ? ' · <b style="color:var(--red-hi)">' + esc(B.err) + '</b>' : ''}</p>
+    <div class="row">${['poll:Annoncer les sondages', 'result:Résultats des sondages', 'death:Morts (avec le différé)', 'victor:Vainqueur'].map(x => { const [k, l] = x.split(':'); return `<label class="switch"><input type="checkbox" data-botann="${k}" ${(B.ann || {})[k] !== false ? 'checked' : ''}> ${l}</label>`; }).join('')}</div>
+    <p class="note"><b style="color:var(--ink2)">Compte du bot :</b> ${B.account ? '<b style="color:var(--ink)">' + esc(B.account) + '</b> (il répond et annonce)' : 'aucun : le bot lit le chat (votes et paris comptés) mais ne peut pas écrire.'}</p>
+    ${B.oauth ? `<div class="gx-row"><a class="btn sm" href="/twitchbot/start?o=${encodeURIComponent(location.origin)}">${B.account ? 'Changer de compte' : 'Connecter le compte du bot'}</a>${B.account ? '<button class="btn sm ghost" data-a="botOut">Déconnecter</button><button class="btn sm ghost" data-a="botTest">Message de test</button>' : ''}</div>
+      <p class="note">Connecte-toi sur Twitch <b>avec le compte du bot</b> (ex. CapitolTVBot), pas le tien, puis donne l'accès au chat. Pense à mettre le bot modérateur de la chaîne (<code>/mod nomdubot</code>) pour qu'il ne soit pas limité.</p>`
+    : `<p class="note">Pour que le bot écrive dans le chat, il faut l'application Twitch ci-dessus (TWITCH_CLIENT_ID et TWITCH_CLIENT_SECRET), avec en plus l'URL de redirection <code>${esc(location.origin)}/twitchbot/cb</code>.</p>`}
+  </div>`;
+}
 function renderSettings() {
   $$('#snav [data-s]').forEach(b => b.classList.toggle('on', b.dataset.s === S.setSection));
   const b = S.board, pub = location.origin + location.pathname, P = $('#spane');
@@ -2676,7 +2924,8 @@ function renderSettings() {
         <label class="f" style="flex:0 0 150px"><span class="lbl2">Couleur principale</span><input class="inp" id="thG" type="color" value="${esc(t.gold || '#d6b261')}" style="padding:2px;height:36px"></label>
         <label class="f" style="flex:0 0 150px"><span class="lbl2">Couleur « direct »</span><input class="inp" id="thR" type="color" value="${esc(t.red || '#d0223f')}" style="padding:2px;height:36px"></label></div>
       <div class="gx-row"><button class="btn sm ghost" id="thReset">Couleurs d'origine</button></div></div>`;
-    const upd = () => { b.theme = { name: $('#thN').value.trim(), gold: $('#thG').value, red: $('#thR').value }; applyTheme(); commit(false); };
+    // toujours sur le tableau actuel (S.board est remplacé à chaque mise à jour du serveur)
+    const upd = () => { S.board.theme = { name: $('#thN').value.trim(), gold: $('#thG').value, red: $('#thR').value }; applyTheme(); commit(false); };
     P.oninput = e => { if (e.target.id && e.target.id.startsWith('th')) upd(); };
     $('#thReset').onclick = () => { $('#thG').value = '#d6b261'; $('#thR').value = '#d0223f'; upd(); };
   } else if (sec === 'fund') {
@@ -2750,7 +2999,8 @@ function renderSettings() {
           <li>Génère un <b>secret</b> et enregistre-le : <code>npx wrangler secret put TWITCH_CLIENT_SECRET</code></li>
           <li><code>npx wrangler deploy</code> — le statut s'active tout seul.</li></ol>
         <button class="btn" data-a="ttvPoll" style="margin-top:10px">${ic('tour')}Tester maintenant</button>`}
-    </div>`;
+    </div>
+    ${botSettingsHtml()}`;
   } else if (sec === 'access') {
     const pub = location.origin + '/', bans = Object.entries(S.banned || {}).sort((x, y) => y[1].at - x[1].at);
     P.innerHTML = `
@@ -2915,6 +3165,10 @@ function settingsEvents() {
     if (id === 'tourSec') { S.tourSec = Math.max(10, Math.min(600, parseInt(tg.value, 10) || 40)); LS.set('ctv.tourSec', S.tourSec); if (S.tour) toggleTour(true); }
     if (id === 'oTheater') setTheater(tg.checked);
     if (id === 'oChat') { S.chat = tg.checked; LS.set('ctv.chat', S.chat); renderChat(); }
+    if (id === 'botCh' || id === 'botOn' || id === 'botCmds' || tg.dataset.botann) {
+      const ann = {}; $$('[data-botann]', P).forEach(x => ann[x.dataset.botann] = x.checked);
+      NET.req({ t: 'botCfg', cfg: { channel: $('#botCh').value.trim(), on: $('#botOn').checked, cmds: $('#botCmds').checked, ann } }).then(r => { S.bot = r.st; renderSettings(); toastInfo('Bot Twitch', S.bot.on ? 'Actif sur #' + S.bot.channel : 'Arrêté'); }, e => toastInfo('Bot', e.message, true));
+    }
     if (id === 'delaySel') { b.delay = parseInt(tg.value, 10) || 0; commit(); renderSettings(); toastInfo(b.delay ? 'Différé réglé sur ' + fmtDelay(b.delay) : 'Différé désactivé', b.delay ? 'Pense à demander le même délai aux streamers.' : ''); }
     if (id === 'hideChat') { b.hideChat = tg.checked; commit(false); }
   });
@@ -2947,6 +3201,8 @@ function settingsEvents() {
       }
       case 'fiche': { e.preventDefault(); const t = byId(a.closest('tr').dataset.id); if (t) openTributeEdit(t); break; }
       case 'ficheNew': e.preventDefault(); openTributeEdit(null); break;
+      case 'botOut': NET.req({ t: 'botCfg', cfg: { logout: true } }).then(r => { S.bot = r.st; renderSettings(); }); break;
+      case 'botTest': NET.req({ t: 'botSay', text: '👋 ' + brandName() + ' est connecté au chat. Tapez !aide pour jouer.' }).then(() => toastInfo('Message envoyé dans le chat'), e => toastInfo('Bot', e.message, true)); break;
       case 'lwAdd': b.lock.windows.push({ days: [0, 1, 2, 3, 4, 5, 6], from: '20:00', to: '23:00' }); commit(); renderSettings(); break;
       case 'lwDel': b.lock.windows.splice(+a.dataset.i, 1); commit(); renderSettings(); break;
       case 'lwDay': { const w = b.lock.windows[+a.dataset.i], d = +a.dataset.d; if (w) { w.days = w.days.includes(d) ? w.days.filter(x => x !== d) : [...w.days, d]; commit(); renderSettings(); } break; }
@@ -3012,7 +3268,7 @@ function addTributes(rows) {
   if (added) { fixNums(S.board.tributes); commit(); }
   return { added, skipped };
 }
-function setTheater(v) { S.theater = v; LS.set('ctv.theater', v); document.body.classList.toggle('theater', v); $('#theaterBtn').classList.toggle('on', v); }
+function setTheater(v) { S.theater = v; LS.set('ctv.theater', v); document.body.classList.toggle('theater', v); $('#theaterBtn').classList.toggle('on', v); sideSync(); }
 
 /* =====================================================================
    Réception des données
@@ -3047,6 +3303,7 @@ function onAlerts(all) {
     const list = [...fresh].map(id => [id, S.alerts[id]]).sort((a, b) => a[1].ts - b[1].ts);
     list.forEach(([id, a]) => { toastAlert(id, a); flashCard(a.ch); });
     SND.alert(list.some(([, a]) => a.urgent));
+    list.forEach(([id, a]) => { const t = byLogin(a.ch); NOTIF.push(a.perf ? 'perf' : 'alert', (a.urgent ? 'URGENT · ' : '') + (a.type || 'Alerte'), (t ? t.name : a.who || a.ch || '') + (a.detail ? ' — ' + a.detail : ''), () => { setPage('antenne'); S.tab = 'alerts'; renderTabs(); if (a.ch) putOnStage(a.ch); }); });
     const urgent = list.filter(([, a]) => a.urgent).pop();
     if (urgent && S.autoSwitch) putOnStage(urgent[1].ch);
   }
@@ -3059,7 +3316,7 @@ function onAlerts(all) {
    ===================================================================== */
 const CAM = {
   feed: [], comms: [], reqs: {}, cams: [], team: [], srv: false, pos: {}, trails: {}, unread: 0,
-  ch: 'all', dmTo: '', fk: 'all', sel: '', dim: 'minecraft:overworld', view: null, subbed: false, showCams: true, showTrails: true,
+  ch: 'all', dmTo: '', fk: 'all', sel: '', dim: 'minecraft:overworld', view: null, subbed: false, showCams: true, showTrails: true, iso: LS.get('ctv.mapIso', false),
   QUICK: ['Reçu ✔', 'J\'y vais', 'Besoin d\'une caméra', 'Action terminée', 'On passe à l\'antenne', 'Attention spoiler'],
   ST: { actif: 'ACTIF', rec: 'EN REC', pause: 'PAUSE', inactif: 'INACTIF' },
   FK: { all: 'Tout', hit: 'Combats', death: 'Morts', effect: 'Effets', meet: 'Rencontres', special: 'Spécial' },
@@ -3076,7 +3333,7 @@ const CAM = {
     switch (m.t) {
       case 'feed': for (const e of m.list || []) { const i = this.feed.findIndex(x => x.id === e.id); if (i >= 0) this.feed[i] = e; else { this.feed.push(e); this.onNewFeed(e); } } if (this.feed.length > 500) this.feed.splice(0, this.feed.length - 500); this.renderTerrain(); break;
       case 'msg': this.comms.push(m.m); if (this.comms.length > 400) this.comms.shift(); this.onNewMsg(m.m); this.renderComms(); break;
-      case 'req': { const old = this.reqs[m.r.id]; this.reqs[m.r.id] = m.r; if (!old && m.r.by !== (S.me && S.me.id)) { toastInfo('Demande de couverture · ' + m.r.byName, this.trName(m.r.tr) + (m.r.text ? ' — ' + m.r.text : '')); SND.blip(); } this.renderTerrain(); break; }
+      case 'req': { const old = this.reqs[m.r.id]; this.reqs[m.r.id] = m.r; if (!old && m.r.by !== (S.me && S.me.id)) { toastInfo('Demande de couverture · ' + m.r.byName, this.trName(m.r.tr) + (m.r.text ? ' — ' + m.r.text : '')); SND.blip(); NOTIF.push('req', 'Demande de couverture · ' + m.r.byName, this.trName(m.r.tr) + (m.r.text ? ' — ' + m.r.text : ''), () => { S.tab = 'terrain'; renderTabs(); if (S.page !== 'antenne') toggleSide(true); }); } this.renderTerrain(); break; }
       case 'reqDel': delete this.reqs[m.id]; this.renderTerrain(); break;
       case 'cams': this.cams = m.cams || []; this.renderTerrain(); if (S.page === 'carte') this.draw(); break;
       case 'srv': this.srv = !!m.on; S.cam = { srv: this.srv }; this.renderTerrain(); refreshSettings('cams'); break;
@@ -3111,14 +3368,16 @@ const CAM = {
   onNewMsg(x) {
     if (x.from === this.me()) return;
     const direct = x.to === this.me();
-    if (x.k === 'buzz' && direct) { toastInfo('BUZZ · ' + x.name, x.text, true); SND.alert(true); }
+    const goC = () => { S.tab = 'comms'; renderTabs(); if (S.page !== 'antenne') toggleSide(true); };
+    if (x.k === 'buzz' && direct) { toastInfo('BUZZ · ' + x.name, x.text, true); SND.alert(true); NOTIF.push('msg', 'BUZZ · ' + x.name, x.text, goC); }
+    else if (direct || x.sup || x.ch !== 'cams') NOTIF.push('msg', (direct ? 'Message privé · ' : x.ch === 'cams' ? 'Caméras · ' : 'Staff · ') + x.name, x.text, goC);
     else if (S.tab !== 'comms' || document.hidden) {
       this.unread++;
       if (direct || x.sup) { toastInfo((direct ? 'Message privé · ' : x.ch === 'cams' ? 'Caméras · ' : 'Staff · ') + x.name, x.text); SND.blip(); }
     }
     this.badge();
   },
-  badge() { const el = $('#commsCnt'); if (!el) return; el.textContent = this.unread; el.classList.toggle('hide', !this.unread || S.tab === 'comms'); },
+  badge() { const el = $('#commsCnt'); if (!el) return; el.textContent = this.unread; el.classList.toggle('hide', !this.unread || S.tab === 'comms'); sideSync(); },
   renderComms() {
     if (!isCrew() || !$('#cmList')) return;
     if (S.tab === 'comms') { this.unread = 0; }
@@ -3148,7 +3407,7 @@ const CAM = {
 
   /* ---------- terrain : caméras, demandes, actes ---------- */
   onNewFeed(e) {
-    if (e.k === 'death' && isCrew()) { toastInfo('Acte : mort détectée', e.text, true); SND.alert(false); }
+    if (e.k === 'death' && isCrew()) { toastInfo('Acte : mort détectée', e.text, true); SND.alert(false); NOTIF.push('death', 'Mort détectée', e.text); }
     else if (e.k === 'special' || e.k === 'meet' || e.k === 'totem') { if (isCrew()) toastInfo('Acte annonciateur', e.text); }
   },
   renderTerrain() {
@@ -3309,6 +3568,8 @@ const CAM = {
         if (v === 'fit') this.fit();
         else if (v === 'cams') this.showCams = !this.showCams;
         else if (v === 'trails') this.showTrails = !this.showTrails;
+        else if (v === 'iso') { const c = this.view && this.unproj(this.view.cx, this.view.cz); this.iso = !this.iso; LS.set('ctv.mapIso', this.iso); if (c) { const q = this.proj(c[0], c[1], c[2]); this.view.cx = q[0]; this.view.cz = q[1]; } }
+        else if (v === 'scan') { const r = +$('#mapR').value || 256, c = this.view ? this.unproj(this.view.cx, this.view.cz) : [0, 64, 0]; NET.req({ t: 'terrainScan', dim: this.dim, cx: Math.round(c[0]), cz: Math.round(c[2]), r }).then(() => toastInfo('Relevé demandé au serveur', 'Centre ' + Math.round(c[0]) + ', ' + Math.round(c[2]) + ' · rayon ' + r + ' blocs')); }
         else if (v.startsWith('dim:')) { this.dim = v.slice(4); this.fit(); }
         this.renderTools(); this.draw();
       });
@@ -3330,15 +3591,27 @@ const CAM = {
     t.innerHTML = this.dims().map(d => `<button class="btn xs ${d === this.dim ? 'on' : ''}" data-mt="dim:${esc(d)}">${esc(this.dimName(d))}</button>`).join('')
       + `<button class="btn xs" data-mt="fit">Tout voir</button>`
       + (isCrew() ? `<button class="btn xs ${this.showCams ? 'on' : ''}" data-mt="cams">${ic('cam')}Caméras</button>` : '')
-      + `<button class="btn xs ${this.showTrails ? 'on' : ''}" data-mt="trails">Traces</button>`;
+      + `<button class="btn xs ${this.showTrails ? 'on' : ''}" data-mt="trails">Traces</button>`
+      + `<button class="btn xs ${this.iso ? 'on' : ''}" data-mt="iso" title="Vue en relief (isométrique)">${this.iso ? 'Vue de dessus' : 'Vue 3D iso'}</button>`
+      + (isCrew() ? `<span class="map-scan"><select class="mini-sel" id="mapR" title="Rayon du relevé">${[128, 256, 384, 512, 768, 1024].map(r => `<option value="${r}" ${r === 256 ? 'selected' : ''}>${r} blocs</option>`).join('')}</select><button class="btn xs" data-mt="scan" title="Le mod serveur relève le terrain autour du centre de la vue (ou /capitol carte <rayon> en jeu)">Relever le terrain ici</button></span>` : '');
+  },
+  /* projection : vue de dessus (x, z) ou isométrique */
+  proj(x, y, z) { return this.iso ? [x - z, (x + z) / 2 - (y == null ? 64 : y) * TERRAIN.HS] : [x, z]; },
+  unproj(u, v) {
+    if (!this.iso) return [u, 64, v];
+    const c = TERRAIN.get(this.dim); let y = 64;
+    for (let k = 0; k < 4; k++) { const s2 = v + y * TERRAIN.HS, x = s2 + u / 2, z = s2 - u / 2, yy = c ? TERRAIN.yAt(c, x, z) : null; if (yy == null) break; y = yy; }
+    const s2 = v + y * TERRAIN.HS; return [s2 + u / 2, y, s2 - u / 2];
   },
   fit() {
     const cv = $('#mapCv'); if (!cv) return;
     const pts = Object.values(this.pos).filter(p => p.d === this.dim);
     if (isCrew() && this.showCams) this.cams.forEach(c => c.pos && c.pos.d === this.dim && pts.push(c.pos));
+    const tm = TERRAIN.meta[this.dim];
+    if (!pts.length && tm) for (const [x, z] of [[tm.x0, tm.z0], [tm.x0 + tm.w * tm.step, tm.z0 + tm.h * tm.step], [tm.x0, tm.z0 + tm.h * tm.step], [tm.x0 + tm.w * tm.step, tm.z0]]) pts.push({ x, z, y: 64 });
     const r = cv.getBoundingClientRect(), w = r.width || 800, h = r.height || 600;
     if (!pts.length) { this.view = { cx: 0, cz: 0, k: 1 }; this.draw(); return; }
-    const xs = pts.map(p => p.x), zs = pts.map(p => p.z);
+    const pp = pts.map(p => this.proj(p.x, p.y, p.z)), xs = pp.map(p => p[0]), zs = pp.map(p => p[1]);
     const minX = Math.min(...xs), maxX = Math.max(...xs), minZ = Math.min(...zs), maxZ = Math.max(...zs);
     const sx = Math.max(64, maxX - minX) * 1.3, sz = Math.max(64, maxZ - minZ) * 1.3;
     this.view = { cx: (minX + maxX) / 2, cz: (minZ + maxZ) / 2, k: Math.max(0.02, Math.min(12, Math.min(w / sx, h / sz))) };
@@ -3349,7 +3622,7 @@ const CAM = {
     let best = null, bd = 144;
     for (const [id, p] of Object.entries(this.pos)) {
       if (p.d !== this.dim) continue;
-      const x = r.width / 2 + (p.x - v.cx) * v.k, y = r.height / 2 + (p.z - v.cz) * v.k, d = (x - mx) ** 2 + (y - my) ** 2;
+      const q = this.proj(p.x, p.y, p.z), x = r.width / 2 + (q[0] - v.cx) * v.k, y = r.height / 2 + (q[1] - v.cz) * v.k, d = (x - mx) ** 2 + (y - my) ** 2;
       if (d < bd) { bd = d; best = id; }
     }
     return best;
@@ -3361,34 +3634,47 @@ const CAM = {
     if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
     const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
     const v = this.view, X = x => W / 2 + (x - v.cx) * v.k, Z = z => H / 2 + (z - v.cz) * v.k;
-    g.fillStyle = '#08090b'; g.fillRect(0, 0, W, H);
-    const steps = [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192]; let st = steps.find(s => s * v.k >= 70) || 8192;
-    g.font = '11px system-ui, sans-serif'; g.lineWidth = 1;
-    const x0 = Math.floor((v.cx - W / 2 / v.k) / st) * st, z0 = Math.floor((v.cz - H / 2 / v.k) / st) * st;
-    for (let x = x0; X(x) <= W; x += st) { g.strokeStyle = x === 0 ? 'rgba(214,178,97,.35)' : 'rgba(255,255,255,.05)'; g.beginPath(); g.moveTo(Math.round(X(x)) + .5, 0); g.lineTo(Math.round(X(x)) + .5, H); g.stroke(); g.fillStyle = '#4a4740'; g.fillText(x, X(x) + 3, 52); }
-    for (let z = z0; Z(z) <= H; z += st) { g.strokeStyle = z === 0 ? 'rgba(214,178,97,.35)' : 'rgba(255,255,255,.05)'; g.beginPath(); g.moveTo(0, Math.round(Z(z)) + .5); g.lineTo(W, Math.round(Z(z)) + .5); g.stroke(); g.fillStyle = '#4a4740'; g.fillText(z, 4, Z(z) - 3); }
+    const PX = (x, y, z) => { const q = this.proj(x, y, z); return [X(q[0]), Z(q[1])]; };
+    const bg = g.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * .7); bg.addColorStop(0, '#101216'); bg.addColorStop(1, '#060709');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const T = TERRAIN.get(this.dim);
+    if (T) {
+      g.imageSmoothingEnabled = v.k * T.step < 3;
+      if (this.iso) g.drawImage(T.iso, X(T.U0), Z(T.V0), T.iso.width * T.step * v.k, T.iso.height * T.step * v.k);
+      else { g.drawImage(T.top, X(T.x0), Z(T.z0), T.w * T.step * v.k, T.h * T.step * v.k); }
+      g.imageSmoothingEnabled = true;
+    }
+    if (!this.iso) {
+      const steps = [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192]; let st = steps.find(s => s * v.k >= 70) || 8192;
+      g.font = '11px system-ui, sans-serif'; g.lineWidth = 1;
+      const x0 = Math.floor((v.cx - W / 2 / v.k) / st) * st, z0 = Math.floor((v.cz - H / 2 / v.k) / st) * st, gl = T ? .09 : .05;
+      for (let x = x0; X(x) <= W; x += st) { g.strokeStyle = x === 0 ? 'rgba(214,178,97,.35)' : `rgba(255,255,255,${gl})`; g.beginPath(); g.moveTo(Math.round(X(x)) + .5, 0); g.lineTo(Math.round(X(x)) + .5, H); g.stroke(); g.fillStyle = T ? 'rgba(255,255,255,.55)' : '#4a4740'; g.fillText(x, X(x) + 3, 52); }
+      for (let z = z0; Z(z) <= H; z += st) { g.strokeStyle = z === 0 ? 'rgba(214,178,97,.35)' : `rgba(255,255,255,${gl})`; g.beginPath(); g.moveTo(0, Math.round(Z(z)) + .5); g.lineTo(W, Math.round(Z(z)) + .5); g.stroke(); g.fillStyle = T ? 'rgba(255,255,255,.55)' : '#4a4740'; g.fillText(z, 4, Z(z) - 3); }
+    }
+    if (!TERRAIN.meta[this.dim]) { g.fillStyle = 'rgba(255,255,255,.28)'; g.font = '13px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText(isCrew() ? 'Pas encore de fond de carte : « Relever le terrain ici » ou /capitol carte <rayon> en jeu' : 'Fond de carte pas encore disponible', W / 2, H - 22); g.textAlign = 'left'; }
     const now = nowS();
     if (this.showTrails) for (const [id, tr] of Object.entries(this.trails)) {
       const pts = tr.filter(p => p.d === this.dim); if (pts.length < 2) continue;
-      g.strokeStyle = this.col(byId(id)) + '55'; g.lineWidth = 2; g.beginPath();
-      pts.forEach((p, i) => i ? g.lineTo(X(p.x), Z(p.z)) : g.moveTo(X(p.x), Z(p.z))); g.stroke();
+      g.strokeStyle = this.col(byId(id)) + '88'; g.lineWidth = 2; g.beginPath();
+      pts.forEach((p, i) => { const [a, b] = PX(p.x, p.y, p.z); i ? g.lineTo(a, b) : g.moveTo(a, b); }); g.stroke();
     }
     if (isCrew() && this.showCams) for (const c of this.cams) {
       if (!c.pos || c.pos.d !== this.dim || !c.online) continue;
-      const x = X(c.pos.x), y = Z(c.pos.z);
+      const [x, y] = PX(c.pos.x, c.pos.y, c.pos.z);
       g.fillStyle = '#5aa0e6'; g.fillRect(x - 4, y - 4, 8, 8);
       g.fillStyle = '#9cc6f2'; g.font = '11px system-ui, sans-serif'; g.fillText('▣ ' + c.name, x + 7, y + 4);
     }
     for (const [id, p] of Object.entries(this.pos)) {
       if (p.d !== this.dim) continue;
-      const t = byId(id), x = X(p.x), y = Z(p.z), stale = now - p.ts > 60000, on = id === this.sel;
+      const t = byId(id), [x, y] = PX(p.x, p.y, p.z), stale = now - p.ts > 60000, on = id === this.sel;
       g.globalAlpha = stale ? .45 : 1;
+      if (this.iso && T) { const yg = TERRAIN.yAt(T, p.x, p.z); if (yg != null && p.y - yg > 1.5) { const [, y2] = PX(p.x, yg, p.z); g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x, y); g.lineTo(x, y2); g.stroke(); } }
       if (on) { g.strokeStyle = '#f6e2a6'; g.lineWidth = 2; g.beginPath(); g.arc(x, y, 11, 0, 7); g.stroke(); }
       g.fillStyle = this.col(t); g.beginPath(); g.arc(x, y, 6, 0, 7); g.fill();
       g.strokeStyle = '#000'; g.lineWidth = 1.5; g.stroke();
-      g.fillStyle = '#f3f0e9'; g.font = '600 12px system-ui, sans-serif';
+      g.fillStyle = '#f3f0e9'; g.font = '600 12px system-ui, sans-serif'; g.shadowColor = 'rgba(0,0,0,.9)'; g.shadowBlur = 4;
       g.fillText((t ? t.name : '?') + (p.hp != null && t && t.status !== 'dead' ? '  ' + Math.round(p.hp / 2 * 10) / 10 + '♥' : ''), x + 10, y + 4);
-      g.globalAlpha = 1;
+      g.globalAlpha = 1; g.shadowBlur = 0;
     }
   },
   renderSide() {
@@ -3445,7 +3731,7 @@ const RTC = {
   },
   /* budget dépassé : tout le monde (sauf la sortie OBS) passe en couche légère */
   saving() { return !!(this.use && this.use.save) && !isOut(); },
-  onPubs(p) { this.pubs = p || {}; this.prune(); renderStage(); PROG.layout(); if (S.page === 'regie') { PROG.renderSources(); PROG.renderCanvas(); PROG.renderPgm(); } },
+  onPubs(p) { this.pubs = p || {}; this.prune(); renderStage(); PROG.layout(); if (S.page === 'regie2') SCREEN2.update(false); if (S.page === 'regie') { PROG.renderSources(); PROG.renderCanvas(); PROG.renderPgm(); } },
   prune() { for (const [id, c] of this.conns) if (!this.live(c.src)) this.close(id); },
   live(src) { if (src && src.startsWith('talk:')) return !!(TALK.st && TALK.st.pubs[src.slice(5)]); return !!(src && this.pubs[src]); },
   allowed() { return this.on && !isLocked() && (isCrew() || isOut()); },
@@ -3758,7 +4044,7 @@ const TALK = {
       for (const uid of Object.keys(st.pubs || {})) if (!this.listen.has(uid) && st.open.includes(uid)) this.hear(uid);
       for (const [uid, e] of this.listen) if (!(st.pubs || {})[uid] || !st.open.includes(uid)) { e.el.remove(); RTC.release(e.conn); RTC.close('talk:' + uid); this.listen.delete(uid); }
       const nreq = Object.keys(st.req || {}).filter(k => !before || !(before.req || {})[k]);
-      if (nreq.length && S.page !== 'regie') { const m = (st.cams || []).find(c => c.id === nreq[0]); toastInfo('Interphone', (m ? m.name : 'Une caméra') + ' demande à parler'); }
+      if (nreq.length) { const m = (st.cams || []).find(c => c.id === nreq[0]); if (S.page !== 'regie') toastInfo('Interphone', (m ? m.name : 'Une caméra') + ' demande à parler'); NOTIF.push('talk', 'Interphone', (m ? m.name : 'Une caméra') + ' demande à parler', () => setPage('regie')); }
     }
     this.render();
   },
@@ -3939,10 +4225,13 @@ class Stage {
     if (!D) { if (this.q && this.q.length) { this.q.forEach(e => clearTimeout(e.t)); this.q = []; } return this.apply(pub, cut); }
     if (!cut && this.q && this.q.length) { const last = this.q[this.q.length - 1]; if (last.raw === pub) return; }
     this.prewarm(pub, Date.now() + D + 8000);
-    const e = { raw: pub, pub: this.shiftPub(pub, D), cut: cut || !!(this.q && this.q.length && this.q.some(x => x.cut)) };
+    // rien encore à montrer (page qui vient de s'ouvrir) : écran d'attente avec compte à rebours
+    if (!this.applied && !(this.pub && this.pub.wait)) this.apply({ on: false, seq: -1, items: [], wait: Date.now() + D, title: '' }, false);
+    const e = { raw: pub, due: Date.now() + D, pub: this.shiftPub(pub, D), cut: cut || !!(this.q && this.q.length && this.q.some(x => x.cut)) };
     e.t = setTimeout(() => { this.q = this.q.filter(x => x !== e); this.apply(e.pub, e.cut); }, D);
     (this.q = this.q || []).push(e);
   }
+  dueOf(e) { return e.due || 0; }
   /* plan retardé : les heures (médias, musique, écrans, replays) sont décalées du différé */
   shiftPub(pub, D) {
     if (!pub) return pub;
@@ -3964,6 +4253,7 @@ class Stage {
     }
   }
   apply(pub, cut) {
+    if (pub && !pub.wait) this.applied = true;
     const p = this.pub = pub, tr = this.el.querySelector(':scope > .em-tr');
     const type = p && p.trans ? p.trans.type : 'cut', ms = p && p.trans ? p.trans.ms : 1200;
     const shot = cut && this.lastSeq >= 0 && p && p.seq !== this.lastSeq;
@@ -3985,7 +4275,7 @@ class Stage {
       this.syncMedia();
       if (!off) { off = document.createElement('div'); off.className = 'em-off'; st.appendChild(off); }
       this.renderGfx();
-      const h = `<div>${LOGO_OK ? `<img src="${esc(CONFIG.logoFull)}" alt="">` : logo(160)}<p style="margin-top:14px;letter-spacing:.18em;font-weight:700">${p && p.on ? 'PLAN VIDE' : 'L\'ÉMISSION REPREND BIENTÔT'}</p>${p && p.title ? `<p>${esc(p.title)}</p>` : ''}</div>`;
+      const h = `<div>${LOGO_OK ? `<img src="${esc(CONFIG.logoFull)}" alt="">` : logo(160)}<p style="margin-top:14px;letter-spacing:.18em;font-weight:700">${p && p.wait ? 'LE DIRECT COMMENCE DANS <span class="cdw"></span>' : p && p.on ? 'PLAN VIDE' : 'L\'ÉMISSION REPREND BIENTÔT'}</p>${p && p.title ? `<p>${esc(p.title)}</p>` : ''}${p && p.wait ? '<p class="note">Différé en cours de remplissage</p>' : ''}</div>`;
       if (off.dataset.h !== h) { off.dataset.h = h; off.innerHTML = h; }
       return;
     }
@@ -4201,9 +4491,17 @@ class Stage {
         this.bgmEl = document.createElement('audio'); this.bgmEl.preload = 'auto'; this.bgmEl.dataset.k = key; this.bgmEl.src = PROG.mediaURL(tr.id); this.el.appendChild(this.bgmEl);
       }
       PROG.syncOne(this.bgmEl, nowS() - t * 1000, false, bg.vol, this.o.sound, this);
-    } else if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; }
+      this.credit(tr.credit ? '♪ ' + tr.credit : '');
+    } else { if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; } this.credit(''); }
   }
-  tick() { if (this.q && this.q.length && this.latest) this.prewarm(this.latest, Date.now() + this.delay() * 1000 + 8000); for (const el of this.players.values()) if (el._tw) this.twApply(el._tw); const t = this.el.querySelector(':scope > .em-tr .em-t'); if (t && t.textContent !== brandName()) t.textContent = brandName(); this.syncMedia(); this.tickScreen(); const m = this.el.querySelector(':scope > .em-gfx .gx-map'); if (m) PROG.drawMini(m, this.mainTrib()); }
+  /* crédit de la musique libre de droits (obligatoire pour les licences CC BY) */
+  credit(txt) {
+    let c = this.el.querySelector(':scope > .em-credit');
+    if (!txt) { if (c) c.remove(); return; }
+    if (!c) { c = document.createElement('div'); c.className = 'em-credit'; this.el.appendChild(c); }
+    if (c.textContent !== txt) c.textContent = txt;
+  }
+  tick() { const cw = this.pub && this.pub.wait && this.el.querySelector(':scope > .em-off .cdw'); if (cw) cw.textContent = fmtDur(Math.max(0, this.pub.wait - Date.now())); if (this.q && this.q.length && this.latest) this.prewarm(this.latest, Date.now() + this.delay() * 1000 + 8000); for (const el of this.players.values()) if (el._tw) this.twApply(el._tw); const t = this.el.querySelector(':scope > .em-tr .em-t'); if (t && t.textContent !== brandName()) t.textContent = brandName(); this.syncMedia(); this.tickScreen(); const m = this.el.querySelector(':scope > .em-gfx .gx-map'); if (m) PROG.drawMini(m, this.mainTrib()); }
   /* POV principale : la plus grande à l'écran */
   mainTrib() { const p = this.pub, big = p && p.on ? (p.items || []).filter(i => i.k === 'trib').sort((a, b) => b.w * b.h - a.w * a.h)[0] : null; return big ? big.ref : ''; }
   destroy() {
@@ -4252,6 +4550,7 @@ const PROG = {
     this.markNav();
     clearInterval(this.tickT); this.tickT = setInterval(() => this.tick(), 1000);
     if (/direct|emission/i.test(H0) && !isLocked()) setTimeout(() => { setPage('direct'); this.fullscreen(true); }, 0);
+    if (/^ecran2/i.test(H0) && hasPerm('program') && !isLocked()) setTimeout(() => { document.body.classList.add('screen2'); if (S.page !== 'regie2') setPage('regie2'); }, 0);
   },
   wantsMap() { return !!(this.pub && this.pub.gfx && this.pub.gfx.map && this.pub.gfx.map.on); },
   onAir(id) { return !!(this.pub && this.pub.on && this.pub.items.some(i => i.k === 'cam' && i.ref === id)); },
@@ -4262,6 +4561,7 @@ const PROG = {
       if (S.page === 'direct') { this.applyDirect(!!m.cut); CAM.mapSub(this.wantsMap()); }
       if (S.page === 'regie') { this.renderPgm(); this.renderReplayPanel(); this.renderScreenBtns(); if (document.activeElement && document.activeElement.id !== 'bgQ') this.renderBgm(); if (this.pgmStage) this.pgmStage.set(this.pub, !!m.cut); this.renderPv(); }
       if (IS_OVERLAY && !this.main) this.renderGfx();
+      if (S.page === 'regie2') SCREEN2.update(!!m.cut);
       renderTeam(); CAM.renderTerrain();
     } else if (m.t === 'onair') {
       this.air = { ids: m.ids || [], prep: m.prep || [], since: m.since || {}, delay: m.delay || 0 };
@@ -4273,6 +4573,7 @@ const PROG = {
       if (m.by === (S.me && S.me.id) && Date.now() - this.dirty < 1500) { if (this.ed && m.prog) { for (const k of ['airItems', 'airGfx', 'airScene', 'apply', 'live', 'seq']) this.ed[k] = m.prog[k]; if (S.page === 'regie') { this.renderMode(); this.renderPgm(); this.renderScenes(); } } return; }
       this.ed = m.prog;
       if (S.page === 'regie') { this.renderEditor(); }
+      if (S.page === 'regie2') SCREEN2.update(false);
     }
   },
   leave() {
@@ -4298,8 +4599,9 @@ const PROG = {
       $$('#cvPv .ci[data-cam]').forEach(el => this.badge(el, el.dataset.cam));
       this.renderSfx(); this.renderWarn();
     }
-    if (this.main) this.main.tick();
+    if (this.main) { this.main.tick(); this.directBar(); }
     for (const m of this.mons()) m.tick();
+    if (S.page === 'regie2' && SCREEN2.pv) { SCREEN2.pv.tick(); SCREEN2.pg.tick(); }
     if (S.page === 'regie') this.renderQueue(true);
   },
   badge(el, id) {
@@ -4324,6 +4626,14 @@ const PROG = {
     const m = S.team.find(x => x.id === it.ref); return m && (m.twitch || RTC.live('c:' + m.id)) ? { login: m.twitch, name: m.name, sub: 'Caméra', cam: true, ctv: RTC.live('c:' + m.id) && (m.vsrc || 'auto') !== 'twitch' } : null;
   },
 
+  /* une POV choisie dans le multiview du 2e écran : remplace la source sélectionnée, sinon l'ajoute au plan */
+  pickFromScreen2(k, ref) {
+    const sc = this.scene(); if (!sc) return;
+    const it = this.item();
+    if (it && it.k !== 'media' && sc.items.includes(it)) { if (sc.items.some(i => i !== it && i.k === k && i.ref === ref)) { toastInfo('Déjà dans ce plan', '', true); return; } it.k = k; it.ref = ref; }
+    else this.addItem(k, ref, 50, 50);
+    this.save(); if (S.page === 'regie') this.renderEditor();
+  },
   /* ---------- page Direct ---------- */
   renderDirect() {
     if (!isCrew() && !isOut()) { $('#pageView').innerHTML = '<div class="team-in"><div class="empty">La page Direct est réservée à la régie et au streamer.</div></div>'; return; }
@@ -4344,9 +4654,15 @@ const PROG = {
   },
   applyDirect(cut) {
     const p = this.pub; if (!this.main || !$('#emStage')) return;
-    $('#emLive').className = 'em-live' + (p && p.on ? '' : ' off'); $('#emLive').textContent = p && p.on ? '● EN DIRECT' : 'HORS ANTENNE';
-    $('#emScene').textContent = p ? (p.title ? p.title + ' · ' : '') + (p.scene || '') : '';
-    this.main.set(p, cut);
+    this.main.set(p, cut); this.directBar();
+  },
+  /* barre du Direct : ce qui est affiché (avec le différé) et ce qui arrive */
+  directBar() {
+    const m = this.main, lv = $('#emLive'), sc = $('#emScene'); if (!m || !lv || !sc) return;
+    const p = m.pub, q = (m.q || [])[0];
+    lv.className = 'em-live' + (p && p.on ? '' : ' off'); lv.textContent = p && p.wait ? 'DIFFÉRÉ' : p && p.on ? '● EN DIRECT' : 'HORS ANTENNE';
+    const t = p && !p.wait ? (p.title ? p.title + ' · ' : '') + (p.scene || '') : '';
+    sc.textContent = t + (q ? (t ? '  ·  ' : '') + 'prochain plan : ' + ((q.raw && q.raw.scene) || 'hors antenne') + ' dans ' + fmtDur(Math.max(0, (m.dueOf ? m.dueOf(q) : 0) - Date.now())) : '');
   },
   renderGfx() { if (this.main) this.main.renderGfx(); for (const m of this.mons()) m.renderGfx(); },
   layout() { if (this.main) this.main.layout(false); for (const m of this.mons()) m.layout(false); },
@@ -4386,6 +4702,8 @@ const PROG = {
       c.fillStyle = 'rgba(8,8,10,.86)'; c.fillRect(0, 0, W, W);
       c.strokeStyle = 'rgba(214,178,97,.14)'; c.lineWidth = 1;
       const k2 = (W - 30) / st.span, grid = st.span > 600 ? 200 : st.span > 250 ? 100 : 50;
+      const TT = TERRAIN.get('minecraft:overworld');
+      if (TT) { c.globalAlpha = .9; c.imageSmoothingEnabled = k2 * TT.step < 3; c.drawImage(TT.top, W / 2 + (TT.x0 - st.x) * k2, W / 2 + (TT.z0 - st.z) * k2, TT.w * TT.step * k2, TT.h * TT.step * k2); c.globalAlpha = 1; c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(0, 0, W, W); }
       for (let g = Math.floor((st.x - st.span) / grid) * grid; g < st.x + st.span; g += grid) { const x = W / 2 + (g - st.x) * k2; c.beginPath(); c.moveTo(x, 0); c.lineTo(x, W); c.stroke(); }
       for (let g = Math.floor((st.z - st.span) / grid) * grid; g < st.z + st.span; g += grid) { const y = W / 2 + (g - st.z) * k2; c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
       c.font = '600 15px Barlow Condensed, sans-serif'; c.textAlign = 'center';
@@ -4562,6 +4880,7 @@ const PROG = {
             <div class="sect rg-p"><h4>♪ Musique de fond</h4><div id="rgBgm"></div></div>
           </div>
           <div class="rg-row"><b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">PLANS</b><div class="scn" id="rgScenes"></div>
+            <button class="btn sm ghost" id="rgScr2" title="Ouvre une 2e fenêtre pour ton 2e écran : grands moniteurs Aperçu / Antenne, plans et multiview des POV. Clique une POV du multiview pour la mettre dans l'Aperçu.">${ic('side')}Double écran</button>
             <button class="btn sm" id="rgNew">${ic('plus')}Nouveau</button><button class="btn sm ghost" id="rgDup">Dupliquer</button><button class="btn sm ghost" id="rgDel" style="color:var(--red-hi)">${ic('trash')}</button></div>
           <div class="rg-row" style="flex-wrap:wrap"><b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">DISPOSITIONS</b>${Object.entries(this.PRESETS).map(([k, [l, L]]) => `<button class="btn sm ghost pre-b" data-pre="${k}" title="${L.length} source${L.length > 1 ? 's' : ''}">${this.preIcon(L)}${l}</button>`).join('')}<button class="btn sm pre-b" id="rgMosaic" title="Choisir combien de POV et lesquels (recherche par pseudo), avec effet d'apparition">${this.preIcon(this.gridOf(9))}Mosaïque…</button></div>
           <div class="rg-row" id="rgAll" style="flex-wrap:wrap"><b style="font-size:11px;letter-spacing:.16em;color:var(--mute)">TOUTES LES POV DU PLAN</b>
@@ -4632,14 +4951,31 @@ const PROG = {
     const live = this.ed.scenes.find(x => x.id === this.ed.live);
     const srcs = live ? live.items.filter(i => i.k !== 'media').map(i => { const s = this.srcInfo(i); const src = (i.k === 'trib' ? 't:' : 'c:') + i.ref; return s && RTC.live(src) ? { src, name: s.name } : null; }).filter(Boolean) : [];
     const r = this.pub && this.pub.replay;
-    box.innerHTML = srcs.length ? `<div class="gx-row" style="flex-wrap:wrap">${srcs.map(x => `<button class="btn sm" data-rp="${esc(x.src)}" data-nm="${esc(x.name)}">⟲ ${esc(x.name)}</button>`).join('')}</div>
+    box.innerHTML = srcs.length ? `<div class="gx-row" style="flex-wrap:wrap">${srcs.map(x => `<span class="rp-pair"><button class="btn sm ghost" data-rpv="${esc(x.src)}" data-nm="${esc(x.name)}" title="Voir le replay dans l'Aperçu (pas à l'antenne)">👁</button><button class="btn sm" data-rp="${esc(x.src)}" data-nm="${esc(x.name)}" title="Envoyer le replay à l'antenne">⟲ ${esc(x.name)}</button></span>`).join('')}</div>
       <div class="gx-row"><select class="mini-sel" id="rpSec"><option value="15">15 s</option><option value="30" selected>30 s</option><option value="45">45 s</option></select><select class="mini-sel" id="rpRate"><option value="0.5" selected>Ralenti ×0,5</option><option value="0.75">×0,75</option><option value="1">Vitesse normale</option></select>${r ? '<button class="btn sm live" data-rp="stop">■ Fin du replay</button>' : ''}</div>`
       : '<p class="note" style="margin:0">Le replay rejoue les dernières secondes d\'un flux Capitol TV (mod ou OBS) à l\'antenne. Les flux Twitch ne peuvent pas être rejoués.</p>';
     box.onclick = e => {
+      const pv = e.target.closest('[data-rpv]'); if (pv) { this.previewReplay(pv.dataset.rpv, pv.dataset.nm, +$('#rpSec').value, +$('#rpRate').value); return; }
       const b = e.target.closest('[data-rp]'); if (!b) return;
       if (b.dataset.rp === 'stop') NET.req({ t: 'progReplay', stop: true });
       else NET.req({ t: 'progReplay', src: b.dataset.rp, name: b.dataset.nm, sec: +$('#rpSec').value, rate: +$('#rpRate').value }).then(() => toastInfo('Replay lancé', b.dataset.nm));
     };
+  },
+  /* replay vu dans l'Aperçu seulement (images gardées par le moniteur Antenne) */
+  previewReplay(src, name, sec, rate) {
+    const host = $('#pvStg') && $('#pvStg').parentElement, st = this.pgmStage;
+    if (!host || !st) { toastInfo('Replay', 'Active l\'image des moniteurs Aperçu et Antenne.', true); return; }
+    const e = [...st.dps.values()].find(x => x.dp.src === src), v = e && e.dp.replay(sec, rate);
+    if (!v) { toastInfo('Replay', 'Pas encore assez d\'images de ' + name + ' : le moniteur Antenne garde les 90 dernières secondes depuis son ouverture.', true); return; }
+    const old = host.querySelector(':scope > .em-replay.pv'); if (old) old.remove();
+    const box = document.createElement('div'); box.className = 'em-replay pv'; box.appendChild(v);
+    box.insertAdjacentHTML('beforeend', `<div class="rp-tag"><b>APERÇU REPLAY</b><span>${esc(name)}${rate < 1 ? ' · ralenti ×' + rate : ''}</span></div><div class="rp-act"><button class="btn sm live" data-go>Envoyer à l'antenne</button><button class="btn sm ghost" data-x>Fermer</button></div>`);
+    box.onclick = ev => {
+      if (ev.target.closest('[data-go]')) NET.req({ t: 'progReplay', src, name, sec, rate }).then(() => toastInfo('Replay lancé', name));
+      if (ev.target.closest('[data-go]') || ev.target.closest('[data-x]')) box.remove();
+    };
+    host.appendChild(box);
+    setTimeout(() => { if (box.isConnected) { box.classList.add('gone'); setTimeout(() => box.remove(), 500); } }, sec / rate * 1000 + 1500);
   },
   renderScenes() {
     const box = $('#rgScenes'); if (!box) return;
@@ -4668,7 +5004,7 @@ const PROG = {
     const P = this.monPrefs, img = k => P[k] !== false;
     if (this.pgmStage && this.pgmStage.el !== pg) { this.pgmStage.destroy(); this.pgmStage = null; }
     if (this.pvStage && this.pvStage.el !== pv) { this.pvStage.destroy(); this.pvStage = null; }
-    if (img('pg') && !this.pgmStage) { this.pgmStage = new Stage(pg, { delay: 0, layer: 'q', sound: P.snd === 'pg' }); this.pgmStage.set(this.pub, false); }
+    if (img('pg') && !this.pgmStage) { this.pgmStage = new Stage(pg, { delay: 0, layer: 'q', record: true, sound: P.snd === 'pg' }); this.pgmStage.set(this.pub, false); }
     if (!img('pg') && this.pgmStage) { this.pgmStage.destroy(); this.pgmStage = null; }
     if (img('pv') && !this.pvStage) { this.pvStage = new Stage(pv, { delay: 0, layer: 'q', sound: P.snd === 'pv' }); }
     if (!img('pv') && this.pvStage) { this.pvStage.destroy(); this.pvStage = null; }
@@ -4797,20 +5133,62 @@ const PROG = {
     const playing = this.pub && this.pub.bgm;
     box.innerHTML = `<div class="gx-row"><select class="mini-sel" id="bgScope"><option value="all" ${scope === 'all' ? 'selected' : ''}>Tous les plans</option><option value="scene" ${scope === 'scene' ? 'selected' : ''}>Ce plan : ${esc(sc ? sc.name : '')}</option></select>
         <label style="display:flex;align-items:center;gap:6px;flex:0 0 130px"><span class="note">Vol.</span><input type="range" id="bgVol" min="0" max="100" step="5" value="${D.vol}" style="flex:1"></label></div>
-      <div class="gx-row"><input class="inp" id="bgQ" value="${esc(this.bgmQ || '')}" placeholder="Chercher une musique par son nom…" autocomplete="off"></div>
-      ${hits.length ? `<div class="bg-hits">${hits.map(x => `<button class="btn xs ghost" data-bga="${esc(x.id)}">＋ ${esc(x.name)} <span class="note">${this.fmtDur(x.dur)}</span></button>`).join('')}</div>` : q ? '<p class="note" style="margin:4px 0">Aucune musique trouvée (importe-la dans Médias).</p>' : ''}
+      <div class="gx-row"><input class="inp" id="bgQ" value="${esc(this.bgmQ || '')}" placeholder="Chercher une musique (ambiance, épique, suspense…)" autocomplete="off"></div>
+      ${hits.length ? `<div class="bg-hits"><span class="note">Déjà dans tes médias</span>${hits.map(x => `<button class="btn xs ghost" data-bga="${esc(x.id)}">＋ ${esc(x.name)} <span class="note">${this.fmtDur(x.dur)}</span></button>`).join('')}</div>` : ''}
+      ${q.length >= 2 ? this.bgWebHtml() : ''}
       <ol class="qlist">${D.ids.map((id, i) => { const md = this.mediaById(id); return `<li><span>${esc(md ? md.name : '?')}</span><span class="note">${md ? this.fmtDur(md.dur) : ''}</span><button class="btn sm ghost" data-bgx="${i}">${ic('x')}</button></li>`; }).join('')}</ol>
       <div class="gx-row"><button class="btn sm primary" id="bgGo" ${D.ids.length ? '' : 'disabled'}>▶ ${scope === 'all' ? 'Lancer sur tous les plans' : 'Lancer sur ce plan'}</button><button class="btn sm ghost" id="bgStop">■ Arrêter</button></div>
       <p class="note" style="margin:6px 0 0">${playing ? `En cours (${playing.scope === 'all' ? 'tous les plans' : 'ce plan'}) : ${esc(playing.tracks.map(t => t.name).join(' → '))}` : 'Aucune musique de fond à l\'antenne.'} La musique d'un plan remplace celle de tous les plans.</p>`;
     const send = ids => NET.req({ t: 'progBgm', scope: scope === 'all' ? 'all' : sc.id, ids, vol: D.vol }).then(() => toastInfo(ids.length ? 'Musique lancée' : 'Musique arrêtée'), e => toastInfo('Musique', e.message, true));
-    box.oninput = e => { if (e.target.id === 'bgQ') { this.bgmQ = e.target.value; this.renderBgm(); const i = $('#bgQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); } if (e.target.id === 'bgVol') D.vol = +e.target.value; };
+    box.oninput = e => { if (e.target.id === 'bgQ') { this.bgmQ = e.target.value; clearTimeout(this.bgWebT); this.bgWebT = setTimeout(() => this.bgWebSearch(), 650); this.renderBgm(); const i = $('#bgQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); } if (e.target.id === 'bgVol') D.vol = +e.target.value; };
     box.onchange = e => { if (e.target.id === 'bgScope') { this.bgmScope = e.target.value; this.bgmDraft = null; this.renderBgm(); } if (e.target.id === 'bgVol' && playing) send(D.ids); };
     box.onclick = e => {
       const a = e.target.closest('[data-bga]'); if (a) { D.ids.push(a.dataset.bga); this.bgmQ = ''; this.renderBgm(); return; }
+      const pl = e.target.closest('[data-bwp]'); if (pl) { this.bgWebPlay(+pl.dataset.bwp); return; }
+      const ad = e.target.closest('[data-bwa]'); if (ad) { this.bgWebAdd(+ad.dataset.bwa, D); return; }
       const x = e.target.closest('[data-bgx]'); if (x) { D.ids.splice(+x.dataset.bgx, 1); this.renderBgm(); return; }
       if (e.target.closest('#bgGo')) send(D.ids);
       if (e.target.closest('#bgStop')) { D.ids = []; send([]); this.renderBgm(); }
     };
+  },
+  /* ---------- musiques en ligne (libres de droits, via Openverse) ---------- */
+  bgWebHtml() {
+    const W = this.bgWeb || {}, q = (this.bgmQ || '').trim();
+    if (W.q !== q || W.busy) return '<p class="note" style="margin:4px 0">Recherche en ligne…</p>';
+    if (W.err) return `<p class="note" style="margin:4px 0;color:var(--red-hi)">${esc(W.err)}</p>`;
+    if (!W.list.length) return '<p class="note" style="margin:4px 0">Rien trouvé en ligne : essaie un mot en anglais (epic, suspense, ambient…).</p>';
+    return `<div class="bg-web"><span class="note">En ligne, libres de droits (crédit à afficher)</span>${W.list.map((x, i) => `<div class="bw"><button class="btn xs ghost" data-bwp="${i}" title="Écouter ici">${this.bgPrevI === i ? '■' : '▶'}</button>
+      <span class="bw-t"><b>${esc(x.title)}</b><small>${esc(x.creator || 'Auteur inconnu')} · ${esc(x.license)}${x.src ? ' · ' + esc(x.src) : ''}</small></span><span class="note">${this.fmtDur(x.dur)}</span>
+      <button class="btn xs" data-bwa="${i}" ${W.adding === i ? 'disabled' : ''}>${W.adding === i ? 'Import…' : '＋ Ajouter'}</button></div>`).join('')}</div>`;
+  },
+  bgWebSearch() {
+    const q = (this.bgmQ || '').trim(); if (q.length < 2) return;
+    this.bgWeb = { q, list: [], busy: true }; this.renderBgmKeep();
+    fetch('/api/media/search?q=' + encodeURIComponent(q)).then(r => r.json().then(j => ({ ok: r.ok, j }))).then(({ ok, j }) => {
+      if ((this.bgmQ || '').trim() !== q) return;
+      this.bgWeb = { q, list: ok ? j.list || [] : [], err: ok ? '' : j.msg || 'Recherche impossible' }; this.renderBgmKeep();
+    }, () => { this.bgWeb = { q, list: [], err: 'Recherche impossible (réseau)' }; this.renderBgmKeep(); });
+  },
+  renderBgmKeep() { const f = document.activeElement && document.activeElement.id === 'bgQ'; this.renderBgm(); if (f) { const i = $('#bgQ'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } } },
+  bgWebPlay(i) {
+    const x = (this.bgWeb || {}).list && this.bgWeb.list[i]; if (!x) return;
+    if (!this.bgPrev) { this.bgPrev = new Audio(); this.bgPrev.onended = () => { this.bgPrevI = -1; this.renderBgmKeep(); }; }
+    if (this.bgPrevI === i) { this.bgPrev.pause(); this.bgPrevI = -1; }
+    else { this.bgPrev.src = x.url; this.bgPrev.volume = .7; this.bgPrev.play().catch(() => toastInfo('Écoute impossible', 'La source ne répond pas.', true)); this.bgPrevI = i; }
+    this.renderBgmKeep();
+  },
+  bgWebAdd(i, D) {
+    const W = this.bgWeb, x = W && W.list[i]; if (!x) return;
+    W.adding = i; this.renderBgmKeep();
+    fetch('/api/media/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: x.url, name: x.title + (x.creator ? ' — ' + x.creator : ''), dur: x.dur, credit: `« ${x.title} » de ${x.creator || 'auteur inconnu'} (${x.license})`, page: x.page }) })
+      .then(r => r.json().then(j => ({ ok: r.ok, j }))).then(({ ok, j }) => {
+        W.adding = -1;
+        if (!ok) { toastInfo('Import impossible', j.msg || '', true); this.renderBgmKeep(); return; }
+        if (!this.media.some(m => m.id === j.media.id)) this.media.push(j.media);
+        D.ids.push(j.media.id); toastInfo('Ajoutée à la playlist', x.title); this.renderBgmKeep();
+        // durée exacte (la source ne la donne pas toujours) : nécessaire pour enchaîner la playlist
+        const a = new Audio(); a.preload = 'metadata'; a.onloadedmetadata = () => { if (isFinite(a.duration) && a.duration > 0 && Math.abs(a.duration - (j.media.dur || 0)) > 1) fetch('/api/media/' + j.media.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dur: Math.round(a.duration) }) }); }; a.src = this.mediaURL(j.media.id);
+      }, () => { W.adding = -1; toastInfo('Import impossible', 'Réseau', true); this.renderBgmKeep(); });
   },
   /* ---------- changer de POV (une ou toutes) ---------- */
   povOk(t) { return t && !isDead(t) && !this.povBlocked('t:' + t.id); },
@@ -4945,6 +5323,7 @@ const PROG = {
       if (S.me && S.me.obsKey) { copy(location.origin + '/overlay/' + encodeURIComponent(S.me.obsKey), e.currentTarget); toastInfo('Lien OBS copié', 'Dans OBS : Source › Navigateur, colle ce lien, taille 1920 × 1080, coche « Contrôler l\'audio via OBS ». Aucun compte nécessaire.'); }
       else { copy(location.origin + '/#direct', e.currentTarget); toastInfo('Lien copié', 'Ajoute la variable OVERLAY_KEY dans Cloudflare pour un lien OBS sans connexion.', true); }
     };
+    $('#rgScr2').onclick = () => SCREEN2.open();
     $('#rgNew').onclick = () => { const id = 's' + rid(); this.ed.scenes.push({ id, name: 'Plan ' + (this.ed.scenes.length + 1), items: [] }); this.ed.preview = id; this.sel = ''; this.save(); };
     $('#rgDup').onclick = () => { const sc = this.scene(); if (!sc) return; const id = 's' + rid(); this.ed.scenes.push({ ...clone(sc), id, name: sc.name + ' (copie)', items: sc.items.map(i => ({ ...i, id: 'i' + rid() })) }); this.ed.preview = id; this.save(); };
     $('#rgDel').onclick = e => {
@@ -5080,6 +5459,9 @@ $('#giftBtn').onclick = () => openGift(byLogin(S.slots[S.active]));
 $('#hommageBtn').onclick = openHommage;
 $('#markBtn').onclick = openMark;
 $('#helpBtn').onclick = openHelp;
+$('#sideBtn').onclick = () => toggleSide();
+SCREEN2.init();
+NOTIF.init();
 $('#onlineBtn').onclick = () => { closeTeam(); if (S.theater) setTheater(false); S.tab = 'online'; renderTabs(); };
 $('#fund').addEventListener('click', () => setPage('sponsors'));
 $('#cmChips').addEventListener('click', e => { const b = e.target.closest('[data-cm]'); if (b) { CAM.ch = b.dataset.cm; CAM.renderComms(); } });
@@ -5188,6 +5570,7 @@ $('#aList').addEventListener('click', e => {
 });
 
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.body.classList.contains('side-open')) { toggleSide(false); return; }
   if (e.key === 'Escape') {
     if (!$('#hommage').classList.contains('hide')) { hide('#hommage'); return; }
     const open = $$('.veil:not(.hide)'); if (open.length) { open.forEach(v => v.classList.add('hide')); return; }

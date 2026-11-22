@@ -1,0 +1,40 @@
+name: Application de bureau (Windows)
+
+on:
+  push:
+    branches: [main]
+    paths: ["desktop/**", ".github/workflows/desktop.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Installation
+        run: npm install --no-audit --no-fund
+      - name: Construction (installateur + version portable)
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npx electron-builder --win nsis portable --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: capitoltv-desktop
+          path: desktop/dist/*.exe
+          if-no-files-found: error
+      - name: Publication (release « app-bureau »)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view app-bureau >/dev/null 2>&1 || gh release create app-bureau --title "Capitol TV — application de bureau" --notes "Installateur Windows et version portable, reconstruits à chaque modification de l'application."
+          gh release upload app-bureau dist/*.exe --clobber
