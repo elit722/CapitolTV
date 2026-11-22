@@ -754,6 +754,7 @@ export class Game extends DurableObject {
         this.broadcastBoard();
         if (this.prog.live) this.pushProg(false);
         this.botTick();
+        this.dvrWantPush();
         await this.scheduleAlarm();
         reply(true); break;
       }
@@ -966,6 +967,7 @@ export class Game extends DurableObject {
     await this.ctx.storage.put("alerts", this.alerts);
     this.broadcast({ t: "alert", id, a: al }, x => isCrew(x) && !x.lock);
     this.modcast({ t: "alert", id, a: al });
+    if (isCrew(a)) this.dvrWantPush();
     reply(true, { id });
   }
 
@@ -975,7 +977,7 @@ export class Game extends DurableObject {
       for (const [k, v] of Object.entries(p.set)) if (SCALARS.includes(k)) b[k] = v;
       if (p.set.flash && typeof p.set.flash === "object") b.flash = { ...p.set.flash, ts: now };
       if (p.set.fund && typeof p.set.fund === "object") { b.fund = { goal: Math.max(0, +p.set.fund.goal || 0), cur: String(p.set.fund.cur || "€").slice(0, 4), show: p.set.fund.show !== false, raised: 0 }; this.recalcFund(); }
-      if (b.theme) { const t = b.theme || {}, hx = v => /^#[0-9a-f]{6}$/i.test(v || "") ? v : ""; b.theme = { name: String(t.name || "").slice(0, 40), gold: hx(t.gold), red: hx(t.red) }; }
+      if (b.theme) { const t = b.theme || {}, hx = v => /^#[0-9a-f]{6}$/i.test(v || "") ? v : ""; b.theme = { name: String(t.name || "").slice(0, 40), gold: hx(t.gold), red: hx(t.red), font: ["unbounded", "syne", "grotesk", "oswald", "cinzel"].includes(t.font) ? t.font : "" }; }
       b.publicAccess = !!b.publicAccess;
       b.map = { on: !!(b.map && b.map.on), staffOnly: !(b.map && b.map.staffOnly === false) };
       b.delay = Math.max(0, Math.min(900, parseInt(b.delay, 10) || 0));
@@ -1210,7 +1212,10 @@ export class Game extends DurableObject {
       const ck = "ovs:" + q.toLowerCase();
       const hit = await this.env.MEDIA.get(ck, "json").catch(() => null);
       if (hit && Date.now() - hit.at < 86400000) return J({ list: hit.list });
-      const ask = async extra => fetch("https://api.openverse.org/v1/audio/?page_size=20&q=" + encodeURIComponent(q) + extra, { headers: { "User-Agent": "CapitolTV/1.0 (charity Hunger Games show)", Accept: "application/json" } });
+      // « art:nom » : toutes les musiques de cet artiste
+      const art = /^art(iste)?\s*:/i.test(q) ? q.replace(/^art(iste)?\s*:/i, "").trim() : "";
+      const base = art ? "creator=" + encodeURIComponent(art) : "q=" + encodeURIComponent(q);
+      const ask = async extra => fetch("https://api.openverse.org/v1/audio/?page_size=20&" + base + extra, { headers: { "User-Agent": "CapitolTV/1.0 (charity Hunger Games show)", Accept: "application/json" } });
       let r = await ask("&license_type=commercial&category=music").catch(() => null);
       if (r && r.status === 400) r = await ask("&license_type=commercial").catch(() => null);
       if (!r || !r.ok) return J({ msg: r && r.status === 429 ? "Trop de recherches d'un coup : réessaie dans une minute." : "Recherche en ligne indisponible pour le moment." }, 502);
@@ -1956,6 +1961,7 @@ export class Game extends DurableObject {
     }
     await this.ctx.storage.put("prog", this.prog);
     this.broadcast({ t: "progEd", prog: this.prog, by: a.id }, x => hasPerm(x, "program") && !x.lock);
+    this.dvrWantPush();
     if (m.t === "progTake") this.pushProg(true);
     else if (JSON.stringify(this.progPublic()) !== wasLive) this.pushProg(false);
     else this.pushOnAir(false);
@@ -2085,7 +2091,30 @@ export class Game extends DurableObject {
     if (cur && best && this.att(cur).dvrPri >= bestA.dvrPri) return;
     if (!this.dvrTok) { this.dvrTok = crypto.randomUUID(); this.ctx.storage.put("dvrtok", this.dvrTok); }
     if (cur && cur !== best) { const a = this.att(cur); a.dvrRec = false; cur.serializeAttachment(a); this.send(cur, { t: "dvrRole", on: false }); }
-    if (best) { bestA.dvrRec = true; best.serializeAttachment(bestA); this.send(best, { t: "dvrRole", on: true, tok: this.dvrTok }); }
+    if (best) { bestA.dvrRec = true; best.serializeAttachment(bestA); this.send(best, { t: "dvrRole", on: true, tok: this.dvrTok, want: this.dvrWant() }); }
+  }
+  /* sources que l'enregistreur doit garder : antenne, aperçu, et POV signalées par les caméras (jusqu'à ce qu'elles passent en différé) */
+  dvrWant() {
+    const now = Date.now(), D = (this.board.delay || 0) * 1000, w = {};
+    if (!D) return w;
+    const add = (src, ly, until) => { if (!src) return; const o = w[src]; if (!o || o.until < until || (ly === "f" && o.ly !== "f")) w[src] = { ly: o && o.ly === "f" ? "f" : ly, until: Math.max(until, o ? o.until : 0) }; };
+    const big = it => (+it.w || 0) * (+it.h || 0) >= 1600;
+    for (const id of [this.prog.live, this.prog.preview]) {
+      const sc = (this.prog.scenes || []).find(x => x.id === id); if (!sc) continue;
+      for (const it of sc.items || []) { if (it.k === "media") continue; const x = this.srcOf(it); if (x && x.src) add(x.src, big(it) ? "f" : "q", now + D + 3600000); }
+    }
+    for (const al of Object.values(this.alerts || {})) {
+      if (!al.ts || al.ts < now - D - 90000) continue;
+      const crew = al.src === "mod" || this.team.some(t => t.id === al.uid); if (!crew) continue;
+      const t = this.board.tributes.find(x => x.login === al.ch); if (t) add("t:" + t.id, "q", al.ts + D + 90000);
+      if (this.team.some(x => x.id === al.uid)) add("c:" + al.uid, "q", al.ts + D + 90000);
+    }
+    return w;
+  }
+  dvrWantPush() {
+    const want = this.dvrWant(), j = JSON.stringify(Object.keys(want).sort().map(k => k + want[k].ly));
+    for (const ws of this.sockets()) { const a = this.att(ws); if (a && a.dvrRec) this.send(ws, { t: "dvrWant", want }); }
+    this.dvrWantKey = j;
   }
   async dvrUpload(req) {
     const u = new URL(req.url), J = (o, st = 200) => Response.json(o, { status: st });

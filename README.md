@@ -258,6 +258,9 @@ SESSION_SECRET=...
 - **Fond de carte** : en jeu, `/capitol carte <rayon>` (ou le bouton « Relever le terrain ici » de la page Carte) relève le terrain autour de soi : couleurs des blocs, relief et profondeur de l'eau. La carte du site et la mini-carte du Direct l'utilisent, en vue de dessus ou en vue 3D isométrique. À refaire si l'arène change.
 - **Musique de fond en ligne** : la recherche du panneau « Musique de fond » cherche aussi des musiques libres de droits (Openverse : Jamendo, Freesound, Wikimedia…). ▶ pour écouter, « Ajouter » l'importe et la met dans la playlist. Le crédit de l'auteur s'affiche en bas du Direct (obligatoire pour les licences CC BY).
 - **Notifications** : cloche en haut à droite (équipe) : alertes, messages, interphone, demandes de couverture, morts, captures qui font ramer. Elles arrivent quand la fenêtre est en arrière-plan.
+- **Régie en différé + « À venir »** : les moniteurs de la régie (Aperçu, Antenne, multiview) sont en différé, comme le Direct. L'onglet « À venir » du panneau latéral liste en temps réel, dans l'ordre d'arrivée, ce que les caméras signalent : signalements, demandes de couverture, morts. Pour chacun, un compte à rebours indique quand ce sera à l'image, et un bouton met le tribut ou la caméra dans l'aperçu. Les POV signalées sont enregistrées tout de suite, pour être prêtes en différé.
+- **Police du titre** : Réglages › Apparence (Unbounded par défaut, Syne, Space Grotesk, Oswald ou Cinzel).
+- **Musique par artiste** : `art:nom de l'artiste` dans la recherche de musique (seulement les artistes en licence libre).
 - **Panneau latéral partout** : bouton à côté de la cloche (tributs, alertes, comms, terrain…), y compris en régie.
 
 ## Bot Twitch

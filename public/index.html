@@ -6,7 +6,7 @@
 <title>Capitol TV — Couverture des Jeux</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Barlow+Condensed:wght@500;600;700&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Barlow+Condensed:wght@500;600;700&family=Cinzel:wght@600;700&family=Unbounded:wght@600;700&family=Syne:wght@700;800&family=Space+Grotesk:wght@600;700&family=Oswald:wght@600;700&display=swap" rel="stylesheet">
 <script>
 /* =====================================================================
    CONFIGURATION — la seule partie à modifier
@@ -27,7 +27,7 @@ const CONFIG = {
   --gold-rgb:214,178,97; --gold:#d6b261; --gold-hi:#f6e2a6; --gold-lo:#8f6c2b; --gold-a:rgba(214,178,97,.10); --gold-b:rgba(214,178,97,.24);
   --red:#d0223f; --red-hi:#ff5d74; --red-a:rgba(208,34,63,.10); --red-b:rgba(208,34,63,.30);
   --ink:#f3f0e9; --ink2:#bdb8ad; --mute:#77736b; --ok:#5fbf8a; --warn:#e8a54b;
-  --serif:'Barlow Condensed','Arial Narrow',sans-serif; --sans:'Barlow',system-ui,-apple-system,sans-serif; --brand:'Cinzel',Georgia,serif;
+  --serif:'Barlow Condensed','Arial Narrow',sans-serif; --sans:'Barlow',system-ui,-apple-system,sans-serif; --brand:'Unbounded','Arial Black',sans-serif;
   --r:12px;
 }
 *{box-sizing:border-box}
@@ -327,7 +327,7 @@ img.logo{object-fit:contain;display:block;filter:drop-shadow(0 0 8px rgba(var(--
 header.top{display:flex;align-items:center;gap:20px;padding:0 18px;border-bottom:1px solid var(--hair);position:relative;z-index:3;min-width:0}
 header.top::after{content:"";position:absolute;left:20%;right:20%;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-b),transparent)}
 .brand{display:flex;align-items:center;gap:12px;user-select:none;flex:none}
-.word{font-family:var(--brand);font-weight:700;font-size:17px;letter-spacing:.26em;line-height:1;white-space:nowrap;
+.word{font-family:var(--brand);font-weight:700;font-size:16px;letter-spacing:var(--brand-ls,.12em);line-height:1;white-space:nowrap;
   background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,var(--gold-lo));-webkit-background-clip:text;background-clip:text;color:transparent}
 .brand small{display:block;margin-top:5px;font-size:10.5px;letter-spacing:.14em;color:var(--mute);text-transform:uppercase;font-weight:600;white-space:nowrap}
 .live{display:inline-flex;align-items:center;gap:7px;height:24px;padding:0 10px;border-radius:99px;background:var(--red-a);border:1px solid var(--red-b);
@@ -491,6 +491,13 @@ body.side-hide.on-antenne aside{display:none}
 @keyframes sideIn{from{transform:translateX(30px);opacity:0}}
 .side-btn{position:relative}
 .rp-pair{display:inline-flex;gap:2px}
+/* panneau « À venir » */
+.sn{padding:10px 12px;border-bottom:1px solid var(--hair);border-left:3px solid var(--hair2)}
+.sn.urgent{border-left-color:var(--red)}.sn.mort{border-left-color:#8a8a8a}.sn.demande{border-left-color:var(--gold)}.sn.alerte{border-left-color:var(--warn,#e2a13b)}
+.sn-h{display:flex;align-items:baseline;gap:8px}.sn-t{font:700 18px var(--serif);font-variant-numeric:tabular-nums;color:var(--gold-hi);min-width:64px}
+.sn.now{background:rgba(var(--gold-rgb),.08)}.sn.now .sn-t{color:var(--red-hi);animation:rpBlink 1.2s ease-in-out infinite}.sn.past{opacity:.45}
+.sn-k{font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase}.sn-h .note{margin-left:auto}
+.sn-b{margin-top:4px}.sn-d{color:var(--ink2);margin-top:2px}.sn-a{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
 .map-scan{display:inline-flex;gap:4px;margin-left:6px}
 /* 2e écran de la régie : tableau de bord */
 body.screen2 #pageView{right:380px;bottom:0}
@@ -903,6 +910,7 @@ body.overlay #flashLayer{top:40px}
   </div>
   <div class="hactions">
     <button class="btn online-btn" id="onlineBtn" title="Qui est sur Capitol TV en ce moment"><span class="dot"></span><b id="onlineN">0</b><span class="lbl-txt">en ligne</span></button>
+    <button class="btn sm ghost scr2-btn hide" id="scr2Btn" title="Ouvrir le 2e écran de la régie (tableau de bord : Direct, aperçu, plans, à venir, carte, sondages…)"><span data-ic="side"></span>2e écran</button>
     <button class="btn icon side-btn crew-only" id="notifBtn" title="Notifications"><span data-ic="bell"></span></button>
     <button class="btn icon side-btn" id="sideBtn" title="Panneau latéral : tributs, alertes, comms, terrain, journal…"><span data-ic="side"></span><i class="cnt hide" id="sideCnt">0</i></button>
     <button class="btn icon" id="helpBtn" title="Tips (?)"><span data-ic="help"></span></button>
@@ -979,6 +987,7 @@ body.overlay #flashLayer{top:40px}
       <button class="tab crew-only" data-tab="alerts">Alertes <span class="cnt hide" id="tabCnt">0</span></button>
       <button class="tab crew-only" data-tab="comms">Comms <span class="cnt hide" id="commsCnt">0</span></button>
       <button class="tab crew-only" data-tab="terrain">Terrain</button>
+      <button class="tab crew-only" data-tab="soon" title="Ce que les caméras ont signalé en temps réel, avec le temps avant que ce soit à l'image (différé)">À venir <span class="cnt hide" id="soonCnt">0</span></button>
       <button class="tab" data-tab="journal">Journal</button>
       <button class="tab" data-tab="rank">Podium</button>
       <button class="tab" data-tab="online">En ligne</button>
@@ -1056,6 +1065,10 @@ body.overlay #flashLayer{top:40px}
 
     <div id="pTerrain" class="panel hide">
       <div class="list" id="trList"></div>
+    </div>
+
+    <div id="pSoon" class="panel hide">
+      <div class="list" id="soonList"></div>
     </div>
 
     <div id="pRank" class="panel hide">
@@ -1266,6 +1279,8 @@ const IS_EMBED = /^embed-/i.test(H0);
 /* écran de sortie (OBS) : lien d'overlay, même ouvert avec #direct */
 const isOut = () => IS_OVERLAY || !!(S.me && S.me.overlay);
 /* couleurs et nom choisis dans Réglages › Apparence */
+/* polices du titre (Apparence) */
+const FONTS = { unbounded: ["Unbounded", "'Unbounded','Arial Black',sans-serif", '.12em'], syne: ['Syne', "'Syne',sans-serif", '.1em'], grotesk: ['Space Grotesk', "'Space Grotesk',sans-serif", '.14em'], oswald: ['Oswald', "'Oswald','Arial Narrow',sans-serif", '.16em'], cinzel: ['Cinzel (classique)', "'Cinzel',Georgia,serif", '.26em'] };
 function applyTheme() {
   const t = (S.board && S.board.theme) || {}, r = document.documentElement.style;
   const hex = v => /^#[0-9a-f]{6}$/i.test(v || '') ? v : '';
@@ -1275,6 +1290,7 @@ function applyTheme() {
   r.setProperty('--gold-rgb', g ? (n => [n >> 16, n >> 8 & 255, n & 255].join(','))(parseInt(g.slice(1), 16)) : '214,178,97');
   for (const [k, v] of Object.entries(g ? { '--gold': g, '--gold-hi': mix(g, .55), '--gold-lo': mix(g, -.4), '--gold-a': a(g, .10), '--gold-b': a(g, .24) } : { '--gold': '', '--gold-hi': '', '--gold-lo': '', '--gold-a': '', '--gold-b': '' })) v ? r.setProperty(k, v) : r.removeProperty(k);
   for (const [k, v] of Object.entries(rd ? { '--red': rd, '--red-hi': mix(rd, .35), '--red-a': a(rd, .10), '--red-b': a(rd, .30) } : { '--red': '', '--red-hi': '', '--red-a': '', '--red-b': '' })) v ? r.setProperty(k, v) : r.removeProperty(k);
+  const f = FONTS[t.font] || FONTS.unbounded; r.setProperty('--brand', f[1]); r.setProperty('--brand-ls', f[2]);
   NOTIF.title();
   const up = brandName().toUpperCase();
   for (const el of document.querySelectorAll('#brand .word, #tickLbl .word, .em-bar h3')) if (el.textContent !== up) el.textContent = up;
@@ -1372,7 +1388,7 @@ function normBoard(b) {
     hideChat: b.hideChat !== false,
     lock: (l => ({ mode: ['off', 'schedule', 'on'].includes(l.mode) ? l.mode : 'off', tz: String(l.tz || 'Europe/Paris'), msg: String(l.msg || ''),
       windows: (Array.isArray(l.windows) ? l.windows : []).map(w => ({ days: (Array.isArray(w.days) ? w.days : []).filter(d => d >= 0 && d <= 6), from: /^\d\d:\d\d$/.test(w.from) ? w.from : '20:00', to: /^\d\d:\d\d$/.test(w.to) ? w.to : '23:00' })) }))(b.lock || {}),
-    theme: (t => ({ name: String(t.name || '').slice(0, 40), gold: /^#[0-9a-f]{6}$/i.test(t.gold || '') ? t.gold : '', red: /^#[0-9a-f]{6}$/i.test(t.red || '') ? t.red : '' }))(b.theme || {}),
+    theme: (t => ({ name: String(t.name || '').slice(0, 40), gold: /^#[0-9a-f]{6}$/i.test(t.gold || '') ? t.gold : '', red: /^#[0-9a-f]{6}$/i.test(t.red || '') ? t.red : '', font: FONTS[t.font] ? t.font : '' }))(b.theme || {}),
     sponsor: (s => ({ url: /^https?:\/\//i.test(s.url || '') ? s.url : '', label: String(s.label || 'Sponsoriser un tribut'), text: String(s.text || ''),
       partners: (Array.isArray(s.partners) ? s.partners : []).map(p => ({ name: String(p.name || ''), url: String(p.url || ''), img: String(p.img || '') })) }))(b.sponsor || {})
   };
@@ -1471,7 +1487,7 @@ const NET = {
       case 'presence': onPresence(m.p); break;
       case 'team': S.team = m.team || []; if (m.roles) S.roles = m.roles; renderTeam(); renderOnline(); refreshSettings('access'); refreshSettings('roles'); PROG.renderSources(); CAM.renderComms(); break;
       case 'prog': case 'progEd': case 'onair': case 'media': PROG.onMsg(m); break;
-      case 'dvr': case 'dvrRole': DVR.onMsg(m); break;
+      case 'dvr': case 'dvrRole': case 'dvrWant': DVR.onMsg(m); break;
       case 'srvCams': S.srvCams = m.names || []; refreshSettings('cams'); break;
       case 'terrain': TERRAIN.set(m.terrain); break;
       case 'bot': S.bot = m.bot; refreshSettings('twitch'); break;
@@ -1584,6 +1600,7 @@ function onHello(m) {
   onLive(m.live);
   S.boardReady = false; onBoard(m.board);
   applyRole(); hideConn();
+  $('#scr2Btn').classList.toggle('hide', !hasPerm('program') || /^(ecran2|embed-|overlay)/i.test(H0));
   if (H0 === 'reglages-twitch' && isAdmin() && !S.botOpened) { S.botOpened = true; history.replaceState(null, '', location.pathname); setTimeout(() => openSettings('twitch'), 300); }
   S.watchKey = ''; sendWatch();
   if (S.subbed) NET.send({ t: 'sub', on: true });
@@ -1651,7 +1668,7 @@ function renderPage() { $('#pageView').onclick = null; if (S.page === 'equipe') 
 function sideSync() {
   const ant = S.page === 'antenne' && !S.theater, b = $('#sideBtn'); if (!b) return;
   b.classList.toggle('on', ant ? !document.body.classList.contains('side-hide') : document.body.classList.contains('side-open'));
-  const n = (+($('#tabCnt') && !$('#tabCnt').classList.contains('hide') ? $('#tabCnt').textContent : 0)) + (() => { try { return CAM.unread || 0; } catch (e) { return 0; } })();
+  const n = (+($('#tabCnt') && !$('#tabCnt').classList.contains('hide') ? $('#tabCnt').textContent : 0)) + (() => { try { return CAM.unread || 0; } catch (e) { return 0; } })() + (+(($('#soonCnt') && !$('#soonCnt').classList.contains('hide')) ? $('#soonCnt').textContent : 0));
   $('#sideCnt').textContent = n; $('#sideCnt').classList.toggle('hide', !n || (ant && !document.body.classList.contains('side-hide')) || document.body.classList.contains('side-open'));
 }
 function toggleSide(force) {
@@ -2323,6 +2340,42 @@ function renderAll() {
   applyTheme();
   renderStage(); renderSidebar(); renderAlerts(); renderJournal(); renderRank(); renderTicker(); renderWall();
 }
+/* « À venir » : ce que les caméras ont signalé en temps réel, dans l'ordre d'arrivée, avec le temps
+   avant que ce soit à l'image (la régie et le Direct sont en différé) */
+function soonItems() {
+  const now = Date.now() + (S.skew || 0), D = (S.board.delay || 0) * 1000, from = now - D - 60000, out = [];
+  const team = new Set((S.team || []).map(t => t.id));
+  for (const [id, a] of Object.entries(S.alerts || {})) {
+    if (!a.ts || a.ts < from || !(a.src === 'mod' || team.has(a.uid))) continue;
+    const t = byLogin(a.ch); out.push({ id: 'a' + id, ts: a.ts, k: a.urgent ? 'urgent' : 'alerte', what: a.type || 'Signalement', tr: t, by: a.by, detail: a.detail && a.detail !== '(aucun détail)' ? a.detail : '', cam: team.has(a.uid) ? a.uid : '' });
+  }
+  for (const [id, r] of Object.entries(CAM.reqs || {})) {
+    if (!r.ts || r.ts < from || r.state === 'done') continue;
+    out.push({ id: 'r' + id, ts: r.ts, k: 'demande', what: 'Demande de couverture', tr: byId(r.tr), by: r.byName, detail: r.text || '', cam: '' });
+  }
+  for (const e of S.board.events || []) {
+    if (!e.ts || e.ts < from || !['death', 'victor'].includes(e.k)) continue;
+    out.push({ id: 'e' + (e.id || e.ts), ts: e.ts, k: e.k === 'death' ? 'mort' : 'vainqueur', what: e.k === 'death' ? 'Mort' : 'Vainqueur', tr: e.tid ? byId(e.tid) : null, by: 'Serveur', detail: e.text || '', cam: '' });
+  }
+  return out.sort((a, b) => a.ts - b.ts).map(x => ({ ...x, left: x.ts + D - now }));
+}
+function renderSoon(tickOnly) {
+  const L = soonItems(), box = $('#soonList'), cnt = $('#soonCnt');
+  const n = L.filter(x => x.left > 0).length; if (cnt && cnt.textContent !== String(n)) { cnt.textContent = n; cnt.classList.toggle('hide', !n); sideSync(); }
+  if (!box || S.tab !== 'soon') return;
+  if (tickOnly && box.childElementCount === L.length) { L.forEach((x, i) => { const el = box.children[i]; if (el && el.dataset.id === x.id) { el.querySelector('.sn-t').textContent = x.left > 0 ? fmtDur(x.left) : 'À L\'IMAGE'; el.classList.toggle('now', x.left <= 0 && x.left > -15000); el.classList.toggle('past', x.left <= -15000); } }); return; }
+  if (!(S.board.delay > 0)) { box.innerHTML = '<div class="empty">Pas de différé : tout est déjà à l\'image en temps réel.</div>'; return; }
+  box.innerHTML = L.length ? L.map(x => `<div class="sn ${esc(x.k)} ${x.left <= 0 ? (x.left > -15000 ? 'now' : 'past') : ''}" data-id="${esc(x.id)}">
+      <div class="sn-h"><b class="sn-t">${x.left > 0 ? fmtDur(x.left) : 'À L\'IMAGE'}</b><span class="sn-k">${esc(x.what)}</span><span class="note">${new Date(x.ts - (S.skew || 0)).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span></div>
+      <div class="sn-b">${x.tr ? `<b>${pad3(x.tr.num)} · ${esc(x.tr.name)}</b>` : ''} <span class="note">par ${esc(x.by || '?')}</span>${x.detail ? `<div class="sn-d">${esc(x.detail)}</div>` : ''}</div>
+      ${hasPerm('program') && (x.tr || x.cam) ? `<div class="sn-a">${x.tr ? `<button class="btn xs" data-sn="trib|${esc(x.tr.id)}">Tribut dans l'aperçu</button>` : ''}${x.cam ? `<button class="btn xs ghost" data-sn="cam|${esc(x.cam)}">Caméra dans l'aperçu</button>` : ''}</div>` : ''}
+    </div>`).join('') : `<div class="empty">Rien de signalé pour l'instant. Les signalements des caméras apparaissent ici en temps réel, avec le temps restant avant qu'ils soient à l'image (différé de ${fmtDelay(S.board.delay)}).</div>`;
+}
+$('#soonList') && $('#soonList').addEventListener('click', e => {
+  const b = e.target.closest('[data-sn]'); if (!b) return; const [k, ref] = b.dataset.sn.split('|');
+  if (S.page === 'regie' && PROG.ed) PROG.pickFromScreen2(k, ref); else if (SCREEN2.bc) SCREEN2.bc.postMessage({ t: 's2pick', k, ref });
+  toastInfo('Dans l\'aperçu', k === 'trib' ? (byId(ref) || {}).name || '' : 'Caméra');
+});
 function renderTabs() {
   $$('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === S.tab));
   $('#pTributes').classList.toggle('hide', S.tab !== 'tributes');
@@ -2332,6 +2385,7 @@ function renderTabs() {
   $('#pOnline').classList.toggle('hide', S.tab !== 'online');
   $('#pComms').classList.toggle('hide', S.tab !== 'comms');
   $('#pTerrain').classList.toggle('hide', S.tab !== 'terrain');
+  $('#pSoon').classList.toggle('hide', S.tab !== 'soon'); if (S.tab === 'soon') renderSoon();
   if (S.tab === 'comms') CAM.renderComms(); if (S.tab === 'terrain') CAM.renderTerrain();
   const sub = S.tab === 'online';
   if (sub !== S.subbed) { S.subbed = sub; if (S.me) NET.send({ t: 'sub', on: sub }); }
@@ -2458,7 +2512,7 @@ const SCREEN2 = {
       this.mkStages();
       pv.querySelectorAll('[data-act]').forEach(b => b.onclick = () => { const w = $('#s2' + (b.dataset.act === 'pv' ? 'Pv' : 'Pg')).closest('.cvw'), on = !w.classList.contains('act'); w.classList.toggle('act', on); b.classList.toggle('on', on); });
       pv.querySelectorAll('[data-img]').forEach(b => b.onclick = () => { const k = b.dataset.img; V[k] = !V[k]; this.saveView(); b.classList.toggle('on', V[k]); $(k === 'dir' ? '#s2PgOff' : '#s2PvOff').classList.toggle('hide', V[k]); this.mkStages(); this.update(false); });
-      $('#s2Mode').onclick = e => { const b = e.target.closest('[data-mode]'); if (!b) return; V.live = b.dataset.mode === 'live'; this.saveView(); $$('#s2Mode [data-mode]').forEach(x => x.classList.toggle('on', x === b)); if (this.pg) { this.pg.destroy(); this.pg = null; } this.mkStages(); this.update(true); };
+      $('#s2Mode').onclick = e => { const b = e.target.closest('[data-mode]'); if (!b) return; V.live = b.dataset.mode === 'live'; this.saveView(); $$('#s2Mode [data-mode]').forEach(x => x.classList.toggle('on', x === b)); if (this.pg) { this.pg.destroy(); this.pg = null; } if (this.pv) { this.pv.destroy(); this.pv = null; } this.tiles.forEach(t => { t.st.destroy(); t.el.remove(); }); this.tiles.clear(); this.mkStages(); this.update(true); };
       $('#s2Snd').onclick = () => { this.snd = !this.snd; $('#s2Snd').classList.toggle('on', this.snd); if (this.pg) this.pg.setSound(this.snd); };
       $('#s2Tabs').onclick = e => { const b = e.target.closest('[data-tab2]'); if (!b) return; V.tab = b.dataset.tab2; this.saveView(); $$('#s2Tabs [data-tab2]').forEach(x => x.classList.toggle('on', x === b)); $$('#s2Box [data-pane]').forEach(x => x.classList.toggle('hide', x.dataset.pane !== V.tab)); this.panes(); };
       $('#s2Sc').onclick = e => { const b = e.target.closest('[data-sc]'); if (!b || !PROG.ed) return; PROG.ed.preview = b.dataset.sc; PROG.dirty = Date.now(); NET.req({ t: 'progSave', prog: PROG.ed }); this.update(false); };
@@ -2483,7 +2537,7 @@ const SCREEN2 = {
     const V = this.view;
     if (V.dir && !this.pg && $('#s2Pg')) { this.pg = new Stage($('#s2Pg'), V.live ? { delay: 0, layer: 'auto', sound: !!this.snd, record: true } : { delay: null, layer: 'auto', sound: !!this.snd, extras: true, record: true }); if (!V.live) { this.pg.seed(PROG.hist); DVR.candidate(2); } }
     if (!V.dir && this.pg) { this.pg.destroy(); this.pg = null; }
-    if (V.pv && !this.pv && $('#s2Pv')) this.pv = new Stage($('#s2Pv'), { delay: 0, layer: 'auto', sound: false });
+    if (V.pv && !this.pv && $('#s2Pv')) this.pv = new Stage($('#s2Pv'), { delay: V.live ? 0 : 'board', layer: 'auto', sound: false });
     if (!V.pv && this.pv) { this.pv.destroy(); this.pv = null; }
     const l = $('#s2DirL'); if (l) l.textContent = V.live ? '● ANTENNE (temps réel)' : '● DIRECT' + (S.board.delay ? ' · différé ' + fmtDelay(S.board.delay) : '');
   },
@@ -2520,7 +2574,7 @@ const SCREEN2 = {
     (lsc ? lsc.items : []).forEach(i => live.add(i.k + '|' + i.ref)); (psc ? psc.items : []).forEach(i => prev.add(i.k + '|' + i.ref));
     L.forEach((it, idx) => {
       const key = it.k + '|' + it.ref; let t = this.tiles.get(key);
-      if (!t) { const el = document.createElement('div'); el.className = 's2-tile'; el.dataset.tile = key; el.innerHTML = '<div class="stg"></div><button class="s2-pin" data-pin="' + esc(key) + '" title="Épingler">★</button>'; t = { el, st: new Stage(el.querySelector('.stg'), { delay: 0, layer: 'q', sound: false }) }; this.tiles.set(key, t); }
+      if (!t) { const el = document.createElement('div'); el.className = 's2-tile'; el.dataset.tile = key; el.innerHTML = '<div class="stg"></div><button class="s2-pin" data-pin="' + esc(key) + '" title="Épingler">★</button>'; t = { el, st: new Stage(el.querySelector('.stg'), { delay: this.view.live ? 0 : 'board', layer: 'q', sound: false }) }; this.tiles.set(key, t); }
       if (g.children[idx] !== t.el) g.insertBefore(t.el, g.children[idx] || null);
       t.el.classList.toggle('onair', live.has(key)); t.el.classList.toggle('inpv', prev.has(key)); t.el.querySelector('.s2-pin').classList.toggle('on', this.pins.includes(key));
       t.st.set(PROG.pubFromScene({ id: 'mv', name: '', items: [it] }), false);
@@ -2972,11 +3026,13 @@ function renderSettings() {
       <p class="note" style="margin-top:0">Pour réutiliser le site pour un autre event : nom affiché (page Direct, transitions, onglet) et couleurs. Le logo se change en remplaçant <code>public/logo.png</code> (voir README).</p>
       <div class="row"><label class="f"><span class="lbl2">Nom de l'émission</span><input class="inp" id="thN" maxlength="40" value="${esc(t.name || '')}" placeholder="${esc(CONFIG.name)}"></label>
         <label class="f" style="flex:0 0 150px"><span class="lbl2">Couleur principale</span><input class="inp" id="thG" type="color" value="${esc(t.gold || '#d6b261')}" style="padding:2px;height:36px"></label>
-        <label class="f" style="flex:0 0 150px"><span class="lbl2">Couleur « direct »</span><input class="inp" id="thR" type="color" value="${esc(t.red || '#d0223f')}" style="padding:2px;height:36px"></label></div>
+        <label class="f" style="flex:0 0 150px"><span class="lbl2">Couleur « direct »</span><input class="inp" id="thR" type="color" value="${esc(t.red || '#d0223f')}" style="padding:2px;height:36px"></label>
+        <label class="f" style="flex:0 0 200px"><span class="lbl2">Police du titre</span><select class="inp" id="thF">${Object.entries(FONTS).map(([k, f]) => `<option value="${k}" ${(t.font || 'unbounded') === k ? 'selected' : ''} style="font-family:${f[1].replace(/"/g, '')}">${f[0]}</option>`).join('')}</select></label></div>
       <div class="gx-row"><button class="btn sm ghost" id="thReset">Couleurs d'origine</button></div></div>`;
     // toujours sur le tableau actuel (S.board est remplacé à chaque mise à jour du serveur)
-    const upd = () => { S.board.theme = { name: $('#thN').value.trim(), gold: $('#thG').value, red: $('#thR').value }; applyTheme(); commit(false); };
+    const upd = () => { S.board.theme = { name: $('#thN').value.trim(), gold: $('#thG').value, red: $('#thR').value, font: $('#thF').value }; applyTheme(); commit(false); };
     P.oninput = e => { if (e.target.id && e.target.id.startsWith('th')) upd(); };
+    P.onchange = e => { if (e.target.id === 'thF') upd(); };
     $('#thReset').onclick = () => { $('#thG').value = '#d6b261'; $('#thR').value = '#d0223f'; upd(); };
   } else if (sec === 'fund') {
     const f = b.fund, log = (b.fundLog || []).slice().reverse();
@@ -3842,8 +3898,10 @@ const DVR = {
   onHello(m) { this.base = m.dvrBase || ''; this.rec = false; this.asked = {}; if (this.pri) NET.send({ t: 'dvrCan', pri: this.pri }); },
   /* cette page peut enregistrer pour tout le monde (Direct : 2, OBS : 3, régie : 1) */
   candidate(pri) { if (pri <= this.pri) return; this.pri = pri; NET.send({ t: 'dvrCan', pri }); },
+  want: {}, keep: new Map(),
   onMsg(m) {
-    if (m.t === 'dvrRole') { this.rec = !!m.on; if (m.tok) this.tok = m.tok; }
+    if (m.t === 'dvrRole') { this.rec = !!m.on; if (m.tok) this.tok = m.tok; if (m.want) this.want = m.want; this.sync(); }
+    if (m.t === 'dvrWant') { this.want = m.want || {}; this.sync(); }
     if (m.t === 'dvr') { const L = this.idx[m.src]; if (L && !L.some(e => e.u === m.seg.u)) { L.push(m.seg); L.sort((a, b) => a.t - b.t); } }
   },
   list(src) {
@@ -3854,6 +3912,23 @@ const DVR = {
     const L = this.idx[src] || [], keep = Date.now() - ((S.board.delay || 0) + 150) * 1000;
     while (L.length && L[0].end < keep) L.shift();
     return L;
+  },
+  /* l'enregistreur garde aussi les POV de l'aperçu et celles signalées par les caméras, pour qu'elles soient prêtes en différé */
+  sync() {
+    const now = Date.now() + (S.skew || 0), D = S.board.delay || 0;
+    for (const [src, k] of this.keep) {
+      const w = this.want[src];
+      if (!this.rec || !D || !w || w.until < now) { if (!k.drop) k.drop = Date.now() + 10000; if (Date.now() > k.drop) { k.dp.destroy(); k.dp.el.remove(); this.keep.delete(src); } }
+      else k.drop = 0;
+    }
+    if (!this.rec || !D) return;
+    let box = document.getElementById('dvrKeep'); if (!box) { box = document.createElement('div'); box.id = 'dvrKeep'; box.style.cssText = 'position:fixed;width:2px;height:2px;overflow:hidden;opacity:0;pointer-events:none;left:-10px;top:-10px'; document.body.appendChild(box); }
+    for (const [src, w] of Object.entries(this.want)) {
+      if (w.until < now || this.keep.has(src)) continue;
+      const set = this.regs.get(src); if (set && [...set].some(x => !x.recordOnly && x.recT && (x.layer === 'f' || w.ly === 'q'))) continue;
+      if (!RTC.live(src)) continue;
+      const dp = new DelayPlayer(src, { recordOnly: true, layer: w.ly === 'q' ? 'q' : 'f', delay: D }); box.appendChild(dp.el); this.keep.set(src, { dp, drop: 0 });
+    }
   },
   url(e) { return this.base ? this.base.replace(/\/$/, '') + '/' + e.u.split('/').map(encodeURIComponent).join('/') : '/dvr/s/' + encodeURIComponent(e.u); },
   fetch(e) { if (!e.p) { e.p = fetch(this.url(e)).then(r => r.ok ? r.arrayBuffer() : Promise.reject(new Error(r.status))); e.p.catch(() => { setTimeout(() => { e.p = null; }, 3000); }); } return e.p; },
@@ -3868,8 +3943,8 @@ const DVR = {
   }
 };
 class DelayPlayer {
-  constructor(src, { delay = 0, record = false, layer = 'f' } = {}) {
-    this.src = src; this.layer = layer; this.delay = Math.max(0, delay); this.record = record || this.delay > 0;
+  constructor(src, { delay = 0, record = false, layer = 'f', recordOnly = false } = {}) {
+    this.src = src; this.layer = layer; this.delay = Math.max(0, delay); this.record = record || this.delay > 0 || recordOnly; this.recordOnly = recordOnly;
     this.el = document.createElement('div'); this.el.className = 'dp';
     this.video = document.createElement('video'); this.video.playsInline = true; this.video.autoplay = true; this.video.muted = true;
     this.el.appendChild(this.video);
@@ -3900,6 +3975,7 @@ class DelayPlayer {
     if (!this.record) { this.video.srcObject = this.conn.ms; this.video.muted = this.muted; this.video.play().catch(() => {}); this.status(); return; }
     if (this.recT) return;
     if (!this.startRec()) { this.video.srcObject = this.conn.ms; this.record = false; return; }
+    if (this.recordOnly) return;
     if (this.delay > 0) this.initMse(this.mt);
     else { this.video.srcObject = this.conn.ms; this.video.play().catch(() => {}); }
   }
@@ -4335,7 +4411,7 @@ class Stage {
   }
   get sound() { return this.o.sound; }
   setSound(on) { this.o.sound = !!on; this.layout(false); }
-  delay() { return this.o.delay == null ? (S.board.delay || 0) : this.o.delay; }
+  delay() { return this.o.delay == null || this.o.delay === 'board' ? (S.board.delay || 0) : this.o.delay; }
   /* petite vignette : couche légère du flux (économise la bande passante) */
   layerFor(it) { return this.o.layer !== 'auto' ? this.o.layer : it.w * it.h < 1200 ? 'q' : 'f'; }
   set(pub, cut) {
@@ -4691,7 +4767,7 @@ const PROG = {
     if (/direct|emission/i.test(H0) && !isLocked()) setTimeout(() => { setPage('direct'); this.fullscreen(true); }, 0);
     const em = /^embed-(carte|jeux)$/i.exec(H0);
     if (em && !isLocked()) setTimeout(() => { document.body.classList.add('embed'); if (S.page !== em[1]) setPage(em[1]); }, 0);
-    if (/^ecran2/i.test(H0) && hasPerm('program') && !isLocked()) setTimeout(() => { document.body.classList.add('screen2'); if (S.page !== 'regie2') setPage('regie2'); }, 0);
+    if (/^ecran2/i.test(H0) && hasPerm('program') && !isLocked()) setTimeout(() => { document.body.classList.add('screen2'); S.tab = 'soon'; renderTabs(); if (S.page !== 'regie2') setPage('regie2'); }, 0);
   },
   wantsMap() { return !!(this.pub && this.pub.gfx && this.pub.gfx.map && this.pub.gfx.map.on); },
   onAir(id) { return !!(this.pub && this.pub.on && this.pub.items.some(i => i.k === 'cam' && i.ref === id)); },
@@ -4743,6 +4819,8 @@ const PROG = {
     if (this.main) { this.main.tick(); this.directBar(); }
     for (const m of this.mons()) m.tick();
     if (S.page === 'regie2') { if (SCREEN2.pv) SCREEN2.pv.tick(); if (SCREEN2.pg) SCREEN2.pg.tick(); }
+    if (DVR.rec) DVR.sync();
+    if (isCrew()) renderSoon(true);
     if (S.page === 'regie') this.renderQueue(true);
   },
   badge(el, id) {
@@ -5147,9 +5225,9 @@ const PROG = {
     const P = this.monPrefs, img = k => P[k] !== false;
     if (this.pgmStage && this.pgmStage.el !== pg) { this.pgmStage.destroy(); this.pgmStage = null; }
     if (this.pvStage && this.pvStage.el !== pv) { this.pvStage.destroy(); this.pvStage = null; }
-    if (img('pg') && !this.pgmStage) { this.pgmStage = new Stage(pg, { delay: 0, layer: 'q', record: true, sound: P.snd === 'pg' }); this.pgmStage.set(this.pub, false); DVR.candidate(1); }
+    if (img('pg') && !this.pgmStage) { this.pgmStage = new Stage(pg, { delay: null, layer: 'q', record: true, sound: P.snd === 'pg' }); this.pgmStage.seed(this.hist); this.pgmStage.set(this.pub, false); DVR.candidate(1); }
     if (!img('pg') && this.pgmStage) { this.pgmStage.destroy(); this.pgmStage = null; }
-    if (img('pv') && !this.pvStage) { this.pvStage = new Stage(pv, { delay: 0, layer: 'q', sound: P.snd === 'pv' }); }
+    if (img('pv') && !this.pvStage) { this.pvStage = new Stage(pv, { delay: 'board', layer: 'q', sound: P.snd === 'pv' }); }
     if (!img('pv') && this.pvStage) { this.pvStage.destroy(); this.pvStage = null; }
     pv.classList.toggle('hide', !img('pv')); pg.classList.toggle('hide', !img('pg'));
     $('#cvPv').classList.toggle('render', img('pv')); $('#cvPg').classList.toggle('render', img('pg'));
@@ -5276,7 +5354,7 @@ const PROG = {
     const playing = this.pub && this.pub.bgm;
     box.innerHTML = `<div class="gx-row"><select class="mini-sel" id="bgScope"><option value="all" ${scope === 'all' ? 'selected' : ''}>Tous les plans</option><option value="scene" ${scope === 'scene' ? 'selected' : ''}>Ce plan : ${esc(sc ? sc.name : '')}</option></select>
         <label style="display:flex;align-items:center;gap:6px;flex:0 0 130px"><span class="note">Vol.</span><input type="range" id="bgVol" min="0" max="100" step="5" value="${D.vol}" style="flex:1"></label></div>
-      <div class="gx-row"><input class="inp" id="bgQ" value="${esc(this.bgmQ || '')}" placeholder="Chercher une musique (ambiance, épique, suspense…)" autocomplete="off"></div>
+      <div class="gx-row"><input class="inp" id="bgQ" value="${esc(this.bgmQ || '')}" placeholder="Chercher une musique (épique, suspense…) ou art:nom de l'artiste" autocomplete="off"></div>
       ${hits.length ? `<div class="bg-hits"><span class="note">Déjà dans tes médias</span>${hits.map(x => `<button class="btn xs ghost" data-bga="${esc(x.id)}">＋ ${esc(x.name)} <span class="note">${this.fmtDur(x.dur)}</span></button>`).join('')}</div>` : ''}
       ${q.length >= 2 ? this.bgWebHtml() : ''}
       <ol class="qlist">${D.ids.map((id, i) => { const md = this.mediaById(id); return `<li><span>${esc(md ? md.name : '?')}</span><span class="note">${md ? this.fmtDur(md.dur) : ''}</span><button class="btn sm ghost" data-bgx="${i}">${ic('x')}</button></li>`; }).join('')}</ol>
@@ -5299,7 +5377,7 @@ const PROG = {
     const W = this.bgWeb || {}, q = (this.bgmQ || '').trim();
     if (W.q !== q || W.busy) return '<p class="note" style="margin:4px 0">Recherche en ligne…</p>';
     if (W.err) return `<p class="note" style="margin:4px 0;color:var(--red-hi)">${esc(W.err)}</p>`;
-    if (!W.list.length) return '<p class="note" style="margin:4px 0">Rien trouvé en ligne : essaie un mot en anglais (epic, suspense, ambient…).</p>';
+    if (!W.list.length) return /^art(iste)?\s*:/i.test(q) ? '<p class="note" style="margin:4px 0">Aucune musique libre de droits de cet artiste. Les artistes sous contrat (Two Steps From Hell, Hans Zimmer…) ne publient pas sous licence libre, et leur musique ferait couper ou bloquer le stream Twitch (DMCA). Essaie un style : art:Kevin MacLeod, ou « epic trailer ».</p>' : '<p class="note" style="margin:4px 0">Rien trouvé en ligne : essaie un mot en anglais (epic, suspense, ambient…) ou art:nom de l\'artiste.</p>';
     return `<div class="bg-web"><span class="note">En ligne, libres de droits (crédit à afficher)</span>${W.list.map((x, i) => `<div class="bw"><button class="btn xs ghost" data-bwp="${i}" title="Écouter ici">${this.bgPrevI === i ? '■' : '▶'}</button>
       <span class="bw-t"><b>${esc(x.title)}</b><small>${esc(x.creator || 'Auteur inconnu')} · ${esc(x.license)}${x.src ? ' · ' + esc(x.src) : ''}</small></span><span class="note">${this.fmtDur(x.dur)}</span>
       <button class="btn xs" data-bwa="${i}" ${W.adding === i ? 'disabled' : ''}>${W.adding === i ? 'Import…' : '＋ Ajouter'}</button></div>`).join('')}</div>`;
@@ -5603,6 +5681,7 @@ $('#hommageBtn').onclick = openHommage;
 $('#markBtn').onclick = openMark;
 $('#helpBtn').onclick = openHelp;
 $('#sideBtn').onclick = () => toggleSide();
+$('#scr2Btn').onclick = () => SCREEN2.open();
 SCREEN2.init();
 NOTIF.init();
 $('#onlineBtn').onclick = () => { closeTeam(); if (S.theater) setTheater(false); S.tab = 'online'; renderTabs(); };
