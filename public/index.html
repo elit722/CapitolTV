@@ -902,15 +902,16 @@ body.em-full #flashLayer{z-index:96;top:5vh}
 .mx-fade{margin:0 8px 8px;padding:8px;border:1px dashed var(--hair2);border-radius:9px;display:flex;flex-direction:column;gap:6px}.mx-pre{display:flex;flex-wrap:wrap;gap:4px}
 .mx-cu{display:flex;align-items:center;gap:5px;font-size:12px}.mx-cu .inp{width:62px;height:28px;padding:0 6px}.mx-cu .mini-sel{height:28px}
 .mx-foot{padding:6px 10px 0;font-size:11px}.mx-sep{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);padding:10px 10px 4px}
-.pmix{position:fixed;right:398px;bottom:14px;z-index:110;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.pmix{flex:none;border-top:1px solid var(--hair2);background:var(--side)}#s2Tw,#s2Tw iframe{pointer-events:auto}
 .pmix-btn{display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--hair2);background:rgba(16,15,18,.95);color:var(--ink);cursor:pointer;font-size:12.5px;box-shadow:0 8px 24px rgba(0,0,0,.4)}.pmix-btn.on,.pmix-btn:hover{border-color:var(--gold-b);color:var(--gold-hi)}
-.pmix-p{width:380px;max-height:60vh;display:flex;flex-direction:column;background:rgba(16,15,18,.97);border:1px solid var(--hair2);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.55)}.pmix-p .mixp-h{cursor:default}
+.pmix-p{max-height:42vh;display:flex;flex-direction:column}.pmix-p .mixp-h{cursor:default;padding:8px 12px}.pmix-p .mixp-b{padding:2px 4px 6px}
 .s2-tw{background:#0e0b14}
 /* menu clic droit de la régie */
 .rs-kpi{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 14px}.rs-kpi div{flex:1;min-width:110px;padding:12px 14px;border:1px solid var(--hair);border-radius:10px;font-size:12px;color:var(--mute)}.rs-kpi b{display:block;font-size:24px;color:var(--gold-hi)}
 .rs-l{display:flex;gap:10px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--hair);font-size:13px}.rs-t{font-variant-numeric:tabular-nums;color:var(--mute);flex:0 0 44px}
 .rs-tops{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:12px 0}.rs-top{border:1px solid var(--hair);border-radius:10px;padding:10px 12px}.rs-top h5{margin:0 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}.rs-top div{display:flex;justify-content:space-between;font-size:13px;padding:3px 0}.rs-top b{color:var(--gold-hi)}
 @media print{body.print-resume header.top,body.print-resume aside,body.print-resume footer,body.print-resume #pageNav,body.print-resume .team-h .btn,body.print-resume .team-h select,body.print-resume #toasts{display:none!important}body.print-resume #pageView{position:static!important;overflow:visible!important}body.print-resume{background:#fff!important;color:#000!important}}
+.kb-r{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--hair);font-size:13px}.kb-b{min-width:120px;justify-content:center;font-family:ui-monospace,monospace}.kb-b.on{border-color:var(--gold-b);color:var(--gold-hi)}.kb-h{margin:14px 0 4px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
 .favs{display:flex;flex-wrap:wrap;gap:4px}.fav{display:flex;align-items:center;gap:6px;height:30px;padding:0 9px 0 4px;border:1px solid var(--hair2);border-radius:7px;background:transparent;color:var(--ink);font-size:12px;cursor:pointer;max-width:150px}
 .fav kbd{font-size:10px;padding:1px 4px}.fav span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fav.vide{color:var(--mute);border-style:dashed}.fav.live{border-color:var(--red);background:rgba(224,81,74,.1)}.fav:hover{border-color:var(--gold-b)}
 .st-row{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:11.5px;color:var(--mute)}.st-row span{display:flex;flex-direction:column;line-height:1.2}.st-row b{color:var(--gold-hi);font-size:13px}
@@ -929,7 +930,7 @@ body.em-full #flashLayer{z-index:96;top:5vh}
 .ctx-h{padding:7px 10px 2px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
 .ctx button{all:unset;padding:6px 10px;border-radius:6px;font-size:12.5px;color:var(--ink);cursor:pointer}.ctx button:hover{background:rgba(var(--gold-rgb),.12);color:var(--gold-hi)}
 .ctx hr{border:0;border-top:1px solid var(--hair);margin:4px 2px}
-.cv .ci.hid{opacity:.45;outline:1px dashed var(--hair2);background-image:none!important}.yt-prev{position:fixed;right:0;bottom:0;width:200px;height:200px;opacity:0;pointer-events:none;z-index:-1}.bw.bad{opacity:.55}.em-yt{position:absolute;right:0;bottom:0;width:200px;height:200px;opacity:0;pointer-events:none;z-index:0}body.em-full #hommage{z-index:97}
+.cv .ci.hid{opacity:.45;outline:1px dashed var(--hair2);background-image:none!important}.yt-prev{position:fixed;right:0;bottom:0;width:200px;height:200px;opacity:0;pointer-events:none;z-index:-1}.bw.bad{opacity:.55}.bw-c{width:28px;height:28px;border-radius:4px;flex:none}.em-yt{position:absolute;right:0;bottom:0;width:200px;height:200px;opacity:0;pointer-events:none;z-index:0}body.em-full #hommage{z-index:97}
 
 @media (max-width:1500px){ .games{display:none} }
 @media (max-width:1280px){ .hs.opt{display:none} }
@@ -1194,6 +1195,7 @@ body.em-full #flashLayer{z-index:96;top:5vh}
           <button data-s="roles" class="roles-only"><span data-ic="crown"></span>Rôles & permissions</button>
           <button data-s="access"><span data-ic="lock"></span>Accès & bannis</button>
           <button data-s="display"><span data-ic="gear"></span>Affichage</button>
+          <button data-s="keys" class="crew-only">⌨ Raccourcis</button>
         </nav>
         <div class="spane" id="spane"></div>
       </div>
@@ -1676,7 +1678,7 @@ function applyRole() {
 function onHello(m) {
   S.me = m.me; S.skew = (m.now || Date.now()) - Date.now();
   S.team = m.team || []; S.banned = m.banned || {}; S.roles = m.roles || [];
-  TERRAIN.set(m.terrain); S.bot = m.bot || null; DVR.onHello(m); if (m.mix) MIX.set(m.mix); RTC.onHello(m); CAM.onHello(m); PROG.onHello(m); S.srvCams = m.srvCams || []; GAMES.onHello(m); CLIPS.onList(m.clips); TALK.onState(m.talk || null); RTC.vq = (m.rtc && m.rtc.vq) || null;
+  TERRAIN.set(m.terrain); S.bot = m.bot || null; DVR.onHello(m); KB.onHello(m); if (m.mix) MIX.set(m.mix); RTC.onHello(m); CAM.onHello(m); PROG.onHello(m); S.srvCams = m.srvCams || []; GAMES.onHello(m); CLIPS.onList(m.clips); TALK.onState(m.talk || null); RTC.vq = (m.rtc && m.rtc.vq) || null;
   S.alertsReady = false; S.seen = new Set(); S.alerts = {};
   if (m.alerts) onAlerts(m.alerts);
   onPresence(m.presence || { n: 0, counts: {}, team: {} });
@@ -2629,7 +2631,7 @@ const SCREEN2 = {
           <section class="s2-box"><h5>Comms</h5><div class="s2-slot" id="s2Comms"></div></section>
           <section class="s2-box"><h5>Terrain <span class="note">caméras · demandes · actes</span></h5><div class="s2-slot" id="s2Terrain"></div></section>
           <section class="s2-box"><h5>Bloc-notes <span class="note" id="s2NoteS"></span></h5><textarea class="inp s2-note" id="s2Note" placeholder="Notes perso (enregistrées sur cet ordinateur) : plans à faire, idées, qui suivre…" spellcheck="false"></textarea></section>
-          <section class="s2-box"><h5>Tips</h5><div class="s2-tips">${helpKeys()}</div></section>
+          <section class="s2-box"><h5>Tips <span class="note">raccourcis modifiables dans Paramètres › Raccourcis</span></h5><div class="s2-tips">${helpKeys(true)}</div></section>
         </div>
         <div class="s2-pane ${V.tab === 'carte' ? '' : 'hide'}" data-pane="carte"></div>
         <div class="s2-pane ${V.tab === 'jeux' ? '' : 'hide'}" data-pane="jeux"></div>
@@ -2675,9 +2677,8 @@ const SCREEN2 = {
     const w = this.tw = { ch, ready: false };
     if (TW && TW.Player && HOST) {
       try {
-        w.pl = new TW.Player(d.id, { channel: ch, parent: [HOST], width: '100%', height: '100%', muted: PMIX.muted('tw'), autoplay: true });
-        w.pl.addEventListener(TW.Player.READY, () => { w.ready = true; PMIX.applyTw(); });
-        if (TW.Player.PLAYING) w.pl.addEventListener(TW.Player.PLAYING, () => PMIX.applyTw());
+        w.pl = new TW.Player(d.id, { channel: ch, parent: [HOST], width: '100%', height: '100%', muted: PMIX.muted('tw'), autoplay: true, controls: true });
+        w.pl.addEventListener(TW.Player.READY, () => { w.ready = true; PMIX.applyTw(true); });
       } catch (e) { w.pl = null; }
     }
     if (!w.pl) d.innerHTML = `<iframe src="${playerURL(ch, PMIX.muted('tw'))}" allow="autoplay; fullscreen" style="width:100%;height:100%;border:0" title="Twitch"></iframe>`;
@@ -2966,33 +2967,73 @@ function openHelp() {
     <div class="modal-b">${helpKeys()}</div>
     <div class="modal-f"><button class="btn primary" data-close>Compris</button></div>`);
 }
-function helpKeys() {
-  return `<div class="keys">
+/* raccourcis clavier : modifiables par chaque membre de l'équipe (Réglages › Raccourcis), retenus sur son compte */
+const KB = {
+  DEF: {
+    antenne: [['back', 'Revenir au canal d\'avant', 'r'], ['random', 'Canal au hasard', 'z'], ['tour', 'Tour automatique de l\'arène', 'p'], ['wall', 'Mur de tous les flux', 'g'], ['layout', 'Changer de disposition', 'l'],
+      ['chat', 'Chat du flux actif', 'c'], ['theater', 'Masquer le panneau', 'h'], ['fs', 'Plein écran', 'f'], ['tabTrib', 'Onglet Tributs', 't'], ['tabJournal', 'Onglet Journal', 'j'], ['tabRank', 'Onglet Classement', 'k'], ['tabOnline', 'Onglet En ligne', 'o'],
+      ['pageTrib', 'Page Tributs', 'u'], ['pageSpons', 'Page Sponsors', 's'], ['pageTeam', 'Page Équipe', 'e'], ['nextAlert', 'Prochaine alerte', 'n'], ['tabAlerts', 'Onglet Alertes', 'a'], ['mark', 'Marquer le moment', 'm']],
+    regie: [['take', 'À l\'antenne', 't'], ['apply', 'Appliquer les modifs (mode manuel)', 'a'], ['replay', 'Replay instantané (10 s, ralenti)', 'r'], ['optimal', 'Placement optimal', 'o'],
+      ['full', 'Survol d\'une source : plein écran', 'f'], ['bg', 'Survol : en fond', 'g'], ['pip', 'Survol : incrustation', 'p'], ['del', 'Retirer la source sélectionnée', 'Delete']]
+  },
+  my: LS.get('ctv.kb', {}),
+  get(sc, id) { const d = (this.DEF[sc].find(x => x[0] === id) || [])[2] || ''; return this.my[sc + '.' + id] || d; },
+  find(e, sc) { const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; for (const [id] of this.DEF[sc]) { const b = this.get(sc, id); if (b === k || (b.length === 1 && b === k.toLowerCase())) return id; } return ''; },
+  is(e, sc, id) { return this.find(e, sc) === id; },
+  label(k) { return ({ ' ': 'Espace', Delete: 'Suppr', Backspace: '⌫', Enter: 'Entrée', ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Escape: 'Échap', Tab: 'Tab', Insert: 'Inser', Home: 'Début', End: 'Fin', PageUp: 'Pg↑', PageDown: 'Pg↓' })[k] || (k.length === 1 ? k.toUpperCase() : k); },
+  kbd(sc, id) { return '<kbd>' + esc(this.label(this.get(sc, id))) + '</kbd>'; },
+  onHello(m) { if (m.me && m.me.kb && typeof m.me.kb === 'object') { this.my = m.me.kb; LS.set('ctv.kb', this.my); } },
+  set(sc, id, key) {
+    const other = this.DEF[sc].find(([x]) => x !== id && this.get(sc, x) === key);
+    if (other) this.my[sc + '.' + other[0]] = this.get(sc, id);
+    this.my[sc + '.' + id] = key; this.save(); return other ? other[1] : '';
+  },
+  reset() { this.my = {}; this.save(); },
+  save() { LS.set('ctv.kb', this.my); NET.req({ t: 'kb', kb: this.my }).catch(() => {}); }
+};
+function helpKeys(regieFirst) {
+  const K = (id, sc = 'antenne') => KB.kbd(sc, id), R = id => KB.kbd('regie', id);
+  const h = `<div class="keys">
       <h5>Zapping</h5>
       <span><kbd>0</kbd>–<kbd>9</kbd></span><span>Taper un numéro de canal (jusqu'à 3 chiffres, validation auto ou <kbd>Entrée</kbd>)</span>
       <span><kbd>←</kbd> <kbd>→</kbd></span><span>Canal précédent / suivant</span>
-      <span><kbd>R</kbd> ou <kbd>⌫</kbd></span><span>Revenir au canal d'avant</span>
-      <span><kbd>Z</kbd></span><span>Canal au hasard</span>
-      <span><kbd>P</kbd></span><span>Tour automatique de l'arène</span>
+      <span>${K('back')} ou <kbd>⌫</kbd></span><span>Revenir au canal d'avant</span>
+      <span>${K('random')}</span><span>Canal au hasard</span>
+      <span>${K('tour')}</span><span>Tour automatique de l'arène</span>
       <h5>Affichage</h5>
-      <span><kbd>G</kbd></span><span>Mur de tous les flux</span>
-      <span><kbd>L</kbd></span><span>Changer de disposition (1, 2, focus, 4, 9)</span>
+      <span>${K('wall')}</span><span>Mur de tous les flux</span>
+      <span>${K('layout')}</span><span>Changer de disposition (1, 2, focus, 4, 9)</span>
       <span><kbd>↑</kbd> <kbd>↓</kbd></span><span>Changer de canal actif (celui qui a le son)</span>
-      <span><kbd>C</kbd> · <kbd>H</kbd> · <kbd>F</kbd></span><span>Chat · masquer le panneau · plein écran</span>
+      <span>${K('chat')} · ${K('theater')} · ${K('fs')}</span><span>Chat · masquer le panneau · plein écran</span>
       <span><kbd>/</kbd></span><span>Rechercher un tribut</span>
-      <span><kbd>T</kbd> · <kbd>J</kbd> · <kbd>K</kbd> · <kbd>O</kbd></span><span>Onglets Tributs · Journal · Classement · En ligne</span>
-      <span><kbd>U</kbd> · <kbd>S</kbd> · <kbd>E</kbd></span><span>Pages Tributs · Sponsors · Équipe (<kbd>Échap</kbd> pour revenir à l'antenne)</span>
-      <h5>Régie</h5>
-      <span><kbd>N</kbd></span><span>Aller à la prochaine alerte</span>
-      <span><kbd>A</kbd></span><span>Onglet Alertes</span>
-      <span><kbd>M</kbd></span><span>Marquer le moment</span>
+      <span>${K('tabTrib')} · ${K('tabJournal')} · ${K('tabRank')} · ${K('tabOnline')}</span><span>Onglets Tributs · Journal · Classement · En ligne</span>
+      <span>${K('pageTrib')} · ${K('pageSpons')} · ${K('pageTeam')}</span><span>Pages Tributs · Sponsors · Équipe (<kbd>Échap</kbd> pour revenir à l'antenne)</span>
+      <h5>Alertes</h5>
+      <span>${K('nextAlert')}</span><span>Aller à la prochaine alerte</span>
+      <span>${K('tabAlerts')}</span><span>Onglet Alertes</span>
+      <span>${K('mark')}</span><span>Marquer le moment</span>
       <span><kbd>Échap</kbd></span><span>Fermer</span>
-      <h5>Réalisation</h5>
-      <span><kbd>T</kbd> · <kbd>A</kbd></span><span>À l'antenne · Appliquer les modifs (mode manuel)</span>
+      <h5>Réalisation (page Réalisation)</h5>
+      <span>${R('take')} ou <kbd>Entrée</kbd></span><span>Passer l'aperçu à l'antenne</span>
+      <span>${R('apply')}</span><span>Appliquer les modifs (mode manuel)</span>
       <span><kbd>1</kbd>–<kbd>9</kbd></span><span>Choisir le plan dans l'aperçu</span>
+      <span><kbd>Maj</kbd>+<kbd>F1</kbd>–<kbd>F12</kbd></span><span>Plan favori directement à l'antenne (Maj+clic sur une case pour la remplir)</span>
+      <span>${R('replay')}</span><span>Replay instantané : 10 dernières secondes de la POV principale, au ralenti</span>
+      <span>${R('optimal')}</span><span>Placement optimal des sources du plan</span>
+      <span>Survol + ${R('full')}</span><span>Source survolée (liste de gauche) en plein écran</span>
+      <span>Survol + <kbd>1</kbd>–<kbd>9</kbd></span><span>Dans la grille 3×3 (remplace la source déjà à cette place)</span>
+      <span>Survol + <kbd>Maj</kbd>+<kbd>1</kbd>–<kbd>4</kbd></span><span>Dans un quart de l'écran</span>
+      <span>Survol + <kbd>←</kbd> <kbd>→</kbd></span><span>Moitié gauche / droite</span>
+      <span>Survol + ${R('pip')} · ${R('bg')}</span><span>Incrustation · en fond</span>
+      <span>Clic droit</span><span>Sur une source de l'aperçu : changer la POV, principal, son, cacher, ordre…</span>
+      <span>${R('del')} · <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd></span><span>Retirer / déplacer la source sélectionnée (<kbd>Maj</kbd> : plus vite)</span>
+      <span><kbd>Espace</kbd> (maintenu)</span><span>Parler aux caméras (interphone)</span>
       <h5>OBS</h5>
       <span>Clic droit</span><span>OBS : clic droit sur la source › <b>Interagir</b> pour accepter les demandes Twitch (contenu sensible…)</span>
     </div>`;
+  if (!regieFirst) return h;
+  const i = h.indexOf('<h5>Réalisation'), j = h.indexOf('<h5>OBS'), z = h.indexOf('<h5>Zapping');
+  return h.slice(0, z) + h.slice(i, j) + h.slice(z, i) + h.slice(j);
 }
 
 /* =====================================================================
@@ -3323,6 +3364,23 @@ function renderSettings() {
       <p class="note" style="margin-top:0">Efface les messages, demandes de couverture et actes annonciateurs (les alertes ont leur propre bouton).</p>
       <button class="btn ghost" data-a="camClear" style="color:var(--red-hi)">${ic('trash')}Effacer comms, demandes et actes</button>
     </div>`;
+  } else if (sec === 'keys') {
+    const row = (sc, [id, lab]) => `<div class="kb-r"><span>${esc(lab)}</span><button class="btn sm kb-b" data-kb="${sc}|${id}">${esc(KB.label(KB.get(sc, id)))}</button></div>`;
+    P.innerHTML = `<div class="sect"><h4>⌨ Raccourcis clavier <span>sur ton compte</span></h4>
+      <p class="note" style="margin-top:0">Clique sur une touche puis appuie sur la nouvelle (<kbd>Échap</kbd> pour annuler). Si elle sert déjà dans la même page, les deux s'échangent. Tes réglages te suivent sur tous tes ordinateurs.</p>
+      <h5 class="kb-h">Antenne</h5>${KB.DEF.antenne.map(x => row('antenne', x)).join('')}
+      <h5 class="kb-h">Réalisation</h5>${KB.DEF.regie.map(x => row('regie', x)).join('')}
+      <p class="note">Fixes : chiffres (canaux, plans, grille), flèches, <kbd>Maj</kbd>+<kbd>F1</kbd>–<kbd>F12</kbd> (favoris), <kbd>Entrée</kbd>, <kbd>Espace</kbd> (interphone).</p>
+      <button class="btn ghost" data-kbr>Tout remettre par défaut</button></div>`;
+    P.onclick = e => {
+      if (e.target.closest('[data-kbr]')) { KB.reset(); renderSettings(); toastInfo('Raccourcis par défaut'); return; }
+      const b = e.target.closest('[data-kb]'); if (!b) return;
+      const [sc, id] = b.dataset.kb.split('|'); b.textContent = 'Appuie sur une touche…'; b.classList.add('on');
+      const cap = ev => { ev.preventDefault(); ev.stopPropagation(); document.removeEventListener('keydown', cap, true);
+        if (ev.key === 'Escape' || /^(Shift|Control|Alt|Meta|CapsLock|Tab)$/.test(ev.key) || /^[0-9]$/.test(ev.key) || /^F\d+$/.test(ev.key) || ['Enter', ' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '/'].includes(ev.key)) { renderSettings(); if (ev.key !== 'Escape') toastInfo('Touche réservée', KB.label(ev.key) + ' ne peut pas être utilisée.', true); return; }
+        const sw = KB.set(sc, id, ev.key.length === 1 ? ev.key.toLowerCase() : ev.key); renderSettings(); if (sw) toastInfo('Touches échangées', '« ' + sw + ' » prend l\'ancienne touche.'); };
+      document.addEventListener('keydown', cap, true);
+    };
   } else if (sec === 'display') {
     P.innerHTML = `
     <div class="sect"><h4>Zapping</h4>
@@ -5181,13 +5239,13 @@ const PMIX = {
   get(k) { return (this.v[k] == null ? 100 : this.v[k]) / 100; },
   muted(k) { return k === 'tw' ? !!this.v.twMute : k === 'dir' ? !SCREEN2.snd : false; },
   save() { LS.set('ctv.pmix', this.v); },
-  applyTw() { const w = SCREEN2.tw; if (!w || !w.pl || !w.ready) return; try { w.pl.setVolume(this.get('tw')); w.pl.setMuted(!!this.v.twMute); } catch (e) {} },
+  applyTw(onlyVol) { const w = SCREEN2.tw; if (!w || !w.pl || !w.ready) return; try { w.pl.setVolume(this.get('tw')); if (!onlyVol) w.pl.setMuted(!!this.v.twMute); } catch (e) {} },
+  /* toujours visible : en bas du panneau de droite du 2e écran */
   mount() {
     if ($('#pmix')) return;
     const el = document.createElement('div'); el.id = 'pmix'; el.className = 'pmix';
-    el.innerHTML = `<button class="pmix-btn" id="pmixBtn" title="Mes volumes : Twitch, Direct, jeu, Deezer…"><span class="mixico"><i></i><i></i><i></i></span>Mes volumes</button><div class="pmix-p hide" id="pmixP"></div>`;
-    document.body.appendChild(el);
-    $('#pmixBtn').onclick = () => { this.open = !this.open; $('#pmixP').classList.toggle('hide', !this.open); $('#pmixBtn').classList.toggle('on', this.open); if (this.open) { this.render(); this.poll(); } else clearTimeout(this.pollT); };
+    el.innerHTML = `<div class="pmix-p" id="pmixP"></div>`;
+    $('aside').appendChild(el); this.open = true; this.render(); this.poll();
     el.addEventListener('input', e => this.input(e)); el.addEventListener('click', e => this.click(e));
   },
   unmount() { const el = $('#pmix'); if (el) el.remove(); clearTimeout(this.pollT); this.open = false; },
@@ -5215,7 +5273,7 @@ const PMIX = {
   input(e) {
     const sl = e.target.closest('[data-pv]'); if (!sl) return; const k = sl.closest('[data-pk]').dataset.pk, v = +sl.value;
     sl.style.setProperty('--p', v + '%'); sl.closest('.mx-row').querySelector('.mx-v').textContent = v + ' %';
-    if (k === 'tw') { this.v.tw = v; this.save(); this.applyTw(); return; }
+    if (k === 'tw') { this.v.tw = v; this.save(); this.applyTw(true); return; }
     if (k === 'dir') { this.v.dir = v; this.save(); if (SCREEN2.pg) SCREEN2.pg.setMon(v / 100); return; }
     if (k.startsWith('app:')) {
       const n = k.slice(4), a = this.apps.find(x => x.name === n); if (a) a.vol = v / 100; this.dragApp = true; clearTimeout(this.dragT); this.dragT = setTimeout(() => { this.dragApp = false; }, 1500);
@@ -5831,7 +5889,7 @@ const PROG = {
     sc.items.push(it); this.sel = it.id; this.autoAudio(sc); this.save();
   },
   /* ---------- placement rapide : survoler une source + touche ---------- */
-  SLOT_KEYS: { f: 'full', g: 'bg', p: 'pip' },
+  slotKey(e) { const id = KB.find(e, 'regie'); return { full: 'full', bg: 'bg', pip: 'pip' }[id] || ''; },
   slotRect(slot) {
     if (slot === 'full' || slot === 'bg') return [0, 0, 100, 100];
     if (slot === 'pip') return [66, 63, 30, 30];
@@ -5964,25 +6022,55 @@ const PROG = {
     const playing = this.pub && this.pub.bgm;
     box.innerHTML = `<div class="gx-row"><select class="mini-sel" id="bgScope"><option value="all" ${scope === 'all' ? 'selected' : ''}>Tous les plans</option><option value="scene" ${scope === 'scene' ? 'selected' : ''}>Ce plan : ${esc(sc ? sc.name : '')}</option></select>
         <label style="display:flex;align-items:center;gap:6px;flex:0 0 130px"><span class="note">Vol.</span><input type="range" id="bgVol" min="0" max="100" step="5" value="${D.vol}" style="flex:1"></label></div>
-      <div class="gx-row"><input class="inp" id="bgQ" value="${esc(this.bgmQ || '')}" placeholder="Titre, artiste ou lien YouTube (ex. two steps from hell heart of courage)" autocomplete="off"></div>
+      <div class="gx-row"><input class="inp" id="bgQ" value="${esc(this.bgmQ || '')}" placeholder="Titre ou artiste (ex. heart of courage, art:two steps from hell)" autocomplete="off"></div>
       ${hits.length ? `<div class="bg-hits"><span class="note">Déjà dans tes médias</span>${hits.map(x => `<button class="btn xs ghost" data-bga="${esc(x.id)}">＋ ${esc(x.name)} <span class="note">${this.fmtDur(x.dur)}</span></button>`).join('')}</div>` : ''}
-      ${q.length >= 2 ? this.bgYtHtml() + this.bgWebHtml() : ''}
+      ${q.length >= 2 ? this.bgDzHtml() + this.bgWebHtml() : ''}
       <ol class="qlist">${D.ids.map((id, i) => { const md = this.mediaById(id); return `<li><span>${esc(md ? md.name : '?')}</span><span class="note">${md ? this.fmtDur(md.dur) : ''}</span><button class="btn sm ghost" data-bgx="${i}">${ic('x')}</button></li>`; }).join('')}</ol>
       <div class="gx-row"><button class="btn sm primary" id="bgGo" ${D.ids.length ? '' : 'disabled'}>▶ ${scope === 'all' ? 'Lancer sur tous les plans' : 'Lancer sur ce plan'}</button><button class="btn sm ghost" id="bgStop">■ Arrêter</button></div>
       <p class="note" style="margin:6px 0 0">${playing ? `En cours (${playing.scope === 'all' ? 'tous les plans' : 'ce plan'}) : ${esc(playing.tracks.map(t => t.name).join(' → '))}` : 'Aucune musique de fond à l\'antenne.'} La musique d'un plan remplace celle de tous les plans.</p>`;
     const send = ids => NET.req({ t: 'progBgm', scope: scope === 'all' ? 'all' : sc.id, ids, vol: D.vol }).then(() => toastInfo(ids.length ? 'Musique lancée' : 'Musique arrêtée'), e => toastInfo('Musique', e.message, true));
-    box.oninput = e => { if (e.target.id === 'bgQ') { this.bgmQ = e.target.value; clearTimeout(this.bgWebT); this.bgWebT = setTimeout(() => { this.bgYtSearch(); this.bgWebSearch(); }, 650); this.renderBgm(); const i = $('#bgQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); } if (e.target.id === 'bgVol') D.vol = +e.target.value; };
+    box.oninput = e => { if (e.target.id === 'bgQ') { this.bgmQ = e.target.value; clearTimeout(this.bgWebT); this.bgWebT = setTimeout(() => { this.bgDzSearch(); this.bgWebSearch(); }, 650); this.renderBgm(); const i = $('#bgQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); } if (e.target.id === 'bgVol') D.vol = +e.target.value; };
     box.onchange = e => { if (e.target.id === 'bgScope') { this.bgmScope = e.target.value; this.bgmDraft = null; this.renderBgm(); } if (e.target.id === 'bgVol' && playing) send(D.ids); };
     box.onclick = e => {
       const a = e.target.closest('[data-bga]'); if (a) { D.ids.push(a.dataset.bga); this.bgmQ = ''; this.renderBgm(); return; }
-      const yp = e.target.closest('[data-byp]'); if (yp) { this.bgYtPlay(+yp.dataset.byp); return; }
-      const ya = e.target.closest('[data-bya]'); if (ya) { this.bgYtAdd(+ya.dataset.bya, D); return; }
+      const dp = e.target.closest('[data-bdp]'); if (dp) { this.bgDzPlay(+dp.dataset.bdp); return; }
+      const dd = e.target.closest('[data-bdo]'); if (dd) { this.bgDzOpen(+dd.dataset.bdo); return; }
       const pl = e.target.closest('[data-bwp]'); if (pl) { this.bgWebPlay(+pl.dataset.bwp); return; }
       const ad = e.target.closest('[data-bwa]'); if (ad) { this.bgWebAdd(+ad.dataset.bwa, D); return; }
       const x = e.target.closest('[data-bgx]'); if (x) { D.ids.splice(+x.dataset.bgx, 1); this.renderBgm(); return; }
       if (e.target.closest('#bgGo')) send(D.ids);
       if (e.target.closest('#bgStop')) { D.ids = []; send([]); this.renderBgm(); }
     };
+  },
+  /* ---------- musique sous droits : Deezer (extrait ici, lecture complète dans l'appli Deezer, sans pub avec un compte) ---------- */
+  bgDzHtml() {
+    const W = this.bgDz || {}, q = (this.bgmQ || '').trim();
+    if (W.q !== q || W.busy) return '<p class="note" style="margin:4px 0">Recherche sur Deezer…</p>';
+    if (W.err || !W.list.length) return `<p class="note" style="margin:4px 0">${esc(W.err || 'Rien trouvé sur Deezer.')}</p>`;
+    return `<div class="bg-web"><span class="note">Deezer · ▶ extrait de 30 s · « Deezer » ouvre le titre dans ton appli Deezer (lecture complète, à capter dans OBS) · pour l'avoir dans le Direct : importe ton propre fichier MP3 dans Médias</span>${W.list.map((x, i) => `<div class="bw">${x.cover ? `<img src="${esc(x.cover)}" alt="" class="bw-c">` : ''}<button class="btn xs ghost" data-bdp="${i}" title="Écouter l'extrait">${this.bgDzI === i ? '■' : '▶'}</button>
+      <span class="bw-t"><b>${esc(x.title)}</b><small>${esc(x.creator)}</small></span><span class="note">${this.fmtDur(x.dur)}</span>
+      <button class="btn xs" data-bdo="${i}" title="Ouvrir ce titre dans l'appli Deezer">Deezer ↗</button></div>`).join('')}</div>`;
+  },
+  bgDzSearch() {
+    const q = (this.bgmQ || '').trim(); if (q.length < 2) { this.bgDz = { q, list: [] }; return; }
+    this.bgDz = { q, list: [], busy: true }; this.renderBgmKeep();
+    fetch('/api/media/dz?q=' + encodeURIComponent(q)).then(r => r.json().then(j => ({ ok: r.ok, j }))).then(({ ok, j }) => {
+      if ((this.bgmQ || '').trim() !== q) return;
+      this.bgDz = { q, list: ok ? j.list || [] : [], err: j.msg || (ok ? '' : 'Recherche Deezer impossible') }; this.renderBgmKeep();
+    }, () => { this.bgDz = { q, list: [], err: 'Recherche Deezer impossible (réseau)' }; this.renderBgmKeep(); });
+  },
+  bgDzPlay(i) {
+    const x = (this.bgDz || {}).list && this.bgDz.list[i]; if (!x || !x.preview) return;
+    if (!this.bgPrev) { this.bgPrev = new Audio(); this.bgPrev.onended = () => { this.bgPrevI = -1; this.bgDzI = -1; this.renderBgmKeep(); }; }
+    if (this.bgDzI === i) { this.bgPrev.pause(); this.bgDzI = -1; } else { this.bgPrev.src = x.preview; this.bgPrev.volume = .7; this.bgPrev.play().catch(() => {}); this.bgDzI = i; this.bgPrevI = -1; }
+    this.renderBgmKeep();
+  },
+  bgDzOpen(i) {
+    const x = (this.bgDz || {}).list && this.bgDz.list[i]; if (!x) return;
+    const web = x.link || 'https://www.deezer.com/track/' + x.id;
+    const a = document.createElement('a'); a.href = 'deezer://www.deezer.com/track/' + x.id; a.click();
+    setTimeout(() => { if (document.hasFocus()) window.open(web, '_blank', 'noopener'); }, 1200);
+    toastInfo('Ouvert dans Deezer', x.title + ' · règle son volume dans « Mes volumes » (app bureau)');
   },
   /* ---------- n'importe quelle musique : YouTube (lu par le lecteur YouTube intégré) ---------- */
   bgYtHtml() {
@@ -6310,20 +6398,21 @@ const PROG = {
     const it = this.item(), k = e.key;
     if (this.hover && !e.repeat) {
       const dg = e.code.match(/^(?:Digit|Numpad)([1-9])$/), lk = k.toLowerCase();
-      const slot = dg ? (e.shiftKey && +dg[1] <= 4 ? 'q' : 'g') + dg[1] : this.SLOT_KEYS[lk] || (k === 'ArrowLeft' ? 'l' : k === 'ArrowRight' ? 'r' : '');
+      const slot = dg ? (e.shiftKey && +dg[1] <= 4 ? 'q' : 'g') + dg[1] : this.slotKey(e) || (k === 'ArrowLeft' ? 'l' : k === 'ArrowRight' ? 'r' : '');
       if (slot) { e.preventDefault(); this.placeAt(this.hover.k, this.hover.ref, slot); return; }
     }
-    if (k.toLowerCase() === 'o' && !e.repeat) { e.preventDefault(); this.optimal(); return; }
-    if (k.toLowerCase() === 'r' && !e.repeat && !e.shiftKey) { e.preventDefault(); this.instantReplay(); return; }
+    const act = KB.find(e, 'regie');
+    if (act === 'optimal' && !e.repeat) { e.preventDefault(); this.optimal(); return; }
+    if (act === 'replay' && !e.repeat && !e.shiftKey) { e.preventDefault(); this.instantReplay(); return; }
     const fk = /^F(\d{1,2})$/.exec(k); if (fk && e.shiftKey && +fk[1] >= 1 && +fk[1] <= 12) { e.preventDefault(); this.favGo(+fk[1] - 1); return; }
-    if ((k === 'Delete' || k === 'Backspace') && it) { e.preventDefault(); this.itemAction('del'); return; }
+    if ((KB.is(e, 'regie', 'del') || k === 'Backspace') && it) { e.preventDefault(); this.itemAction('del'); return; }
     if (k.startsWith('Arrow') && it) {
       e.preventDefault(); const st = e.shiftKey ? 5 : .5;
       if (k === 'ArrowLeft') it.x -= st; if (k === 'ArrowRight') it.x += st; if (k === 'ArrowUp') it.y -= st; if (k === 'ArrowDown') it.y += st;
       it.x = Math.round(it.x * 10) / 10; it.y = Math.round(it.y * 10) / 10; this.save(); return;
     }
-    if (k.toLowerCase() === 't' || k === 'Enter') { e.preventDefault(); this.take(); return; }
-    if (k.toLowerCase() === 'a' && this.ed && this.ed.apply === 'manual') { e.preventDefault(); this.apply(); return; }
+    if (KB.is(e, 'regie', 'take') || k === 'Enter') { e.preventDefault(); this.take(); return; }
+    if (KB.is(e, 'regie', 'apply') && this.ed && this.ed.apply === 'manual') { e.preventDefault(); this.apply(); return; }
     if (/^[1-9]$/.test(k)) { const sc = this.ed.scenes[+k - 1]; if (sc) { this.ed.preview = sc.id; this.sel = ''; this.save(); } }
   }
 };
@@ -6488,17 +6577,17 @@ document.addEventListener('keydown', e => {
     case '?': openHelp(); return;
     case '/': e.preventDefault(); S.tab = 'tributes'; renderTabs(); if (S.theater) setTheater(false); $('#q').focus(); return;
   }
-  const k = e.key.toLowerCase();
+  const k = KB.find(e, 'antenne');
   const order = ['1', '2', 'f', '4', '9'];
   const map = {
-    g: () => S.wall ? closeWall() : openWall(),
-    z: zapRandom, p: () => toggleTour(), r: goBack,
-    l: () => setLayout(order[(order.indexOf(S.layout) + 1) % order.length]),
-    c: () => $('#chatBtn').click(), h: () => setTheater(!S.theater), f: () => $('#fsBtn').click(),
-    t: () => { S.tab = 'tributes'; renderTabs(); }, j: () => { S.tab = 'journal'; renderTabs(); }, k: () => { S.tab = 'rank'; renderTabs(); },
-    n: () => isStaff() && nextAlert(), a: () => { if (isStaff()) { S.tab = 'alerts'; renderTabs(); } },
-    m: () => isAdmin() && openMark(),
-    e: () => setPage('equipe'), u: () => setPage('tributs'), s: () => setPage('sponsors'), o: () => { S.tab = 'online'; renderTabs(); }
+    wall: () => S.wall ? closeWall() : openWall(),
+    random: zapRandom, tour: () => toggleTour(), back: goBack,
+    layout: () => setLayout(order[(order.indexOf(S.layout) + 1) % order.length]),
+    chat: () => $('#chatBtn').click(), theater: () => setTheater(!S.theater), fs: () => $('#fsBtn').click(),
+    tabTrib: () => { S.tab = 'tributes'; renderTabs(); }, tabJournal: () => { S.tab = 'journal'; renderTabs(); }, tabRank: () => { S.tab = 'rank'; renderTabs(); },
+    nextAlert: () => isStaff() && nextAlert(), tabAlerts: () => { if (isStaff()) { S.tab = 'alerts'; renderTabs(); } },
+    mark: () => isAdmin() && openMark(),
+    pageTeam: () => setPage('equipe'), pageTrib: () => setPage('tributs'), pageSpons: () => setPage('sponsors'), tabOnline: () => { S.tab = 'online'; renderTabs(); }
   };
   if (map[k]) { e.preventDefault(); map[k](); }
 });

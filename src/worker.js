@@ -457,7 +457,7 @@ export class Game extends DurableObject {
 
   load() {
     if (!this.loading) this.loading = (async () => {
-      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage", "moved", "from", "perf", "terrain", "tbot", "phist", "dvrtok", "mix", "tstats"]);
+      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage", "moved", "from", "perf", "terrain", "tbot", "phist", "dvrtok", "mix", "tstats", "kbs"]);
       this.board = { ...defaultBoard(), ...(m.get("board") || {}) };
       this.alerts = m.get("alerts") || {};
       this.team = m.get("team") || [];
@@ -468,7 +468,7 @@ export class Game extends DurableObject {
       this.camSt = m.get("camst") || {};
       this.srvKey = m.get("srvkey") || "";
       this.terrain = m.get("terrain") || {};
-      this.phist = m.get("phist") || []; this.dvrTok = m.get("dvrtok") || ""; this.mix = m.get("mix") || {}; this.tstats = m.get("tstats") || {};
+      this.phist = m.get("phist") || []; this.dvrTok = m.get("dvrtok") || ""; this.mix = m.get("mix") || {}; this.tstats = m.get("tstats") || {}; this.kbs = m.get("kbs") || {};
       this.tbot = { on: false, channel: "", ann: { poll: true, result: true, death: true, victor: true, bets: true }, cmds: true, ...(m.get("tbot") || {}) };
       this.roles = m.get("roles") || null;
       if (!this.roles) {
@@ -575,7 +575,7 @@ export class Game extends DurableObject {
   hello(a) {
     return {
       t: "hello", now: Date.now(),
-      me: { id: a.id, name: a.name, av: a.av, perm: a.perm, pub: a.pub, overlay: !!a.overlay, obsKey: hasPerm(a, "program") && !a.lock && this.env.OVERLAY_KEY ? this.env.OVERLAY_KEY : undefined, lock: !!a.lock, guest: !!a.guest, tribute: this.tributeOf(a.id), cam: a.cam || "", sup: isSup(a), crew: isCrew(a) && !a.lock, map: this.mapAllowed(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "" },
+      me: { id: a.id, name: a.name, av: a.av, perm: a.perm, pub: a.pub, overlay: !!a.overlay, obsKey: hasPerm(a, "program") && !a.lock && this.env.OVERLAY_KEY ? this.env.OVERLAY_KEY : undefined, lock: !!a.lock, guest: !!a.guest, tribute: this.tributeOf(a.id), cam: a.cam || "", sup: isSup(a), crew: isCrew(a) && !a.lock, map: this.mapAllowed(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "", kb: isCrew(a) ? this.kbs[a.id] : undefined },
       roles: this.roles, prog: a.lock || !(isCrew(a) || a.overlay) ? undefined : this.progPub(), progHist: a.lock || !(isCrew(a) || a.overlay) ? undefined : this.progHistFor(),
       dvrBase: isCrew(a) || a.overlay ? (this.env.DVR_PUBLIC || "") : undefined, mix: isCrew(a) || a.overlay ? this.mix : undefined, progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
       terrain: this.terrain || {}, bot: isStaff(a) ? this.botPublic() : undefined, media: isCrew(a) ? this.media : undefined, srvCams: isCrew(a) ? this.srvCams : undefined,
@@ -760,6 +760,11 @@ export class Game extends DurableObject {
       }
       case "alert": return this.onAlert(ws, a, m.a || {}, reply);
       case "tstats": this.statTick(); return reply(true, this.statsFor(a));
+      case "kb": {
+        if (!isCrew(a) || a.guest) return deny();
+        const o = {}; for (const [k, v] of Object.entries(m.kb || {}).slice(0, 80)) if (/^(antenne|regie)\.\w{1,20}$/.test(k) && typeof v === "string" && v.length <= 12) o[k] = v;
+        this.kbs[a.id] = o; await this.ctx.storage.put("kbs", this.kbs); return reply(true);
+      }
       case "progTake": this.statTick(); return this.onProgOp(a, m, reply);
       case "progMix": {
         // volumes de l'émission (général, musique, effets, chaque source), avec fondus : appliqués tout de suite sur le Direct
@@ -1278,6 +1283,16 @@ export class Game extends DurableObject {
       if (!list.length) return J({ list: [], msg: "YouTube ne répond pas pour le moment : colle directement le lien d'une vidéo." });
       await this.env.MEDIA.put(ck, JSON.stringify({ at: Date.now(), list }), { expirationTtl: 172800 }).catch(() => {});
       return J({ list });
+    }
+    // Deezer : recherche dans tout le catalogue (extrait de 30 s pour écouter ; la lecture complète se fait dans l'appli Deezer)
+    if (req.method === "GET" && id === "dz") {
+      const q = (new URL(req.url).searchParams.get("q") || "").trim().slice(0, 100);
+      if (q.length < 2) return J({ list: [] });
+      const art = /^art(iste)?\s*:/i.test(q) ? q.replace(/^art(iste)?\s*:/i, "").trim() : "";
+      const r = await fetch("https://api.deezer.com/search?limit=15&q=" + encodeURIComponent(art ? 'artist:"' + art + '"' : q)).catch(() => null);
+      const d = r && r.ok ? await r.json().catch(() => ({})) : null;
+      if (!d || d.error) return J({ list: [], msg: "Deezer ne répond pas pour le moment." });
+      return J({ list: (d.data || []).map(x => ({ id: x.id, title: String(x.title || "").slice(0, 100), creator: String((x.artist || {}).name || "").slice(0, 60), dur: +x.duration || 0, preview: String(x.preview || ""), link: String(x.link || ""), cover: String((x.album || {}).cover_small || "") })) });
     }
     if (req.method === "POST" && id === "addyt") {
       const b = await req.json().catch(() => ({})), v = ytId(String(b.yt || ""));
