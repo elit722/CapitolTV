@@ -492,6 +492,11 @@ body.side-hide.on-antenne aside{display:none}
 .side-btn{position:relative}
 .rp-pair{display:inline-flex;gap:2px}
 /* panneau « À venir » */
+.rg-soon{display:flex;align-items:center;gap:6px;overflow-x:auto;min-height:34px;padding:3px 8px;border:1px solid var(--hair);border-radius:8px;background:var(--bg2,rgba(255,255,255,.02));scrollbar-width:thin;flex:none}
+.ss-l{font-size:10px;letter-spacing:.16em;color:var(--mute);flex:none;margin-right:4px}.rg-soon .note{white-space:nowrap}
+.ss{flex:none;display:flex;align-items:baseline;gap:6px;height:26px;padding:0 9px;border:1px solid var(--hair2);border-left:3px solid var(--gold);border-radius:6px;background:transparent;color:var(--ink);font-size:12px;cursor:pointer;white-space:nowrap}
+.ss:hover{background:rgba(var(--gold-rgb),.08)}.ss.urgent,.ss.mort{border-left-color:var(--red-hi)}.ss-t{font-variant-numeric:tabular-nums;color:var(--gold-hi);min-width:38px}.ss i{font-style:normal;color:var(--ink2)}
+.ss.now{background:rgba(var(--gold-rgb),.1)}.ss.now .ss-t{color:var(--red-hi);animation:rpBlink 1.2s ease-in-out infinite}
 .sn{padding:10px 12px;border-bottom:1px solid var(--hair);border-left:3px solid var(--hair2)}
 .sn.urgent{border-left-color:var(--red)}.sn.mort{border-left-color:#8a8a8a}.sn.demande{border-left-color:var(--gold)}.sn.alerte{border-left-color:var(--warn,#e2a13b)}
 .sn-h{display:flex;align-items:baseline;gap:8px}.sn-t{font:700 18px var(--serif);font-variant-numeric:tabular-nums;color:var(--gold-hi);min-width:64px}
@@ -2359,8 +2364,21 @@ function soonItems() {
   }
   return out.sort((a, b) => a.ts - b.ts).map(x => ({ ...x, left: x.ts + D - now }));
 }
+/* bande compacte toujours visible en régie */
+function renderSoonStrip(L) {
+  const box = $('#rgSoon'); if (!box) return;
+  const D = S.board.delay > 0, act = L.filter(x => x.left > -15000);
+  const key = D + '|' + act.map(x => x.id).join(',');
+  const t = x => x.left > 0 ? fmtDur(x.left) : 'À L\'IMAGE';
+  if (box.dataset.k === key) { act.forEach((x, i) => { const el = box.querySelector(`[data-id="${CSS.escape(x.id)}"]`); if (el) { el.querySelector('.ss-t').textContent = t(x); el.classList.toggle('now', x.left <= 0); } }); return; }
+  box.dataset.k = key;
+  box.innerHTML = `<b class="ss-l">À VENIR</b>` + (!D ? '<span class="note">Pas de différé : tout est à l\'image en temps réel.</span>'
+    : act.length ? act.map(x => `<button class="ss ${esc(x.k)} ${x.left <= 0 ? 'now' : ''}" data-id="${esc(x.id)}" ${x.tr ? `data-sn="trib|${esc(x.tr.id)}"` : x.cam ? `data-sn="cam|${esc(x.cam)}"` : ''} title="${esc(x.what + (x.tr ? ' · ' + x.tr.name : '') + ' · par ' + (x.by || '?') + (x.detail ? ' — ' + x.detail : '') + ((x.tr || x.cam) ? '\nCliquer : mettre dans l\'aperçu' : ''))}"><b class="ss-t">${t(x)}</b><span>${esc(x.what)}</span>${x.tr ? `<i>${pad3(x.tr.num)} ${esc(x.tr.name)}</i>` : ''}</button>`).join('')
+    : `<span class="note">Rien de signalé. Les signalements des caméras arrivent ici en temps réel, ${fmtDelay(S.board.delay)} avant d'être à l'image.</span>`);
+}
 function renderSoon(tickOnly) {
   const L = soonItems(), box = $('#soonList'), cnt = $('#soonCnt');
+  renderSoonStrip(L);
   const n = L.filter(x => x.left > 0).length; if (cnt && cnt.textContent !== String(n)) { cnt.textContent = n; cnt.classList.toggle('hide', !n); sideSync(); }
   if (!box || S.tab !== 'soon') return;
   if (tickOnly && box.childElementCount === L.length) { L.forEach((x, i) => { const el = box.children[i]; if (el && el.dataset.id === x.id) { el.querySelector('.sn-t').textContent = x.left > 0 ? fmtDur(x.left) : 'À L\'IMAGE'; el.classList.toggle('now', x.left <= 0 && x.left > -15000); el.classList.toggle('past', x.left <= -15000); } }); return; }
@@ -2375,6 +2393,10 @@ $('#soonList') && $('#soonList').addEventListener('click', e => {
   const b = e.target.closest('[data-sn]'); if (!b) return; const [k, ref] = b.dataset.sn.split('|');
   if (S.page === 'regie' && PROG.ed) PROG.pickFromScreen2(k, ref); else if (SCREEN2.bc) SCREEN2.bc.postMessage({ t: 's2pick', k, ref });
   toastInfo('Dans l\'aperçu', k === 'trib' ? (byId(ref) || {}).name || '' : 'Caméra');
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('#rgSoon [data-sn]'); if (!b || !PROG.ed) return; const [k, ref] = b.dataset.sn.split('|');
+  PROG.pickFromScreen2(k, ref); toastInfo('Dans l\'aperçu', k === 'trib' ? (byId(ref) || {}).name || '' : 'Caméra');
 });
 function renderTabs() {
   $$('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === S.tab));
@@ -4401,7 +4423,7 @@ function renderAlliances() {
    Moteur de rendu de l'émission : page Direct (OBS) et moniteurs de la régie
    ===================================================================== */
 class Stage {
-  /* o.sound : son actif · o.delay : différé (null = celui de la régie) · o.layer : 'auto' | 'f' | 'q'
+  /* o.sound : son actif · o.delay : différé du contenu (null = celui de la régie ; les prises de la régie partent sans second différé) · o.layer : 'auto' | 'f' | 'q'
      o.extras : replays et clips · o.record : garder les flux enregistrés (replays) */
   constructor(el, o = {}) {
     this.el = el; this.o = Object.assign({ sound: false, delay: null, layer: 'auto', extras: false, record: false, bug: true }, o);
@@ -4415,7 +4437,8 @@ class Stage {
   /* petite vignette : couche légère du flux (économise la bande passante) */
   layerFor(it) { return this.o.layer !== 'auto' ? this.o.layer : it.w * it.h < 1200 ? 'q' : 'f'; }
   set(pub, cut) {
-    const D = this.o.delay == null ? (S.board.delay || 0) * 1000 : 0;
+    // la régie travaille déjà sur l'image en différé : ses prises partent à l'antenne tout de suite (pas de second différé)
+    const D = 0;
     this.latest = pub;
     if (!D) { if (this.q && this.q.length) { this.q.forEach(e => clearTimeout(e.t)); this.q = []; } return this.apply(pub, cut); }
     this.q = this.q || [];
@@ -4440,7 +4463,7 @@ class Stage {
   }
   /* page ouverte ou rechargée : on reprend l'historique de l'antenne (le même pour tout le monde) */
   seed(hist) {
-    const D = this.o.delay == null ? (S.board.delay || 0) * 1000 : 0; if (!D || !hist || !hist.length) return;
+    const D = 0; if (!D || !hist || !hist.length) return;
     const now = Date.now(), sk = S.skew || 0, L = hist.filter(h => h.pubAt != null).sort((a, b) => a.pubAt - b.pubAt);
     let k = -1; L.forEach((h, i) => { if (h.pubAt - sk + D <= now) k = i; });
     L.slice(Math.max(0, k)).forEach(h => this.set(h, !!h.cut));
@@ -5075,6 +5098,7 @@ const PROG = {
         <div class="rg-main">
           <div class="rg-row"><input class="inp" id="rgTitle" maxlength="80" placeholder="Titre de l'émission (affiché sur la page Direct)" style="max-width:420px;height:34px"><span style="flex:1"></span>
             <a class="btn sm" href="#" id="rgOpenDirect">${ic('live')}Voir la page Direct</a><button class="btn sm ghost" id="rgCopyObs" title="Lien plein écran pour OBS (nécessite le lien d'overlay)">${ic('copy')}Lien OBS</button></div>
+          <div class="rg-soon" id="rgSoon"></div>
           <div class="rg-mons">
             <div class="mon"><h4>APERÇU · <span id="pvName" style="color:var(--ink2)"></span><span style="flex:1"></span>
                 <button class="btn sm ghost hide" id="pvSim" title="Afficher dans l'aperçu le plan à l'antenne avec les modifications en attente">${ic('eye')}Simuler les modifs</button>
