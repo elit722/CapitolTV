@@ -180,7 +180,7 @@ public final class SkyShow {
         Shade back = (u, v) -> {
             float k = A * 0.55f;
             if (!hasFace) return k;
-            float du = Math.max(0, Math.abs(u) - FW * 0.55f), dv = Math.max(0, Math.max(v - (FV + FW * 0.55f), (FV - FW * 0.55f - 7f) - v));
+            float du = Math.max(0, Math.abs(u) - FW * 0.55f), dv = Math.max(0, Math.max(v - (FV + FW * 0.55f), (FV - FW * 0.55f - 10f) - v));
             float d = (float) Math.sqrt(du * du + dv * dv);
             return k * MathHelper.clamp(0.12f + d / 7f, 0.12f, 1f);
         };
