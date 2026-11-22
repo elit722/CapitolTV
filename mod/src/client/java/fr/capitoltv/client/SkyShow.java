@@ -100,7 +100,7 @@ public final class SkyShow {
     /* ---------- tracé sur la voûte : (u, v) en degrés autour du point visé ---------- */
     private static float R, ELEV = 30f;
     private static Vec3d pt(float u, float v) {
-        float elev = ELEV + v + u * 0.07f - 0.0028f * u * u;   // légère inclinaison + courbure de la voûte
+        float elev = ELEV + v + u * 0.05f - 0.0028f * u * u;   // légère inclinaison + courbure de la voûte
         return Vec3d.fromPolar(-elev, baseYaw + u).multiply(R);
     }
     private interface Shade { float at(float u, float v); }
@@ -203,7 +203,7 @@ public final class SkyShow {
                 float v0 = 16f - r * 8.6f, off = -56f + (r % 2) * rw * 0.42f - r * 3f + (r == 2 ? glitch : 0);
                 for (float u = off; u < 56; u += rw) text(t, m, row, u, v0, h, 0.30f, 0.66f, 1f, back, -58, 58);
             }
-            if (!name.isEmpty()) { float h2 = 3.4f, w2 = width(name, h2); text(t, m, name, -w2 / 2, FV - FW / 2 - 5.5f, h2, 0.62f, 0.9f, 1f, (u, v) -> A, -90, 90); }
+            if (!name.isEmpty()) { float h2 = 5.2f, w2 = width(name, h2); text(t, m, name, -w2 / 2, FV - FW / 2 - 7.5f, h2, 0.75f, 0.95f, 1f, (u, v) -> Math.min(1f, A * 1.3f), -90, 90); }
         }
         imm.draw(RenderLayer.getEyes(FONT));
         if (face != null) {
