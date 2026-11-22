@@ -1,6 +1,6 @@
 package fr.capitoltv.client;
 
-/** Métriques de la police de l'hommage dans le ciel (générées avec la texture sky/font.png). */
+/** Métriques de la police (Archivo Black) de l'hommage dans le ciel (générées avec la texture sky/font.png). */
 final class SkyFont {
     private SkyFont() { }
     static final int W = 4096, H = 128, PAD = 10;
