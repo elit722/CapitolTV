@@ -150,7 +150,7 @@ audio.em-md{display:none}
 .gx-break{position:absolute;left:0;right:0;bottom:3.2%;display:flex;align-items:stretch;height:3.6cqw;font-size:1.6cqw;animation:gxIn .4s ease both}
 .gx-break b{flex:none;display:flex;align-items:center;padding:0 1em;background:#c2121f;color:#fff;letter-spacing:.14em;font-weight:700;box-shadow:.4em 0 1em rgba(0,0,0,.4);z-index:1}
 .gx-break .tk{flex:1;overflow:hidden;background:rgba(255,255,255,.95);color:#111;display:flex;align-items:center;white-space:nowrap;font-family:var(--sans);font-weight:700}
-.gx-break .tk span{display:inline-block;padding-left:100%;animation:gxTick 18s linear infinite} .gx-break .tk span+span{display:none}
+.gx-break .tk .tl{display:inline-flex;white-space:nowrap;animation:tickLoop 18s linear infinite;will-change:transform}.gx-break .tk .tl i{font-style:normal;padding-right:2.2em}.gx-break .tk .tl i::after{content:"◆";color:#c2121f;font-size:.6em;margin-left:2.2em;vertical-align:.15em}
 .gx-poll,.gx-bets{position:absolute;right:2.2%;top:16%;width:min(34%,520px);background:rgba(10,9,8,.9);border-top:.25em solid var(--gold);padding:.6em .9em .8em;color:#fff;font-size:1.25cqw;animation:gxIn .5s ease both}
 .gx-bets{top:auto;bottom:22%}
 .gx-poll h5,.gx-bets h5{margin:0 0 .3em;font-size:.72em;letter-spacing:.2em;color:var(--gold)} .gx-poll>b{display:block;font-family:var(--sans);font-size:1.05em;margin-bottom:.4em}
@@ -169,6 +169,7 @@ audio.em-md{display:none}
 @keyframes scrBar{0%{transform:translateX(-100%)}100%{transform:translateX(340%)}}
 @keyframes gxIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes gxSlide{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:none}}
+@keyframes tickLoop{to{transform:translateX(-50%)}}
 @keyframes gxTick{from{transform:translateX(0)}to{transform:translateX(-100%)}}
 .em-replay,.em-clip{position:absolute;inset:0;z-index:55;background:#000;animation:gxIn .3s ease both} .em-clip video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain} .em-replay.gone{opacity:0;transition:opacity .5s}
 .em-replay video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
@@ -508,6 +509,17 @@ body.side-hide.on-antenne aside{display:none}
 body.screen2 #pageView{right:380px;bottom:0}
 body.screen2 aside{display:flex!important;position:fixed;right:0;top:64px;bottom:0;width:380px;z-index:30}
 body.screen2 .ticker{display:none}
+body.screen2 aside .tab[data-tab="comms"],body.screen2 aside .tab[data-tab="terrain"],body.screen2 aside .tab[data-tab="soon"],body.screen2 aside .tab[data-tab="online"]{display:none}
+body.screen2 aside .tabs{order:-2}body.screen2 #pSoon.merged{order:-1;flex:0 1 auto;max-height:45%;border-bottom:2px solid var(--hair2)}
+#pSoon .soon-h{display:none}body.screen2 #pSoon.merged .soon-h{display:block;padding:8px 12px 2px;font-size:10.5px;font-weight:800;letter-spacing:.2em;color:var(--mute)}
+.s2-util{display:grid;grid-template-columns:1.25fr 1.25fr 1fr 1fr;flex:1;min-height:300px;gap:10px}.s2-util.hide{display:none}
+body.screen2 .s2{height:100%}
+.s2-box{display:flex;flex-direction:column;min-height:0;border:1px solid var(--hair);border-radius:10px;background:var(--side);overflow:hidden}
+.s2-box h5{margin:0;padding:8px 12px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;border-bottom:1px solid var(--hair);display:flex;gap:8px;align-items:baseline}.s2-box h5 .note{text-transform:none;letter-spacing:0;font-weight:400}
+.s2-slot{flex:1;min-height:0;display:flex;flex-direction:column}.s2-slot>.panel{flex:1;min-height:0}
+.s2-note{flex:1;min-height:180px;resize:none;border:0;border-radius:0;background:transparent;font:13px/1.5 var(--sans);padding:10px 12px}
+.s2-tips{flex:1;min-height:0;overflow:auto;padding:4px 12px 10px;font-size:12px}.s2-tips .keys{grid-template-columns:max-content minmax(0,1fr);gap:7px 10px;font-size:12px}.s2-tips .keys>span{white-space:normal!important;text-align:left!important;min-width:0}.s2-tips .keys h5{grid-column:1/-1;margin:8px 0 0}
+body.screen2 #pSoon.merged .empty{padding:10px 12px;font-size:12px}
 .s2-main .cvw{width:100%}
 .s2-mons{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)!important;align-items:start}
 .s2-side .s2-bar{margin-top:8px}.s2-quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
@@ -624,7 +636,7 @@ button:focus{outline:none} button:focus-visible{outline:2px solid var(--gold-b);
 .ticker .lbl{display:flex;align-items:center;gap:9px;padding:0 16px 0 12px;border-right:1px solid var(--hair);white-space:nowrap}
 .ticker .lbl .word{font-size:11.5px;letter-spacing:.24em}
 .ticker .win{flex:1;overflow:hidden;display:flex;align-items:center;-webkit-mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent)}
-.ticker .run{white-space:nowrap;display:inline-block;padding-left:100%;animation:marquee 40s linear infinite;font-size:13px;color:var(--ink2)}
+.ticker .run{white-space:nowrap;display:inline-flex;align-items:center;animation:tickLoop 40s linear infinite;font-size:13px;color:var(--ink2);will-change:transform}
 .ticker .run b{color:var(--ink)}
 .ticker .run .dot{display:inline-block;width:5px;height:5px;transform:rotate(45deg) translateY(-2px);background:var(--gold);margin:0 20px}
 @keyframes marquee{to{transform:translateX(-100%)}}
@@ -1073,6 +1085,7 @@ body.overlay #flashLayer{top:40px}
     </div>
 
     <div id="pSoon" class="panel hide">
+      <div class="soon-h">À VENIR</div>
       <div class="list" id="soonList"></div>
     </div>
 
@@ -2380,14 +2393,14 @@ function renderSoon(tickOnly) {
   const L = soonItems(), box = $('#soonList'), cnt = $('#soonCnt');
   renderSoonStrip(L);
   const n = L.filter(x => x.left > 0).length; if (cnt && cnt.textContent !== String(n)) { cnt.textContent = n; cnt.classList.toggle('hide', !n); sideSync(); }
-  if (!box || S.tab !== 'soon') return;
+  if (!box || !(S.tab === 'soon' || (S.tab === 'alerts' && document.body.classList.contains('screen2')))) return;
   if (tickOnly && box.childElementCount === L.length) { L.forEach((x, i) => { const el = box.children[i]; if (el && el.dataset.id === x.id) { el.querySelector('.sn-t').textContent = x.left > 0 ? fmtDur(x.left) : 'À L\'IMAGE'; el.classList.toggle('now', x.left <= 0 && x.left > -15000); el.classList.toggle('past', x.left <= -15000); } }); return; }
   if (!(S.board.delay > 0)) { box.innerHTML = '<div class="empty">Pas de différé : tout est déjà à l\'image en temps réel.</div>'; return; }
   box.innerHTML = L.length ? L.map(x => `<div class="sn ${esc(x.k)} ${x.left <= 0 ? (x.left > -15000 ? 'now' : 'past') : ''}" data-id="${esc(x.id)}">
       <div class="sn-h"><b class="sn-t">${x.left > 0 ? fmtDur(x.left) : 'À L\'IMAGE'}</b><span class="sn-k">${esc(x.what)}</span><span class="note">${new Date(x.ts - (S.skew || 0)).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span></div>
       <div class="sn-b">${x.tr ? `<b>${pad3(x.tr.num)} · ${esc(x.tr.name)}</b>` : ''} <span class="note">par ${esc(x.by || '?')}</span>${x.detail ? `<div class="sn-d">${esc(x.detail)}</div>` : ''}</div>
       ${hasPerm('program') && (x.tr || x.cam) ? `<div class="sn-a">${x.tr ? `<button class="btn xs" data-sn="trib|${esc(x.tr.id)}">Tribut dans l'aperçu</button>` : ''}${x.cam ? `<button class="btn xs ghost" data-sn="cam|${esc(x.cam)}">Caméra dans l'aperçu</button>` : ''}</div>` : ''}
-    </div>`).join('') : `<div class="empty">Rien de signalé pour l'instant. Les signalements des caméras apparaissent ici en temps réel, avec le temps restant avant qu'ils soient à l'image (différé de ${fmtDelay(S.board.delay)}).</div>`;
+    </div>`).join('') : document.body.classList.contains('screen2') ? '<div class="empty">Rien de signalé pour l\'instant.</div>' : `<div class="empty">Rien de signalé pour l'instant. Les signalements des caméras apparaissent ici en temps réel, avec le temps restant avant qu'ils soient à l'image (différé de ${fmtDelay(S.board.delay)}).</div>`;
 }
 $('#soonList') && $('#soonList').addEventListener('click', e => {
   const b = e.target.closest('[data-sn]'); if (!b) return; const [k, ref] = b.dataset.sn.split('|');
@@ -2399,6 +2412,8 @@ document.addEventListener('click', e => {
   PROG.pickFromScreen2(k, ref); toastInfo('Dans l\'aperçu', k === 'trib' ? (byId(ref) || {}).name || '' : 'Caméra');
 });
 function renderTabs() {
+  const s2 = document.body.classList.contains('screen2');
+  if (s2 && ['comms', 'terrain', 'soon', 'online'].includes(S.tab)) S.tab = 'alerts';
   $$('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === S.tab));
   $('#pTributes').classList.toggle('hide', S.tab !== 'tributes');
   $('#pAlerts').classList.toggle('hide', S.tab !== 'alerts');
@@ -2407,8 +2422,10 @@ function renderTabs() {
   $('#pOnline').classList.toggle('hide', S.tab !== 'online');
   $('#pComms').classList.toggle('hide', S.tab !== 'comms');
   $('#pTerrain').classList.toggle('hide', S.tab !== 'terrain');
-  $('#pSoon').classList.toggle('hide', S.tab !== 'soon'); if (S.tab === 'soon') renderSoon();
-  if (S.tab === 'comms') CAM.renderComms(); if (S.tab === 'terrain') CAM.renderTerrain();
+  const soonOn = S.tab === 'soon' || (s2 && S.tab === 'alerts');
+  $('#pSoon').classList.toggle('hide', !soonOn); $('#pSoon').classList.toggle('merged', s2 && S.tab === 'alerts'); if (soonOn) renderSoon();
+  if (s2) { $('#pComms').classList.remove('hide'); $('#pTerrain').classList.remove('hide'); }
+  if (S.tab === 'comms' || s2) CAM.renderComms(); if (S.tab === 'terrain' || s2) CAM.renderTerrain();
   const sub = S.tab === 'online';
   if (sub !== S.subbed) { S.subbed = sub; if (S.me) NET.send({ t: 'sub', on: sub }); }
   renderOnline();
@@ -2432,9 +2449,22 @@ function renderTicker() {
   const html = parts.join('<span class="dot"></span>');
   if (html === lastTick) return;
   lastTick = html;
-  const run = $('#run'); run.innerHTML = html;
-  run.style.animationDuration = Math.max(30, run.textContent.length * 0.22) + 's';
+  const run = $('#run'); run.innerHTML = html + '<span class="dot"></span>'; delete run.dataset.u;
+  fillTick(run.parentElement, 0.06);
 }
+/* défilement en boucle continue : le texte repart derrière lui-même, sans attendre qu'il ait quitté l'écran.
+   speed : fraction de la largeur visible parcourue par seconde */
+function fillTick(win, speed) {
+  const tr = win && win.firstElementChild; if (!tr) return;
+  const unit = tr.dataset.u != null ? tr.dataset.u : (tr.dataset.u = tr.innerHTML);
+  const W = win.clientWidth || 1600;
+  tr.innerHTML = unit; const uw = tr.scrollWidth;
+  const reps = uw > 10 ? Math.max(1, Math.ceil(W / uw)) : 3;
+  tr.innerHTML = unit.repeat(reps * 2);
+  tr.style.animationDuration = Math.max(6, (uw > 10 ? uw * reps : W * 1.5) / (W * speed)) + 's';
+  tr._tw = W;
+}
+window.addEventListener('resize', () => { clearTimeout(fillTick.t); fillTick.t = setTimeout(() => $$('.ticker .win, .gx-break .tk').forEach(w => { if (w.firstElementChild && Math.abs((w.firstElementChild._tw || 0) - w.clientWidth) > 40) fillTick(w, w.matches('.tk') ? 0.11 : 0.06); }), 300); });
 
 /* =====================================================================
    Annonces à l'antenne (flash, parachute, canon, hommage, vainqueur)
@@ -2504,7 +2534,7 @@ const SCREEN2 = {
     else toastInfo('2e écran ouvert', 'Glisse la fenêtre sur ton 2e écran puis passe-la en plein écran (F11). Coupe l\'image des moniteurs ici pour économiser les données.');
   },
   init() { if (this.bc) this.bc.onmessage = e => { const m = e.data || {}; if (m.t === 's2focus' && S.page !== 'regie2') { try { window.focus(); } catch (x) {} } if (m.t === 's2pick' && S.page === 'regie' && PROG.ed) PROG.pickFromScreen2(m.k, m.ref); if (m.t === 's2pick' && S.page !== 'regie' && !/^ecran2/i.test(H0)) toastInfo('2e écran', 'Ouvre la page Réalisation dans la fenêtre principale pour placer les POV.', true); }; },
-  view: LS.get('ctv.s2view', { dir: true, live: false, pv: true, tab: 'mv' }),
+  view: Object.assign({ dir: true, pv: true, tab: 'util' }, LS.get('ctv.s2view', {})),
   saveView() { LS.set('ctv.s2view', this.view); },
   render() {
     const pv = $('#pageView');
@@ -2514,7 +2544,6 @@ const SCREEN2 = {
       pv.innerHTML = `<div class="s2" id="s2Box">
         <div class="s2-mons">
           <div class="s2-mon s2-main"><h4><b style="color:var(--red-hi)" id="s2DirL">● DIRECT</b> <span class="note" id="s2PgN"></span><span style="flex:1"></span>
-            <span class="seg" id="s2Mode"><button class="btn xs ${V.live ? '' : 'on'}" data-mode="dir" title="Ce que voient les spectateurs, avec le différé">Direct (différé)</button><button class="btn xs ${V.live ? 'on' : ''}" data-mode="live" title="L'antenne en temps réel">Temps réel</button></span>
             <button class="btn xs ghost mon-b" data-act="pg">Interagir</button><button class="btn xs ghost mon-b ${V.dir ? 'on' : ''}" data-img="dir" title="Afficher ou cacher l'image (économise les données)">Image</button><button class="btn xs ghost mon-b" id="s2Snd" title="Écouter">${ic('vol')}</button></h4>
             <div class="cvw"><div class="stg" id="s2Pg"></div><div class="s2-off ${V.dir ? 'hide' : ''}" id="s2PgOff">Image cachée</div></div></div>
           <div class="s2-mon s2-side"><h4><b>APERÇU</b> <span class="note" id="s2PvN"></span><span style="flex:1"></span><button class="btn xs ghost mon-b" data-act="pv">Interagir</button><button class="btn xs ghost mon-b ${V.pv ? 'on' : ''}" data-img="pv">Image</button></h4>
@@ -2522,11 +2551,13 @@ const SCREEN2 = {
             <div class="s2-bar"><div class="scn" id="s2Sc"></div><button class="btn take" id="s2Take">À L'ANTENNE ▶</button></div>
             <div class="s2-quick"><button class="btn sm ghost" id="s2Off">Hors antenne</button><button class="btn sm ghost" id="s2Set">${ic('gear')}Paramètres</button><button class="btn sm ghost" id="s2Main">Fenêtre principale</button></div></div>
         </div>
-        <div class="s2-tabs" id="s2Tabs">${[['mv', 'Multiview'], ['carte', 'Carte'], ['jeux', 'Sondages & pronostics']].map(([k, l]) => `<button class="btn sm ${V.tab === k ? 'on' : ''}" data-tab2="${k}">${l}</button>`).join('')}</div>
-        <div class="s2-pane ${V.tab === 'mv' ? '' : 'hide'}" data-pane="mv">
-          <div class="s2-mvh"><span class="note">clic : dans l'Aperçu (à la place de la source sélectionnée) · ★ : épingler</span><span style="flex:1"></span>
-            <input class="inp" id="s2Q" placeholder="Ajouter une POV : n° ou pseudo…" style="width:220px;height:30px" autocomplete="off"><select class="mini-sel" id="s2N">${[4, 6, 9, 12, 16].map(n => `<option value="${n}" ${n === this.n ? 'selected' : ''}>${n} cases</option>`).join('')}</select></div>
-          <div class="s2-grid" id="s2Grid"></div></div>
+        <div class="s2-tabs" id="s2Tabs">${[['util', 'Outils'], ['carte', 'Carte'], ['jeux', 'Sondages & pronostics']].map(([k, l]) => `<button class="btn sm ${V.tab === k ? 'on' : ''}" data-tab2="${k}">${l}</button>`).join('')}</div>
+        <div class="s2-pane s2-util ${V.tab === 'util' ? '' : 'hide'}" data-pane="util">
+          <section class="s2-box"><h5>Comms</h5><div class="s2-slot" id="s2Comms"></div></section>
+          <section class="s2-box"><h5>Terrain <span class="note">caméras · demandes · actes</span></h5><div class="s2-slot" id="s2Terrain"></div></section>
+          <section class="s2-box"><h5>Bloc-notes <span class="note" id="s2NoteS"></span></h5><textarea class="inp s2-note" id="s2Note" placeholder="Notes perso (enregistrées sur cet ordinateur) : plans à faire, idées, qui suivre…" spellcheck="false"></textarea></section>
+          <section class="s2-box"><h5>Tips</h5><div class="s2-tips">${helpKeys()}</div></section>
+        </div>
         <div class="s2-pane ${V.tab === 'carte' ? '' : 'hide'}" data-pane="carte"></div>
         <div class="s2-pane ${V.tab === 'jeux' ? '' : 'hide'}" data-pane="jeux"></div>
       </div>`;
@@ -2534,7 +2565,6 @@ const SCREEN2 = {
       this.mkStages();
       pv.querySelectorAll('[data-act]').forEach(b => b.onclick = () => { const w = $('#s2' + (b.dataset.act === 'pv' ? 'Pv' : 'Pg')).closest('.cvw'), on = !w.classList.contains('act'); w.classList.toggle('act', on); b.classList.toggle('on', on); });
       pv.querySelectorAll('[data-img]').forEach(b => b.onclick = () => { const k = b.dataset.img; V[k] = !V[k]; this.saveView(); b.classList.toggle('on', V[k]); $(k === 'dir' ? '#s2PgOff' : '#s2PvOff').classList.toggle('hide', V[k]); this.mkStages(); this.update(false); });
-      $('#s2Mode').onclick = e => { const b = e.target.closest('[data-mode]'); if (!b) return; V.live = b.dataset.mode === 'live'; this.saveView(); $$('#s2Mode [data-mode]').forEach(x => x.classList.toggle('on', x === b)); if (this.pg) { this.pg.destroy(); this.pg = null; } if (this.pv) { this.pv.destroy(); this.pv = null; } this.tiles.forEach(t => { t.st.destroy(); t.el.remove(); }); this.tiles.clear(); this.mkStages(); this.update(true); };
       $('#s2Snd').onclick = () => { this.snd = !this.snd; $('#s2Snd').classList.toggle('on', this.snd); if (this.pg) this.pg.setSound(this.snd); };
       $('#s2Tabs').onclick = e => { const b = e.target.closest('[data-tab2]'); if (!b) return; V.tab = b.dataset.tab2; this.saveView(); $$('#s2Tabs [data-tab2]').forEach(x => x.classList.toggle('on', x === b)); $$('#s2Box [data-pane]').forEach(x => x.classList.toggle('hide', x.dataset.pane !== V.tab)); this.panes(); };
       $('#s2Sc').onclick = e => { const b = e.target.closest('[data-sc]'); if (!b || !PROG.ed) return; PROG.ed.preview = b.dataset.sc; PROG.dirty = Date.now(); NET.req({ t: 'progSave', prog: PROG.ed }); this.update(false); };
@@ -2542,26 +2572,24 @@ const SCREEN2 = {
       $('#s2Off').onclick = () => PROG.screen ? PROG.screen('off') : NET.req({ t: 'progScreen', kind: 'off' });
       $('#s2Set').onclick = () => openSettings();
       $('#s2Main').onclick = () => { if (this.bc) this.bc.postMessage({ t: 's2focus' }); };
-      $('#s2N').onchange = e => { this.n = +e.target.value; LS.set('ctv.s2n', this.n); this.renderGrid(); };
-      $('#s2Q').onkeydown = e => { if (e.key !== 'Enter') return; const q = e.target.value.trim().toLowerCase(), t = /^\d+$/.test(q) ? byNum(+q) : S.board.tributes.find(x => x.login.toLowerCase() === q || x.name.toLowerCase().includes(q)); if (!t) { e.target.classList.add('bad'); return; } e.target.classList.remove('bad'); e.target.value = ''; this.pin('trib', t.id, true); };
-      $('#s2Grid').onclick = e => {
-        const pn = e.target.closest('[data-pin]'); if (pn) { const [k, ref] = pn.dataset.pin.split('|'); this.pin(k, ref); return; }
-        const t = e.target.closest('[data-tile]'); if (!t) return; const [k, ref] = t.dataset.tile.split('|');
-        if (this.bc) this.bc.postMessage({ t: 's2pick', k, ref }); else toastInfo('2e écran', 'Ce navigateur ne relie pas les deux fenêtres.', true);
-        t.classList.add('picked'); setTimeout(() => t.classList.remove('picked'), 600);
-      };
+      const nt = $('#s2Note'); nt.value = LS.get('ctv.s2note', '');
+      nt.oninput = () => { clearTimeout(this.ntT); $('#s2NoteS').textContent = '…'; this.ntT = setTimeout(() => { LS.set('ctv.s2note', nt.value); $('#s2NoteS').textContent = 'enregistré'; }, 400); };
+      // les panneaux Comms et Terrain quittent le panneau de droite pour la zone Outils
+      $('#s2Comms').appendChild($('#pComms')); $('#s2Terrain').appendChild($('#pTerrain'));
+      $('#pComms').classList.remove('hide'); $('#pTerrain').classList.remove('hide');
+      CAM.renderAllPanels();
       this.panes();
     }
     this.update(false);
   },
-  /* moniteurs : le Direct (exactement ce que voient les spectateurs, différé compris) ou l'antenne en temps réel */
+  /* moniteurs : le Direct (identique à l'Antenne de la régie : même différé) et l'aperçu */
   mkStages() {
     const V = this.view;
-    if (V.dir && !this.pg && $('#s2Pg')) { this.pg = new Stage($('#s2Pg'), V.live ? { delay: 0, layer: 'auto', sound: !!this.snd, record: true } : { delay: null, layer: 'auto', sound: !!this.snd, extras: true, record: true }); if (!V.live) { this.pg.seed(PROG.hist); DVR.candidate(2); } }
+    if (V.dir && !this.pg && $('#s2Pg')) { this.pg = new Stage($('#s2Pg'), { delay: null, layer: 'auto', sound: !!this.snd, extras: true, record: true }); DVR.candidate(2); }
     if (!V.dir && this.pg) { this.pg.destroy(); this.pg = null; }
-    if (V.pv && !this.pv && $('#s2Pv')) this.pv = new Stage($('#s2Pv'), { delay: V.live ? 0 : 'board', layer: 'auto', sound: false });
+    if (V.pv && !this.pv && $('#s2Pv')) this.pv = new Stage($('#s2Pv'), { delay: 'board', layer: 'auto', sound: false });
     if (!V.pv && this.pv) { this.pv.destroy(); this.pv = null; }
-    const l = $('#s2DirL'); if (l) l.textContent = V.live ? '● ANTENNE (temps réel)' : '● DIRECT' + (S.board.delay ? ' · différé ' + fmtDelay(S.board.delay) : '');
+    const l = $('#s2DirL'); if (l) l.textContent = '● DIRECT' + (S.board.delay ? ' · différé ' + fmtDelay(S.board.delay) : '');
   },
   /* carte et sondages : les vraies pages, intégrées */
   panes() {
@@ -2571,6 +2599,7 @@ const SCREEN2 = {
   pin(k, ref, only) { const key = k + '|' + ref, i = this.pins.indexOf(key); if (i >= 0 && !only) this.pins.splice(i, 1); else if (i < 0) this.pins.unshift(key); this.pins = this.pins.slice(0, 32); LS.set('ctv.s2pins', this.pins); this.renderGrid(); },
   update(cut) {
     if (S.page !== 'regie2' || !$('#s2Pv') || !PROG.ed) return;
+    if (this.view.tab === 'mv') { this.view.tab = 'util'; this.saveView(); }
     const sc = PROG.ed.scenes.find(x => x.id === PROG.ed.preview);
     if (this.pv) this.pv.set(PROG.pubFromScene(sc), false); if (this.pg) this.pg.set(PROG.pub, cut);
     $('#s2PvN').textContent = sc ? sc.name : ''; $('#s2PgN').textContent = PROG.pub && PROG.pub.on ? PROG.pub.scene : 'hors antenne';
@@ -2871,7 +2900,11 @@ function openMark() {
 /* Aide */
 function openHelp() {
   modal(`${modalHead('Tips', 'Raccourcis clavier et astuces. Comme une télécommande : tape un numéro de canal pour zapper.')}
-    <div class="modal-b"><div class="keys">
+    <div class="modal-b">${helpKeys()}</div>
+    <div class="modal-f"><button class="btn primary" data-close>Compris</button></div>`);
+}
+function helpKeys() {
+  return `<div class="keys">
       <h5>Zapping</h5>
       <span><kbd>0</kbd>–<kbd>9</kbd></span><span>Taper un numéro de canal (jusqu'à 3 chiffres, validation auto ou <kbd>Entrée</kbd>)</span>
       <span><kbd>←</kbd> <kbd>→</kbd></span><span>Canal précédent / suivant</span>
@@ -2896,8 +2929,7 @@ function openHelp() {
       <span><kbd>1</kbd>–<kbd>9</kbd></span><span>Choisir le plan dans l'aperçu</span>
       <h5>OBS</h5>
       <span>Clic droit</span><span>OBS : clic droit sur la source › <b>Interagir</b> pour accepter les demandes Twitch (contenu sensible…)</span>
-    </div></div>
-    <div class="modal-f"><button class="btn primary" data-close>Compris</button></div>`);
+    </div>`;
 }
 
 /* =====================================================================
@@ -3508,7 +3540,7 @@ const CAM = {
   badge() { const el = $('#commsCnt'); if (!el) return; el.textContent = this.unread; el.classList.toggle('hide', !this.unread || S.tab === 'comms'); sideSync(); },
   renderComms() {
     if (!isCrew() || !$('#cmList')) return;
-    if (S.tab === 'comms') { this.unread = 0; }
+    if (S.tab === 'comms' || document.body.classList.contains('screen2')) { this.unread = 0; }
     this.badge();
     $$('#cmChips [data-cm]').forEach(b => b.classList.toggle('on', b.dataset.cm === this.ch));
     const others = S.team.filter(m => m.id !== this.me());
@@ -3539,7 +3571,7 @@ const CAM = {
     else if (e.k === 'special' || e.k === 'meet' || e.k === 'totem') { if (isCrew()) toastInfo('Acte annonciateur', e.text); }
   },
   renderTerrain() {
-    if (!isCrew() || S.tab !== 'terrain' || !$('#trList')) return;
+    if (!isCrew() || !(S.tab === 'terrain' || document.body.classList.contains('screen2')) || !$('#trList')) return;
     const ae = document.activeElement; if (ae && $('#trList').contains(ae) && ae.matches('input,select,textarea')) return;
     const online = this.cams.filter(c => c.online).length;
     const cams = this.cams.slice().sort((a, b) => (b.online - a.online) || a.name.localeCompare(b.name));
@@ -4654,12 +4686,12 @@ class Stage {
     const html = [
       G.alive && G.alive.on && all ? `<div class="gx-alive"><b>${alive}</b><span>/ ${all}</span><i>EN VIE</i></div>` : '',
       lowT ? `<div class="gx-lower ${isDead(lowT) ? 'dead' : ''}"><div class="n">${lowT.num ? `<em>${pad3(lowT.num)}</em>` : ''}${esc(lowT.name)}</div><div class="s">${esc(distLabel(lowT.district))}${lowT.alliance ? ' · ' + esc(lowT.alliance) : ''}${killsOf(lowT) ? ' · ' + killsOf(lowT) + ' élimination' + (killsOf(lowT) > 1 ? 's' : '') : ''}${isDead(lowT) ? ' · tombé' : lowT.status === 'injured' ? ' · blessé' : ''}</div>${G.lower.text ? `<div class="x">${esc(G.lower.text)}</div>` : ''}</div>` : '',
-      G.breaking && G.breaking.on && G.breaking.text ? `<div class="gx-break"><b>DERNIÈRE MINUTE</b><div class="tk"><span>${esc(G.breaking.text)}</span><span aria-hidden="true">${esc(G.breaking.text)}</span></div></div>` : '',
+      G.breaking && G.breaking.on && G.breaking.text ? `<div class="gx-break"><b>DERNIÈRE MINUTE</b><div class="tk"><div class="tl"><i>${esc(G.breaking.text)}</i></div></div></div>` : '',
       G.poll && G.poll.on && poll ? `<div class="gx-poll"><h5>${poll.closed ? 'RÉSULTATS' : 'SONDAGE'} · ${poll.total} vote${poll.total > 1 ? 's' : ''}</h5><b>${esc(poll.q)}</b>${poll.opts.map((o, i) => { const pc = poll.total ? Math.round(poll.counts[i] / poll.total * 100) : 0; return `<div class="op"><span>${esc(o)}</span><em>${pc}%</em><i style="width:${pc}%"></i></div>`; }).join('')}</div>` : '',
       G.bets && G.bets.on && bets ? `<div class="gx-bets"><h5>FAVORIS DES SPECTATEURS</h5>${GAMES.favs(4).map(([t, pc]) => `<div class="op"><span>${esc(t.name)}</span><em>${pc}%</em><i style="width:${pc}%"></i></div>`).join('') || '<div class="note">Aucun pronostic</div>'}</div>` : '',
       G.map && G.map.on ? `<canvas class="gx-map" width="320" height="320"></canvas>` : ''
     ].join('');
-    if (g.dataset.h !== html) { g.dataset.h = html; g.innerHTML = html; }
+    if (g.dataset.h !== html) { g.dataset.h = html; g.innerHTML = html; const tk = g.querySelector('.gx-break .tk'); if (tk) requestAnimationFrame(() => fillTick(tk, 0.11)); }
     if (G.map && G.map.on) PROG.drawMini(g.querySelector('.gx-map'), this.mainTrib());
     if (this.o.extras) { this.renderReplay(); this.renderClip(); }
     else this.renderTags();
@@ -4790,7 +4822,7 @@ const PROG = {
     if (/direct|emission/i.test(H0) && !isLocked()) setTimeout(() => { setPage('direct'); this.fullscreen(true); }, 0);
     const em = /^embed-(carte|jeux)$/i.exec(H0);
     if (em && !isLocked()) setTimeout(() => { document.body.classList.add('embed'); if (S.page !== em[1]) setPage(em[1]); }, 0);
-    if (/^ecran2/i.test(H0) && hasPerm('program') && !isLocked()) setTimeout(() => { document.body.classList.add('screen2'); S.tab = 'soon'; renderTabs(); if (S.page !== 'regie2') setPage('regie2'); }, 0);
+    if (/^ecran2/i.test(H0) && hasPerm('program') && !isLocked()) setTimeout(() => { document.body.classList.add('screen2'); S.tab = 'alerts'; renderTabs(); if (S.page !== 'regie2') setPage('regie2'); }, 0);
   },
   wantsMap() { return !!(this.pub && this.pub.gfx && this.pub.gfx.map && this.pub.gfx.map.on); },
   onAir(id) { return !!(this.pub && this.pub.on && this.pub.items.some(i => i.k === 'cam' && i.ref === id)); },
