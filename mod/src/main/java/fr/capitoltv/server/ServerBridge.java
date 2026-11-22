@@ -219,7 +219,7 @@ public final class ServerBridge {
 
     public static void init() {
         ServerLifecycleEvents.SERVER_STARTED.register(s -> { server = s; loadConfig(); TerrainScan.load(s); connect(); });
-        ServerLifecycleEvents.SERVER_STOPPING.register(s -> { if (sock != null) sock.disconnect(); server = null; });
+        ServerLifecycleEvents.SERVER_STOPPING.register(s -> { TerrainScan.release(s); if (sock != null) sock.disconnect(); server = null; });
         ServerTickEvents.END_SERVER_TICK.register(ServerBridge::onTick);
 
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, base, taken, blocked) -> {

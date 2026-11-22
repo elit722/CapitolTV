@@ -47,14 +47,14 @@ final class HymnSound extends MovingSoundInstance {
             });
     }
 
-    void fadeOut() { if (out < 0) out = 60; }
+    void fadeOut() { if (out < 0) out = 80; }
 
     @Override public boolean shouldAlwaysPlay() { return true; }
 
     @Override
     public void tick() {
         age++;
-        if (out >= 0) { out--; volume = Math.max(0.001f, base * out / 60f); if (out <= 0) setDone(); return; }
+        if (out >= 0) { out--; float k = out / 80f; volume = Math.max(0.001f, base * k * k * (3 - 2 * k)) * Math.min(1f, age / 50f); if (out <= 0) setDone(); return; }
         float k = Math.min(1f, age / 50f);
         volume = Math.max(0.001f, base * k * k * (3 - 2 * k));
     }

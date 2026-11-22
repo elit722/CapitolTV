@@ -63,7 +63,6 @@ public final class SkyShow {
         per = (int) Math.max(4, Math.min(15, Data.l(m, "per") == 0 ? 7 : Data.l(m, "per")));
         title = Data.s(m, "title");
         at = System.currentTimeMillis() + 2000; // le temps de charger visages et hymne
-        baseYaw = mc.gameRenderer.getCamera().getYaw();
         for (Face f : list) if (!f.mc.isEmpty() && skin(f.mc) == null) loadHead(f.mc);
         stopHymn();
         JsonObject h = Data.obj(m, "hymn");
@@ -71,7 +70,10 @@ public final class SkyShow {
         Hud.toast("Hommage", "Lève les yeux vers le ciel.", Hud.BLUE, 5);
     }
 
-    private static double total() { return INTRO + list.size() * per + 1.5; }
+    /** fin du dernier tribut affiché */
+    private static double shown() { return INTRO + list.size() * per; }
+    /** l'hymne s'éteint en 4 s après le dernier tribut, puis tout s'arrête */
+    private static double total() { return shown() + 4.5; }
     private static void stopHymn() { if (hymn != null) { hymn.fadeOut(); hymn = null; } }
 
     public static void stop() { list.clear(); stopHymn(); }
@@ -136,7 +138,7 @@ public final class SkyShow {
         for (char c : s.toCharArray()) {
             int i = SkyFont.CHARS.indexOf(c); if (i < 0) continue;
             float adv = SkyFont.ADV[i] * 1.06f / SkyFont.H * h, pad = SkyFont.PAD / (float) SkyFont.H * h;
-            if (c != ' ' && x + adv > uMin && x < uMax) {
+            if (c != ' ' && x >= uMin && x + adv <= uMax) {
                 float tu0 = SkyFont.X[i] / (float) SkyFont.W, tu1 = (SkyFont.X[i] + SkyFont.ADV[i] + 2 * SkyFont.PAD) / (float) SkyFont.W;
                 quad(vc, m, x - pad, v, x + adv - pad * 0.1f + pad, v + h, tu0, 0f, tu1, 1f, r, g, b, sh);
             }
@@ -153,7 +155,7 @@ public final class SkyShow {
         long now = System.currentTimeMillis();
         double el = (now - at) / 1000.0;
         if (el > total()) { stop(); return; }
-        if (hymn != null && el > total() - 4) stopHymn();
+        if (hymn != null && el >= shown() - 0.3) stopHymn();
         if (el < 0) return;
         R = MathHelper.clamp(mc.options.getClampedViewDistance() * 16 * 0.5f, 40f, 100f);
         // scintillement du projecteur (et quelques sauts d'image)
@@ -162,6 +164,7 @@ public final class SkyShow {
         String big; String name = ""; Identifier face = null; boolean skinTex = false; float a;
         if (el < INTRO) { big = "PANEM"; a = (float) (Math.min(1, el / 1.5) * Math.min(1, (INTRO - el) / 1.0)); }
         else {
+            if (el >= shown()) return; // plus rien à l'écran, l'hymne finit de s'éteindre
             int i = Math.min(list.size() - 1, (int) ((el - INTRO) / per));
             double le = el - INTRO - i * per;
             a = (float) (Math.min(1, le / 1.2) * Math.min(1, (per - le) / 1.0));
@@ -185,41 +188,45 @@ public final class SkyShow {
             return k * MathHelper.clamp(0.12f + d / 7f, 0.12f, 1f);
         };
         // halo du faisceau
-        VertexConsumer g = imm.getBuffer(RenderLayer.getEyes(GLOW));
-        quad(g, m, -60, -32, 60, 38, 0, 0, 1, 1, 0.10f, 0.32f, 0.55f, (u, v) -> A * 0.55f);
-        imm.draw(RenderLayer.getEyes(GLOW));
-        VertexConsumer t = imm.getBuffer(RenderLayer.getEyes(FONT));
-        if (el < INTRO) {
-            float h = 14f, w = width(big, h);
-            text(t, m, big, -w / 2, -2, h, 0.45f, 0.82f, 1f, (u, v) -> A, -90, 90);
-            String sub = clean(title.isEmpty() ? "LE CAPITOLE REND HOMMAGE" : title);
-            float h2 = 3.2f, w2 = width(sub, h2);
-            text(t, m, sub, -w2 / 2, -8, h2, 0.6f, 0.9f, 1f, (u, v) -> A, -90, 90);
-        } else {
-            // rangées de « DISTRICT N » en quinconce derrière le visage
-            String row = big + "   ";
-            float h = 7.2f, rw = width(row, h);
-            for (int r = 0; r < 5; r++) {
-                float v0 = 16f - r * 8.6f, off = -56f + (r % 2) * rw * 0.42f - r * 3f + (r == 2 ? glitch : 0);
-                for (float u = off; u < 56; u += rw) text(t, m, row, u, v0, h, 0.30f, 0.66f, 1f, back, -58, 58);
-            }
-            if (!name.isEmpty()) { float h2 = 5.2f, w2 = width(name, h2); text(t, m, name, -w2 / 2, FV - FW / 2 - 7.5f, h2, 0.75f, 0.95f, 1f, (u, v) -> Math.min(1f, A * 1.3f), -90, 90); }
-        }
-        imm.draw(RenderLayer.getEyes(FONT));
-        if (face != null) {
-            // visage projeté, en bandes horizontales (lignes de balayage), teinté bleu
-            VertexConsumer fv = imm.getBuffer(RenderLayer.getEyes(face));
-            int N = 32;
-            for (int layer = 0; layer < (skinTex ? 2 : 1); layer++) {
-                float tu0 = skinTex ? (layer == 0 ? 8 : 40) / 64f : 0, tu1 = skinTex ? (layer == 0 ? 16 : 48) / 64f : 1, tv0 = skinTex ? 8 / 64f : 0, tv1 = skinTex ? 16 / 64f : 1;
-                for (int k = 0; k < N; k++) {
-                    float vTop = FV + FW / 2 - FW * k / N, vBot = vTop - FW / N * 0.74f;
-                    float sh = (hash(now / 90 + k) > 0.97 ? (float) (hash(k * 7L + now / 90) - 0.5) * 1.5f : 0) + glitch * 0.3f;
-                    float ta = tv0 + (tv1 - tv0) * k / N, tb = tv0 + (tv1 - tv0) * (k + 0.74f) / N;
-                    quad(fv, m, -FW / 2 + sh, vBot, FW / 2 + sh, vTop, tu0, ta, tu1, tb, 0.50f, 0.84f, 1f, (u, v) -> A * 0.95f);
+        // projetée en même temps aux quatre points cardinaux (nord, est, sud, ouest)
+        for (int dir = 0; dir < 4; dir++) {
+            baseYaw = dir * 90f;
+            VertexConsumer g = imm.getBuffer(RenderLayer.getEyes(GLOW));
+            quad(g, m, -44, -32, 44, 38, 0, 0, 1, 1, 0.10f, 0.32f, 0.55f, (u, v) -> A * 0.55f);
+            imm.draw(RenderLayer.getEyes(GLOW));
+            VertexConsumer t = imm.getBuffer(RenderLayer.getEyes(FONT));
+            if (el < INTRO) {
+                float h = 14f, w = width(big, h);
+                text(t, m, big, -w / 2, -2, h, 0.45f, 0.82f, 1f, (u, v) -> A, -90, 90);
+                String sub = clean(title.isEmpty() ? "LE CAPITOLE REND HOMMAGE" : title);
+                float h2 = 3.2f, w2 = width(sub, h2);
+                text(t, m, sub, -w2 / 2, -8, h2, 0.6f, 0.9f, 1f, (u, v) -> A, -90, 90);
+            } else {
+                // rangées de « DISTRICT N » en quinconce derrière le visage
+                String row = big + "   ";
+                float h = 7.2f, rw = width(row, h);
+                for (int r = 0; r < 5; r++) {
+                    float v0 = 16f - r * 8.6f, off = -44f + (r % 2) * rw * 0.42f - r * 3f + (r == 2 ? glitch : 0);
+                    for (float u = off; u < 44; u += rw) text(t, m, row, u, v0, h, 0.30f, 0.66f, 1f, back, -44, 44);
                 }
+                if (!name.isEmpty()) { float h2 = 5.2f, w2 = width(name, h2); text(t, m, name, -w2 / 2, FV - FW / 2 - 7.5f, h2, 0.75f, 0.95f, 1f, (u, v) -> Math.min(1f, A * 1.3f), -90, 90); }
             }
-            imm.draw(RenderLayer.getEyes(face));
+            imm.draw(RenderLayer.getEyes(FONT));
+            if (face != null) {
+                // visage projeté, en bandes horizontales (lignes de balayage), teinté bleu
+                VertexConsumer fv = imm.getBuffer(RenderLayer.getEyes(face));
+                int N = 32;
+                for (int layer = 0; layer < (skinTex ? 2 : 1); layer++) {
+                    float tu0 = skinTex ? (layer == 0 ? 8 : 40) / 64f : 0, tu1 = skinTex ? (layer == 0 ? 16 : 48) / 64f : 1, tv0 = skinTex ? 8 / 64f : 0, tv1 = skinTex ? 16 / 64f : 1;
+                    for (int k = 0; k < N; k++) {
+                        float vTop = FV + FW / 2 - FW * k / N, vBot = vTop - FW / N * 0.74f;
+                        float sh = (hash(now / 90 + k) > 0.97 ? (float) (hash(k * 7L + now / 90) - 0.5) * 1.5f : 0) + glitch * 0.3f;
+                        float ta = tv0 + (tv1 - tv0) * k / N, tb = tv0 + (tv1 - tv0) * (k + 0.74f) / N;
+                        quad(fv, m, -FW / 2 + sh, vBot, FW / 2 + sh, vTop, tu0, ta, tu1, tb, 0.50f, 0.84f, 1f, (u, v) -> A * 0.95f);
+                    }
+                }
+                imm.draw(RenderLayer.getEyes(face));
+            }
         }
     }
 }

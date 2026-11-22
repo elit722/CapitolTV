@@ -103,7 +103,7 @@ public class CapitolClientGameTest implements FabricClientGameTest {
             context.takeScreenshot("ctv-30-hommage-intro");
             context.waitTicks(20 * 5);
             context.takeScreenshot("ctv-31-hommage-visage");
-            context.runOnClient(c -> c.player.setPitch(-10f));
+            context.runOnClient(c -> { c.player.setYaw(45f); c.player.setPitch(-25f); });
             context.waitTicks(5);
             context.takeScreenshot("ctv-32-hommage-bas");
             context.runOnClient(c -> fr.capitoltv.client.Overlays.onServerMsg("{\"t\":\"recap\",\"n\":\"x\",\"name\":\"Rue\",\"district\":11,\"place\":3,\"lines\":[\"3e place sur 24\",\"Tombée face à Cato\",\"Temps de survie : 1 h 12\"]}"));

@@ -85,7 +85,7 @@ final class TerrainScan {
         if (old != null) copy(old, a);
         areas.put(dim, a);
         job = new Job(a, say);
-        return "Relevé du terrain lancé : " + span + " blocs de côté autour de " + cx + ", " + cz + " (" + job.total + " chunks, sans ralentir le serveur ; la carte reste ensuite à jour toute seule).";
+        return "Relevé du terrain lancé : " + span + " blocs de côté autour de " + cx + ", " + cz + " (" + job.total + " chunks ; les zones jamais explorées sont générées au passage, doucement, sans faire ramer le serveur ; la carte reste ensuite à jour toute seule).";
     }
 
     private static void copy(Area from, Area to) {
@@ -145,46 +145,62 @@ final class TerrainScan {
         for (Area a : areas.values()) if (a.dirty && job == null && now - a.sentAt > 180_000 && now - a.changedAt > 5_000) send(a, null);
     }
 
+    /** chunks en cours de chargement / génération (maintenus le temps de les lire) */
+    private static final Map<Long, int[]> forced = new HashMap<>();
+    private static long lastTick;
+    private static int slow;
+
     private static void stepJob(MinecraftServer s, long until) {
         Job jb = job; Area a = jb.a;
         ServerWorld w = world(s, a.dim);
         if (w == null) { job = null; return; }
+        // serveur à la peine (tick > 60 ms) : on lève le pied pour ne jamais faire ramer les joueurs
+        long nowN = System.nanoTime(); boolean lag = lastTick != 0 && nowN - lastTick > 60_000_000L; lastTick = nowN;
+        slow = lag ? 40 : Math.max(0, slow - 1);
         int cw = a.cw(), cx0 = a.cx0(), cz0 = a.cz0();
         try {
-            // 1) chunks déjà en mémoire : lus tout de suite ; les autres : on demande au disque s'ils existent (sans bloquer)
-            while (jb.next < jb.total && jb.asking.size() < 24 && System.nanoTime() < until) {
-                int k = jb.next++;
+            // 1) chunks demandés : lus dès qu'ils sont prêts (chargés du disque ou générés), puis relâchés
+            for (var it = forced.entrySet().iterator(); it.hasNext(); ) {
+                var e = it.next(); ChunkPos cp = new ChunkPos(e.getKey());
+                WorldChunk ch = w.getChunkManager().getWorldChunk(cp.x, cp.z);
+                if (ch != null || ++e.getValue()[0] > 1200) {
+                    if (ch != null) { if (readChunk(w, a, ch)) a.dirty = true; } else jb.skipped++;
+                    w.setChunkForced(cp.x, cp.z, false);
+                    it.remove(); jb.done++;
+                }
+                if (System.nanoTime() > until) break;
+            }
+            // 2) chunks déjà en mémoire : lus tout de suite ; les autres : demandés au serveur (génération en tâche de fond)
+            int max = slow > 0 ? 2 : 12;
+            while (jb.next < jb.total && System.nanoTime() < until) {
+                int k = jb.next;
                 ChunkPos cp = new ChunkPos(cx0 + k % cw, cz0 + k / cw);
                 WorldChunk ch = w.getChunkManager().getWorldChunk(cp.x, cp.z);
-                if (ch != null) { if (readChunk(w, a, ch)) a.dirty = true; jb.done++; continue; }
-                long key = cp.toLong();
-                CompletableFuture<Boolean> f = w.getChunkManager().chunkLoadingManager.getNbt(cp).thenApply(Optional::isPresent).exceptionally(e -> false);
-                jb.asking.put(key, f);
-                f.thenAccept(ok -> mainQ.add(() -> {
-                    if (job != jb) return;
-                    jb.asking.remove(key);
-                    if (ok) jb.toLoad.add(cp); else { jb.done++; jb.skipped++; }
-                }));
-            }
-            // 2) chunks créés mais pas chargés : lus depuis le disque, deux par tick au plus
-            int loads = 0;
-            while (!jb.toLoad.isEmpty() && loads < 2 && System.nanoTime() < until) {
-                ChunkPos cp = jb.toLoad.poll(); loads++;
-                WorldChunk ch = w.getChunk(cp.x, cp.z);
-                if (readChunk(w, a, ch)) a.dirty = true;
-                jb.done++;
+                if (ch != null) { jb.next++; if (readChunk(w, a, ch)) a.dirty = true; jb.done++; continue; }
+                if (forced.size() >= max) break;
+                jb.next++;
+                w.setChunkForced(cp.x, cp.z, true);
+                forced.put(cp.toLong(), new int[]{0});
             }
         } catch (Exception e) {
             CapitolTV.LOG.warn("Capitol TV : relevé du terrain interrompu", e);
             jb.say.accept("Relevé interrompu : " + e.getMessage());
-            job = null; return;
+            release(s); job = null; return;
         }
         int pct = jb.done * 100 / Math.max(1, jb.total);
-        if (pct / 25 != jb.lastPct / 25 && pct < 100) { jb.lastPct = pct; if (pct > 0) jb.say.accept("Relevé du terrain : " + pct + " %"); }
+        if (pct / 10 != jb.lastPct / 10 && pct < 100) { jb.lastPct = pct; if (pct > 0) jb.say.accept("Relevé du terrain : " + pct + " %"); }
         if (jb.done < jb.total) return;
         job = null;
         a.dirty = true;
         send(a, jb);
+    }
+
+    /** arrêt du serveur ou relevé interrompu : on relâche les chunks demandés */
+    static void release(MinecraftServer s) {
+        Job jb = job;
+        ServerWorld w = jb != null ? world(s, jb.a.dim) : null;
+        if (w != null) for (long k : forced.keySet()) { ChunkPos cp = new ChunkPos(k); w.setChunkForced(cp.x, cp.z, false); }
+        forced.clear();
     }
 
     /** mise à jour continue : relit quelques chunks chargés de la carte à chaque tick */
@@ -237,7 +253,7 @@ final class TerrainScan {
             }
         }
         save(a, c, hg);
-        if (jb != null) mainQ.add(() -> jb.say.accept("Relevé terminé en " + (System.currentTimeMillis() - jb.started) / 1000 + " s" + (jb.skipped > 0 ? " (" + jb.skipped + " chunks jamais explorés laissés vides)" : "") + ". La carte se met ensuite à jour toute seule."));
+        if (jb != null) mainQ.add(() -> jb.say.accept("Relevé terminé en " + (System.currentTimeMillis() - jb.started) / 1000 + " s" + (jb.skipped > 0 ? " (" + jb.skipped + " chunks impossibles à charger)" : "") + ". La carte se met ensuite à jour toute seule."));
     }
 
     /* ---------- sauvegarde sur le disque du serveur ---------- */

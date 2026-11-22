@@ -5629,19 +5629,23 @@ const PROG = {
     const q2 = (this.secQ.media || '').toLowerCase(), f2 = md => f(md) && (!q2 || md.name.toLowerCase().includes(q2));
     const others = this.media.filter(x => !x.slot && f2(x)).map(md => this.mediaRow(md)).join('');
     const free = this.ups[''] ? `<div class="src smd up"><div class="th md">⇪</div><div style="flex:1"><b>Envoi en cours</b><small>${this.ups['']}%</small><div class="pbar"><i style="width:${this.ups['']}%"></i></div></div></div>` : '';
-    return `${this.secHead('media', ic('live') + ' Médias', this.media.length, `<button class="btn sm ghost" data-pick="" data-accept="video/*,audio/*,image/*" title="Vidéo (mp4, webm), son (mp3, ogg, wav) ou image · 300 Mo max">${ic('plus')}Importer</button>`)}${q2 ? '' : slotRows}${others}${free}`;
+    return `${this.secHead('media', ic('live') + ' Médias', this.media.length, `<button class="btn sm ghost" data-pick="" data-accept="video/*,audio/*,image/*,.mp3,.ogg,.oga,.opus,.wav,.m4a,.flac,.webm,.mp4" title="Vidéo (mp4, webm), son (mp3, ogg, wav) ou image · 300 Mo max">${ic('plus')}Importer</button>`)}${q2 ? '' : slotRows}${others}${free}`;
   },
   async upload(file, slot) {
     const key = slot || '';
     if (this.ups[key] != null) { toastInfo('Un envoi est déjà en cours', '', true); return; }
-    const kind = /^video\//.test(file.type) ? 'video' : /^audio\//.test(file.type) ? 'audio' : /^image\//.test(file.type) ? 'image' : '';
+    // le type donné par le navigateur est parfois vide ou faux (.ogg vu comme vidéo sous Windows) : on se fie aussi à l'extension
+    const ext = (file.name.match(/\.([a-z0-9]+)$/i) || [, ''])[1].toLowerCase();
+    const EXT = { mp3: 'audio/mpeg', ogg: 'audio/ogg', oga: 'audio/ogg', opus: 'audio/ogg', wav: 'audio/wav', m4a: 'audio/mp4', aac: 'audio/aac', flac: 'audio/flac', mp4: 'video/mp4', m4v: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp' };
+    const mime = EXT[ext] && (!file.type || /ogg|octet/.test(file.type) || !/^(video|audio|image)\//.test(file.type)) ? EXT[ext] : file.type;
+    const kind = /^video\//.test(mime) ? 'video' : /^audio\//.test(mime) ? 'audio' : /^image\//.test(mime) ? 'image' : '';
     if (!kind) { toastInfo('Format non pris en charge', 'Vidéo (mp4, webm), son (mp3, ogg, wav) ou image.', true); return; }
     const dur = kind === 'image' ? 0 : await new Promise(res => { const u = URL.createObjectURL(file), e = document.createElement(kind); e.preload = 'metadata'; e.onloadedmetadata = () => { res(e.duration || 0); URL.revokeObjectURL(u); }; e.onerror = () => res(0); e.src = u; setTimeout(() => res(0), 8000); });
     const slotDef = this.SLOTS.find(x => x.slot === slot);
     const name = slotDef ? slotDef.name : file.name.replace(/\.[a-z0-9]+$/i, '').slice(0, 80);
     this.ups[key] = 0; this.renderSources();
     try {
-      const r = await fetch('/api/media/new', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, mime: file.type, size: file.size, dur, slot }) });
+      const r = await fetch('/api/media/new', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, mime, size: file.size, dur, slot }) });
       const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.msg || 'Envoi refusé (' + r.status + ')');
       const n = Math.ceil(file.size / j.cs);
       for (let i = 0; i < n; i++) {
