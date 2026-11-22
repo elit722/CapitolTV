@@ -524,7 +524,7 @@ export class Game extends DurableObject {
       this.terrain = m.get("terrain") || {};
       this.phist = m.get("phist") || []; this.dvrTok = m.get("dvrtok") || ""; this.mix = m.get("mix") || {}; this.tstats = m.get("tstats") || {}; this.kbs = m.get("kbs") || {}; this.zones = m.get("zones") || []; this.scJobs = m.get("scjobs") || [];
       // anciens titres SoundCloud (lecteur intégré) : copiés dans les médias au prochain réveil
-      for (const x of this.media) if (x.sc && !x.n && !x.dl && !this.scJobs.some(j => j.id === x.id)) { x.dl = 1; this.scJobs.push({ id: x.id, i: 0, parts: 0, size: 0 }); }
+      for (const x of (m.get("media") || [])) if (x.sc && !x.n && !x.dl && !this.scJobs.some(j => j.id === x.id)) { x.dl = 1; this.scJobs.push({ id: x.id, i: 0, parts: 0, size: 0 }); }
       this.tbot = { on: false, channel: "", ann: { poll: true, result: true, death: true, victor: true, bets: true }, cmds: true, ...(m.get("tbot") || {}) };
       this.roles = m.get("roles") || null;
       if (!this.roles) {

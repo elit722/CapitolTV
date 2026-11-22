@@ -1460,7 +1460,7 @@ function normBoard(b) {
     flash: b.flash || null,
     delay: Math.max(0, Math.min(900, parseInt(b.delay, 10) || 0)),
     hideChat: b.hideChat !== false,
-    autoCanon: b.autoCanon !== false, skyHommage: b.skyHommage !== false,
+    autoCanon: b.autoCanon !== false, skyHommage: b.skyHommage !== false, hymn: b.hymn && typeof b.hymn === "object" ? b.hymn : { on: true, vol: 70, id: "" },
     tick: normTick(b.tick, b.ticker),
     lock: (l => ({ mode: ['off', 'schedule', 'on'].includes(l.mode) ? l.mode : 'off', tz: String(l.tz || 'Europe/Paris'), msg: String(l.msg || ''),
       windows: (Array.isArray(l.windows) ? l.windows : []).map(w => ({ days: (Array.isArray(w.days) ? w.days : []).filter(d => d >= 0 && d <= 6), from: /^\d\d:\d\d$/.test(w.from) ? w.from : '20:00', to: /^\d\d:\d\d$/.test(w.to) ? w.to : '23:00' })) }))(b.lock || {}),
