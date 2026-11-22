@@ -8,5 +8,9 @@
   "key.capitoltv.camera": "Camera mode (clean HUD, camera bar)",
   "key.capitoltv.peek": "Show interface (hold, while on air)",
   "key.capitoltv.moves": "Camera moves",
-  "key.capitoltv.talk": "Talk to the control room"
+  "key.capitoltv.talk": "Talk to the control room",
+  "key.capitoltv.drone": "Cinema drone (smooth flight, roll, zoom)",
+  "key.capitoltv.pathAdd": "Camera path: add point (Shift: clear)",
+  "key.capitoltv.pathPlay": "Camera path: play / stop loop",
+  "key.capitoltv.radar": "Action radar (show / hide)"
 }

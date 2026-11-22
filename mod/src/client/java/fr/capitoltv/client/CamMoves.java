@@ -17,8 +17,8 @@ import net.minecraft.util.math.Vec3d;
 public final class CamMoves {
     private CamMoves() { }
 
-    public static final String[] NAMES = {"Orbite", "Orbite large", "Travelling avant", "Grue", "Suivi de dos", "Vue du ciel", "Panoramique", "Regard verrouillé"};
-    public static final String[] HINTS = {"tourne autour du tribut suivi", "grand cercle en hauteur", "s'approche lentement du tribut", "s'élève en le regardant", "reste derrière lui", "plongée au-dessus, en rotation", "tour complet sur place", "regarde le tribut, tu bouges librement"};
+    public static final String[] NAMES = {"Orbite", "Orbite large", "Travelling avant", "Grue", "Suivi auto", "Vue du ciel", "Panoramique", "Regard verrouillé"};
+    public static final String[] HINTS = {"tourne autour du tribut suivi", "grand cercle en hauteur", "s'approche lentement du tribut", "s'élève en le regardant", "change d'angle tout seul, évite les murs", "plongée au-dessus, en rotation", "tour complet sur place", "regarde le tribut, tu bouges librement"};
 
     public static boolean picker;
     private static int move = -1, t, wait;
@@ -55,6 +55,7 @@ public final class CamMoves {
         picker = false;
         ClientPlayerEntity p = mc.player;
         if (p == null) return;
+        CamDrone.off(mc); CamPath.stop(null);
         Vec3d tg = target(mc);
         if (tg == null && i != 6) {
             // pas de tribut suivi : on vise le point regardé à 10 blocs
@@ -124,10 +125,22 @@ public final class CamMoves {
                 PlayerEntity te = null;
                 Data.Trib tr = Data.tribById(CapitolClient.follow);
                 for (PlayerEntity e : mc.world.getPlayers()) if (tr != null && e.getGameProfile().getName().equalsIgnoreCase(tr.mc)) te = e;
-                float yaw = te != null ? te.getYaw() : p.getYaw();
-                Vec3d back = Vec3d.fromPolar(0, yaw).multiply(-6);
-                want = tg.add(back).add(0, 1.0, 0);
-                look = tg.add(Vec3d.fromPolar(0, yaw).multiply(4));
+                float yaw = te != null ? te.getBodyYaw() : p.getYaw();
+                // angle qui change toutes les 8 s : de dos, de côté, en plongée
+                int ph = (int) (s / 8) % 3;
+                boolean cave = !mc.world.isSkyVisible(net.minecraft.util.math.BlockPos.ofFloored(tg));
+                double k0 = cave ? 0.55 : 1.0;
+                Vec3d off = switch (ph) {
+                    case 0 -> Vec3d.fromPolar(0, yaw).multiply(-6 * k0).add(0, 1.2 * k0, 0);
+                    case 1 -> Vec3d.fromPolar(0, yaw + 90).multiply(5 * k0).add(0, 0.6, 0);
+                    default -> Vec3d.fromPolar(0, yaw).multiply(-5 * k0).add(0, (cave ? 2.5 : 7), 0);
+                };
+                Vec3d w0 = tg.add(off);
+                // pas de caméra dans un mur : on s'arrête juste avant l'obstacle
+                var hit = mc.world.raycast(new net.minecraft.world.RaycastContext(tg, w0, net.minecraft.world.RaycastContext.ShapeType.COLLIDER, net.minecraft.world.RaycastContext.FluidHandling.NONE, p));
+                if (hit.getType() != net.minecraft.util.hit.HitResult.Type.MISS) w0 = hit.getPos().add(tg.subtract(hit.getPos()).normalize().multiply(0.6));
+                want = w0.add(0, -p.getStandingEyeHeight(), 0);
+                look = tg.add(Vec3d.fromPolar(0, yaw).multiply(2));
             }
             case 5 -> {
                 if (tg == null) { stop("Aucun tribut suivi"); return; }
@@ -148,7 +161,7 @@ public final class CamMoves {
             default -> { }
         }
         // lissage : la caméra glisse vers sa position voulue
-        double k = move == 4 ? 0.18 : move == 2 || move == 3 ? 1.0 : 0.25;
+        double k = move == 4 ? 0.12 : move == 2 || move == 3 ? 1.0 : 0.25;
         cur = cur.lerp(want, k);
         p.setVelocity(Vec3d.ZERO);
         p.setPosition(cur.x, cur.y, cur.z);

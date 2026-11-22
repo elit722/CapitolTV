@@ -59,12 +59,40 @@ public final class Hud {
         };
     }
 
+    /* ---------- zones interdites aux caméras ---------- */
+    private static Data.Zone inZone;
+    private static boolean nearZone;
+    static void zoneTick(MinecraftClient mc) {
+        if (mc.player == null || mc.world == null || Data.zones.isEmpty() || Data.meCam.isEmpty() && !CamMode.allowed()) { inZone = null; return; }
+        String dim = mc.world.getRegistryKey().getValue().toString();
+        double x = mc.player.getX(), z = mc.player.getZ();
+        Data.Zone hit = null; boolean near = false;
+        for (Data.Zone q : Data.zones) {
+            if (!q.d.isEmpty() && !q.d.equals(dim)) continue;
+            if (x >= q.x1 && x <= q.x2 && z >= q.z1 && z <= q.z2) hit = q;
+            else if (x >= q.x1 - 12 && x <= q.x2 + 12 && z >= q.z1 - 12 && z <= q.z2 + 12) near = true;
+        }
+        if (hit != null && inZone != hit) { toast("Zone interdite", "« " + hit.name + " » : la régie ne veut pas d'images ici. Ressors de la zone.", RED, 6); sound(true); }
+        inZone = hit; nearZone = near;
+    }
+
     public static void render(DrawContext ctx, RenderTickCounter tc) {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.options.hudHidden || mc.currentScreen instanceof fr.capitoltv.client.gui.CapitolScreen) return;
         TextRenderer tr = mc.textRenderer;
         ClientConfig c = ClientConfig.get();
         int sw = ctx.getScaledWindowWidth(), sh = ctx.getScaledWindowHeight();
+        Overlays.renderSky(ctx, sw, sh);
+        if (mc.currentScreen == null) Overlays.renderRecap(ctx, sw, sh);
+        CamDrone.render(ctx, tr, sw);
+        CamPath.render(ctx, tr, sw);
+        if (inZone != null || nearZone) {
+            String s = inZone != null ? "⛔ ZONE INTERDITE · " + inZone.name : "⚠ Zone interdite toute proche";
+            int w = tr.getWidth(s) + 14, x = (sw - w) / 2, y = sh / 2 - 40;
+            boolean blink = inZone != null && (System.currentTimeMillis() / 400) % 2 == 0;
+            ctx.fill(x, y, x + w, y + 15, inZone != null ? (blink ? 0xF0B0182C : 0xE0801020) : 0xB0503010);
+            ctx.drawText(tr, s, x + 7, y + 4, 0xFFFFFFFF, false);
+        }
         CamMode.renderTally(ctx, tr, sw);
         CamMoves.render(ctx, tr, sw, sh);
         if (Talk.open) {
@@ -76,6 +104,7 @@ public final class Hud {
         if (Streamer.live() && ClientConfig.get().streamOn) { String s = "● DIFFUSION"; int w = tr.getWidth(s) + 8; ctx.fill(sw - w - 4, sh - 16, sw - 4, sh - 4, 0xA0101014); ctx.drawText(tr, s, sw - w, sh - 14, 0xFFE0514A, false); }
         if (CamMode.clean()) return;
         if (CamMode.active() && CapitolClient.online()) CamMode.renderToolbar(ctx, tr, sw, sh);
+        if (!CamMoves.picker) Radar.render(ctx, tr, sw);
         if (!Data.meCam.isEmpty() && mc.player != null && CapitolClient.online()) {
             boolean sp = mc.player.isSpectator();
             String s = sp ? "SPECTATEUR" : "PAS EN SPECTATEUR";

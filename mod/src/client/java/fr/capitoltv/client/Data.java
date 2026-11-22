@@ -57,6 +57,13 @@ public final class Data {
     public static final Map<String, Cam> cams = new LinkedHashMap<>();
     public static final Map<String, Pos> pos = new HashMap<>();
     public static final List<Member> team = new ArrayList<>();
+    /** zones interdites aux caméras (dessinées par la régie sur la carte du site) */
+    public static final class Zone { public String name = "", d = ""; public double x1, z1, x2, z2; }
+    public static final List<Zone> zones = new ArrayList<>();
+    static void setZones(JsonArray a) {
+        zones.clear();
+        if (a != null) for (JsonElement e : a) { JsonObject o = e.getAsJsonObject(); Zone z = new Zone(); z.name = s(o, "name"); z.d = s(o, "d"); z.x1 = d(o, "x1"); z.z1 = d(o, "z1"); z.x2 = d(o, "x2"); z.z2 = d(o, "z2"); zones.add(z); }
+    }
     public static String lastSentAlertId = "";
     public static long lastReportTs;
 
@@ -238,6 +245,7 @@ public final class Data {
         skew = l(m, "now") - System.currentTimeMillis();
         delay = (int) l(m, "delay");
         serverMod = b(m, "srv");
+        setZones(m.has("zones") ? arr(m, "zones") : null);
         setTribs(arr(m, "tribs"));
         setCams(arr(m, "cams"));
         setTeam(arr(m, "team"));

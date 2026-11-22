@@ -85,6 +85,33 @@ public final class ServerBridge {
         p.sendMessage(Text.literal("§6[Capitol TV]§r " + (on ? "Mode caméra : tu es en spectateur." : "Tu quittes le mode spectateur.")), false);
     }
 
+    /* ---------- tribut éliminé : récap à l'écran puis exclusion du serveur (il ne peut pas espionner pour un autre) ---------- */
+    private static final Map<String, long[]> pendingBans = new ConcurrentHashMap<>();
+    private static final Map<String, String> banText = new ConcurrentHashMap<>();
+    private static void onRecap(MinecraftServer s, JsonObject m) {
+        String n = m.has("n") ? m.get("n").getAsString() : ""; if (n.isEmpty()) return;
+        ServerPlayerEntity p = s.getPlayerManager().getPlayer(n);
+        if (p != null && ServerPlayNetworking.canSend(p, fr.capitoltv.net.CtvMsgPayload.ID)) ServerPlayNetworking.send(p, new fr.capitoltv.net.CtvMsgPayload(m.toString()));
+        if (!m.has("ban") || !m.get("ban").getAsBoolean()) return;
+        int delay = m.has("delay") ? Math.max(3, Math.min(120, m.get("delay").getAsInt())) : 15;
+        StringBuilder txt = new StringBuilder("§6§lCAPITOL TV§r\n\n§c§lTU ES TOMBÉ·E§r\n");
+        if (m.has("lines")) for (var e : m.getAsJsonArray("lines")) txt.append("\n§7").append(e.getAsString());
+        txt.append("\n\n§fMerci d'avoir joué ! Tu peux suivre la suite des Jeux sur Capitol TV.");
+        String k = n.toLowerCase(Locale.ROOT);
+        banText.put(k, txt.toString());
+        pendingBans.put(k, new long[]{System.currentTimeMillis() + delay * 1000L});
+    }
+    private static void banNow(MinecraftServer s, String k) {
+        pendingBans.remove(k);
+        String txt = banText.getOrDefault(k, "Éliminé des Jeux");
+        ServerPlayerEntity p = null;
+        for (ServerPlayerEntity x : s.getPlayerManager().getPlayerList()) if (x.getGameProfile().getName().equalsIgnoreCase(k)) p = x;
+        String name = p != null ? p.getGameProfile().getName() : k;
+        if (p != null) p.networkHandler.disconnect(Text.literal(txt));
+        s.getCommandManager().executeWithPrefix(s.getCommandSource(), "ban " + name + " Éliminé des Jeux (Capitol TV)");
+        CapitolTV.LOG.info("Capitol TV : {} éliminé, exclu du serveur", name);
+    }
+
     /** joueurs dont on attend la clé de diffusion */
     private static final Set<String> wantKeys = ConcurrentHashMap.newKeySet();
 
@@ -100,6 +127,14 @@ public final class ServerBridge {
                 MinecraftServer s0 = server;
                 if (s0 != null) s0.execute(() -> { for (ServerPlayerEntity p : s0.getPlayerManager().getPlayerList()) wantKeys.add(p.getGameProfile().getName()); connect(); });
             }
+            return;
+        }
+        if (t.equals("recap")) { MinecraftServer s0 = server; if (s0 != null) s0.execute(() -> onRecap(s0, m)); return; }
+        if (t.equals("sky")) { MinecraftServer s0 = server; if (s0 != null) s0.execute(() -> { String j = m.toString(); for (ServerPlayerEntity p : s0.getPlayerManager().getPlayerList()) if (ServerPlayNetworking.canSend(p, fr.capitoltv.net.CtvMsgPayload.ID)) ServerPlayNetworking.send(p, new fr.capitoltv.net.CtvMsgPayload(j)); }); return; }
+        if (t.equals("pardon") && m.has("n")) {
+            MinecraftServer s0 = server; if (s0 == null) return;
+            String n = m.get("n").getAsString().replaceAll("[^A-Za-z0-9_]", "");
+            if (!n.isEmpty()) s0.execute(() -> { pendingBans.remove(n.toLowerCase(Locale.ROOT)); s0.getCommandManager().executeWithPrefix(s0.getCommandSource(), "pardon " + n); CapitolTV.LOG.info("Capitol TV : {} peut revenir sur le serveur", n); });
             return;
         }
         if (t.equals("scan")) {
@@ -341,6 +376,15 @@ public final class ServerBridge {
 
     private static void onTick(MinecraftServer s) {
         TerrainScan.tick(s);
+        if (!pendingBans.isEmpty()) {
+            long now = System.currentTimeMillis();
+            for (var e : new ArrayList<>(pendingBans.entrySet())) {
+                ServerPlayerEntity p = null;
+                for (ServerPlayerEntity x : s.getPlayerManager().getPlayerList()) if (x.getGameProfile().getName().equalsIgnoreCase(e.getKey())) p = x;
+                // déjà réapparu (bouton Réapparaître) : on n'attend pas
+                if (now >= e.getValue()[0] || (p != null && p.isAlive() && !p.isSpectator())) banNow(s, e.getKey());
+            }
+        }
         if (sock == null || !sock.online()) { if (events.size() > 200) events.clear(); return; }
         tick++;
         if (cfg.giveStreamKeys && !wantKeys.isEmpty() && tick % 20 == 0) {

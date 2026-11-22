@@ -8,5 +8,9 @@
   "key.capitoltv.camera": "Mode caméra (HUD masqué, barre caméra)",
   "key.capitoltv.peek": "Voir l'interface (maintenir, à l'antenne)",
   "key.capitoltv.moves": "Mouvements de caméra",
-  "key.capitoltv.talk": "Parler à la régie (interphone)"
+  "key.capitoltv.talk": "Parler à la régie (interphone)",
+  "key.capitoltv.drone": "Drone cinéma (vol fluide, roulis, zoom)",
+  "key.capitoltv.pathAdd": "Travelling : poser un point (Maj : tout effacer)",
+  "key.capitoltv.pathPlay": "Travelling : lancer / arrêter la boucle",
+  "key.capitoltv.radar": "Radar d'action (afficher / masquer)"
 }

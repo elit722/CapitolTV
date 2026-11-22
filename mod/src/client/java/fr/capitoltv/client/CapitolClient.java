@@ -16,7 +16,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.Map;
 
 public class CapitolClient implements ClientModInitializer {
-    public static KeyBinding menuKey, signalKey, stateKey, followKey, replyKey, cameraKey, peekKey, movesKey, talkKey;
+    public static KeyBinding menuKey, signalKey, stateKey, followKey, replyKey, cameraKey, peekKey, movesKey, talkKey, droneKey, pathAddKey, pathPlayKey, radarKey;
     private static CtvSocket sock;
     /** Tribut suivi par cette caméra (id Capitol TV). */
     public static String follow = "";
@@ -37,9 +37,19 @@ public class CapitolClient implements ClientModInitializer {
         peekKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.peek", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, cat));
         movesKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.moves", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_V, cat));
         talkKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.talk", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_B, cat));
+        droneKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.drone", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_H, cat));
+        pathAddKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.pathAdd", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_N, cat));
+        pathPlayKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.pathPlay", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_M, cat));
+        radarKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.radar", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_G, cat));
         try { CamMode.install(); } catch (Throwable t) { fr.capitoltv.CapitolTV.LOG.warn("Capitol TV : HUD vanilla non géré ({})", t.toString()); }
         ClientTickEvents.START_CLIENT_TICK.register(mc -> { if (!CamMoves.startTick(mc)) CamMode.startTick(mc); });
-        ClientTickEvents.END_CLIENT_TICK.register(CamMoves::endTick);
+        ClientTickEvents.END_CLIENT_TICK.register(mc -> { CamMoves.endTick(mc); CamDrone.endTick(mc); CamPath.endTick(mc); });
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(fr.capitoltv.net.CtvMsgPayload.ID, (payload, ctx) -> Overlays.onServerMsg(payload.json()));
+        // récap de mort affiché par-dessus l'écran « Vous êtes mort »
+        net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.AFTER_INIT.register((client, screen, w, h) -> {
+            if (screen instanceof net.minecraft.client.gui.screen.DeathScreen)
+                net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.afterRender(screen).register((sc, ctx, mx, my, td) -> Overlays.renderRecap(ctx, sc.width, sc.height));
+        });
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(mc -> Streamer.stop(null));
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((h, sender, client) -> { CamMode.resetSpectatorTries(); stDirty = true; });
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((h, client) -> {
@@ -232,6 +242,14 @@ public class CapitolClient implements ClientModInitializer {
             if (!CamMode.allowed() && !mc.player.isSpectator()) { Hud.toast("Mouvements de caméra", "Réservés aux caméras en spectateur", Hud.ORANGE, 3); continue; }
             CamMoves.togglePicker();
         }
+        while (droneKey.wasPressed()) { if (CamMode.allowed() || (mc.player != null && mc.player.isSpectator())) CamDrone.toggle(mc); }
+        while (pathAddKey.wasPressed()) {
+            if (mc.player == null || !(CamMode.allowed() || mc.player.isSpectator())) continue;
+            if (InputUtil.isKeyPressed(mc.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT_SHIFT)) CamPath.clear(); else CamPath.add(mc);
+        }
+        while (pathPlayKey.wasPressed()) { if (CamMode.allowed() || (mc.player != null && mc.player.isSpectator())) CamPath.toggle(mc); }
+        while (radarKey.wasPressed()) { if (CamMode.active()) { Radar.on = !Radar.on; Hud.toast("Radar d'action", Radar.on ? "affiché" : "masqué", Hud.BLUE, 2); } }
+        Hud.zoneTick(mc);
         while (replyKey.wasPressed()) {
             if (lastMsgFrom.isEmpty()) Hud.toast("Comms", "Aucun message auquel répondre", Hud.DIM, 3);
             else { message("dm", lastMsgFrom, "Reçu ✔"); Hud.toast("Comms", "« Reçu » envoyé à " + Data.memberName(lastMsgFrom), Hud.GREEN, 3); }
@@ -304,6 +322,7 @@ public class CapitolClient implements ClientModInitializer {
                 if (m.has("delay")) Data.delay = (int) Data.l(m, "delay");
             }
             case "delay" -> Data.delay = (int) Data.l(m, "delay");
+            case "zones" -> Data.setZones(Data.arr(m, "zones"));
             case "srv" -> Data.serverMod = Data.b(m, "on");
             case "cams" -> Data.setCams(Data.arr(m, "cams"));
             case "roles" -> Data.setRoles(Data.arr(m, "roles"));

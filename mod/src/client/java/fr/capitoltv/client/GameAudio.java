@@ -87,6 +87,8 @@ public final class GameAudio {
         thread = null; loop = 0L;
     }
 
+    private static float duck = 1f;
+    private static byte[] spk = new byte[0];
     private static void render(long device) {
         SourceDataLine line = null;
         ShortBuffer pcm = ByteBuffer.allocateDirect(FRAMES * 4).order(ByteOrder.nativeOrder()).asShortBuffer();
@@ -107,7 +109,21 @@ public final class GameAudio {
                 for (int i = 0; i < FRAMES * 2; i++) { short v = pcm.get(i); bytes[i * 2] = (byte) v; bytes[i * 2 + 1] = (byte) (v >> 8); }
                 BiConsumer<byte[], Integer> s = sink;
                 if (s != null) s.accept(bytes, FRAMES);
-                if (line != null) line.write(bytes, 0, bytes.length); // bloque : donne le rythme
+                if (line != null) {
+                    // interphone : le son du jeu baisse dans TES oreilles quand la régie parle (pas dans la POV diffusée)
+                    float want = Talk.regieSpeaks && Talk.open ? 0.3f : 1f;
+                    if (duck != 1f || want != 1f) {
+                        if (spk.length != bytes.length) spk = new byte[bytes.length];
+                        for (int i = 0; i < FRAMES * 2; i++) {
+                            if ((i & 1) == 0) duck += (want - duck) * 0.0005f;
+                            short v = (short) ((bytes[i * 2] & 0xFF) | (bytes[i * 2 + 1] << 8));
+                            int o = Math.round(v * duck);
+                            spk[i * 2] = (byte) o; spk[i * 2 + 1] = (byte) (o >> 8);
+                        }
+                        if (Math.abs(duck - 1f) < 0.002f && want == 1f) duck = 1f;
+                        line.write(spk, 0, spk.length);
+                    } else line.write(bytes, 0, bytes.length); // bloque : donne le rythme
+                }
                 else { next += 10_000_000L; long w = next - System.nanoTime(); if (w > 0) java.util.concurrent.locks.LockSupport.parkNanos(w); }
             } catch (Throwable t) {
                 CapitolTV.LOG.warn("Capitol TV : erreur du son ({})", t.toString());

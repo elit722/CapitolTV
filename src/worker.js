@@ -322,7 +322,7 @@ async function overlayLogin(env, key) {
    Durable Object : la régie centrale
    ===================================================================== */
 const TYPES = ["Combat", "Alliance", "Trahison", "Mort imminente", "Cadeau sponsor", "Moment drôle", "Révélation", "Autre"];
-const SCALARS = ["ticker", "don", "fund", "day", "startTs", "cooldown", "lastHommage", "flash", "delay", "hideChat", "lock", "sponsor", "publicAccess", "map", "theme", "autoCanon", "tick"];
+const SCALARS = ["ticker", "don", "fund", "day", "startTs", "cooldown", "lastHommage", "flash", "delay", "hideChat", "lock", "sponsor", "publicAccess", "map", "theme", "autoCanon", "tick", "banOnDeath", "skyHommage"];
 const STATUSES = ["alive", "injured", "missing", "dead"];
 const PERMS = ["admin", "mod", "member"];
 const LOGIN_RE = /^[a-z0-9_]{3,25}$/;
@@ -408,7 +408,7 @@ const defaultRoles = () => [
 const SLUG = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 24);
 const defaultBoard = () => ({
   tributes: [], ticker: "", don: { label: "Sponsoriser", url: "" }, fund: { raised: 0, goal: 0, cur: "€" },
-  day: 0, startTs: null, cooldown: 20, lastHommage: 0, events: [], flash: null, delay: 0, hideChat: true, publicAccess: false, autoCanon: true,
+  day: 0, startTs: null, cooldown: 20, lastHommage: 0, events: [], flash: null, delay: 0, hideChat: true, publicAccess: false, autoCanon: true, banOnDeath: true, skyHommage: true,
   fund: { raised: 0, goal: 0, cur: "€", show: true }, fundLog: [],
   lock: { mode: "off", tz: "Europe/Paris", windows: [], msg: "" },
   sponsor: { url: "", label: "Sponsoriser un tribut", text: "", partners: [] },
@@ -478,7 +478,7 @@ export class Game extends DurableObject {
 
   load() {
     if (!this.loading) this.loading = (async () => {
-      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage", "moved", "from", "perf", "terrain", "tbot", "phist", "dvrtok", "mix", "tstats", "kbs"]);
+      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage", "moved", "from", "perf", "terrain", "tbot", "phist", "dvrtok", "mix", "tstats", "kbs", "zones"]);
       this.board = { ...defaultBoard(), ...(m.get("board") || {}) };
       this.alerts = m.get("alerts") || {};
       this.team = m.get("team") || [];
@@ -489,7 +489,7 @@ export class Game extends DurableObject {
       this.camSt = m.get("camst") || {};
       this.srvKey = m.get("srvkey") || "";
       this.terrain = m.get("terrain") || {};
-      this.phist = m.get("phist") || []; this.dvrTok = m.get("dvrtok") || ""; this.mix = m.get("mix") || {}; this.tstats = m.get("tstats") || {}; this.kbs = m.get("kbs") || {};
+      this.phist = m.get("phist") || []; this.dvrTok = m.get("dvrtok") || ""; this.mix = m.get("mix") || {}; this.tstats = m.get("tstats") || {}; this.kbs = m.get("kbs") || {}; this.zones = m.get("zones") || [];
       this.tbot = { on: false, channel: "", ann: { poll: true, result: true, death: true, victor: true, bets: true }, cmds: true, ...(m.get("tbot") || {}) };
       this.roles = m.get("roles") || null;
       if (!this.roles) {
@@ -598,7 +598,7 @@ export class Game extends DurableObject {
       t: "hello", now: Date.now(),
       me: { id: a.id, name: a.name, av: a.av, perm: a.perm, pub: a.pub, overlay: !!a.overlay, obsKey: hasPerm(a, "program") && !a.lock && this.env.OVERLAY_KEY ? this.env.OVERLAY_KEY : undefined, lock: !!a.lock, guest: !!a.guest, tribute: this.tributeOf(a.id), cam: a.cam || "", sup: isSup(a), crew: isCrew(a) && !a.lock, map: this.mapAllowed(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "", kb: isCrew(a) ? this.kbs[a.id] : undefined },
       roles: this.roles, prog: a.lock || !(isCrew(a) || a.overlay) ? undefined : this.progPub(), progHist: a.lock || !(isCrew(a) || a.overlay) ? undefined : this.progHistFor(),
-      dvrBase: isCrew(a) || a.overlay ? (this.env.DVR_PUBLIC || "") : undefined, mix: isCrew(a) || a.overlay ? this.mix : undefined, progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
+      dvrBase: isCrew(a) || a.overlay ? (this.env.DVR_PUBLIC || "") : undefined, mix: isCrew(a) || a.overlay ? this.mix : undefined, zones: isCrew(a) ? this.zones || [] : undefined, progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
       terrain: this.terrain || {}, bot: isStaff(a) ? this.botPublic() : undefined, media: isCrew(a) ? this.media : undefined, srvCams: isCrew(a) ? this.srvCams : undefined,
       pubs: this.pubsFor(a), rtc: { on: this.rtcOn(), pub: false, capOff: !!this.board.capOff, perf: isCrew(a) ? this.perf : undefined, use: isCrew(a) || a.overlay ? this.useInfo() : undefined, vq: { trib: this.vqCap("t:"), cam: this.vqCap("c:") }, vpref: isCrew(a) && !a.lock ? this.vpref : undefined },
       talk: this.talkSup(a) ? this.talkState() : undefined, clips: this.clipsFor(a),
@@ -781,6 +781,14 @@ export class Game extends DurableObject {
       }
       case "alert": return this.onAlert(ws, a, m.a || {}, reply);
       case "tstats": this.statTick(); return reply(true, this.statsFor(a));
+      case "zones": {
+        if (!isCrew(a) || a.lock || !(isSup(a) || hasPerm(a, "program"))) return deny();
+        this.zones = (Array.isArray(m.zones) ? m.zones : []).slice(0, 40).map(z => ({ id: String(z.id || rid8()).slice(0, 12), name: String(z.name || "Zone interdite").slice(0, 40), d: String(z.d || "minecraft:overworld").slice(0, 60),
+          x1: Math.round(Math.min(+z.x1, +z.x2)), z1: Math.round(Math.min(+z.z1, +z.z2)), x2: Math.round(Math.max(+z.x1, +z.x2)), z2: Math.round(Math.max(+z.z1, +z.z2)) })).filter(z => isFinite(z.x1) && isFinite(z.z1) && isFinite(z.x2) && isFinite(z.z2));
+        await this.ctx.storage.put("zones", this.zones);
+        this.crewcast({ t: "zones", zones: this.zones });
+        return reply(true);
+      }
       case "kb": {
         if (!isCrew(a) || a.guest) return deny();
         const o = {}; for (const [k, v] of Object.entries(m.kb || {}).slice(0, 80)) if (/^(antenne|regie)\.\w{1,20}$/.test(k) && typeof v === "string" && v.length <= 12) o[k] = v;
@@ -1053,11 +1061,17 @@ export class Game extends DurableObject {
     const b = this.board, now = Date.now();
     if (p.set && typeof p.set === "object") {
       for (const [k, v] of Object.entries(p.set)) if (SCALARS.includes(k)) b[k] = v;
-      if (p.set.flash && typeof p.set.flash === "object") b.flash = { ...p.set.flash, ts: now };
+      if (p.set.flash && typeof p.set.flash === "object") {
+        b.flash = { ...p.set.flash, ts: now };
+        if (b.flash.k === "tribute" && b.skyHommage) {
+          const list = (Array.isArray(b.flash.ids) ? b.flash.ids : []).map(id => b.tributes.find(t => t.id === id)).filter(Boolean).slice(0, 24).map(t => ({ name: t.name, d: t.district || 0, num: t.num || 0, mc: t.mc || "" }));
+          this.sendServers({ t: "sky", list, title: String(b.flash.title || "").slice(0, 80), per: 7 });
+        }
+      }
       if (p.set.fund && typeof p.set.fund === "object") { b.fund = { goal: Math.max(0, +p.set.fund.goal || 0), cur: String(p.set.fund.cur || "€").slice(0, 4), show: p.set.fund.show !== false, raised: 0 }; this.recalcFund(); }
       if (b.theme) { const t = b.theme || {}, hx = v => /^#[0-9a-f]{6}$/i.test(v || "") ? v : ""; b.theme = { name: String(t.name || "").slice(0, 40), gold: hx(t.gold), red: hx(t.red), font: ["unbounded", "syne", "grotesk", "oswald", "cinzel"].includes(t.font) ? t.font : "" }; }
       b.publicAccess = !!b.publicAccess;
-      b.autoCanon = b.autoCanon !== false;
+      b.autoCanon = b.autoCanon !== false; b.banOnDeath = b.banOnDeath !== false; b.skyHommage = b.skyHommage !== false;
       if (b.tick) { const t = b.tick; b.tick = { msgs: (Array.isArray(t.msgs) ? t.msgs : []).filter(m => m && m.text).slice(0, 12).map(m => ({ id: String(m.id || "").slice(0, 20), text: String(m.text).slice(0, 200), until: +m.until || 0 })), off: (Array.isArray(t.off) ? t.off : []).map(String).slice(0, 10) }; if (p.set.tick) b.ticker = ""; }
       b.map = { on: !!(b.map && b.map.on), staffOnly: !(b.map && b.map.staffOnly === false) };
       b.delay = Math.max(0, Math.min(900, parseInt(b.delay, 10) || 0));
@@ -1074,6 +1088,7 @@ export class Game extends DurableObject {
       if (prev && prev.status === t.status) { t.statusAt = prev.statusAt || 0; t.prevStatus = prev.prevStatus || ""; t.diedAt = prev.diedAt || t.diedAt || 0; }
       else { t.prevStatus = t.status; t.statusAt = prev ? now : 0; }
       if (t.status === "dead" && (!prev || prev.status !== "dead")) t.diedAt = now;
+      if (prev && prev.status === "dead" && t.status !== "dead" && t.mc) this.sendServers({ t: "pardon", n: t.mc });
       if (t.status === "injured" && (!prev || prev.status !== "injured")) t.injAt = now;
       if (i >= 0) b.tributes[i] = t; else if (b.tributes.length < 999) b.tributes.push(t);
     }
@@ -2224,7 +2239,7 @@ export class Game extends DurableObject {
       talk: { open: this.talk.open.includes(a.id), regie: !!this.talk.regie },
       tribs: this.tribsForMod(), alerts, cams: this.camsList(), team: this.teamForMod(),
       feed: this.camData.feed.slice(-150), comms: this.camData.comms.filter(x => this.msgVisible(x, a)).slice(-150),
-      reqs: Object.values(this.camData.reqs), pos: this.latestPos()
+      reqs: Object.values(this.camData.reqs), pos: this.latestPos(), zones: this.zones || []
     };
   }
 
@@ -2632,7 +2647,7 @@ export class Game extends DurableObject {
       if (!t) continue;
       if (!isServer && srvOn && k !== "totem") continue;
       const byT = e.byP ? this.tribByMc(e.by) : null;
-      const ev = { k, tr: t.id, n: t.name, cause: String(e.cause || "").slice(0, 40), by: byT ? byT.name : String(e.by || "").slice(0, 40), byTr: byT ? byT.id : "", byT: String(e.byT || "").slice(0, 60), via: String(e.via || "").slice(0, 60), src };
+      const ev = { k, tr: t.id, n: t.name, nmc: String(e.n || "").slice(0, 16), cause: String(e.cause || "").slice(0, 40), by: byT ? byT.name : String(e.by || "").slice(0, 40), byTr: byT ? byT.id : "", byT: String(e.byT || "").slice(0, 60), via: String(e.via || "").slice(0, 60), src };
       if (isFinite(+e.amt) && +e.amt > 0) ev.amt = Math.round(+e.amt * 10) / 10;
       if (isFinite(+e.hp)) ev.hp = Math.round(+e.hp * 10) / 10;
       if (isFinite(+e.x) && isFinite(+e.z)) { ev.x = Math.round(+e.x); ev.y = Math.round(+e.y || 0); ev.z = Math.round(+e.z); ev.d = String(e.d || "").slice(0, 60); }
@@ -2644,9 +2659,19 @@ export class Game extends DurableObject {
       ev.key = key;
       this.addFeed(ev);
       if (k === "death" && (isServer || !srvOn)) this.autoKill(t, ev);
+      if (k === "death" && isServer) this.sendRecap(t, ev);
       if (isFinite(ev.hp) && ev.x != null) this.setPos(t, { x: ev.x, y: ev.y, z: ev.z, d: ev.d, hp: ev.hp }, src);
     }
     this.flushPosSoon();
+  }
+  /* récap affiché au tribut sur son écran de mort, puis exclusion du serveur (réglage) */
+  sendRecap(t, ev) {
+    const b = this.board, now = Date.now(), st = this.tstats[t.id] || { dist: 0, air: 0, peak: 0 };
+    const place = t.place || b.tributes.filter(x => x.id !== t.id && x.status !== "dead").length + 1;
+    const dur = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? h + " h " + String(m).padStart(2, "0") : m + " min"; };
+    const lines = [place ? place + (place === 1 ? "re" : "e") + " place sur " + b.tributes.length : "", ev.by ? "Tombé·e face à " + ev.by : ev.cause ? "Cause : " + ev.cause : "", b.startTs ? "Temps de survie : " + dur((now - b.startTs) / 1000) : "",
+      st.dist ? "Distance parcourue : " + (st.dist >= 1000 ? (st.dist / 1000).toFixed(1).replace(".", ",") + " km" : Math.round(st.dist) + " m") : "", st.air ? "Temps à l'antenne : " + dur(st.air) : "", st.peak ? "Jusqu'à " + st.peak + " spectateurs" : ""].filter(Boolean);
+    this.sendServers({ t: "recap", n: ev.nmc || t.mc, name: t.name, district: t.district || 0, num: t.num || 0, place, lines, ban: b.banOnDeath !== false, delay: 15 });
   }
   autoKill(t, ev) {
     const b = this.board; if (!b.autoCanon || t.status === "dead") return;

@@ -1460,7 +1460,7 @@ function normBoard(b) {
     flash: b.flash || null,
     delay: Math.max(0, Math.min(900, parseInt(b.delay, 10) || 0)),
     hideChat: b.hideChat !== false,
-    autoCanon: b.autoCanon !== false,
+    autoCanon: b.autoCanon !== false, banOnDeath: b.banOnDeath !== false, skyHommage: b.skyHommage !== false,
     tick: normTick(b.tick, b.ticker),
     lock: (l => ({ mode: ['off', 'schedule', 'on'].includes(l.mode) ? l.mode : 'off', tz: String(l.tz || 'Europe/Paris'), msg: String(l.msg || ''),
       windows: (Array.isArray(l.windows) ? l.windows : []).map(w => ({ days: (Array.isArray(w.days) ? w.days : []).filter(d => d >= 0 && d <= 6), from: /^\d\d:\d\d$/.test(w.from) ? w.from : '20:00', to: /^\d\d:\d\d$/.test(w.to) ? w.to : '23:00' })) }))(b.lock || {}),
@@ -1563,6 +1563,7 @@ const NET = {
   onMsg(m) {
     switch (m.t) {
       case 'mix': MIX.set(m.mix); break;
+      case 'zones': CAM.zones = m.zones || []; if (S.page === 'carte') { CAM.draw(); CAM.renderSide(); } break;
       case 'hello': { this.tries = 0; this.everConnected = true; onHello(m); const q = this.q; this.q = []; q.forEach(o => this.send(o)); break; }
       case 'board': onBoard(m.board); break;
       case 'alert': S.alerts[m.id] = m.a; onAlerts(S.alerts); break;
@@ -1615,7 +1616,7 @@ function showConn(title, text, final) {
 function hideConn() { clearTimeout(showConn.t); $('#conn').classList.add('hide'); }
 
 /* Enregistrement : seules les modifications sont envoyées (plusieurs personnes peuvent être en régie) */
-const SCALARS = ['ticker', 'don', 'fund', 'day', 'startTs', 'cooldown', 'lastHommage', 'flash', 'delay', 'hideChat', 'lock', 'sponsor', 'publicAccess', 'map', 'theme', 'autoCanon', 'tick'];
+const SCALARS = ['ticker', 'don', 'fund', 'day', 'startTs', 'cooldown', 'lastHommage', 'flash', 'delay', 'hideChat', 'lock', 'sponsor', 'publicAccess', 'map', 'theme', 'autoCanon', 'tick', 'banOnDeath', 'skyHommage'];
 const clone = o => JSON.parse(JSON.stringify(o));
 function boardDiff(a, b) {
   const p = {}, set = {};
@@ -1678,7 +1679,7 @@ function applyRole() {
 function onHello(m) {
   S.me = m.me; S.skew = (m.now || Date.now()) - Date.now();
   S.team = m.team || []; S.banned = m.banned || {}; S.roles = m.roles || [];
-  TERRAIN.set(m.terrain); S.bot = m.bot || null; DVR.onHello(m); KB.onHello(m); if (m.mix) MIX.set(m.mix); RTC.onHello(m); CAM.onHello(m); PROG.onHello(m); S.srvCams = m.srvCams || []; GAMES.onHello(m); CLIPS.onList(m.clips); TALK.onState(m.talk || null); RTC.vq = (m.rtc && m.rtc.vq) || null;
+  TERRAIN.set(m.terrain); S.bot = m.bot || null; DVR.onHello(m); KB.onHello(m); if (m.zones) CAM.zones = m.zones; if (m.mix) MIX.set(m.mix); RTC.onHello(m); CAM.onHello(m); PROG.onHello(m); S.srvCams = m.srvCams || []; GAMES.onHello(m); CLIPS.onList(m.clips); TALK.onState(m.talk || null); RTC.vq = (m.rtc && m.rtc.vq) || null;
   S.alertsReady = false; S.seen = new Set(); S.alerts = {};
   if (m.alerts) onAlerts(m.alerts);
   onPresence(m.presence || { n: 0, counts: {}, team: {} });
@@ -3121,6 +3122,9 @@ function renderSettings() {
       </div>
       <p class="note"><b style="color:var(--gold-hi)">Comment ça marche :</b> la régie, le Direct (OBS) et la page Antenne montrent tous l'image avec ce retard, la même pour tout le monde. Ce que tu fais en régie (plans, canon à la main, flashs, statuts) part donc <b style="color:var(--ink2)">immédiatement</b>, puisque tu regardes déjà l'image retardée. Seuls le panneau « À venir », la carte et les comms sont en temps réel.</p>
       <label class="switch"><input type="checkbox" id="autoCanon" ${b.autoCanon ? 'checked' : ''}> Coup de canon automatique quand le serveur détecte une mort</label>
+      <label class="switch"><input type="checkbox" id="banOnDeath" ${b.banOnDeath ? 'checked' : ''}> Tribut mort : récap sur son écran puis exclusion du serveur Minecraft 15 s après (il ne peut pas espionner pour un autre)</label>
+      <p class="note" style="margin-top:0">Pour le laisser revenir : remets-le « en lice » sur le site (il est débanni tout seul) ou <code>/pardon pseudo</code> en jeu.</p>
+      <label class="switch"><input type="checkbox" id="skyHommage" ${b.skyHommage ? 'checked' : ''}> Hommage aussi dans le ciel en jeu (visages projetés au nord, comme dans les films)</label>
       <p class="note">Le tribut passe « tombé » et le canon retentit <b style="color:var(--ink2)">${b.delay ? fmtDelay(b.delay) + ' après la mort' : 'tout de suite'}</b>, au moment où la scène arrive à l'image. Décoche si tu préfères tout faire à la main (bouton « Tombé »).${b.delay && pending ? ` <b style="color:var(--gold-hi)">${pending} annonce(s) en attente.</b>` : ''}</p>
       <p class="note" style="margin-bottom:0"><b style="color:var(--warn)">Important :</b> un site ne peut pas retarder une vidéo Twitch. Chaque streamer doit régler <b style="color:var(--ink2)">le même délai</b> de son côté : Twitch › Gestionnaire de stream › <i>Délai du stream</i> (jusqu'à 15 min), ou OBS › Paramètres › Avancé › <i>Délai de diffusion</i>.</p>
     </div>
@@ -3442,6 +3446,8 @@ function settingsEvents() {
     const id = tg.id, b = S.board;
     if (tg.dataset.tkauto) { const k = tg.dataset.tkauto, off = b.tick.off.filter(x => x !== k); if (!tg.checked) off.push(k); b.tick = { ...b.tick, off }; commit(); renderTickList(); }
     if (id === 'autoCanon') { b.autoCanon = tg.checked; commit(false); }
+    if (id === 'banOnDeath') { b.banOnDeath = tg.checked; commit(false); }
+    if (id === 'skyHommage') { b.skyHommage = tg.checked; commit(false); }
     if (id === 'lkMode' || id === 'lkTz' || id === 'lkMsg') { b.lock = { ...b.lock, mode: $('#lkMode').value, tz: $('#lkTz').value.trim() || 'Europe/Paris', msg: $('#lkMsg').value.trim() }; commit(); renderSettings(); }
     if (tg.dataset.lw) { const w = b.lock.windows[+tg.dataset.i]; if (w && /^\d\d:\d\d$/.test(tg.value)) { w[tg.dataset.lw] = tg.value; commit(); renderSettings(); } }
     if (id === 'spU' || id === 'spL' || id === 'spT') { const u = $('#spU').value.trim(); b.sponsor = { ...b.sponsor, url: /^https?:\/\//i.test(u) ? u : '', label: $('#spL').value.trim() || 'Sponsoriser un tribut', text: $('#spT').value.trim() }; commit(); }
@@ -3835,14 +3841,24 @@ const CAM = {
           <div id="mapCard"></div><div class="list" id="mapList"></div></div></div>`;
       const cv = $('#mapCv');
       let drag = null;
-      cv.addEventListener('mousedown', e => { drag = { x: e.clientX, y: e.clientY, moved: false }; });
+      const toWorld = e => { const r = cv.getBoundingClientRect(); return [this.view.cx + (e.clientX - r.left - r.width / 2) / this.view.k, this.view.cz + (e.clientY - r.top - r.height / 2) / this.view.k]; };
+      cv.addEventListener('mousedown', e => { if (this.zoneDraw && this.view) { const [x, z] = toWorld(e); this.zoneTmp = { x1: x, z1: z, x2: x, z2: z }; return; } drag = { x: e.clientX, y: e.clientY, moved: false }; });
       window.addEventListener('mousemove', e => {
+        if (this.zoneTmp && this.view) { const [x, z] = toWorld(e); this.zoneTmp.x2 = x; this.zoneTmp.z2 = z; this.draw(); return; }
         if (!drag || S.page !== 'carte' || !this.view) return;
         const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
         if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
         if (drag.moved) { this.view.cx -= dx / this.view.k; this.view.cz -= dy / this.view.k; drag.x = e.clientX; drag.y = e.clientY; this.draw(); }
       });
       window.addEventListener('mouseup', e => {
+        if (this.zoneTmp) {
+          const z = this.zoneTmp; this.zoneTmp = null; this.zoneDraw = false; this.renderTools();
+          if (Math.abs(z.x2 - z.x1) < 3 || Math.abs(z.z2 - z.z1) < 3) { this.draw(); return; }
+          const name = prompt('Nom de la zone interdite', 'Zone interdite'); if (name == null) { this.draw(); return; }
+          const zones = [...(this.zones || []), { id: rid(), name: name.trim() || 'Zone interdite', d: this.dim, ...z }];
+          NET.req({ t: 'zones', zones }).then(() => toastInfo('Zone ajoutée', 'Les caméras qui y entrent sont averties.'), er => toastInfo('Zone', er.message, true));
+          return;
+        }
         if (!drag) return;
         const d = drag; drag = null;
         if (!d.moved && e.target === cv) { this.sel = this.hit(e) || ''; this.draw(); this.renderSide(); }
@@ -3863,10 +3879,11 @@ const CAM = {
         else if (v === 'trails') this.showTrails = !this.showTrails;
         else if (v === 'iso') { const c = this.view && this.unproj(this.view.cx, this.view.cz); this.iso = !this.iso; LS.set('ctv.mapIso', this.iso); if (c) { const q = this.proj(c[0], c[1], c[2]); this.view.cx = q[0]; this.view.cz = q[1]; } }
         else if (v === 'scan') { const r = +$('#mapR').value || 256, c = this.view ? this.unproj(this.view.cx, this.view.cz) : [0, 64, 0]; NET.req({ t: 'terrainScan', dim: this.dim, cx: Math.round(c[0]), cz: Math.round(c[2]), r }).then(() => toastInfo('Relevé demandé au serveur', 'Centre ' + Math.round(c[0]) + ', ' + Math.round(c[2]) + ' · rayon ' + r + ' blocs')); }
+        else if (v === 'zone') { if (this.iso) { toastInfo('Passe en vue de dessus pour dessiner une zone', '', true); return; } this.zoneDraw = !this.zoneDraw; if (this.zoneDraw) toastInfo('Zone interdite', 'Glisse sur la carte pour dessiner le rectangle.'); }
         else if (v.startsWith('dim:')) { this.dim = v.slice(4); this.fit(); }
         this.renderTools(); this.draw();
       });
-      $('#mapList').addEventListener('click', e => { const r = e.target.closest('[data-mid]'); if (r) { this.sel = r.dataset.mid; const p = this.pos[this.sel]; if (p) { this.dim = p.d; if (this.view) { this.view.cx = p.x; this.view.cz = p.z; } } this.renderTools(); this.draw(); this.renderSide(); } });
+      $('#mapList').addEventListener('click', e => { const zd = e.target.closest('[data-zdel]'); if (zd) { NET.req({ t: 'zones', zones: (this.zones || []).filter(z => z.id !== zd.dataset.zdel) }); return; } const r = e.target.closest('[data-mid]'); if (r) { this.sel = r.dataset.mid; const p = this.pos[this.sel]; if (p) { this.dim = p.d; if (this.view) { this.view.cx = p.x; this.view.cz = p.z; } } this.renderTools(); this.draw(); this.renderSide(); } });
       $('#mapCard').addEventListener('click', e => {
         const b = e.target.closest('[data-mc]'); if (!b) return;
         const t = byId(this.sel); if (!t) return;
@@ -3886,6 +3903,7 @@ const CAM = {
       + (isCrew() ? `<button class="btn xs ${this.showCams ? 'on' : ''}" data-mt="cams">${ic('cam')}Caméras</button>` : '')
       + `<button class="btn xs ${this.showTrails ? 'on' : ''}" data-mt="trails">Traces</button>`
       + `<button class="btn xs ${this.iso ? 'on' : ''}" data-mt="iso" title="Vue en relief (isométrique)">${this.iso ? 'Vue de dessus' : 'Vue 3D iso'}</button>`
+      + (isCrew() ? `<button class="btn xs ${this.zoneDraw ? 'on' : ''}" data-mt="zone" title="Dessine un rectangle sur la carte : les caméras qui y entrent sont averties (bases secrètes, lieux à ne pas spoiler)">⛔ Zone interdite</button>` : '')
       + (isCrew() ? `<span class="map-scan"><select class="mini-sel" id="mapR" title="Rayon du relevé">${[128, 256, 384, 512, 768, 1024].map(r => `<option value="${r}" ${r === 256 ? 'selected' : ''}>${r} blocs</option>`).join('')}</select><button class="btn xs" data-mt="scan" title="Le mod serveur relève le terrain autour du centre de la vue (ou /capitol carte <rayon> en jeu)">Relever le terrain ici</button></span>` : '');
   },
   /* projection : vue de dessus (x, z) ou isométrique */
@@ -3944,6 +3962,11 @@ const CAM = {
       for (let x = x0; X(x) <= W; x += st) { g.strokeStyle = x === 0 ? 'rgba(214,178,97,.35)' : `rgba(255,255,255,${gl})`; g.beginPath(); g.moveTo(Math.round(X(x)) + .5, 0); g.lineTo(Math.round(X(x)) + .5, H); g.stroke(); g.fillStyle = T ? 'rgba(255,255,255,.55)' : '#4a4740'; g.fillText(x, X(x) + 3, 52); }
       for (let z = z0; Z(z) <= H; z += st) { g.strokeStyle = z === 0 ? 'rgba(214,178,97,.35)' : `rgba(255,255,255,${gl})`; g.beginPath(); g.moveTo(0, Math.round(Z(z)) + .5); g.lineTo(W, Math.round(Z(z)) + .5); g.stroke(); g.fillStyle = T ? 'rgba(255,255,255,.55)' : '#4a4740'; g.fillText(z, 4, Z(z) - 3); }
     }
+    if (!this.iso) for (const z of [...(this.zones || []).filter(z => z.d === this.dim), ...(this.zoneTmp ? [{ ...this.zoneTmp, name: '' }] : [])]) {
+      const x1 = X(Math.min(z.x1, z.x2)), y1 = Z(Math.min(z.z1, z.z2)), w = Math.abs(z.x2 - z.x1) * v.k, h = Math.abs(z.z2 - z.z1) * v.k;
+      g.fillStyle = 'rgba(224,81,74,.18)'; g.fillRect(x1, y1, w, h); g.strokeStyle = '#e0514a'; g.setLineDash([6, 4]); g.lineWidth = 2; g.strokeRect(x1, y1, w, h); g.setLineDash([]);
+      if (z.name) { g.fillStyle = '#ffb3ae'; g.font = '600 12px system-ui, sans-serif'; g.fillText('⛔ ' + z.name, x1 + 6, y1 + 16); }
+    }
     if (!TERRAIN.meta[this.dim]) { g.fillStyle = 'rgba(255,255,255,.28)'; g.font = '13px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText(isCrew() ? 'Pas encore de fond de carte : « Relever le terrain ici » ou /capitol carte <rayon> en jeu' : 'Fond de carte pas encore disponible', W / 2, H - 22); g.textAlign = 'left'; }
     const now = nowS();
     if (this.showTrails) for (const [id, tr] of Object.entries(this.trails)) {
@@ -3975,9 +3998,10 @@ const CAM = {
     const now = nowS(), crew = isCrew() && !(S.me && S.me.pub);
     $('#mapSub').innerHTML = crew ? 'Positions <b style="color:var(--ok)">en direct</b> (équipe)' + (this.srv ? ' · mod serveur actif' : ' · vues des caméras') : S.board.delay ? 'Positions avec le différé de ' + fmtDelay(S.board.delay) : 'Positions en direct';
     const list = sortedByNum().map(t => [t, this.pos[t.id]]);
-    $('#mapList').innerHTML = list.length ? list.map(([t, p]) => `<div class="mrow ${t.id === this.sel ? 'on' : ''}" data-mid="${esc(t.id)}"><i style="background:${this.col(t)}"></i>
+    const zl = isCrew() ? (this.zones || []) : [];
+    $('#mapList').innerHTML = (zl.length ? `<div class="mrow" style="cursor:default"><b style="color:var(--red-hi)">⛔ Zones interdites aux caméras</b></div>` + zl.map(z => `<div class="mrow" style="cursor:default"><i style="background:#e0514a"></i><div style="min-width:0"><b>${esc(z.name)}</b><small>${z.x1} ${z.z1} → ${z.x2} ${z.z2} · ${esc(this.dimName(z.d))}</small></div><button class="btn xs ghost" data-zdel="${esc(z.id)}">${ic('x')}</button></div>`).join('') : '') + (list.length ? list.map(([t, p]) => `<div class="mrow ${t.id === this.sel ? 'on' : ''}" data-mid="${esc(t.id)}"><i style="background:${this.col(t)}"></i>
       <div style="min-width:0"><b>${esc(t.name)}</b><small>${p ? `${Math.round(p.x)} ${Math.round(p.y)} ${Math.round(p.z)} · ${esc(this.dimName(p.d))}` : t.mc ? 'position inconnue' : 'pseudo Minecraft non renseigné'}</small></div>
-      <small>${p ? Math.max(0, Math.round((now - p.ts) / 1000)) + ' s' : ''}</small></div>`).join('') : '<div class="empty">Aucun tribut.</div>';
+      <small>${p ? Math.max(0, Math.round((now - p.ts) / 1000)) + ' s' : ''}</small></div>`).join('') : '<div class="empty">Aucun tribut.</div>');
     const t = byId(this.sel), p = t && this.pos[t.id];
     $('#mapCard').innerHTML = t ? `<div class="map-card"><b>${esc(t.name)}</b> ${stTag(t)}<div class="note">${distLabel(t.district)}${p ? ` · ${Math.round(p.x)} ${Math.round(p.y)} ${Math.round(p.z)}${p.hp != null ? ' · ' + Math.round(p.hp / 2 * 10) / 10 + ' ♥' : ''} · vu il y a ${Math.max(0, Math.round((now - p.ts) / 1000))} s${crew && p.src ? ' (' + esc(p.src) + ')' : ''}` : ''}</div>
       <div class="row" style="gap:6px"><button class="btn sm" data-mc="watch" style="flex:none">${ic('play')}Voir son flux</button>${isCrew() ? `<button class="btn sm ghost" data-mc="req" style="flex:none">${ic('cam')}Demander une caméra</button>` : ''}</div></div>` : '';
