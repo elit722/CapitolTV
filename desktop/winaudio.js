@@ -32,7 +32,7 @@ namespace CtvAudio {
   }
   public static class Mixer {
     static IEnumerable<object[]> Sessions() {
-      var en = (IMMDeviceEnumerator)(new MMDeviceEnumeratorCo()); IMMDevice dev; en.GetDefaultAudioEndpoint(0, 1, out dev);
+      var en = (IMMDeviceEnumerator)(new MMDeviceEnumeratorCo()); IMMDevice dev; en.GetDefaultAudioEndpoint(0, 1, out dev); if (dev == null) yield break;
       var iid = typeof(IAudioSessionManager2).GUID; object o; dev.Activate(ref iid, 23, IntPtr.Zero, out o);
       var mgr = (IAudioSessionManager2)o; IAudioSessionEnumerator se; mgr.GetSessionEnumerator(out se); int n; se.GetCount(out n);
       for (int i = 0; i < n; i++) { IAudioSessionControl2 c; se.GetSession(i, out c); uint pid; c.GetProcessId(out pid); int st; c.GetState(out st);
