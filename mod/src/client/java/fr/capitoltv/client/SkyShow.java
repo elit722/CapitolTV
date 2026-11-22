@@ -67,7 +67,7 @@ public final class SkyShow {
         stopHymn();
         JsonObject h = Data.obj(m, "hymn");
         if (h != null && !Data.s(h, "url").isEmpty()) HymnSound.load(Data.s(h, "url"), (float) Math.max(0, Math.min(1, Data.l(h, "vol") / 100.0)), s -> { if (active()) { hymn = s; mc.getSoundManager().play(s); } });
-        Hud.toast("Hommage", "Lève les yeux vers le ciel.", Hud.BLUE, 5);
+        Hud.toast("Hommage", "Lève les yeux vers le ciel, au nord.", Hud.BLUE, 6);
     }
 
     /** fin du dernier tribut affiché */
@@ -102,7 +102,7 @@ public final class SkyShow {
     /* ---------- tracé sur la voûte : (u, v) en degrés autour du point visé ---------- */
     private static float R, ELEV = 30f;
     private static Vec3d pt(float u, float v) {
-        float elev = ELEV + v + u * 0.05f - 0.0028f * u * u;   // légère inclinaison + courbure de la voûte
+        float elev = ELEV + v + u * 0.03f - 0.0034f * u * u;   // légère inclinaison + courbure de la voûte
         return Vec3d.fromPolar(-elev, baseYaw + u).multiply(R);
     }
     private interface Shade { float at(float u, float v); }
@@ -177,7 +177,7 @@ public final class SkyShow {
         final float A = MathHelper.clamp(a * fl, 0, 1);
         VertexConsumerProvider.Immediate imm = mc.getBufferBuilders().getEntityVertexConsumers();
         Matrix4f m = new MatrixStack().peek().getPositionMatrix();
-        final float FW = 26f, FV = 3f; // visage : taille (degrés) et centre vertical
+        final float FW = 30f, FV = 3f; // visage : taille (degrés) et centre vertical
         final boolean hasFace = face != null || el >= INTRO;
         // le texte s'efface là où se trouvent le visage et le nom (il reste derrière, pas devant)
         Shade back = (u, v) -> {
@@ -188,11 +188,11 @@ public final class SkyShow {
             return k * MathHelper.clamp(0.12f + d / 7f, 0.12f, 1f);
         };
         // halo du faisceau
-        // projetée en même temps aux quatre points cardinaux (nord, est, sud, ouest)
-        for (int dir = 0; dir < 4; dir++) {
-            baseYaw = dir * 90f;
+        // projetée au nord, large et courbée sur la voûte
+        {
+            baseYaw = 180f;
             VertexConsumer g = imm.getBuffer(RenderLayer.getEyes(GLOW));
-            quad(g, m, -44, -32, 44, 38, 0, 0, 1, 1, 0.10f, 0.32f, 0.55f, (u, v) -> A * 0.55f);
+            quad(g, m, -80, -38, 80, 44, 0, 0, 1, 1, 0.10f, 0.32f, 0.55f, (u, v) -> A * 0.55f);
             imm.draw(RenderLayer.getEyes(GLOW));
             VertexConsumer t = imm.getBuffer(RenderLayer.getEyes(FONT));
             if (el < INTRO) {
@@ -205,9 +205,9 @@ public final class SkyShow {
                 // rangées de « DISTRICT N » en quinconce derrière le visage
                 String row = big + "   ";
                 float h = 7.2f, rw = width(row, h);
-                for (int r = 0; r < 5; r++) {
-                    float v0 = 16f - r * 8.6f, off = -44f + (r % 2) * rw * 0.42f - r * 3f + (r == 2 ? glitch : 0);
-                    for (float u = off; u < 44; u += rw) text(t, m, row, u, v0, h, 0.30f, 0.66f, 1f, back, -44, 44);
+                for (int r = 0; r < 6; r++) {
+                    float v0 = 20f - r * 8.6f, off = -74f + (r % 2) * rw * 0.42f - r * 3f + (r == 2 ? glitch : 0);
+                    for (float u = off; u < 74; u += rw) text(t, m, row, u, v0, h, 0.30f, 0.66f, 1f, back, -74, 74);
                 }
                 if (!name.isEmpty()) { float h2 = 5.2f, w2 = width(name, h2); text(t, m, name, -w2 / 2, FV - FW / 2 - 7.5f, h2, 0.75f, 0.95f, 1f, (u, v) -> Math.min(1f, A * 1.3f), -90, 90); }
             }
