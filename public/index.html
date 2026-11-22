@@ -492,12 +492,26 @@ body.side-hide.on-antenne aside{display:none}
 .side-btn{position:relative}
 .rp-pair{display:inline-flex;gap:2px}
 .map-scan{display:inline-flex;gap:4px;margin-left:6px}
-/* 2e écran de la régie */
+/* 2e écran de la régie : tableau de bord */
+body.screen2 #pageView{right:380px;bottom:0}
+body.screen2 aside{display:flex!important;position:fixed;right:0;top:64px;bottom:0;width:380px;z-index:30}
+body.screen2 .ticker{display:none}
+.s2-main .cvw{width:100%}
+.s2-mons{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)!important;align-items:start}
+.s2-side .s2-bar{margin-top:8px}.s2-quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.s2-off{position:absolute;inset:0;display:grid;place-items:center;color:var(--mute);font-size:12px;letter-spacing:.14em;background:#050506;border-radius:8px}
+.s2-tabs{display:flex;gap:6px;border-bottom:1px solid var(--hair);padding-bottom:8px}
+.s2-pane{min-height:320px}.s2-frame{width:100%;height:calc(100vh - 64px - 52vh);min-height:420px;border:1px solid var(--hair);border-radius:10px;background:var(--bg)}
+.seg{display:inline-flex;gap:2px;border:1px solid var(--hair);border-radius:8px;padding:2px}
+/* pages intégrées (carte, sondages) */
+body.embed header.top,body.embed .ticker,body.embed aside,body.embed #pageNav{display:none!important}
+body.embed #pageView{top:0;bottom:0}
+body.embed .team-h [data-tp="close"]{display:none}
 .s2{display:flex;flex-direction:column;gap:10px;padding:12px 16px;min-height:100%}
 .s2-mons{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .s2-mon h4{display:flex;align-items:center;gap:8px;margin:0 0 6px;font-size:12px;letter-spacing:.16em}
 .s2-mon .stg,.s2-tile .stg{aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden;position:relative}
-.s2-mon .cvw{width:min(100%,calc(52vh*16/9));margin:0 auto}
+.s2-side .cvw{width:100%}.s2-main .cvw{width:min(100%,calc(58vh*16/9));margin:0 auto}
 .s2-bar,.s2-mvh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.s2-bar .take{width:auto;margin:0;padding:0 26px}
 .s2-l{font-size:11px;letter-spacing:.16em;color:var(--mute)}
 .s2-grid{display:grid;gap:8px}
@@ -1227,7 +1241,7 @@ function tone(f, t0, d, type = 'triangle', g = .12) {
   o.connect(v).connect(c.destination); o.start(t); o.stop(t + d + .05);
 }
 const SND = {
-  alert(urgent) { if (!S.sound) return; (urgent ? [[784, 0], [988, .13], [1175, .26], [784, .5], [988, .63], [1175, .76]] : [[659, 0], [880, .16]]).forEach(([f, t]) => tone(f, t, .34)); },
+  alert(urgent) { if (!S.sound || IS_EMBED) return; (urgent ? [[784, 0], [988, .13], [1175, .26], [784, .5], [988, .63], [1175, .76]] : [[659, 0], [880, .16]]).forEach(([f, t]) => tone(f, t, .34)); },
   canon() {
     if (!S.sound) return; const c = ac(); if (!c) return;
     const len = Math.floor(c.sampleRate * 1.8), buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
@@ -1248,6 +1262,7 @@ const SND = {
    ===================================================================== */
 const H0 = location.hash.slice(1);
 const IS_OVERLAY = /^overlay/i.test(H0);
+const IS_EMBED = /^embed-/i.test(H0);
 /* écran de sortie (OBS) : lien d'overlay, même ouvert avec #direct */
 const isOut = () => IS_OVERLAY || !!(S.me && S.me.overlay);
 /* couleurs et nom choisis dans Réglages › Apparence */
@@ -1456,6 +1471,7 @@ const NET = {
       case 'presence': onPresence(m.p); break;
       case 'team': S.team = m.team || []; if (m.roles) S.roles = m.roles; renderTeam(); renderOnline(); refreshSettings('access'); refreshSettings('roles'); PROG.renderSources(); CAM.renderComms(); break;
       case 'prog': case 'progEd': case 'onair': case 'media': PROG.onMsg(m); break;
+      case 'dvr': case 'dvrRole': DVR.onMsg(m); break;
       case 'srvCams': S.srvCams = m.names || []; refreshSettings('cams'); break;
       case 'terrain': TERRAIN.set(m.terrain); break;
       case 'bot': S.bot = m.bot; refreshSettings('twitch'); break;
@@ -1561,7 +1577,7 @@ function applyRole() {
 function onHello(m) {
   S.me = m.me; S.skew = (m.now || Date.now()) - Date.now();
   S.team = m.team || []; S.banned = m.banned || {}; S.roles = m.roles || [];
-  TERRAIN.set(m.terrain); S.bot = m.bot || null; RTC.onHello(m); CAM.onHello(m); PROG.onHello(m); S.srvCams = m.srvCams || []; GAMES.onHello(m); CLIPS.onList(m.clips); TALK.onState(m.talk || null); RTC.vq = (m.rtc && m.rtc.vq) || null;
+  TERRAIN.set(m.terrain); S.bot = m.bot || null; DVR.onHello(m); RTC.onHello(m); CAM.onHello(m); PROG.onHello(m); S.srvCams = m.srvCams || []; GAMES.onHello(m); CLIPS.onList(m.clips); TALK.onState(m.talk || null); RTC.vq = (m.rtc && m.rtc.vq) || null;
   S.alertsReady = false; S.seen = new Set(); S.alerts = {};
   if (m.alerts) onAlerts(m.alerts);
   onPresence(m.presence || { n: 0, counts: {}, team: {} });
@@ -2411,26 +2427,45 @@ const SCREEN2 = {
     if (!w) toastInfo('Fenêtre bloquée', 'Autorise les fenêtres pop-up pour ce site, puis réessaie.', true);
     else toastInfo('2e écran ouvert', 'Glisse la fenêtre sur ton 2e écran puis passe-la en plein écran (F11). Coupe l\'image des moniteurs ici pour économiser les données.');
   },
-  init() { if (this.bc) this.bc.onmessage = e => { const m = e.data || {}; if (m.t === 's2pick' && S.page === 'regie' && PROG.ed) PROG.pickFromScreen2(m.k, m.ref); if (m.t === 's2pick' && S.page !== 'regie' && !/^ecran2/i.test(H0)) toastInfo('2e écran', 'Ouvre la page Réalisation dans la fenêtre principale pour placer les POV.', true); }; },
+  init() { if (this.bc) this.bc.onmessage = e => { const m = e.data || {}; if (m.t === 's2focus' && S.page !== 'regie2') { try { window.focus(); } catch (x) {} } if (m.t === 's2pick' && S.page === 'regie' && PROG.ed) PROG.pickFromScreen2(m.k, m.ref); if (m.t === 's2pick' && S.page !== 'regie' && !/^ecran2/i.test(H0)) toastInfo('2e écran', 'Ouvre la page Réalisation dans la fenêtre principale pour placer les POV.', true); }; },
+  view: LS.get('ctv.s2view', { dir: true, live: false, pv: true, tab: 'mv' }),
+  saveView() { LS.set('ctv.s2view', this.view); },
   render() {
     const pv = $('#pageView');
     if (!hasPerm('program')) { pv.innerHTML = '<div class="team-in"><div class="empty">Réservé à la réalisation.</div></div>'; return; }
-    if (!$('#s2Pv')) {
-      pv.innerHTML = `<div class="s2">
+    if (!$('#s2Box')) {
+      const V = this.view;
+      pv.innerHTML = `<div class="s2" id="s2Box">
         <div class="s2-mons">
-          <div class="s2-mon"><h4><b>APERÇU</b> <span class="note" id="s2PvN"></span><span style="flex:1"></span><button class="btn sm ghost mon-b" data-act="pv">Interagir</button></h4><div class="cvw"><div class="stg" id="s2Pv"></div></div></div>
-          <div class="s2-mon"><h4><b style="color:var(--red-hi)">● ANTENNE</b> <span class="note" id="s2PgN"></span><span style="flex:1"></span><button class="btn sm ghost mon-b" data-act="pg">Interagir</button></h4><div class="cvw"><div class="stg" id="s2Pg"></div></div></div>
+          <div class="s2-mon s2-main"><h4><b style="color:var(--red-hi)" id="s2DirL">● DIRECT</b> <span class="note" id="s2PgN"></span><span style="flex:1"></span>
+            <span class="seg" id="s2Mode"><button class="btn xs ${V.live ? '' : 'on'}" data-mode="dir" title="Ce que voient les spectateurs, avec le différé">Direct (différé)</button><button class="btn xs ${V.live ? 'on' : ''}" data-mode="live" title="L'antenne en temps réel">Temps réel</button></span>
+            <button class="btn xs ghost mon-b" data-act="pg">Interagir</button><button class="btn xs ghost mon-b ${V.dir ? 'on' : ''}" data-img="dir" title="Afficher ou cacher l'image (économise les données)">Image</button><button class="btn xs ghost mon-b" id="s2Snd" title="Écouter">${ic('vol')}</button></h4>
+            <div class="cvw"><div class="stg" id="s2Pg"></div><div class="s2-off ${V.dir ? 'hide' : ''}" id="s2PgOff">Image cachée</div></div></div>
+          <div class="s2-mon s2-side"><h4><b>APERÇU</b> <span class="note" id="s2PvN"></span><span style="flex:1"></span><button class="btn xs ghost mon-b" data-act="pv">Interagir</button><button class="btn xs ghost mon-b ${V.pv ? 'on' : ''}" data-img="pv">Image</button></h4>
+            <div class="cvw"><div class="stg" id="s2Pv"></div><div class="s2-off ${V.pv ? 'hide' : ''}" id="s2PvOff">Image cachée</div></div>
+            <div class="s2-bar"><div class="scn" id="s2Sc"></div><button class="btn take" id="s2Take">À L'ANTENNE ▶</button></div>
+            <div class="s2-quick"><button class="btn sm ghost" id="s2Off">Hors antenne</button><button class="btn sm ghost" id="s2Set">${ic('gear')}Paramètres</button><button class="btn sm ghost" id="s2Main">Fenêtre principale</button></div></div>
         </div>
-        <div class="s2-bar"><b class="s2-l">PLANS</b><div class="scn" id="s2Sc"></div><span style="flex:1"></span><button class="btn take" id="s2Take">À L'ANTENNE ▶</button></div>
-        <div class="s2-mvh"><b class="s2-l">MULTIVIEW</b><span class="note">clic : dans l'Aperçu (à la place de la source sélectionnée) · ★ : épingler</span><span style="flex:1"></span>
-          <input class="inp" id="s2Q" placeholder="Ajouter une POV : n° ou pseudo…" style="width:220px;height:30px" autocomplete="off"><select class="mini-sel" id="s2N">${[4, 6, 9, 12, 16].map(n => `<option value="${n}" ${n === this.n ? 'selected' : ''}>${n} cases</option>`).join('')}</select></div>
-        <div class="s2-grid" id="s2Grid"></div></div>`;
-      this.pv = new Stage($('#s2Pv'), { delay: 0, layer: 'auto', sound: false });
-      this.pg = new Stage($('#s2Pg'), { delay: 0, layer: 'auto', sound: false, record: true });
+        <div class="s2-tabs" id="s2Tabs">${[['mv', 'Multiview'], ['carte', 'Carte'], ['jeux', 'Sondages & pronostics']].map(([k, l]) => `<button class="btn sm ${V.tab === k ? 'on' : ''}" data-tab2="${k}">${l}</button>`).join('')}</div>
+        <div class="s2-pane ${V.tab === 'mv' ? '' : 'hide'}" data-pane="mv">
+          <div class="s2-mvh"><span class="note">clic : dans l'Aperçu (à la place de la source sélectionnée) · ★ : épingler</span><span style="flex:1"></span>
+            <input class="inp" id="s2Q" placeholder="Ajouter une POV : n° ou pseudo…" style="width:220px;height:30px" autocomplete="off"><select class="mini-sel" id="s2N">${[4, 6, 9, 12, 16].map(n => `<option value="${n}" ${n === this.n ? 'selected' : ''}>${n} cases</option>`).join('')}</select></div>
+          <div class="s2-grid" id="s2Grid"></div></div>
+        <div class="s2-pane ${V.tab === 'carte' ? '' : 'hide'}" data-pane="carte"></div>
+        <div class="s2-pane ${V.tab === 'jeux' ? '' : 'hide'}" data-pane="jeux"></div>
+      </div>`;
       this.tiles.forEach(t => t.st.destroy()); this.tiles.clear();
+      this.mkStages();
       pv.querySelectorAll('[data-act]').forEach(b => b.onclick = () => { const w = $('#s2' + (b.dataset.act === 'pv' ? 'Pv' : 'Pg')).closest('.cvw'), on = !w.classList.contains('act'); w.classList.toggle('act', on); b.classList.toggle('on', on); });
+      pv.querySelectorAll('[data-img]').forEach(b => b.onclick = () => { const k = b.dataset.img; V[k] = !V[k]; this.saveView(); b.classList.toggle('on', V[k]); $(k === 'dir' ? '#s2PgOff' : '#s2PvOff').classList.toggle('hide', V[k]); this.mkStages(); this.update(false); });
+      $('#s2Mode').onclick = e => { const b = e.target.closest('[data-mode]'); if (!b) return; V.live = b.dataset.mode === 'live'; this.saveView(); $$('#s2Mode [data-mode]').forEach(x => x.classList.toggle('on', x === b)); if (this.pg) { this.pg.destroy(); this.pg = null; } this.mkStages(); this.update(true); };
+      $('#s2Snd').onclick = () => { this.snd = !this.snd; $('#s2Snd').classList.toggle('on', this.snd); if (this.pg) this.pg.setSound(this.snd); };
+      $('#s2Tabs').onclick = e => { const b = e.target.closest('[data-tab2]'); if (!b) return; V.tab = b.dataset.tab2; this.saveView(); $$('#s2Tabs [data-tab2]').forEach(x => x.classList.toggle('on', x === b)); $$('#s2Box [data-pane]').forEach(x => x.classList.toggle('hide', x.dataset.pane !== V.tab)); this.panes(); };
       $('#s2Sc').onclick = e => { const b = e.target.closest('[data-sc]'); if (!b || !PROG.ed) return; PROG.ed.preview = b.dataset.sc; PROG.dirty = Date.now(); NET.req({ t: 'progSave', prog: PROG.ed }); this.update(false); };
       $('#s2Take').onclick = () => PROG.take();
+      $('#s2Off').onclick = () => PROG.screen ? PROG.screen('off') : NET.req({ t: 'progScreen', kind: 'off' });
+      $('#s2Set').onclick = () => openSettings();
+      $('#s2Main').onclick = () => { if (this.bc) this.bc.postMessage({ t: 's2focus' }); };
       $('#s2N').onchange = e => { this.n = +e.target.value; LS.set('ctv.s2n', this.n); this.renderGrid(); };
       $('#s2Q').onkeydown = e => { if (e.key !== 'Enter') return; const q = e.target.value.trim().toLowerCase(), t = /^\d+$/.test(q) ? byNum(+q) : S.board.tributes.find(x => x.login.toLowerCase() === q || x.name.toLowerCase().includes(q)); if (!t) { e.target.classList.add('bad'); return; } e.target.classList.remove('bad'); e.target.value = ''; this.pin('trib', t.id, true); };
       $('#s2Grid').onclick = e => {
@@ -2439,14 +2474,29 @@ const SCREEN2 = {
         if (this.bc) this.bc.postMessage({ t: 's2pick', k, ref }); else toastInfo('2e écran', 'Ce navigateur ne relie pas les deux fenêtres.', true);
         t.classList.add('picked'); setTimeout(() => t.classList.remove('picked'), 600);
       };
+      this.panes();
     }
     this.update(false);
+  },
+  /* moniteurs : le Direct (exactement ce que voient les spectateurs, différé compris) ou l'antenne en temps réel */
+  mkStages() {
+    const V = this.view;
+    if (V.dir && !this.pg && $('#s2Pg')) { this.pg = new Stage($('#s2Pg'), V.live ? { delay: 0, layer: 'auto', sound: !!this.snd, record: true } : { delay: null, layer: 'auto', sound: !!this.snd, extras: true, record: true }); if (!V.live) { this.pg.seed(PROG.hist); DVR.candidate(2); } }
+    if (!V.dir && this.pg) { this.pg.destroy(); this.pg = null; }
+    if (V.pv && !this.pv && $('#s2Pv')) this.pv = new Stage($('#s2Pv'), { delay: 0, layer: 'auto', sound: false });
+    if (!V.pv && this.pv) { this.pv.destroy(); this.pv = null; }
+    const l = $('#s2DirL'); if (l) l.textContent = V.live ? '● ANTENNE (temps réel)' : '● DIRECT' + (S.board.delay ? ' · différé ' + fmtDelay(S.board.delay) : '');
+  },
+  /* carte et sondages : les vraies pages, intégrées */
+  panes() {
+    const V = this.view, p = $(`#s2Box [data-pane="${V.tab}"]`);
+    if (p && (V.tab === 'carte' || V.tab === 'jeux') && !p.querySelector('iframe')) p.innerHTML = `<iframe class="s2-frame" src="${location.pathname}#embed-${V.tab}" title="${V.tab}"></iframe>`;
   },
   pin(k, ref, only) { const key = k + '|' + ref, i = this.pins.indexOf(key); if (i >= 0 && !only) this.pins.splice(i, 1); else if (i < 0) this.pins.unshift(key); this.pins = this.pins.slice(0, 32); LS.set('ctv.s2pins', this.pins); this.renderGrid(); },
   update(cut) {
     if (S.page !== 'regie2' || !$('#s2Pv') || !PROG.ed) return;
     const sc = PROG.ed.scenes.find(x => x.id === PROG.ed.preview);
-    this.pv.set(PROG.pubFromScene(sc), false); this.pg.set(PROG.pub, cut);
+    if (this.pv) this.pv.set(PROG.pubFromScene(sc), false); if (this.pg) this.pg.set(PROG.pub, cut);
     $('#s2PvN').textContent = sc ? sc.name : ''; $('#s2PgN').textContent = PROG.pub && PROG.pub.on ? PROG.pub.scene : 'hors antenne';
     $('#s2Sc').innerHTML = PROG.ed.scenes.map((x, i) => `<button class="btn sm ${x.id === PROG.ed.preview ? 'on' : ''} ${x.id === PROG.ed.live ? 'live' : ''}" data-sc="${esc(x.id)}">${esc(x.name)} <span class="note">${x.items.length}</span></button>`).join('');
     this.renderGrid();
@@ -2542,7 +2592,7 @@ const NOTIF = {
   ask() { if (this.supported() && Notification.permission === 'default') return Notification.requestPermission().then(() => this.render()); return Promise.resolve(); },
   away() { return document.hidden || !document.hasFocus(); },
   push(kind, title, body, go) {
-    if (!isCrew() || !this.prefs[kind]) return;
+    if (!isCrew() || !this.prefs[kind] || IS_EMBED) return;
     if (!this.away()) return;
     this.unseen++; this.title();
     try { if (window.ctvApp && window.ctvApp.attention) window.ctvApp.attention(); } catch (e) {}
@@ -3782,6 +3832,41 @@ const RTC = {
 };
 
 /* Lecteur avec différé : segments WebM (MediaRecorder) rejoués via MediaSource */
+/* =====================================================================
+   Différé partagé : un navigateur « enregistreur » (la page Direct d'OBS de préférence) dépose
+   les POV de l'antenne par morceaux de 3 s ; chaque page Direct relit le même passé. Une page
+   ouverte ou rechargée en retard affiche donc tout de suite l'image d'il y a exactement un différé.
+   ===================================================================== */
+const DVR = {
+  idx: {}, asked: {}, rec: false, tok: '', base: '', regs: new Map(), pri: 0,
+  onHello(m) { this.base = m.dvrBase || ''; this.rec = false; this.asked = {}; if (this.pri) NET.send({ t: 'dvrCan', pri: this.pri }); },
+  /* cette page peut enregistrer pour tout le monde (Direct : 2, OBS : 3, régie : 1) */
+  candidate(pri) { if (pri <= this.pri) return; this.pri = pri; NET.send({ t: 'dvrCan', pri }); },
+  onMsg(m) {
+    if (m.t === 'dvrRole') { this.rec = !!m.on; if (m.tok) this.tok = m.tok; }
+    if (m.t === 'dvr') { const L = this.idx[m.src]; if (L && !L.some(e => e.u === m.seg.u)) { L.push(m.seg); L.sort((a, b) => a.t - b.t); } }
+  },
+  list(src) {
+    if (!this.asked[src]) {
+      this.asked[src] = true; this.idx[src] = this.idx[src] || [];
+      NET.req({ t: 'dvrIdx', src }).then(r => { const L = this.idx[src]; for (const e of r.list || []) if (!L.some(x => x.u === e.u)) L.push(e); L.sort((a, b) => a.t - b.t); }, () => { this.asked[src] = false; });
+    }
+    const L = this.idx[src] || [], keep = Date.now() - ((S.board.delay || 0) + 150) * 1000;
+    while (L.length && L[0].end < keep) L.shift();
+    return L;
+  },
+  url(e) { return this.base ? this.base.replace(/\/$/, '') + '/' + e.u.split('/').map(encodeURIComponent).join('/') : '/dvr/s/' + encodeURIComponent(e.u); },
+  fetch(e) { if (!e.p) { e.p = fetch(this.url(e)).then(r => r.ok ? r.arrayBuffer() : Promise.reject(new Error(r.status))); e.p.catch(() => { setTimeout(() => { e.p = null; }, 3000); }); } return e.p; },
+  reg(dp, on) { let set = this.regs.get(dp.src); if (!set) this.regs.set(dp.src, set = new Set()); on ? set.add(dp) : set.delete(dp); },
+  /* un morceau vient d'être enregistré : on le dépose si on est l'enregistreur */
+  upload(dp, seg) {
+    if (!this.rec || !this.tok || !/^[tc]:/.test(dp.src)) return;
+    const set = this.regs.get(dp.src) || new Set();
+    if (dp.layer !== 'f' && [...set].some(x => x !== dp && x.layer === 'f' && x.recT)) return;
+    const q = new URLSearchParams({ src: dp.src, t: Math.round(seg.t + (S.skew || 0)), end: Math.round(seg.end + (S.skew || 0)), ly: dp.layer === 'q' ? 'q' : 'f', mt: dp.mt || 'video/webm' });
+    fetch('/dvr/up?' + q, { method: 'PUT', headers: { 'X-DVR-Tok': this.tok }, body: seg.blob }).then(r => { if (r.status === 403) this.rec = false; }).catch(() => {});
+  }
+};
 class DelayPlayer {
   constructor(src, { delay = 0, record = false, layer = 'f' } = {}) {
     this.src = src; this.layer = layer; this.delay = Math.max(0, delay); this.record = record || this.delay > 0;
@@ -3789,7 +3874,8 @@ class DelayPlayer {
     this.video = document.createElement('video'); this.video.playsInline = true; this.video.autoplay = true; this.video.muted = true;
     this.el.appendChild(this.video);
     this.badge = document.createElement('div'); this.badge.className = 'dp-st'; this.el.appendChild(this.badge);
-    this.segs = []; this.next = 0; this.muted = true;
+    this.segs = []; this.pos = null; this.muted = true;
+    DVR.reg(this, true);
     this.conn = RTC.stream(src, layer);
     this.onTracks = () => this.begin();
     this.conn.subs.add(this.onTracks);
@@ -3798,9 +3884,9 @@ class DelayPlayer {
     this.status();
   }
   status() {
-    const c = this.conn, waiting = this.delay > 0 && this.started && !this.appended;
-    const left = waiting ? Math.max(0, Math.ceil((this.started + this.delay * 1000 - Date.now()) / 1000)) : 0;
-    const txt = !c.ms.getTracks().length ? (c.state === 'erreur' ? 'Flux indisponible · nouvel essai…' : 'Connexion au flux…') : waiting ? 'Différé : image dans ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0') : '';
+    const c = this.conn, waiting = this.delay > 0 && !this.appended && (this.started || this.pos == null);
+    const left = waiting && this.started ? Math.max(0, Math.ceil((this.started + this.delay * 1000 - Date.now()) / 1000)) : 0;
+    const txt = this.appended ? '' : !c.ms.getTracks().length && !this.pool().length ? (c.state === 'erreur' ? 'Flux indisponible · nouvel essai…' : 'Connexion au flux…') : waiting ? 'Différé : image dans ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0') : '';
     this.badge.textContent = txt; this.badge.classList.toggle('hide', !txt);
   }
   setMuted(m) { this.muted = m; this.video.muted = m; }
@@ -3814,7 +3900,7 @@ class DelayPlayer {
     if (!this.record) { this.video.srcObject = this.conn.ms; this.video.muted = this.muted; this.video.play().catch(() => {}); this.status(); return; }
     if (this.recT) return;
     if (!this.startRec()) { this.video.srcObject = this.conn.ms; this.record = false; return; }
-    if (this.delay > 0) this.initMse();
+    if (this.delay > 0) this.initMse(this.mt);
     else { this.video.srcObject = this.conn.ms; this.video.play().catch(() => {}); }
   }
   /* active l'enregistrement en arrière-plan (pour les clips) sans changer la lecture */
@@ -3828,7 +3914,7 @@ class DelayPlayer {
       const rec = new MediaRecorder(this.conn.ms, { mimeType: mt, videoBitsPerSecond: 3500000 });
       const parts = [], t0 = Date.now();
       rec.ondataavailable = e => { if (e.data && e.data.size) parts.push(e.data); };
-      rec.onstop = () => { if (parts.length) this.segs.push({ t: t0, end: Date.now(), blob: new Blob(parts, { type: mt }) }); this.trim(); };
+      rec.onstop = () => { if (parts.length) { const sg = { t: t0, end: Date.now(), blob: new Blob(parts, { type: mt }) }; this.segs.push(sg); DVR.upload(this, sg); } this.trim(); };
       try { rec.start(); } catch (e) { return; }
       const old = this.rec; this.rec = rec;
       if (old && old.state !== 'inactive') try { old.stop(); } catch (e) {}
@@ -3841,30 +3927,63 @@ class DelayPlayer {
     const showNow = Date.now() - this.delay * 1000, from = showNow - sec * 1000;
     return { segs: this.segs.filter(s => s.end > from && s.t <= showNow), mt: this.mt, at: showNow };
   }
-  trim() { const keep = Date.now() - this.delay * 1000 - 70000; while (this.segs.length > 2 && this.segs[0].end < keep) { this.segs.shift(); this.next = Math.max(0, this.next - 1); } }
-  initMse() {
-    this.ms = new MediaSource();
+  trim() { const keep = Date.now() - this.delay * 1000 - 70000; while (this.segs.length > 2 && this.segs[0].end < keep) this.segs.shift(); }
+  /* morceaux disponibles, en heure locale : les miens et ceux du différé partagé */
+  pool() {
+    if (this.delay <= 0 || !/^[tc]:/.test(this.src)) return this.segs;
+    const sk = S.skew || 0, rem = DVR.list(this.src).map(e => e.lt ? e : Object.assign(e, { lt: e.t - sk, lend: e.end - sk }));
+    return this.segs.map(x => ({ t: x.t, end: x.end, s: x })).concat(rem.map(e => ({ t: e.lt, end: e.lend, r: e })));
+  }
+  /* prochain morceau à lire pour l'heure « due » (maintenant − différé) */
+  pick(due) {
+    const all = this.pool().map(x => x.s ? x : x.blob ? { t: x.t, end: x.end, s: x } : x);
+    if (this.pos == null) {
+      let best = null;
+      for (const x of all) if (x.t <= due && x.end > due + 300 && (!best || (x.s && !best.s))) best = x;
+      return best;
+    }
+    let best = null;
+    for (const x of all) {
+      if (x.end <= this.pos + 400 || x.t > due) continue;
+      const gap = Math.abs(x.t - this.pos);
+      if (!best || gap < best.gap - 50 || (Math.abs(gap - best.gap) <= 50 && x.s && !best.x.s)) best = { x, gap };
+    }
+    return best && best.x;
+  }
+  static ct(mt) { return mt.replace(';codecs=', '; codecs="') + (mt.includes('codecs') ? '"' : ''); }
+  initMse(mt) {
+    if (this.ms || !mt) return;
+    this.ms = new MediaSource(); this.sbType = mt;
     this.video.src = URL.createObjectURL(this.ms);
     this.ms.addEventListener('sourceopen', () => {
-      try { this.sb = this.ms.addSourceBuffer(this.mt.replace(';codecs=', '; codecs="') + (this.mt.includes('codecs') ? '"' : '')); this.sb.mode = 'sequence'; } catch (e) { this.sb = null; }
+      try { this.sb = this.ms.addSourceBuffer(DelayPlayer.ct(mt)); this.sb.mode = 'sequence'; } catch (e) { this.sb = null; }
     }, { once: true });
   }
   async loop() {
     this.status();
-    if (this.dead || !this.sb || this.busy || this.delay <= 0) return;
+    if (this.dead || this.busy || this.delay <= 0) return;
+    // lecture du différé partagé même sans flux en direct (source pas encore connectée)
+    if (!this.ms) { const r = this.pool().find(y => y.r); if (r) this.initMse(r.r.mt || 'video/webm;codecs=vp8'); }
+    if (!this.sb) return;
     const due = Date.now() - this.delay * 1000;
-    const s = this.segs[this.next];
-    if (!s || s.t > due) { this.keepEdge(); return; }
+    const x = this.pick(due);
+    // morceaux du différé partagé à venir : on les télécharge un peu en avance
+    for (const y of this.pool()) if (y.r && y.t > due && y.t < due + 4000) DVR.fetch(y.r);
+    if (!x) { this.keepEdge(); return; }
     this.busy = true;
     try {
-      const buf = await s.blob.arrayBuffer();
+      const buf = x.s ? await (x.s.blob || x.s).arrayBuffer() : await DVR.fetch(x.r);
+      const first = this.pos == null, b0 = this.sb.buffered.length ? this.sb.buffered.end(this.sb.buffered.length - 1) : 0;
+      const want = x.s ? this.mt : x.r.mt; if (want && want !== this.sbType && this.sb.changeType) { this.sb.changeType(DelayPlayer.ct(want)); this.sbType = want; }
       await new Promise((res, rej) => { this.sb.addEventListener('updateend', res, { once: true }); this.sb.addEventListener('error', rej, { once: true }); this.sb.appendBuffer(buf); });
-      this.next++; this.appended = true;
+      this.pos = x.end; this.appended = true;
+      // première image : on se place au bon endroit du morceau (même instant pour tout le monde)
+      if (first) this.video.currentTime = b0 + Math.max(0, (due - x.t) / 1000);
       if (this.video.paused) this.video.play().catch(() => {});
       // on libère ce qui est déjà passé
       const b = this.sb.buffered;
       if (b.length && this.video.currentTime - b.start(0) > 40 && !this.sb.updating) await new Promise(res => { this.sb.addEventListener('updateend', res, { once: true }); this.sb.remove(b.start(0), this.video.currentTime - 20); });
-    } catch (e) { /* segment illisible : on passe au suivant */ this.next++; }
+    } catch (e) { /* morceau illisible : on passe au suivant */ this.pos = x.end; }
     this.busy = false;
     this.keepEdge();
   }
@@ -3891,7 +4010,7 @@ class DelayPlayer {
     return v;
   }
   destroy() {
-    this.dead = true; clearInterval(this.tick); clearInterval(this.recT);
+    this.dead = true; clearInterval(this.tick); clearInterval(this.recT); DVR.reg(this, false);
     try { this.rec && this.rec.state !== 'inactive' && this.rec.stop(); } catch (e) {}
     this.conn.subs.delete(this.onTracks); RTC.release(this.conn);
     this.video.pause(); this.video.removeAttribute('src'); this.video.srcObject = null; this.el.remove();
@@ -4223,13 +4342,32 @@ class Stage {
     const D = this.o.delay == null ? (S.board.delay || 0) * 1000 : 0;
     this.latest = pub;
     if (!D) { if (this.q && this.q.length) { this.q.forEach(e => clearTimeout(e.t)); this.q = []; } return this.apply(pub, cut); }
-    if (!cut && this.q && this.q.length) { const last = this.q[this.q.length - 1]; if (last.raw === pub) return; }
-    this.prewarm(pub, Date.now() + D + 8000);
-    // rien encore à montrer (page qui vient de s'ouvrir) : écran d'attente avec compte à rebours
-    if (!this.applied && !(this.pub && this.pub.wait)) this.apply({ on: false, seq: -1, items: [], wait: Date.now() + D, title: '' }, false);
-    const e = { raw: pub, due: Date.now() + D, pub: this.shiftPub(pub, D), cut: cut || !!(this.q && this.q.length && this.q.some(x => x.cut)) };
-    e.t = setTimeout(() => { this.q = this.q.filter(x => x !== e); this.apply(e.pub, e.cut); }, D);
-    (this.q = this.q || []).push(e);
+    this.q = this.q || [];
+    // heure de la prise à l'antenne (serveur) : affichée exactement D plus tard, pour tout le monde
+    const at = pub && pub.pubAt;
+    if (at != null) { if (this.q.some(e => e.raw.pubAt === at) || (this.appliedAt && at <= this.appliedAt)) return; }
+    else if (!cut && this.q.length && this.q[this.q.length - 1].raw === pub) return;
+    const due = at != null ? at - (S.skew || 0) + D : Date.now() + D;
+    this.prewarm(pub, due + 8000);
+    const e = { raw: pub, due, pub: this.shiftPub(pub, D), cut: cut || this.q.some(x => x.cut) };
+    const run = () => {
+      this.q = this.q.filter(x => x !== e && !(x.raw.pubAt != null && at != null && x.raw.pubAt < at));
+      this.q.forEach(x => { if (x.raw.pubAt != null && at != null && x.raw.pubAt < at) clearTimeout(x.t); });
+      if (at != null) this.appliedAt = at;
+      this.apply(e.pub, e.cut);
+    };
+    if (due <= Date.now()) { run(); return; }
+    // rien encore à montrer (le différé n'a pas encore commencé) : écran d'attente avec compte à rebours
+    if (!this.applied && !(this.pub && this.pub.wait)) this.apply({ on: false, seq: -1, items: [], wait: due, title: '' }, false);
+    e.t = setTimeout(run, due - Date.now());
+    this.q.push(e);
+  }
+  /* page ouverte ou rechargée : on reprend l'historique de l'antenne (le même pour tout le monde) */
+  seed(hist) {
+    const D = this.o.delay == null ? (S.board.delay || 0) * 1000 : 0; if (!D || !hist || !hist.length) return;
+    const now = Date.now(), sk = S.skew || 0, L = hist.filter(h => h.pubAt != null).sort((a, b) => a.pubAt - b.pubAt);
+    let k = -1; L.forEach((h, i) => { if (h.pubAt - sk + D <= now) k = i; });
+    L.slice(Math.max(0, k)).forEach(h => this.set(h, !!h.cut));
   }
   dueOf(e) { return e.due || 0; }
   /* plan retardé : les heures (médias, musique, écrans, replays) sont décalées du différé */
@@ -4544,12 +4682,15 @@ const PROG = {
   },
   preIcon(L) { return `<svg class="pre-ic" viewBox="0 0 32 18">${L.map(([x, y, w, h]) => `<rect x="${x * .32 + .4}" y="${y * .18 + .4}" width="${Math.max(.5, w * .32 - .8)}" height="${Math.max(.5, h * .18 - .8)}" rx=".6"/>`).join('')}</svg>`; },
   onHello(m) {
-    this.pub = m.prog || null; if (m.progEd) this.ed = m.progEd;
+    this.pub = m.prog || null; this.hist = m.progHist || []; if (m.progEd) this.ed = m.progEd;
+    if (this.main) this.main.seed(this.hist);
     if (m.media) this.media = m.media;
     if (m.onair && m.onair.ids) this.air = m.onair;
     this.markNav();
     clearInterval(this.tickT); this.tickT = setInterval(() => this.tick(), 1000);
     if (/direct|emission/i.test(H0) && !isLocked()) setTimeout(() => { setPage('direct'); this.fullscreen(true); }, 0);
+    const em = /^embed-(carte|jeux)$/i.exec(H0);
+    if (em && !isLocked()) setTimeout(() => { document.body.classList.add('embed'); if (S.page !== em[1]) setPage(em[1]); }, 0);
     if (/^ecran2/i.test(H0) && hasPerm('program') && !isLocked()) setTimeout(() => { document.body.classList.add('screen2'); if (S.page !== 'regie2') setPage('regie2'); }, 0);
   },
   wantsMap() { return !!(this.pub && this.pub.gfx && this.pub.gfx.map && this.pub.gfx.map.on); },
@@ -4601,7 +4742,7 @@ const PROG = {
     }
     if (this.main) { this.main.tick(); this.directBar(); }
     for (const m of this.mons()) m.tick();
-    if (S.page === 'regie2' && SCREEN2.pv) { SCREEN2.pv.tick(); SCREEN2.pg.tick(); }
+    if (S.page === 'regie2') { if (SCREEN2.pv) SCREEN2.pv.tick(); if (SCREEN2.pg) SCREEN2.pg.tick(); }
     if (S.page === 'regie') this.renderQueue(true);
   },
   badge(el, id) {
@@ -4642,6 +4783,8 @@ const PROG = {
         <button class="btn sm" id="emSound">${ic('vol')}Activer le son</button><button class="btn sm" id="emFull" title="Plein écran (F)">${ic('full')}Plein écran</button></div>
         <div class="em-stage" id="emStage"></div></div>`;
       this.main = new Stage($('#emStage'), { sound: this.sound, delay: null, layer: 'auto', extras: true, record: true, onNeedSound: () => { const b = $('#emSound'); if (b && !this.sound) b.classList.add('primary'); } });
+      this.main.seed(this.hist);
+      DVR.candidate(IS_OVERLAY ? 3 : 2);
       $('#emFull').onclick = () => this.fullscreen();
       const lab = () => { $('#emSound').innerHTML = ic('vol') + (this.sound ? 'Couper le son' : 'Activer le son'); };
       $('#emSound').onclick = () => { this.sound = !this.sound; $('#emSound').classList.remove('primary'); lab(); this.main.setSound(this.sound); };
@@ -5004,7 +5147,7 @@ const PROG = {
     const P = this.monPrefs, img = k => P[k] !== false;
     if (this.pgmStage && this.pgmStage.el !== pg) { this.pgmStage.destroy(); this.pgmStage = null; }
     if (this.pvStage && this.pvStage.el !== pv) { this.pvStage.destroy(); this.pvStage = null; }
-    if (img('pg') && !this.pgmStage) { this.pgmStage = new Stage(pg, { delay: 0, layer: 'q', record: true, sound: P.snd === 'pg' }); this.pgmStage.set(this.pub, false); }
+    if (img('pg') && !this.pgmStage) { this.pgmStage = new Stage(pg, { delay: 0, layer: 'q', record: true, sound: P.snd === 'pg' }); this.pgmStage.set(this.pub, false); DVR.candidate(1); }
     if (!img('pg') && this.pgmStage) { this.pgmStage.destroy(); this.pgmStage = null; }
     if (img('pv') && !this.pvStage) { this.pvStage = new Stage(pv, { delay: 0, layer: 'q', sound: P.snd === 'pv' }); }
     if (!img('pv') && this.pvStage) { this.pvStage.destroy(); this.pvStage = null; }

@@ -134,6 +134,14 @@ export default {
         const h = new Headers(); h.set("X-CTV-User", JSON.stringify(user)); h.set("X-CTV-Origin", url.origin);
         return env.GAME.getByName("main").fetch(new Request(new URL(p + url.search, "https://game"), { headers: h }));
       }
+      if (p === "/dvr/up" && req.method === "PUT") return env.GAME.getByName("main").fetch(new Request(new URL(p + url.search, "https://game"), { method: "PUT", headers: req.headers, body: await req.arrayBuffer() }));
+      if (p.startsWith("/dvr/s/") && req.method === "GET") {
+        // segments du différé partagé (si le bucket public n'est pas configuré) : réservé à l'équipe et à OBS
+        if (!dvrStore(env)) return new Response("Indisponible", { status: 404 });
+        const o = await dvrStore(env).get(decodeURIComponent(p.slice(7)));
+        if (!o) return new Response("Introuvable", { status: 404 });
+        return new Response(o.body, { headers: { "Content-Type": o.httpMetadata && o.httpMetadata.contentType || "video/webm", "Cache-Control": "private, max-age=3600" } });
+      }
       if (p.startsWith("/terrain/")) return env.GAME.getByName("main").fetch(new Request(new URL(p, "https://game"), { method: "GET" }));
       if (p.startsWith("/clip/")) {
         const h = new Headers(req.headers); h.set("X-CTV-User", JSON.stringify(user));
@@ -321,6 +329,14 @@ const LOGIN_RE = /^[a-z0-9_]{3,25}$/;
 const cleanLogin = s => { s = String(s || "").toLowerCase(); return LOGIN_RE.test(s) ? s : null; };
 const isStaff = a => a && (a.perm === "admin" || a.perm === "mod");
 const CAMROLES = ["cam", "chef"];
+/* différé partagé : bucket dédié s'il existe, sinon le bucket des clips (préfixe dvr/) */
+function dvrStore(env) {
+  if (env.DVR) return env.DVR;
+  const b = env.CLIPS; if (!b) return null;
+  return { put: (k, v, o) => b.put("dvr/" + k, v, o), get: k => b.get("dvr/" + k), delete: k => b.delete(Array.isArray(k) ? k.map(x => "dvr/" + x) : "dvr/" + k),
+    list: async o => { const r = await b.list({ ...o, prefix: "dvr/" + (o.prefix || "") }); return { ...r, objects: r.objects.map(x => ({ ...x, key: x.key.slice(4) })) }; } };
+}
+function hash32(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
 const rid8 = () => crypto.randomUUID().replace(/-/g, "").slice(0, 10);
 const isCrew = a => !!a && !a.guest && !a.overlay && !a.server && (isStaff(a) || CAMROLES.includes(a.cam) || !!a.team);
 const hasPerm = (a, k) => !!a && (a.perm === "admin" || (Array.isArray(a.perms) && a.perms.includes(k)));
@@ -408,7 +424,7 @@ export class Game extends DurableObject {
 
   load() {
     if (!this.loading) this.loading = (async () => {
-      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage", "moved", "from", "perf", "terrain", "tbot"]);
+      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage", "moved", "from", "perf", "terrain", "tbot", "phist", "dvrtok"]);
       this.board = { ...defaultBoard(), ...(m.get("board") || {}) };
       this.alerts = m.get("alerts") || {};
       this.team = m.get("team") || [];
@@ -419,6 +435,7 @@ export class Game extends DurableObject {
       this.camSt = m.get("camst") || {};
       this.srvKey = m.get("srvkey") || "";
       this.terrain = m.get("terrain") || {};
+      this.phist = m.get("phist") || []; this.dvrTok = m.get("dvrtok") || "";
       this.tbot = { on: false, channel: "", ann: { poll: true, result: true, death: true, victor: true, bets: true }, cmds: true, ...(m.get("tbot") || {}) };
       this.roles = m.get("roles") || null;
       if (!this.roles) {
@@ -476,6 +493,7 @@ export class Game extends DurableObject {
     if (path === "/mod") return this.modConnect(req);
     if (path.startsWith("/api/media")) return this.mediaApi(req, path);
     if (path.startsWith("/terrain/")) return this.terrainGet(path);
+    if (path === "/dvr/up") return this.dvrUpload(req);
     if (path === "/twitchbot/start" || path === "/twitchbot/cb") return this.botOAuth(req, path);
     if (this.tbot && this.tbot.on && this.tbot.channel && !this.botWs && !this.botConnecting && Date.now() - (this.botTry || 0) > 20000) { this.botTry = Date.now(); this.botStart(); }
     if (path.startsWith("/api/rtc")) return this.rtcApi(req, path);
@@ -525,7 +543,8 @@ export class Game extends DurableObject {
     return {
       t: "hello", now: Date.now(),
       me: { id: a.id, name: a.name, av: a.av, perm: a.perm, pub: a.pub, overlay: !!a.overlay, obsKey: hasPerm(a, "program") && !a.lock && this.env.OVERLAY_KEY ? this.env.OVERLAY_KEY : undefined, lock: !!a.lock, guest: !!a.guest, tribute: this.tributeOf(a.id), cam: a.cam || "", sup: isSup(a), crew: isCrew(a) && !a.lock, map: this.mapAllowed(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "" },
-      roles: this.roles, prog: a.lock || !(isCrew(a) || a.overlay) ? undefined : this.progPublic(), progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
+      roles: this.roles, prog: a.lock || !(isCrew(a) || a.overlay) ? undefined : this.progPub(), progHist: a.lock || !(isCrew(a) || a.overlay) ? undefined : this.progHistFor(),
+      dvrBase: isCrew(a) || a.overlay ? (this.env.DVR_PUBLIC || "") : undefined, progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
       terrain: this.terrain || {}, bot: isStaff(a) ? this.botPublic() : undefined, media: isCrew(a) ? this.media : undefined, srvCams: isCrew(a) ? this.srvCams : undefined,
       pubs: this.pubsFor(a), rtc: { on: this.rtcOn(), pub: false, capOff: !!this.board.capOff, perf: isCrew(a) ? this.perf : undefined, use: isCrew(a) || a.overlay ? this.useInfo() : undefined, vq: { trib: this.vqCap("t:"), cam: this.vqCap("c:") }, vpref: isCrew(a) && !a.lock ? this.vpref : undefined },
       talk: this.talkSup(a) ? this.talkState() : undefined, clips: this.clipsFor(a),
@@ -884,6 +903,16 @@ export class Game extends DurableObject {
         if (!this.botCanSay()) return reply(false, { msg: "Le bot n'est pas connecté avec un compte (lecture seule)." });
         this.botSay(String(m.text || "").slice(0, 450)); reply(true); break;
       }
+      case "dvrCan": {
+        if (!(isCrew(a) || a.overlay)) return reply(false);
+        a.dvrPri = Math.max(0, Math.min(3, +m.pri || 0)); a.dvrAt = a.dvrAt || Date.now(); ws.serializeAttachment(a);
+        this.dvrElect(); reply(true); break;
+      }
+      case "dvrIdx": {
+        if (!(isCrew(a) || a.overlay)) return reply(false);
+        const src = String(m.src || ""); if (!/^[tc]:[\w-]{1,40}$/.test(src)) return reply(false);
+        reply(true, { list: await this.dvrList(src) }); break;
+      }
       case "terrainScan": {
         if (!isCrew(a) || a.lock) return reply(false, { msg: "Réservé à l'équipe." });
         let on = false; for (const ws2 of this.sockets()) { const b = this.att(ws2); if (b && b.server) on = true; }
@@ -1115,8 +1144,34 @@ export class Game extends DurableObject {
       gfx: this.prog.gfx || {}, queue: this.prog.queue || [], qrun: this.prog.qrun || null, next: this.prog.next || null, replay: this.prog.replay || null, autoBack: this.prog.autoBack !== false, prevLive: this.prog.prevLive || "",
       apply: this.prog.apply === "manual" ? "manual" : "auto", screen: this.prog.screen || null, bgm: this.prog.bgm || null, liveAt: this.prog.liveAt || 0, airScene: this.prog.airScene || "", airItems: this.prog.airItems || null, airGfx: this.prog.airGfx || null };
   }
+  /* état de l'antenne horodaté : la page Direct l'affiche exactement un différé plus tard, pour tout le monde */
+  progPub(newShot) {
+    const p = this.progPublic(), key = JSON.stringify(p), now = Date.now();
+    if (key !== this.progKey || !this.progAt) {
+      const first = !this.progKey;
+      this.progKey = key;
+      // après un redémarrage, on garde l'heure enregistrée si l'antenne n'a pas changé
+      const last = this.phist[this.phist.length - 1];
+      if (first && last && last.key === hash32(key)) this.progAt = last.at;
+      else {
+        this.progAt = now;
+        const keep = now - Math.max(60, (this.board.delay || 0) + 60) * 1000;
+        const h = this.phist.filter(e => e.at >= keep);
+        const before = this.phist.filter(e => e.at < keep).pop();
+        this.phist = [...(before ? [before] : []), ...h, { at: now, key: hash32(key), p, cut: !!newShot }].slice(-60);
+        this.ctx.storage.put("phist", this.phist);
+      }
+    }
+    return { ...p, pubAt: this.progAt };
+  }
+  progHistFor() {
+    const D = (this.board.delay || 0) * 1000; if (!D) return [];
+    const from = Date.now() - D - 5000, h = this.phist, i = h.findIndex(e => e.at >= from);
+    const list = i < 0 ? h.slice(-1) : h.slice(Math.max(0, i - 1));
+    return list.map(e => ({ ...e.p, pubAt: e.at, cut: e.cut }));
+  }
   pushProg(newShot) {
-    const pub = JSON.stringify({ t: "prog", p: this.progPublic(), cut: !!newShot });
+    const pub = JSON.stringify({ t: "prog", p: this.progPub(newShot), cut: !!newShot });
     // la page Direct est réservée à l'équipe et au lien OBS
     for (const ws of this.sockets()) { const a = this.att(ws); if (a && !a.mod && !a.server && !a.lock && (isCrew(a) || a.overlay)) this.send(ws, pub); }
     this.pushOnAir(true);
@@ -1911,6 +1966,7 @@ export class Game extends DurableObject {
   async webSocketClose(ws, code, reason) {
     try { ws.close(code, reason); } catch (e) {}
     const a = this.att(ws);
+    if (a && a.dvrPri != null) this.dvrElect(ws);
     if (a && a.server) this.crewcast({ t: "srv", on: this.serverOn(ws) });
     if (a && a.mod) { this.camsChanged(); if (this.talk && this.talk.cams[a.id]) { delete this.talk.cams[a.id]; delete this.talk.speak[a.id]; this.pushTalk(); } }
     this.schedulePresence();
@@ -2016,6 +2072,62 @@ export class Game extends DurableObject {
     };
   }
 
+  /* ---------- différé partagé : un navigateur (OBS de préférence) enregistre les POV de l'antenne
+     et les dépose par morceaux de 3 s ; toutes les pages Direct relisent le même passé ---------- */
+  dvrElect(closing) {
+    let best = null, bestA = null, cur = null;
+    for (const ws of this.sockets()) {
+      if (ws === closing) continue;
+      const a = this.att(ws); if (!a || a.dvrPri == null || a.dvrPri <= 0) continue;
+      if (a.dvrRec) cur = ws;
+      if (!best || a.dvrPri > bestA.dvrPri || (a.dvrPri === bestA.dvrPri && (a.dvrAt || 0) < (bestA.dvrAt || 0))) { best = ws; bestA = a; }
+    }
+    if (cur && best && this.att(cur).dvrPri >= bestA.dvrPri) return;
+    if (!this.dvrTok) { this.dvrTok = crypto.randomUUID(); this.ctx.storage.put("dvrtok", this.dvrTok); }
+    if (cur && cur !== best) { const a = this.att(cur); a.dvrRec = false; cur.serializeAttachment(a); this.send(cur, { t: "dvrRole", on: false }); }
+    if (best) { bestA.dvrRec = true; best.serializeAttachment(bestA); this.send(best, { t: "dvrRole", on: true, tok: this.dvrTok }); }
+  }
+  async dvrUpload(req) {
+    const u = new URL(req.url), J = (o, st = 200) => Response.json(o, { status: st });
+    if (!dvrStore(this.env)) return J({ msg: "Stockage du différé non configuré." }, 503);
+    if (!this.dvrTok || req.headers.get("X-DVR-Tok") !== this.dvrTok) return J({ msg: "Pas l'enregistreur." }, 403);
+    const src = u.searchParams.get("src") || "", t = Math.round(+u.searchParams.get("t")), end = Math.round(+u.searchParams.get("end"));
+    const ly = u.searchParams.get("ly") === "q" ? "q" : "f", mt = (u.searchParams.get("mt") || "video/webm").slice(0, 60);
+    if (!/^[tc]:[\w-]{1,40}$/.test(src) || !(t > 0) || !(end > t) || end - t > 15000 || Math.abs(Date.now() - end) > 120000) return J({ msg: "Morceau invalide." }, 400);
+    const L = await this.dvrList(src);
+    // déjà couvert (par un morceau de même qualité ou meilleure) : rien à faire
+    if (L.some(e => e.t <= t + 400 && e.end >= end - 400 && (e.ly === "f" || ly === "q"))) return J({ ok: true, skip: true });
+    const buf = await req.arrayBuffer();
+    if (!buf.byteLength || buf.byteLength > 12 * 1024 * 1024) return J({ msg: "Taille invalide." }, 400);
+    const k = src + "/" + t + "-" + end + "-" + ly + "-" + crypto.randomUUID().slice(0, 10);
+    await dvrStore(this.env).put(k, buf, { httpMetadata: { contentType: mt } });
+    const e = { t, end, u: k, ly, mt };
+    L.push(e); L.sort((a, b) => a.t - b.t);
+    const keep = Date.now() - ((this.board.delay || 0) + 150) * 1000, old = [];
+    while (L.length && L[0].end < keep) old.push(L.shift().u);
+    if (old.length) dvrStore(this.env).delete(old).catch(() => {});
+    const msg = JSON.stringify({ t: "dvr", src, seg: e });
+    for (const ws of this.sockets()) { const a = this.att(ws); if (a && !a.mod && !a.server && !a.lock && (isCrew(a) || a.overlay)) this.send(ws, msg); }
+    return J({ ok: true });
+  }
+  async dvrList(src) {
+    this.dvr = this.dvr || {};
+    if (this.dvr[src]) return this.dvr[src];
+    const L = [];
+    // après un redémarrage, on retrouve les morceaux récents dans le stockage
+    if (dvrStore(this.env)) {
+      const keep = Date.now() - ((this.board.delay || 0) + 150) * 1000;
+      let cur; for (let i = 0; i < 5; i++) {
+        const r = await dvrStore(this.env).list({ prefix: src + "/", cursor: cur, limit: 1000 }).catch(() => null); if (!r) break;
+        const old = [];
+        for (const o of r.objects) { const m = o.key.slice(src.length + 1).match(/^(\d+)-(\d+)-([fq])-/); if (m && +m[2] >= keep) L.push({ t: +m[1], end: +m[2], u: o.key, ly: m[3], mt: "video/webm" }); else old.push(o.key); }
+        if (old.length) dvrStore(this.env).delete(old).catch(() => {});
+        if (!r.truncated) break; cur = r.cursor;
+      }
+      L.sort((a, b) => a.t - b.t);
+    }
+    return (this.dvr[src] = L);
+  }
   /* fond de carte : images du relevé du terrain (couleurs, hauteurs) */
   async terrainGet(path) {
     const [, , dim, kind] = path.split("/"), d = decodeURIComponent(dim || ""), meta = (this.terrain || {})[d];

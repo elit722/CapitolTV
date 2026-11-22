@@ -174,7 +174,7 @@ Le dossier `mod/` contient un mod Fabric pour les caméramans. Le fichier `.jar`
 
 ## Vidéo : POV des joueurs et caméras → régie → OBS
 
-**Différé** : réglé sur le site, il est commun à tous et fait par le site. Rien à régler dans OBS. La page Direct affiche un plan pris à l'antenne exactement un différé plus tard, et commence à recevoir ses POV dès la prise : elles s'affichent sans attente. Les POV en repli Twitch ne peuvent pas être retardées par le site : c'est le délai de chaque stream Twitch qui s'applique.
+**Différé partagé** : le différé est fait par le site et il est commun à tous, même pour une page ouverte ou rechargée en retard. Un navigateur « enregistreur » enregistre les POV de l'antenne par morceaux de 3 secondes et les dépose sur le serveur (bucket des clips, dossier `dvr/`, vidé automatiquement). C'est la page Direct d'OBS de préférence, sinon une page Direct de l'équipe, sinon la régie. Chaque page Direct relit exactement le même passé et l'historique des plans. Une page qui arrive en retard affiche donc tout de suite l'image d'il y a un différé. Il faut seulement qu'une page Direct (OBS) soit ouverte avant la prise à l'antenne. L'ordinateur d'OBS envoie environ 3,5 Mbit/s par POV à l'antenne. Les POV en repli Twitch ne peuvent pas être retardées par le site.
 
 **Chemin de l'image** : chaque joueur et chaque caméra envoie son écran (le monde seulement, sans HUD ni chat) au serveur vidéo de Cloudflare (Realtime). La régie compose les plans sur la page **Réalisation**, la page **Direct** les affiche, et le streamer la capture dans OBS (source *Navigateur*, lien donné par le bouton **Lien OBS**). Le public du site ne voit que les POV Twitch.
 
@@ -250,7 +250,11 @@ SESSION_SECRET=...
 
 ## Nouveautés de la régie
 
-- **Double écran** : bouton « Double écran » à côté des plans (page Réalisation). La 2e fenêtre affiche les grands moniteurs Aperçu / Antenne, les plans, le bouton « À l'antenne » et un multiview des POV (4 à 16 cases, épinglables). Un clic sur une POV du multiview la met dans l'Aperçu, à la place de la source sélectionnée. Dans l'application de bureau, la fenêtre s'ouvre directement en plein écran sur l'autre moniteur.
+- **Double écran** : bouton « Double écran » à côté des plans (page Réalisation). La 2e fenêtre est un tableau de bord :
+  - le Direct, exactement ce que voient les spectateurs avec le différé, ou l'antenne en temps réel ; l'image se cache ;
+  - l'Aperçu, les plans, « À l'antenne », « Hors antenne » et les Paramètres ;
+  - le panneau tributs / alertes / comms / terrain / journal à droite ;
+  - en bas, des onglets Multiview (clic sur une POV = dans l'Aperçu), Carte et Sondages & pronostics. Dans l'application de bureau, la fenêtre s'ouvre directement en plein écran sur l'autre moniteur.
 - **Fond de carte** : en jeu, `/capitol carte <rayon>` (ou le bouton « Relever le terrain ici » de la page Carte) relève le terrain autour de soi : couleurs des blocs, relief et profondeur de l'eau. La carte du site et la mini-carte du Direct l'utilisent, en vue de dessus ou en vue 3D isométrique. À refaire si l'arène change.
 - **Musique de fond en ligne** : la recherche du panneau « Musique de fond » cherche aussi des musiques libres de droits (Openverse : Jamendo, Freesound, Wikimedia…). ▶ pour écouter, « Ajouter » l'importe et la met dans la playlist. Le crédit de l'auteur s'affiche en bas du Direct (obligatoire pour les licences CC BY).
 - **Notifications** : cloche en haut à droite (équipe) : alertes, messages, interphone, demandes de couverture, morts, captures qui font ramer. Elles arrivent quand la fenêtre est en arrière-plan.
