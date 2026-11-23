@@ -1,7 +1,7 @@
 {
   "name": "capitol-tv-desktop",
   "productName": "Capitol TV",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Capitol TV : application de bureau (régie, double écran, notifications)",
   "main": "main.js",
   "author": "Capitol TV",
@@ -17,10 +17,28 @@
   "build": {
     "appId": "fr.capitoltv.app",
     "productName": "Capitol TV",
-    "files": ["main.js", "preload.js", "winaudio.js", "config.json", "icon.png"],
-    "win": { "target": ["nsis", "portable"], "icon": "icon.ico" },
-    "nsis": { "oneClick": true, "perMachine": false, "shortcutName": "Capitol TV" },
-    "portable": { "artifactName": "CapitolTV-portable-${version}.exe" },
+    "files": [
+      "main.js",
+      "preload.js",
+      "winaudio.js",
+      "config.json",
+      "icon.png"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "shortcutName": "Capitol TV"
+    },
+    "portable": {
+      "artifactName": "CapitolTV-portable-${version}.exe"
+    },
     "artifactName": "CapitolTV-installation-${version}.${ext}"
   }
 }

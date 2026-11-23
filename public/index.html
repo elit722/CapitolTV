@@ -6282,6 +6282,7 @@ const PROG = {
     const playing = this.pub && this.pub.bgm;
     box.innerHTML = `<div class="gx-row"><select class="mini-sel" id="bgScope"><option value="all" ${scope === 'all' ? 'selected' : ''}>Tous les plans</option><option value="scene" ${scope === 'scene' ? 'selected' : ''}>Ce plan : ${esc(sc ? sc.name : '')}</option></select>
         <label style="display:flex;align-items:center;gap:6px;flex:0 0 130px"><span class="note">Vol.</span><input type="range" id="bgVol" min="0" max="100" step="5" value="${D.vol}" style="flex:1"></label></div>
+      <div class="gx-row"><span class="note" style="flex:1">Titres Deezer : joués en entier sur la page Direct, avec ton compte Premium connecté <b>sur le PC qui diffuse le Direct</b> (une seule fois).</span><button class="btn xs" id="bgDzLogin" title="Ouvre Deezer pour te connecter (à faire sur le PC du Direct, dans le site ou l'appli)">🎧 Connecter Deezer</button></div>
       <div class="gx-row"><input class="inp" id="bgQ" value="${esc(this.bgmQ || '')}" placeholder="Titre ou artiste (recherche Deezer, ex. two steps from hell heart of courage)" autocomplete="off"></div>
       ${hits.length ? `<div class="bg-hits"><span class="note">Déjà dans tes médias</span>${hits.map(x => `<button class="btn xs ghost" data-bga="${esc(x.id)}">＋ ${esc(x.name)} <span class="note">${this.fmtDur(x.dur)}</span></button>`).join('')}</div>` : ''}
       ${q.length >= 2 ? this.bgDzHtml() + this.bgWebHtml() : ''}
@@ -6300,6 +6301,7 @@ const PROG = {
       const pl = e.target.closest('[data-bwp]'); if (pl) { this.bgWebPlay(+pl.dataset.bwp); return; }
       const ad = e.target.closest('[data-bwa]'); if (ad) { this.bgWebAdd(+ad.dataset.bwa, D); return; }
       const x = e.target.closest('[data-bgx]'); if (x) { D.ids.splice(+x.dataset.bgx, 1); this.renderBgm(); return; }
+      if (e.target.closest('#bgDzLogin')) { window.open('https://www.deezer.com/login', 'deezer', 'width=520,height=760'); return; }
       if (e.target.closest('#bgGo')) send(D.ids);
       if (e.target.closest('#bgStop')) { D.ids = []; send([]); this.renderBgm(); }
     };

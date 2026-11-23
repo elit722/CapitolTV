@@ -35,6 +35,12 @@ function guard(win) {
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/#ecran2/i.test(url)) { openSecond(url); return { action: 'deny' }; }
     if (inApp(url) && /twitchbot\/start/.test(url)) { win.loadURL(url); return { action: 'deny' }; }
+    // connexion Deezer : dans l'appli (même session), pour que le lecteur Deezer du Direct joue les titres en entier
+    if (/^https:\/\/([a-z0-9-]+\.)*deezer\.com\//i.test(url)) {
+      const dz = new BrowserWindow({ parent: win, width: 520, height: 760, title: 'Deezer — connexion', autoHideMenuBar: true, backgroundColor: '#0b0b0d', webPreferences: { contextIsolation: true, sandbox: true } });
+      dz.webContents.setWindowOpenHandler(({ url: u }) => { if (/deezer\.com|accounts\.google|facebook\.com|appleid\.apple/i.test(u)) return { action: 'allow' }; shell.openExternal(u); return { action: 'deny' }; });
+      dz.loadURL(url); return { action: 'deny' };
+    }
     shell.openExternal(url); return { action: 'deny' };
   });
   win.webContents.on('will-navigate', (e, url) => { if (!inApp(url)) { e.preventDefault(); shell.openExternal(url); } });
