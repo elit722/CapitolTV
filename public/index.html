@@ -66,6 +66,8 @@ body.locked .nolock{display:none!important}
 .em-it.gone{opacity:0;transform:scale(.88)}
 body.em-full .em-wrap{top:0;bottom:0;padding:0;z-index:90}
 body.em-full .em-bar{display:none}
+.em-dz{width:100%;max-width:calc((100vh - 190px) * 16 / 9);margin-top:8px;display:flex;flex-direction:column;gap:4px}.em-dz.hide{display:flex!important;position:fixed;left:-9999px}.em-dzf{width:100%;height:92px;border:0;border-radius:8px;background:#111}
+body.em-full .em-dz{position:fixed;left:-9999px}
 body.em-full .em-stage{width:min(100vw, 100vh * 16 / 9);border-radius:0;box-shadow:none}
 body.em-full header.top,body.em-full footer.ticker,body.em-full #toasts{display:none!important}
 .em-it{position:absolute;overflow:hidden;background:#0b0b0d;transition:left .7s cubic-bezier(.65,0,.35,1),top .7s cubic-bezier(.65,0,.35,1),width .7s cubic-bezier(.65,0,.35,1),height .7s cubic-bezier(.65,0,.35,1),opacity .5s,transform .6s cubic-bezier(.2,.8,.2,1)}
@@ -5057,10 +5059,13 @@ class Stage {
       this.dzStop(); w = this.dz = { id: tr.dz };
       const f = document.createElement('iframe'); f.className = 'em-yt'; f.allow = 'autoplay; encrypted-media';
       f.src = 'https://widget.deezer.com/widget/dark/track/' + encodeURIComponent(tr.dz) + '?autoplay=true&tracklist=false&radius=false';
-      this.el.appendChild(f); w.f = f;
+      // lecteur visible sous le Direct (hors de l'image) : on voit s'il joue, et on peut cliquer ▶ s'il attend un clic
+      const host = $('#emDz');
+      if (host) { f.className = 'em-dzf'; host.appendChild(f); host.classList.remove('hide'); } else this.el.appendChild(f);
+      w.f = f;
     }
   }
-  dzStop() { const w = this.dz; this.dz = null; if (w && w.f) w.f.remove(); }
+  dzStop() { const w = this.dz; this.dz = null; if (w && w.f) w.f.remove(); const h = $('#emDz'); if (h && !h.querySelector('iframe')) h.classList.add('hide'); }
   ytStop() { const y = this.yt; this.yt = null; if (!y) return; try { y.pl && y.pl.destroy(); } catch (e) {} if (y.box) y.box.remove(); }
   setSound(on) { this.o.sound = !!on; this.layout(false); }
   delay() { return this.o.delay == null || this.o.delay === 'board' ? (S.board.delay || 0) : this.o.delay; }
@@ -5676,7 +5681,7 @@ const PROG = {
     if (!$('#emStage') || !this.main) {
       $('#pageView').innerHTML = `<div class="em-wrap"><div class="em-bar"><h3>${esc(brandName().toUpperCase())}</h3><span class="em-live" id="emLive">● EN DIRECT</span><span class="note" id="emScene"></span><span style="flex:1"></span>
         <button class="btn sm" id="emSound">${ic('vol')}Activer le son</button><button class="btn sm" id="emFull" title="Plein écran (F)">${ic('full')}Plein écran</button></div>
-        <div class="em-stage" id="emStage"></div></div>`;
+        <div class="em-stage" id="emStage"></div><div class="em-dz hide" id="emDz"><span class="note">Musique Deezer en cours (visible ici seulement, pas dans le Direct) · si rien ne s'entend, clique ▶ dans le lecteur ; « 30 s » ou « Se connecter » = compte non reconnu : régie › Musique › 🎧 Connecter Deezer</span></div></div>`;
       this.main = new Stage($('#emStage'), { sound: this.sound, dzOut: true, delay: null, layer: 'auto', extras: true, record: true, onNeedSound: () => { const b = $('#emSound'); if (b && !this.sound) b.classList.add('primary'); } });
       this.main.seed(this.hist);
       DVR.candidate(IS_OVERLAY ? 3 : 2);
