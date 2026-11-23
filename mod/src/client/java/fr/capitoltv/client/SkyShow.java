@@ -53,7 +53,7 @@ public final class SkyShow {
     private static HymnSound hymn, pendingHymn;
     private static final Identifier FONT = Identifier.of("capitoltv", "textures/sky/font.png");
     private static final Identifier GLOW = Identifier.of("capitoltv", "textures/sky/glow.png");
-    private static final Identifier EMBLEM = Identifier.of("capitoltv", "textures/gui/emblem.png");
+    private static final Identifier EMBLEM = Identifier.of("capitoltv", "textures/sky/emblem.png");
     private static final Map<String, Identifier> heads = new ConcurrentHashMap<>();
     private static final Map<String, Identifier> imgs = new ConcurrentHashMap<>();
     private static final Map<String, Float> aspect = new ConcurrentHashMap<>();

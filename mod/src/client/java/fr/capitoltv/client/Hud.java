@@ -91,7 +91,7 @@ public final class Hud {
         TextRenderer tr = mc.textRenderer;
         ClientConfig c = ClientConfig.get();
         int sw = ctx.getScaledWindowWidth(), sh = ctx.getScaledWindowHeight();
-        if (mc.currentScreen == null) Overlays.renderRecap(ctx, sw, sh);
+        if (mc.currentScreen == null && mc.player != null && mc.player.isDead()) Overlays.renderRecap(ctx, sw, sh);
         CamDrone.render(ctx, tr, sw);
         if (System.currentTimeMillis() - buzzAt < 4000 && (System.currentTimeMillis() / 250) % 2 == 0) {
             int b = 4, bc = 0xC0E0514A;
