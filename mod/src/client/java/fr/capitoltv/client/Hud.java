@@ -94,8 +94,8 @@ public final class Hud {
         if (mc.currentScreen == null) Overlays.renderRecap(ctx, sw, sh);
         CamDrone.render(ctx, tr, sw);
         if (System.currentTimeMillis() - buzzAt < 4000 && (System.currentTimeMillis() / 250) % 2 == 0) {
-            int b = 4, c = 0xC0E0514A;
-            ctx.fill(0, 0, sw, b, c); ctx.fill(0, sh - b, sw, sh, c); ctx.fill(0, b, b, sh - b, c); ctx.fill(sw - b, b, sw, sh - b, c);
+            int b = 4, bc = 0xC0E0514A;
+            ctx.fill(0, 0, sw, b, bc); ctx.fill(0, sh - b, sw, sh, bc); ctx.fill(0, b, b, sh - b, bc); ctx.fill(sw - b, b, sw, sh - b, bc);
         }
         if (CapitolClient.voiceLoud) {
             String s = "🔊 LES JOUEURS T'ENTENDENT · " + Keys.of(CapitolClient.voiceKey);
