@@ -5356,6 +5356,16 @@ class Stage {
     } else if (this.sfxEl) { this.sfxEl.pause(); this.sfxEl.remove(); this.sfxEl = null; }
     // musique de fond (playlist en boucle, synchronisée pour tout le monde)
     const bg = p && p.on && !p.screen ? p.bgm : null;
+    if (this.o.onMus) {
+      let st;
+      if (!p) st = 'aucune image reçue';
+      else if (!p.on) st = 'aucun plan à l\'antenne (musique coupée)';
+      else if (p.screen) st = 'écran plein (musique coupée)';
+      else if (!p.bgm) st = PROG.pub && PROG.pub.bgm ? 'musique lancée en régie, arrive avec le différé (' + (this.delay() || 0) + ' s)' : 'aucune musique lancée';
+      else if (!p.bgm.tracks.length) st = 'playlist vide (titres non lisibles ?)';
+      else st = null;
+      this.o.onMus(st, bg && bg.tracks.length ? bg : null);
+    }
     if (bg && bg.tracks.length) {
       const durs = bg.tracks.map(t => Math.max(1, t.dur || 180)), tot = durs.reduce((a, b) => a + b, 0);
       let t = ((nowS() - (bg.at || nowS())) / 1000) % tot; if (t < 0) t = 0; let i = 0;
@@ -5679,10 +5689,22 @@ const PROG = {
   renderDirect() {
     if (!isCrew() && !isOut()) { $('#pageView').innerHTML = '<div class="team-in"><div class="empty">La page Direct est réservée à la régie et au streamer.</div></div>'; return; }
     if (!$('#emStage') || !this.main) {
-      $('#pageView').innerHTML = `<div class="em-wrap"><div class="em-bar"><h3>${esc(brandName().toUpperCase())}</h3><span class="em-live" id="emLive">● EN DIRECT</span><span class="note" id="emScene"></span><span style="flex:1"></span>
+      $('#pageView').innerHTML = `<div class="em-wrap"><div class="em-bar"><h3>${esc(brandName().toUpperCase())}</h3><span class="em-live" id="emLive">● EN DIRECT</span><span class="note" id="emScene"></span><span style="flex:1"></span><span class="note" id="emMus" title="État de la musique de fond sur cette page"></span>
         <button class="btn sm" id="emSound">${ic('vol')}Activer le son</button><button class="btn sm" id="emFull" title="Plein écran (F)">${ic('full')}Plein écran</button></div>
         <div class="em-stage" id="emStage"></div><div class="em-dz hide" id="emDz"><span class="note">Musique Deezer en cours (visible ici seulement, pas dans le Direct) · si rien ne s'entend, clique ▶ dans le lecteur ; « 30 s » ou « Se connecter » = compte non reconnu : régie › Musique › 🎧 Connecter Deezer</span></div></div>`;
-      this.main = new Stage($('#emStage'), { sound: this.sound, dzOut: true, delay: null, layer: 'auto', extras: true, record: true, onNeedSound: () => { const b = $('#emSound'); if (b && !this.sound) b.classList.add('primary'); } });
+      this.main = new Stage($('#emStage'), { sound: this.sound, dzOut: true, delay: null, layer: 'auto', extras: true, record: true, onMus: (st, bg) => {
+        const e = $('#emMus'); if (!e) return;
+        let txt;
+        if (st) txt = '♪ ' + st;
+        else {
+          const st2 = this.main, tr = st2.dz ? bg.tracks.find(x => x.dz === st2.dz.id) : null;
+          if (!this.sound) txt = '♪ musique à l\'antenne — son coupé ici';
+          else if (tr) txt = '🎧 Deezer : ' + tr.name;
+          else if (bg.tracks.some(x => x.dz)) txt = '♪ playlist mixte, titre en cours non Deezer';
+          else txt = '♪ fichier (pas Deezer) en cours';
+        }
+        if (e.textContent !== txt) e.textContent = txt;
+      }, onNeedSound: () => { const b = $('#emSound'); if (b && !this.sound) b.classList.add('primary'); } });
       this.main.seed(this.hist);
       DVR.candidate(IS_OVERLAY ? 3 : 2);
       $('#emFull').onclick = () => this.fullscreen();
