@@ -5052,8 +5052,17 @@ class Stage {
   /* Deezer : lecteur officiel, titre complet grâce au compte Premium connecté dans ce navigateur.
      Seulement sur la page qui porte le son du Direct (sinon le compte serait « déjà en lecture ailleurs »).
      Pas de réglage de volume possible : il se fait dans OBS. */
-  dzSync(tr, t, sound) {
+  dzSync(tr, t, sound, vol) {
     if (!sound) { this.dzStop(); return; }
+    const A = window.ctvApp && window.ctvApp.dz;
+    if (A) {
+      // appli de bureau : lecteur web Deezer intégré à l'appli (titre complet, volume piloté d'ici)
+      let w = this.dz;
+      const v = Math.round((vol == null ? 1 : vol) * 100) / 100;
+      if (!w || w.id !== tr.dz || w.v !== v) { if (!w || w.id !== tr.dz) this.dzStop(); w = this.dz = { id: tr.dz, v, app: 1 }; A.set({ id: tr.dz, vol: v }); }
+      DZUI.show(tr);
+      return;
+    }
     let w = this.dz;
     if (!w || w.id !== tr.dz) {
       this.dzStop(); w = this.dz = { id: tr.dz };
@@ -5065,7 +5074,7 @@ class Stage {
       w.f = f;
     }
   }
-  dzStop() { const w = this.dz; this.dz = null; if (w && w.f) w.f.remove(); const h = $('#emDz'); if (h && !h.querySelector('iframe')) h.classList.add('hide'); }
+  dzStop() { const w = this.dz; this.dz = null; if (w && w.f) w.f.remove(); if (w && w.app) { window.ctvApp.dz.set(null); DZUI.show(null); } const h = $('#emDz'); if (h && !h.querySelector('iframe') && !(w && w.app)) h.classList.add('hide'); }
   ytStop() { const y = this.yt; this.yt = null; if (!y) return; try { y.pl && y.pl.destroy(); } catch (e) {} if (y.box) y.box.remove(); }
   setSound(on) { this.o.sound = !!on; this.layout(false); }
   delay() { return this.o.delay == null || this.o.delay === 'board' ? (S.board.delay || 0) : this.o.delay; }
@@ -5373,7 +5382,7 @@ class Stage {
       const tr = bg.tracks[i], key = tr.id + ':' + bg.at + ':' + i;
       if (tr.sc || tr.dz) {
         if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; } this.ytStop();
-        if (tr.dz) { this.scStop(); this.dzSync(tr, t, this.o.sound && this.o.dzOut); } else { this.dzStop(); this.scSync(tr, t, this.volOf('bgm', bg.vol), this.o.sound); }
+        if (tr.dz) { this.scStop(); this.dzSync(tr, t, this.o.sound && this.o.dzOut, this.volOf('bgm', bg.vol)); } else { this.dzStop(); this.scSync(tr, t, this.volOf('bgm', bg.vol), this.o.sound); }
         if (!(this.sc && this.sc.err)) this.credit('♪ ' + (tr.credit || tr.name));
       } else if (tr.yt) {
         if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; } this.scStop(); this.dzStop();
@@ -5558,6 +5567,31 @@ const PMIX = {
     this.render();
   }
 };
+/* état du lecteur Deezer intégré à l'appli de bureau, affiché sous le Direct (hors de l'image) */
+const DZUI = {
+  st: null, tr: null, bound: false,
+  TXT: { loading: '⏳ démarrage…', playing: '▶ lecture en cours (titre complet)', login: '⚠ pas connecté à Deezer dans l\'appli', blocked: '⚠ le lecteur n\'a pas pu démarrer seul', off: '' },
+  show(tr) {
+    const A = window.ctvApp && window.ctvApp.dz; if (!A) return;
+    if (!this.bound) { this.bound = true; A.onState(s => { this.st = s.state; this.paint(); }); }
+    this.tr = tr; this.paint();
+  },
+  paint() {
+    const h = $('#emDz'); if (!h) return;
+    if (!this.tr) { h.classList.add('hide'); return; }
+    h.classList.remove('hide');
+    let b = h.querySelector('.dzapp');
+    if (!b) {
+      h.innerHTML = '<div class="dzapp" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="note dzt"></span><span style="flex:1"></span><button class="btn sm dzshow">Afficher le lecteur Deezer</button></div>';
+      b = h.querySelector('.dzapp');
+      b.querySelector('.dzshow').onclick = () => window.ctvApp.dz.show();
+    }
+    const st = this.st || 'loading', bad = st === 'login' || st === 'blocked';
+    const txt = '🎧 ' + this.tr.name + ' — ' + (this.TXT[st] || st) + (st === 'login' ? ' : clique « Afficher le lecteur Deezer », connecte-toi, ferme la fenêtre.' : st === 'blocked' ? ' : clique « Afficher le lecteur Deezer » puis ▶ « Écouter ».' : '');
+    const t = b.querySelector('.dzt'); if (t.textContent !== txt) t.textContent = txt;
+    b.querySelector('.dzshow').classList.toggle('primary', bad);
+  }
+};
 const PROG = {
   pub: null, ed: null, sound: IS_OVERLAY, main: null, pgmStage: null, pvStage: null, saveT: null, dirty: 0,
   sel: '', drag: null, wasFull: false, media: [], air: { ids: [], prep: [], since: {}, delay: 0 }, ups: {}, listen: null, sfxEl: null,
@@ -5691,7 +5725,7 @@ const PROG = {
     if (!$('#emStage') || !this.main) {
       $('#pageView').innerHTML = `<div class="em-wrap"><div class="em-bar"><h3>${esc(brandName().toUpperCase())}</h3><span class="em-live" id="emLive">● EN DIRECT</span><span class="note" id="emScene"></span><span style="flex:1"></span><span class="note" id="emMus" title="État de la musique de fond sur cette page"></span>
         <button class="btn sm" id="emSound">${ic('vol')}Activer le son</button><button class="btn sm" id="emFull" title="Plein écran (F)">${ic('full')}Plein écran</button></div>
-        <div class="em-stage" id="emStage"></div><div class="em-dz hide" id="emDz"><span class="note">Musique Deezer en cours (visible ici seulement, pas dans le Direct) · si rien ne s'entend, clique ▶ dans le lecteur ; « 30 s » ou « Se connecter » = compte non reconnu : régie › Musique › 🎧 Connecter Deezer</span></div></div>`;
+        <div class="em-stage" id="emStage"></div><div class="em-dz hide" id="emDz"><span class="note">Musique Deezer (visible ici seulement, pas dans le Direct) · dans un navigateur, Deezer ne joue que des extraits de 30 s : ouvre cette page dans l'appli Capitol TV pour les titres complets.</span></div></div>`;
       this.main = new Stage($('#emStage'), { sound: this.sound, dzOut: true, delay: null, layer: 'auto', extras: true, record: true, onMus: (st, bg) => {
         const e = $('#emMus'); if (!e) return;
         let txt;
@@ -6309,7 +6343,7 @@ const PROG = {
     const playing = this.pub && this.pub.bgm;
     box.innerHTML = `<div class="gx-row"><select class="mini-sel" id="bgScope"><option value="all" ${scope === 'all' ? 'selected' : ''}>Tous les plans</option><option value="scene" ${scope === 'scene' ? 'selected' : ''}>Ce plan : ${esc(sc ? sc.name : '')}</option></select>
         <label style="display:flex;align-items:center;gap:6px;flex:0 0 130px"><span class="note">Vol.</span><input type="range" id="bgVol" min="0" max="100" step="5" value="${D.vol}" style="flex:1"></label></div>
-      <div class="gx-row"><span class="note" style="flex:1">Titres Deezer : joués en entier sur la page Direct, avec ton compte Premium connecté <b>sur le PC qui diffuse le Direct</b> (une seule fois).</span><button class="btn xs" id="bgDzLogin" title="Ouvre Deezer pour te connecter (à faire sur le PC du Direct, dans le site ou l'appli)">🎧 Connecter Deezer</button></div>
+      <div class="gx-row"><span class="note" style="flex:1">Titres Deezer : joués en entier sur la page Direct <b>ouverte dans l'appli Capitol TV</b>, avec ton compte Premium connecté dans l'appli (une seule fois). Dans un navigateur : extraits de 30 s.</span><button class="btn xs" id="bgDzLogin" title="Ouvre Deezer pour te connecter (à faire sur le PC du Direct, dans le site ou l'appli)">🎧 Connecter Deezer</button></div>
       <div class="gx-row"><input class="inp" id="bgQ" value="${esc(this.bgmQ || '')}" placeholder="Titre ou artiste (recherche Deezer, ex. two steps from hell heart of courage)" autocomplete="off"></div>
       ${hits.length ? `<div class="bg-hits"><span class="note">Déjà dans tes médias</span>${hits.map(x => `<button class="btn xs ghost" data-bga="${esc(x.id)}">＋ ${esc(x.name)} <span class="note">${this.fmtDur(x.dur)}</span></button>`).join('')}</div>` : ''}
       ${q.length >= 2 ? this.bgDzHtml() + this.bgWebHtml() : ''}

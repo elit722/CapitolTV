@@ -1,7 +1,7 @@
 {
   "name": "capitol-tv-desktop",
   "productName": "Capitol TV",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Capitol TV : application de bureau (régie, double écran, notifications)",
   "main": "main.js",
   "author": "Capitol TV",
