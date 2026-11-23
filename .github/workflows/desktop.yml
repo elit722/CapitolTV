@@ -20,6 +20,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Numéro de version (chaque build = une nouvelle version, pour la mise à jour auto)
+        shell: bash
+        run: node -e "const f='package.json',p=require('./'+f),[a,b]=p.version.split('.');p.version=a+'.'+b+'.'+process.env.GITHUB_RUN_NUMBER;require('fs').writeFileSync(f,JSON.stringify(p,null,2));console.log(p.version)"
       - name: Installation
         run: npm install --no-audit --no-fund
       - name: Test du mélangeur Windows (compilation du code audio)
@@ -31,7 +34,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: capitoltv-desktop
-          path: desktop/dist/*.exe
+          path: |
+            desktop/dist/*.exe
+            desktop/dist/latest.yml
           if-no-files-found: error
       - name: Publication (release « app-bureau »)
         shell: bash
@@ -39,4 +44,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release view app-bureau >/dev/null 2>&1 || gh release create app-bureau --title "Capitol TV — application de bureau" --notes "Installateur Windows et version portable, reconstruits à chaque modification de l'application."
-          gh release upload app-bureau dist/*.exe --clobber
+          gh release upload app-bureau dist/*.exe dist/*.blockmap dist/latest.yml --clobber

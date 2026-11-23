@@ -66,8 +66,6 @@ body.locked .nolock{display:none!important}
 .em-it.gone{opacity:0;transform:scale(.88)}
 body.em-full .em-wrap{top:0;bottom:0;padding:0;z-index:90}
 body.em-full .em-bar{display:none}
-.em-dz{width:100%;max-width:calc((100vh - 190px) * 16 / 9);margin-top:8px;display:flex;flex-direction:column;gap:4px}.em-dz.hide{display:flex!important;position:fixed;left:-9999px}.em-dzf{width:100%;height:92px;border:0;border-radius:8px;background:#111}
-body.em-full .em-dz{position:fixed;left:-9999px}
 body.em-full .em-stage{width:min(100vw, 100vh * 16 / 9);border-radius:0;box-shadow:none}
 body.em-full header.top,body.em-full footer.ticker,body.em-full #toasts{display:none!important}
 .em-it{position:absolute;overflow:hidden;background:#0b0b0d;transition:left .7s cubic-bezier(.65,0,.35,1),top .7s cubic-bezier(.65,0,.35,1),width .7s cubic-bezier(.65,0,.35,1),height .7s cubic-bezier(.65,0,.35,1),opacity .5s,transform .6s cubic-bezier(.2,.8,.2,1)}
@@ -2772,6 +2770,25 @@ const HYMN = {
    Notifications
    ===================================================================== */
 function toastBox(el, ms) { const box = $('#toasts'); box.prepend(el); while (box.children.length > 4) box.lastChild.remove(); setTimeout(() => el.remove(), ms); }
+/* appli de bureau : mise à jour téléchargée en fond → petit bouton « Redémarrer » (installée aussi à la fermeture) */
+const APPUPD = {
+  init() {
+    const U = window.ctvApp && window.ctvApp.update; if (!U) return;
+    U.on(u => this.paint(u)); U.state().then(u => this.paint(u), () => {});
+  },
+  paint(u) {
+    let b = document.getElementById('appUpd');
+    if (!u || u.state !== 'ready') { if (b) b.remove(); return; }
+    if (!b) {
+      b = document.createElement('button'); b.id = 'appUpd'; b.className = 'btn sm primary';
+      b.style.cssText = 'position:fixed;right:14px;bottom:52px;z-index:9999;box-shadow:0 6px 20px rgba(0,0,0,.5)';
+      b.title = "L'appli redémarre en quelques secondes. Sinon, la mise à jour s'installera à la prochaine fermeture.";
+      b.onclick = () => window.ctvApp.update.install();
+      document.body.appendChild(b);
+    }
+    b.textContent = '⬆ Mise à jour ' + (u.version || '') + ' prête · Redémarrer';
+  }
+};
 function toastInfo(title, text, bad) {
   const el = document.createElement('div');
   el.className = 'toast ' + (bad ? 'urgent' : 'info');
@@ -5049,32 +5066,6 @@ class Stage {
     } catch (e) {}
   }
   scStop() { const w = this.sc; this.sc = null; if (w && w.f) w.f.remove(); }
-  /* Deezer : lecteur officiel, titre complet grâce au compte Premium connecté dans ce navigateur.
-     Seulement sur la page qui porte le son du Direct (sinon le compte serait « déjà en lecture ailleurs »).
-     Pas de réglage de volume possible : il se fait dans OBS. */
-  dzSync(tr, t, sound, vol) {
-    if (!sound) { this.dzStop(); return; }
-    const A = window.ctvApp && window.ctvApp.dz;
-    if (A) {
-      // appli de bureau : lecteur web Deezer intégré à l'appli (titre complet, volume piloté d'ici)
-      let w = this.dz;
-      const v = Math.round((vol == null ? 1 : vol) * 100) / 100;
-      if (!w || w.id !== tr.dz || w.v !== v) { if (!w || w.id !== tr.dz) this.dzStop(); w = this.dz = { id: tr.dz, v, app: 1 }; A.set({ id: tr.dz, vol: v }); }
-      DZUI.show(tr);
-      return;
-    }
-    let w = this.dz;
-    if (!w || w.id !== tr.dz) {
-      this.dzStop(); w = this.dz = { id: tr.dz };
-      const f = document.createElement('iframe'); f.className = 'em-yt'; f.allow = 'autoplay; encrypted-media';
-      f.src = 'https://widget.deezer.com/widget/dark/track/' + encodeURIComponent(tr.dz) + '?autoplay=true&tracklist=false&radius=false';
-      // lecteur visible sous le Direct (hors de l'image) : on voit s'il joue, et on peut cliquer ▶ s'il attend un clic
-      const host = $('#emDz');
-      if (host) { f.className = 'em-dzf'; host.appendChild(f); host.classList.remove('hide'); } else this.el.appendChild(f);
-      w.f = f;
-    }
-  }
-  dzStop() { const w = this.dz; this.dz = null; if (w && w.f) w.f.remove(); if (w && w.app) { window.ctvApp.dz.set(null); DZUI.show(null); } const h = $('#emDz'); if (h && !h.querySelector('iframe') && !(w && w.app)) h.classList.add('hide'); }
   ytStop() { const y = this.yt; this.yt = null; if (!y) return; try { y.pl && y.pl.destroy(); } catch (e) {} if (y.box) y.box.remove(); }
   setSound(on) { this.o.sound = !!on; this.layout(false); }
   delay() { return this.o.delay == null || this.o.delay === 'board' ? (S.board.delay || 0) : this.o.delay; }
@@ -5380,16 +5371,16 @@ class Stage {
       let t = ((nowS() - (bg.at || nowS())) / 1000) % tot; if (t < 0) t = 0; let i = 0;
       while (t >= durs[i] && i < durs.length - 1) { t -= durs[i]; i++; }
       const tr = bg.tracks[i], key = tr.id + ':' + bg.at + ':' + i;
-      if (tr.sc || tr.dz) {
+      if (tr.sc) {
         if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; } this.ytStop();
-        if (tr.dz) { this.scStop(); this.dzSync(tr, t, this.o.sound && this.o.dzOut, this.volOf('bgm', bg.vol)); } else { this.dzStop(); this.scSync(tr, t, this.volOf('bgm', bg.vol), this.o.sound); }
+        this.scSync(tr, t, this.volOf('bgm', bg.vol), this.o.sound);
         if (!(this.sc && this.sc.err)) this.credit('♪ ' + (tr.credit || tr.name));
       } else if (tr.yt) {
-        if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; } this.scStop(); this.dzStop();
+        if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; } this.scStop();
         this.ytSync(tr, t, this.volOf('bgm', bg.vol), this.o.sound);
         if (!(this.yt && this.yt.err)) this.credit(tr.credit ? '♪ ' + tr.credit : '♪ ' + tr.name);
       } else {
-        this.ytStop(); this.scStop(); this.dzStop();
+        this.ytStop(); this.scStop();
         if (!this.bgmEl || this.bgmEl.dataset.k !== key) {
           if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); }
           this.bgmEl = document.createElement('audio'); this.bgmEl.preload = 'auto'; this.bgmEl.dataset.k = key; this.bgmEl.src = PROG.mediaURL(tr.id); this.el.appendChild(this.bgmEl);
@@ -5397,7 +5388,7 @@ class Stage {
         PROG.syncOne(this.bgmEl, nowS() - t * 1000, false, this.volOf('bgm', bg.vol) * 100, this.o.sound, this);
         this.credit(tr.credit ? '♪ ' + tr.credit : '');
       }
-    } else { if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; } this.ytStop(); this.scStop(); this.dzStop(); this.credit(''); }
+    } else { if (this.bgmEl) { this.bgmEl.pause(); this.bgmEl.remove(); this.bgmEl = null; } this.ytStop(); this.scStop(); this.credit(''); }
   }
   /* crédit de la musique libre de droits (obligatoire pour les licences CC BY) */
   credit(txt) {
@@ -5413,7 +5404,7 @@ class Stage {
     clearTimeout(this.trT1); clearTimeout(this.trT2); (this.q || []).forEach(e => clearTimeout(e.t)); this.q = [];
     for (const el of this.players.values()) { const md = el.querySelector('.em-md'); if (md && md.pause) md.pause(); }
     for (const e of this.dps.values()) { clearTimeout(e.t); e.dp.destroy(); }
-    if (this.sfxEl) this.sfxEl.pause(); if (this.bgmEl) this.bgmEl.pause(); this.ytStop(); this.scStop(); this.dzStop(); MIX.stages.delete(this);
+    if (this.sfxEl) this.sfxEl.pause(); if (this.bgmEl) this.bgmEl.pause(); this.ytStop(); this.scStop(); MIX.stages.delete(this);
     this.players.clear(); this.dps.clear(); this.el.innerHTML = '';
   }
 }
@@ -5546,7 +5537,7 @@ const PMIX = {
       ${this.row('dir', 'Direct (mon écoute)', 'ne change pas l\'émission', this.v.dir == null ? 100 : this.v.dir, !SCREEN2.snd, 'master')}
       <div class="mx-sep">Autres logiciels du PC</div>
       ${A ? (this.apps.length ? this.apps.map(a => this.row('app:' + a.name, a.title && a.title.length < 40 ? a.title : a.name, a.name + (a.active ? ' · joue du son' : ''), a.vol * 100, a.mute)).join('') : `<div class="note" style="padding:6px 10px">${this.appErr ? 'Mélangeur Windows indisponible : ' + esc(this.appErr) : 'Aucun autre logiciel ne joue de son pour l\'instant.'}</div>`)
-        : '<div class="note" style="padding:6px 10px">Pour régler le jeu, Deezer, Discord… ouvre le 2e écran depuis l\'<b>app bureau Capitol TV</b> (Windows). Un navigateur n\'a pas le droit de toucher au son des autres logiciels.</div>'}</div>`;
+        : '<div class="note" style="padding:6px 10px">Pour régler le jeu, Discord… ouvre le 2e écran depuis l\'<b>app bureau Capitol TV</b> (Windows). Un navigateur n\'a pas le droit de toucher au son des autres logiciels.</div>'}</div>`;
   },
   input(e) {
     const sl = e.target.closest('[data-pv]'); if (!sl) return; const k = sl.closest('[data-pk]').dataset.pk, v = +sl.value;
@@ -5565,31 +5556,6 @@ const PMIX = {
     else if (k === 'dir') { const sb = $('#s2Snd'); if (sb) sb.click(); }
     else if (k.startsWith('app:')) { const n = k.slice(4), a = this.apps.find(x => x.name === n); if (a) { a.mute = !a.mute; window.ctvApp.audio.set(n, null, a.mute); } }
     this.render();
-  }
-};
-/* état du lecteur Deezer intégré à l'appli de bureau, affiché sous le Direct (hors de l'image) */
-const DZUI = {
-  st: null, tr: null, bound: false,
-  TXT: { loading: '⏳ démarrage…', playing: '▶ lecture en cours (titre complet)', login: '⚠ pas connecté à Deezer dans l\'appli', blocked: '⚠ le lecteur n\'a pas pu démarrer seul', off: '' },
-  show(tr) {
-    const A = window.ctvApp && window.ctvApp.dz; if (!A) return;
-    if (!this.bound) { this.bound = true; A.onState(s => { this.st = s.state; this.paint(); }); }
-    this.tr = tr; this.paint();
-  },
-  paint() {
-    const h = $('#emDz'); if (!h) return;
-    if (!this.tr) { h.classList.add('hide'); return; }
-    h.classList.remove('hide');
-    let b = h.querySelector('.dzapp');
-    if (!b) {
-      h.innerHTML = '<div class="dzapp" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="note dzt"></span><span style="flex:1"></span><button class="btn sm dzshow">Afficher le lecteur Deezer</button></div>';
-      b = h.querySelector('.dzapp');
-      b.querySelector('.dzshow').onclick = () => window.ctvApp.dz.show();
-    }
-    const st = this.st || 'loading', bad = st === 'login' || st === 'blocked';
-    const txt = '🎧 ' + this.tr.name + ' — ' + (this.TXT[st] || st) + (st === 'login' ? ' : clique « Afficher le lecteur Deezer », connecte-toi, ferme la fenêtre.' : st === 'blocked' ? ' : clique « Afficher le lecteur Deezer » puis ▶ « Écouter ».' : '');
-    const t = b.querySelector('.dzt'); if (t.textContent !== txt) t.textContent = txt;
-    b.querySelector('.dzshow').classList.toggle('primary', bad);
   }
 };
 const PROG = {
@@ -5725,17 +5691,14 @@ const PROG = {
     if (!$('#emStage') || !this.main) {
       $('#pageView').innerHTML = `<div class="em-wrap"><div class="em-bar"><h3>${esc(brandName().toUpperCase())}</h3><span class="em-live" id="emLive">● EN DIRECT</span><span class="note" id="emScene"></span><span style="flex:1"></span><span class="note" id="emMus" title="État de la musique de fond sur cette page"></span>
         <button class="btn sm" id="emSound">${ic('vol')}Activer le son</button><button class="btn sm" id="emFull" title="Plein écran (F)">${ic('full')}Plein écran</button></div>
-        <div class="em-stage" id="emStage"></div><div class="em-dz hide" id="emDz"><span class="note">Musique Deezer (visible ici seulement, pas dans le Direct) · dans un navigateur, Deezer ne joue que des extraits de 30 s : ouvre cette page dans l'appli Capitol TV pour les titres complets.</span></div></div>`;
-      this.main = new Stage($('#emStage'), { sound: this.sound, dzOut: true, delay: null, layer: 'auto', extras: true, record: true, onMus: (st, bg) => {
+        <div class="em-stage" id="emStage"></div></div>`;
+      this.main = new Stage($('#emStage'), { sound: this.sound, delay: null, layer: 'auto', extras: true, record: true, onMus: (st, bg) => {
         const e = $('#emMus'); if (!e) return;
         let txt;
         if (st) txt = '♪ ' + st;
         else {
-          const st2 = this.main, tr = st2.dz ? bg.tracks.find(x => x.dz === st2.dz.id) : null;
           if (!this.sound) txt = '♪ musique à l\'antenne — son coupé ici';
-          else if (tr) txt = '🎧 Deezer : ' + tr.name;
-          else if (bg.tracks.some(x => x.dz)) txt = '♪ playlist mixte, titre en cours non Deezer';
-          else txt = '♪ fichier (pas Deezer) en cours';
+          else txt = '♪ musique en cours';
         }
         if (e.textContent !== txt) e.textContent = txt;
       }, onNeedSound: () => { const b = $('#emSound'); if (b && !this.sound) b.classList.add('primary'); } });
@@ -5853,7 +5816,7 @@ const PROG = {
       <div class="mda">${md.kind === 'audio' ? `<button class="btn sm ${playing ? 'live' : ''}" data-ma="sfx" title="${playing ? 'Arrêter' : 'Jouer par-dessus l\'antenne, sans changer de plan'}">${playing ? '■' : '▶'}</button><button class="btn sm ghost" data-ma="listen" title="Écouter ici seulement (casque de la régie)">${this.listen && this.listen.dataset.id === md.id ? '⏸' : '🎧'}</button>` : ''}<button class="btn sm ghost" data-ma="del" title="Supprimer">${ic('trash')}</button></div></div></div>`;
   },
   renderMediaSec(q) {
-    const f = md => !md.yt && !md.dz && !(md.sc && !md.n) && (!q || md.name.toLowerCase().includes(q));
+    const f = md => !md.yt && !(md.sc && !md.n) && (!q || md.name.toLowerCase().includes(q));
     const slotRows = this.SLOTS.map(sl => {
       const md = this.media.find(x => x.slot === sl.slot), up = this.ups[sl.slot];
       if (up) return `<div class="src smd up"><div class="th md">⇪</div><div style="min-width:0;flex:1"><b>${esc(sl.name)}</b><small>Envoi… ${up}%</small><div class="pbar"><i style="width:${up}%"></i></div></div></div>`;
@@ -6343,26 +6306,22 @@ const PROG = {
     const playing = this.pub && this.pub.bgm;
     box.innerHTML = `<div class="gx-row"><select class="mini-sel" id="bgScope"><option value="all" ${scope === 'all' ? 'selected' : ''}>Tous les plans</option><option value="scene" ${scope === 'scene' ? 'selected' : ''}>Ce plan : ${esc(sc ? sc.name : '')}</option></select>
         <label style="display:flex;align-items:center;gap:6px;flex:0 0 130px"><span class="note">Vol.</span><input type="range" id="bgVol" min="0" max="100" step="5" value="${D.vol}" style="flex:1"></label></div>
-      <div class="gx-row"><span class="note" style="flex:1">Titres Deezer : joués en entier sur la page Direct <b>ouverte dans l'appli Capitol TV</b>, avec ton compte Premium connecté dans l'appli (une seule fois). Dans un navigateur : extraits de 30 s.</span><button class="btn xs" id="bgDzLogin" title="Ouvre Deezer pour te connecter (à faire sur le PC du Direct, dans le site ou l'appli)">🎧 Connecter Deezer</button></div>
-      <div class="gx-row"><input class="inp" id="bgQ" value="${esc(this.bgmQ || '')}" placeholder="Titre ou artiste (recherche Deezer, ex. two steps from hell heart of courage)" autocomplete="off"></div>
+      <div class="gx-row"><input class="inp" id="bgQ" value="${esc(this.bgmQ || '')}" placeholder="Ambiance, genre ou titre (musiques libres de droits, ex. epic orchestral, suspense)" autocomplete="off"></div>
       ${hits.length ? `<div class="bg-hits"><span class="note">Déjà dans tes médias</span>${hits.map(x => `<button class="btn xs ghost" data-bga="${esc(x.id)}">＋ ${esc(x.name)} <span class="note">${this.fmtDur(x.dur)}</span></button>`).join('')}</div>` : ''}
-      ${q.length >= 2 ? this.bgDzHtml() + this.bgWebHtml() : ''}
+      ${q.length >= 2 ? this.bgWebHtml() : ''}
       <ol class="qlist">${D.ids.map((id, i) => { const md = this.mediaById(id); return `<li><span>${esc(md ? md.name : '?')}</span><span class="note">${md && md.dl === 1 ? 'copie ' + (md.dlp || 0) + ' %' : md && md.dl === 2 ? '<span style="color:var(--red-hi)" title="' + esc(md.dlErr || '') + '">copie ratée</span>' : md ? this.fmtDur(md.dur) : ''}</span><button class="btn sm ghost" data-bgx="${i}">${ic('x')}</button></li>`; }).join('')}</ol>
       <div class="gx-row"><button class="btn sm primary" id="bgGo" ${D.ids.length ? '' : 'disabled'}>▶ ${scope === 'all' ? 'Lancer sur tous les plans' : 'Lancer sur ce plan'}</button><button class="btn sm ghost" id="bgStop">■ Arrêter</button></div>
       <p class="note" style="margin:6px 0 0">${playing ? `En cours (${playing.scope === 'all' ? 'tous les plans' : 'ce plan'}) : ${esc(playing.tracks.map(t => t.name).join(' → '))}` : 'Aucune musique de fond à l\'antenne.'} La musique d'un plan remplace celle de tous les plans.</p>`;
     const send = ids => NET.req({ t: 'progBgm', scope: scope === 'all' ? 'all' : sc.id, ids, vol: D.vol }).then(() => toastInfo(ids.length ? 'Musique lancée' : 'Musique arrêtée'), e => toastInfo('Musique', e.message, true));
-    box.oninput = e => { if (e.target.id === 'bgQ') { this.bgmQ = e.target.value; clearTimeout(this.bgWebT); this.bgWebT = setTimeout(() => { this.bgDzSearch(); this.bgWebSearch(); }, 650); this.renderBgm(); const i = $('#bgQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); } if (e.target.id === 'bgVol') D.vol = +e.target.value; };
+    box.oninput = e => { if (e.target.id === 'bgQ') { this.bgmQ = e.target.value; clearTimeout(this.bgWebT); this.bgWebT = setTimeout(() => this.bgWebSearch(), 650); this.renderBgm(); const i = $('#bgQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); } if (e.target.id === 'bgVol') D.vol = +e.target.value; };
     box.onchange = e => { if (e.target.id === 'bgScope') { this.bgmScope = e.target.value; this.bgmDraft = null; this.renderBgm(); } if (e.target.id === 'bgVol' && playing) send(D.ids); };
     box.onclick = e => {
       const a = e.target.closest('[data-bga]'); if (a) { D.ids.push(a.dataset.bga); this.bgmQ = ''; this.renderBgm(); return; }
       const sp = e.target.closest('[data-bsp]'); if (sp) { this.bgScPlay(+sp.dataset.bsp); return; }
       const sa = e.target.closest('[data-bsa]'); if (sa) { this.bgScAdd(+sa.dataset.bsa, D); return; }
-      const dp = e.target.closest('[data-bdp]'); if (dp) { this.bgDzPlay(+dp.dataset.bdp); return; }
-      const da = e.target.closest('[data-bda]'); if (da) { this.bgDzAdd(+da.dataset.bda, D); return; }
       const pl = e.target.closest('[data-bwp]'); if (pl) { this.bgWebPlay(+pl.dataset.bwp); return; }
       const ad = e.target.closest('[data-bwa]'); if (ad) { this.bgWebAdd(+ad.dataset.bwa, D); return; }
       const x = e.target.closest('[data-bgx]'); if (x) { D.ids.splice(+x.dataset.bgx, 1); this.renderBgm(); return; }
-      if (e.target.closest('#bgDzLogin')) { window.open('https://www.deezer.com/login', 'deezer', 'width=520,height=760'); return; }
       if (e.target.closest('#bgGo')) send(D.ids);
       if (e.target.closest('#bgStop')) { D.ids = []; send([]); this.renderBgm(); }
     };
@@ -6391,7 +6350,7 @@ const PROG = {
     if (this.bgScI === i) { this.bgScI = -1; this.renderBgmKeep(); return; }
     this.bgScI = i; this.renderBgmKeep();
     // écoute : le son passe par le site lui-même (lecteur audio normal)
-    if (!this.bgPrev) { this.bgPrev = new Audio(); this.bgPrev.onended = () => { this.bgPrevI = -1; this.bgDzI = -1; this.bgScI = -1; this.renderBgmKeep(); }; }
+    if (!this.bgPrev) { this.bgPrev = new Audio(); this.bgPrev.onended = () => { this.bgPrevI = -1; this.bgScI = -1; this.renderBgmKeep(); }; }
     this.bgPrev.src = '/api/media/scplay?s=' + encodeURIComponent(x.sc); this.bgPrev.volume = .7;
     this.bgPrev.play().catch(() => toastInfo('Écoute impossible', 'SoundCloud refuse ce titre', true));
   },
@@ -6405,47 +6364,6 @@ const PROG = {
         if (!this.media.some(m => m.id === j.media.id)) this.media.push(j.media);
         D.ids.push(j.media.id); toastInfo('Ajoutée à la playlist', x.title); this.renderBgmKeep();
       }, () => { W.adding = -1; toastInfo('Ajout impossible', 'Réseau', true); this.renderBgmKeep(); });
-  },
-  /* ---------- musique sous droits : Deezer (extrait ici, lecture complète dans l'appli Deezer, sans pub avec un compte) ---------- */
-  bgDzHtml() {
-    const W = this.bgDz || {}, q = (this.bgmQ || '').trim();
-    if (W.q !== q || W.busy) return '<p class="note" style="margin:4px 0">Recherche sur Deezer…</p>';
-    if (W.err || !W.list.length) return `<p class="note" style="margin:4px 0">${esc(W.err || 'Rien trouvé sur Deezer.')}</p>`;
-    return `<div class="bg-web"><span class="note">Deezer · ▶ extrait de 30 s pour choisir · ＋ : joué en entier sur le Direct par ton compte Deezer Premium (connecté dans le navigateur d'OBS)</span>${W.list.map((x, i) => `<div class="bw">${x.cover ? `<img src="${esc(x.cover)}" alt="" class="bw-c">` : ''}<button class="btn xs ghost" data-bdp="${i}" title="Écouter l'extrait">${this.bgDzI === i ? '■' : '▶'}</button>
-      <span class="bw-t"><b>${esc(x.title)}</b><small>${esc(x.creator)}</small></span><span class="note">${this.fmtDur(x.dur)}</span>
-      <button class="btn xs" data-bda="${i}" ${W.adding === i ? 'disabled' : ''}>${W.adding === i ? '…' : '＋ Ajouter'}</button></div>`).join('')}</div>`;
-  },
-  bgDzSearch() {
-    const q = (this.bgmQ || '').trim(); if (q.length < 2) { this.bgDz = { q, list: [] }; return; }
-    this.bgDz = { q, list: [], busy: true }; this.renderBgmKeep();
-    fetch('/api/media/dz?q=' + encodeURIComponent(q)).then(r => r.json().then(j => ({ ok: r.ok, j }))).then(({ ok, j }) => {
-      if ((this.bgmQ || '').trim() !== q) return;
-      this.bgDz = { q, list: ok ? j.list || [] : [], err: j.msg || (ok ? '' : 'Recherche Deezer impossible') }; this.renderBgmKeep();
-    }, () => { this.bgDz = { q, list: [], err: 'Recherche Deezer impossible (réseau)' }; this.renderBgmKeep(); });
-  },
-  bgDzPlay(i) {
-    const x = (this.bgDz || {}).list && this.bgDz.list[i]; if (!x || !x.preview) return;
-    if (!this.bgPrev) { this.bgPrev = new Audio(); this.bgPrev.onended = () => { this.bgPrevI = -1; this.bgDzI = -1; this.renderBgmKeep(); }; }
-    if (this.bgDzI === i) { this.bgPrev.pause(); this.bgDzI = -1; } else { this.bgPrev.src = x.preview; this.bgPrev.volume = .7; this.bgPrev.play().catch(() => {}); this.bgDzI = i; this.bgPrevI = -1; }
-    this.renderBgmKeep();
-  },
-  bgDzAdd(i, D) {
-    const W = this.bgDz, x = W && W.list[i]; if (!x) return;
-    W.adding = i; this.renderBgmKeep();
-    fetch('/api/media/adddz', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dz: x.id, name: x.title + (x.creator ? ' — ' + x.creator : ''), dur: x.dur, credit: x.title + (x.creator ? ' — ' + x.creator : '') }) })
-      .then(r => r.json().then(j => ({ ok: r.ok, j }))).then(({ ok, j }) => {
-        W.adding = -1;
-        if (!ok) { toastInfo('Ajout impossible', j.msg || '', true); this.renderBgmKeep(); return; }
-        if (!this.media.some(m => m.id === j.media.id)) this.media.push(j.media);
-        D.ids.push(j.media.id); toastInfo('Ajoutée à la playlist', x.title); this.renderBgmKeep();
-      }, () => { W.adding = -1; toastInfo('Ajout impossible', 'Réseau', true); this.renderBgmKeep(); });
-  },
-  bgDzOpen(i) {
-    const x = (this.bgDz || {}).list && this.bgDz.list[i]; if (!x) return;
-    const web = x.link || 'https://www.deezer.com/track/' + x.id;
-    const a = document.createElement('a'); a.href = 'deezer://www.deezer.com/track/' + x.id; a.click();
-    setTimeout(() => { if (document.hasFocus()) window.open(web, '_blank', 'noopener'); }, 1200);
-    toastInfo('Ouvert dans Deezer', x.title + ' · règle son volume dans « Mes volumes » (app bureau)');
   },
   /* ---------- n'importe quelle musique : YouTube (lu par le lecteur YouTube intégré) ---------- */
   bgYtHtml() {
@@ -6993,6 +6911,7 @@ setInterval(() => {
   setTheater(S.theater);
   const dm = H0.match(/^c-(\d{1,3})$/); if (dm) S.deep = parseInt(dm[1], 10);
   settingsEvents();
+  try { APPUPD.init(); } catch (e) {}
   renderTabs(); renderAll();
   // lecteur Twitch (API d'intégration) puis connexion temps réel
   const go = () => NET.connect();

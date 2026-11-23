@@ -540,7 +540,7 @@ export class Game extends DurableObject {
         this.ctx.storage.put("roles", this.roles); this.ctx.storage.put("team", this.team);
       }
       this.prog = m.get("prog") || { scenes: [{ id: "s1", name: "Plan 1", items: [] }], live: "", preview: "s1", trans: { type: "logo", ms: 1400 }, seq: 0, title: "" };
-      this.media = m.get("media") || [];
+      this.media = (m.get("media") || []).filter(x => !x.dz); // anciens titres Deezer : retirés
       this.srvCams = m.get("srvcams") || [];
       this.skeys = m.get("skeys") || {};
       this.pubs = m.get("pubs") || {};
@@ -1273,7 +1273,7 @@ export class Game extends DurableObject {
     const own = sc && sc.bgm && sc.bgm.ids.length ? { ...sc.bgm, at: this.prog.liveAt || 0, scope: "scene" } : null;
     const g = this.prog.bgm && this.prog.bgm.ids && this.prog.bgm.ids.length ? { ...this.prog.bgm, scope: "all" } : null;
     const b = own || g; if (!b) return null;
-    const tracks = b.ids.map(id => this.media.find(x => x.id === id)).filter(x => x && x.kind === "audio" && !x.dl).map(x => ({ id: x.id, name: x.name, dur: x.dur || 0, credit: x.credit || "", yt: x.yt || undefined, sc: x.sc && !x.n ? x.sc : undefined, dz: x.dz || undefined }));
+    const tracks = b.ids.map(id => this.media.find(x => x.id === id)).filter(x => x && x.kind === "audio" && !x.dl).map(x => ({ id: x.id, name: x.name, dur: x.dur || 0, credit: x.credit || "", yt: x.yt || undefined, sc: x.sc && !x.n ? x.sc : undefined }));
     return tracks.length ? { tracks, at: b.at || 0, vol: b.vol == null ? 60 : b.vol, scope: b.scope } : null;
   }
   onAirCams() {
@@ -1420,28 +1420,6 @@ export class Game extends DurableObject {
       await this.env.MEDIA.put("meta:" + meta.id, JSON.stringify(meta));
       pushList();
       try { await this.scStart(meta); } catch (e) { return J({ msg: "SoundCloud : " + e.message }, 502); }
-      return J({ ok: true, media: meta });
-    }
-    // Deezer : recherche dans tout le catalogue (extrait de 30 s pour écouter ; la lecture complète se fait dans l'appli Deezer)
-    if (req.method === "GET" && id === "dz") {
-      const q = (new URL(req.url).searchParams.get("q") || "").trim().slice(0, 100);
-      if (q.length < 2) return J({ list: [] });
-      const art = /^art(iste)?\s*:/i.test(q) ? q.replace(/^art(iste)?\s*:/i, "").trim() : "";
-      const r = await fetch("https://api.deezer.com/search?limit=15&q=" + encodeURIComponent(art ? 'artist:"' + art + '"' : q)).catch(() => null);
-      const d = r && r.ok ? await r.json().catch(() => ({})) : null;
-      if (!d || d.error) return J({ list: [], msg: "Deezer ne répond pas pour le moment." });
-      return J({ list: (d.data || []).map(x => ({ id: x.id, title: String(x.title || "").slice(0, 100), creator: String((x.artist || {}).name || "").slice(0, 60), dur: +x.duration || 0, preview: String(x.preview || ""), link: String(x.link || ""), cover: String((x.album || {}).cover_small || "") })) });
-    }
-    // Deezer : titre lu en entier sur le Direct par le lecteur officiel (compte Premium connecté dans le navigateur d'OBS)
-    if (req.method === "POST" && id === "adddz") {
-      const b = await req.json().catch(() => ({})), dz = String(b.dz || "").replace(/\D/g, "").slice(0, 20);
-      if (!dz) return J({ msg: "Titre Deezer invalide." }, 400);
-      const have = this.media.find(x => x.dz === dz); if (have) return J({ ok: true, media: have });
-      const nid = crypto.randomUUID().replace(/-/g, "").slice(0, 20);
-      const meta = { id: nid, name: String(b.name || "Musique").slice(0, 100), mime: "audio/deezer", kind: "audio", dz, size: 0, dur: Math.max(0, +b.dur || 0), slot: "", by: user.name, at: Date.now(), n: 0, credit: String(b.credit || "").slice(0, 160) };
-      await this.env.MEDIA.put("meta:" + nid, JSON.stringify(meta));
-      this.media = [...this.media, meta].slice(-120);
-      pushList();
       return J({ ok: true, media: meta });
     }
     if (req.method === "POST" && id === "addyt") {

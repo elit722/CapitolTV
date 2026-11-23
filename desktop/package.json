@@ -1,7 +1,7 @@
 {
   "name": "capitol-tv-desktop",
   "productName": "Capitol TV",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Capitol TV : application de bureau (régie, double écran, notifications)",
   "main": "main.js",
   "author": "Capitol TV",
@@ -22,7 +22,8 @@
       "preload.js",
       "winaudio.js",
       "config.json",
-      "icon.png"
+      "icon.png",
+      "node_modules/**/*"
     ],
     "win": {
       "target": [
@@ -39,6 +40,15 @@
     "portable": {
       "artifactName": "CapitolTV-portable-${version}.exe"
     },
-    "artifactName": "CapitolTV-installation-${version}.${ext}"
+    "artifactName": "CapitolTV-installation-${version}.${ext}",
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://github.com/elit722/CapitolTV/releases/download/app-bureau/"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
   }
 }

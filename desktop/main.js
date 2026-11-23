@@ -5,6 +5,7 @@ const { app, BrowserWindow, screen, shell, ipcMain, session, Menu } = require('e
 const path = require('path');
 const fs = require('fs');
 const winaudio = require('./winaudio');
+let autoUpdater = null; try { ({ autoUpdater } = require('electron-updater')); } catch (e) {}
 
 const CFG = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8')); } catch (e) { return {}; } })();
 const statePath = () => path.join(app.getPath('userData'), 'fenetres.json');
@@ -27,72 +28,6 @@ if (process.platform === 'win32') app.setAppUserModelId('fr.capitoltv.app');
 if (!app.requestSingleInstanceLock()) app.quit();
 app.on('second-instance', () => { if (main) { if (main.isMinimized()) main.restore(); main.focus(); } });
 
-// ---------- lecteur Deezer intégré (invisible) ----------
-// Le lecteur web officiel de deezer.com, avec le compte Premium connecté dans l'appli, joue les titres
-// en entier ; le son sort de l'appli (donc du Direct). Le site le pilote : titre, volume, arrêt.
-const chromeUA = () => session.defaultSession.getUserAgent().replace(/\s(Electron|capitol-tv-desktop|Capitol TV)\/\S+/gi, '');
-const DZ = { win: null, id: null, vol: 1, state: 'off', tries: 0, timer: null, owner: null };
-function dzSend() { const o = DZ.owner; if (o && !o.isDestroyed()) o.send('ctv:dzState', { state: DZ.state, id: DZ.id }); }
-function dzSetState(st) { if (DZ.state !== st) { DZ.state = st; dzSend(); } }
-function dzWin() {
-  if (DZ.win && !DZ.win.isDestroyed()) return DZ.win;
-  const w = DZ.win = new BrowserWindow({ show: false, width: 1100, height: 760, title: 'Lecteur Deezer (Capitol TV)', autoHideMenuBar: true, backgroundColor: '#0b0b0d', icon: path.join(__dirname, 'icon.png'), webPreferences: { contextIsolation: true, sandbox: true, backgroundThrottling: false } });
-  w.webContents.setUserAgent(chromeUA());
-  w.webContents.setWindowOpenHandler(({ url }) => { if (/deezer\.com|accounts\.google|facebook\.com|appleid\.apple/i.test(url)) return { action: 'allow' }; shell.openExternal(url); return { action: 'deny' }; });
-  // fermer la fenêtre = la cacher (le lecteur continue)
-  w.on('close', e => { if (!app.isQuitting) { e.preventDefault(); w.hide(); } });
-  w.webContents.on('dom-ready', () => w.webContents.executeJavaScript(`(()=>{ if (window.__ctv) return; window.__ctv = 1; window.__ctvVol = ${DZ.vol}; window.__ctvM = new Set();
-    const op = HTMLMediaElement.prototype.play;
-    HTMLMediaElement.prototype.play = function () { window.__ctvM.add(this); try { this.volume = window.__ctvVol; } catch (e) {} return op.apply(this, arguments); };
-    setInterval(() => { for (const m of window.__ctvM) try { if (Math.abs(m.volume - window.__ctvVol) > .005) m.volume = window.__ctvVol; } catch (e) {} }, 250);
-  })()`).catch(() => {}));
-  return w;
-}
-// clique « Écouter » sur la page du titre (et accepte le bandeau cookies), jusqu'à ce que l'appli émette du son
-const DZ_CLICK = `(()=>{
-  if ([...(window.__ctvM || [])].some(m => !m.paused && !m.ended)) return 'playing';
-  const btn = [...document.querySelectorAll('button')];
-  const ok = btn.find(b => b.id === 'gdpr-btn-accept-all' || /didomi-notice-agree/.test(b.id) || /^(tout accepter|accepter|accept all|accept)$/i.test((b.textContent || '').trim()));
-  if (ok) ok.click();
-  if (/\/login|\/register|\/signup/.test(location.pathname)) return 'login';
-  const logged = !!document.querySelector('[data-testid="account-menu"],[aria-label*="profil" i],[aria-label*="account" i],[data-testid*="avatar" i]');
-  const play = btn.find(b => { const t = (b.textContent || '').trim(), a = b.getAttribute('aria-label') || '', d = b.getAttribute('data-testid') || '';
-    return /^(écouter|ecouter|lecture|play|listen)$/i.test(t) || /^(écouter|lecture|play|listen)\b/i.test(a) || /^play(-button)?$/i.test(d); });
-  if (play) { play.click(); return logged ? 'clicked' : 'clicked?'; }
-  return logged ? 'wait' : 'nobtn';
-})()`;
-function dzTick() {
-  clearTimeout(DZ.timer);
-  const w = DZ.win; if (!w || w.isDestroyed() || !DZ.id) return;
-  if (w.webContents.isCurrentlyAudible()) { dzSetState('playing'); DZ.timer = setTimeout(dzTick, 4000); return; }
-  if (DZ.state === 'playing') { DZ.tries = 0; dzSetState('loading'); } // coupure (fin du titre, pub, déconnexion…)
-  DZ.tries++;
-  w.webContents.executeJavaScript(DZ_CLICK).then(r => {
-    if (r === 'playing') { DZ.tries = 0; dzSetState('playing'); }
-    else if (r === 'login') dzSetState('login');
-    else if (DZ.tries > 12) dzSetState('blocked');
-    else if (DZ.state !== 'login') dzSetState('loading');
-  }).catch(() => {});
-  DZ.timer = setTimeout(dzTick, DZ.tries < 6 ? 1500 : 3000);
-  if (DZ.tries > 40) clearTimeout(DZ.timer); // abandon : l'utilisateur clique lui-même (bouton « Afficher le lecteur »)
-}
-function dzSet(owner, o) {
-  DZ.owner = owner;
-  const id = o && String(o.id || '').replace(/\D/g, '').slice(0, 20);
-  if (o && typeof o.vol === 'number') {
-    DZ.vol = Math.max(0, Math.min(1, o.vol));
-    if (DZ.win && !DZ.win.isDestroyed()) DZ.win.webContents.executeJavaScript('window.__ctvVol=' + DZ.vol).catch(() => {});
-  }
-  if (!id) {
-    if (DZ.id) { DZ.id = null; clearTimeout(DZ.timer); if (DZ.win && !DZ.win.isDestroyed()) DZ.win.webContents.loadURL('about:blank'); dzSetState('off'); }
-    return;
-  }
-  if (id === DZ.id) { dzSend(); return; }
-  DZ.id = id; DZ.tries = 0; dzSetState('loading');
-  dzWin().webContents.loadURL('https://www.deezer.com/fr/track/' + id);
-  DZ.timer && clearTimeout(DZ.timer); DZ.timer = setTimeout(dzTick, 2500);
-}
-
 function webPrefs() {
   return { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false, spellcheck: false };
 }
@@ -101,15 +36,6 @@ function guard(win) {
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/#ecran2/i.test(url)) { openSecond(url); return { action: 'deny' }; }
     if (inApp(url) && /twitchbot\/start/.test(url)) { win.loadURL(url); return { action: 'deny' }; }
-    // connexion Deezer : dans l'appli (même session), pour que le lecteur Deezer du Direct joue les titres en entier
-    if (/^https:\/\/([a-z0-9-]+\.)*deezer\.com\//i.test(url)) {
-      const dz = new BrowserWindow({ parent: win, width: 520, height: 760, title: 'Deezer — connexion', autoHideMenuBar: true, backgroundColor: '#0b0b0d', webPreferences: { contextIsolation: true, sandbox: true } });
-      dz.webContents.setUserAgent(chromeUA());
-      // connecté : on relance le titre en cours dans le lecteur intégré
-      dz.on('closed', () => { if (DZ.id && DZ.win && !DZ.win.isDestroyed()) { DZ.tries = 0; DZ.win.webContents.loadURL('https://www.deezer.com/fr/track/' + DZ.id); clearTimeout(DZ.timer); DZ.timer = setTimeout(dzTick, 2500); } });
-      dz.webContents.setWindowOpenHandler(({ url: u }) => { if (/deezer\.com|accounts\.google|facebook\.com|appleid\.apple/i.test(u)) return { action: 'allow' }; shell.openExternal(u); return { action: 'deny' }; });
-      dz.loadURL(url); return { action: 'deny' };
-    }
     shell.openExternal(url); return { action: 'deny' };
   });
   win.webContents.on('will-navigate', (e, url) => { if (!inApp(url)) { e.preventDefault(); shell.openExternal(url); } });
@@ -126,6 +52,25 @@ function guard(win) {
     if (inp.control && inp.key === '-') { win.webContents.setZoomLevel(win.webContents.getZoomLevel() - .5); e.preventDefault(); }
     if (inp.control && inp.key === '0') { win.webContents.setZoomLevel(0); e.preventDefault(); }
   });
+}
+
+// ---------- mise à jour automatique ----------
+// Vérifie au démarrage puis toutes les 30 min ; télécharge en fond. Installée à la fermeture de l'appli,
+// ou tout de suite si l'utilisateur clique « Redémarrer » (jamais de redémarrage forcé pendant un direct).
+const UPD = { state: 'idle', version: '' };
+function updSend() { for (const w of BrowserWindow.getAllWindows()) if (!w.isDestroyed()) w.webContents.send('ctv:update', UPD); }
+function setupUpdates() {
+  ipcMain.handle('ctv:updState', () => UPD);
+  ipcMain.on('ctv:updInstall', () => { if (autoUpdater && UPD.state === 'ready') setImmediate(() => autoUpdater.quitAndInstall(true, true)); });
+  if (!autoUpdater || !app.isPackaged || process.env.PORTABLE_EXECUTABLE_DIR) return; // version portable : pas de mise à jour auto
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.on('update-available', i => { UPD.state = 'downloading'; UPD.version = i.version; updSend(); });
+  autoUpdater.on('download-progress', p => { UPD.pct = Math.round(p.percent || 0); updSend(); });
+  autoUpdater.on('update-downloaded', i => { UPD.state = 'ready'; UPD.version = i.version; updSend(); });
+  autoUpdater.on('error', () => { if (UPD.state === 'downloading') { UPD.state = 'idle'; updSend(); } });
+  const check = () => autoUpdater.checkForUpdates().catch(() => {});
+  setTimeout(check, 8000); setInterval(check, 30 * 60 * 1000);
 }
 
 function openSecond(url) {
@@ -169,15 +114,12 @@ app.whenReady().then(() => {
   ipcMain.on('ctv:attention', e => { const w = BrowserWindow.fromWebContents(e.sender); if (w && !w.isFocused()) w.flashFrame(true); });
   ipcMain.on('ctv:screen2', (e, u) => { if (inApp(u)) openSecond(u); });
   ipcMain.handle('ctv:version', () => app.getVersion());
-  // lecteur Deezer intégré
-  ipcMain.on('ctv:dz', (e, o) => dzSet(e.sender, o));
-  ipcMain.on('ctv:dzShow', () => { const w = dzWin(); if (!DZ.id && w.webContents.getURL() in { '': 1, 'about:blank': 1 }) w.webContents.loadURL('https://www.deezer.com/fr/'); w.show(); w.focus(); });
   // volumes des autres logiciels (mélangeur Windows)
   ipcMain.handle('ctv:audList', () => winaudio.list().catch(e => ({ err: e.message })));
   ipcMain.handle('ctv:audSet', (e, name, vol, mute) => winaudio.set(name, vol, mute).catch(er => ({ err: er.message })));
   createMain();
+  setupUpdates();
   app.on('activate', () => { if (!main) createMain(); });
 });
-app.on('before-quit', () => { app.isQuitting = true; });
 app.on('will-quit', () => winaudio.stop());
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
