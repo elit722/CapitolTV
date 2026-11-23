@@ -104,6 +104,7 @@ public final class Hud {
             ctx.drawText(tr, s, 9, sh - 37, 0xFFFFFFFF, false);
         }
         CamPath.render(ctx, tr, sw);
+        Overlays.renderScan(ctx, tr, sw);
         if (inZone != null || nearZone) {
             String s = inZone != null ? "⛔ ZONE INTERDITE · " + inZone.name : "⚠ Zone interdite toute proche";
             int w = tr.getWidth(s) + 14, x = (sw - w) / 2, y = sh / 2 - 40;

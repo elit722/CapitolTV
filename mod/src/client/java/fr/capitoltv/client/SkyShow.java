@@ -225,7 +225,10 @@ public final class SkyShow {
         if (sc != null && sc.face) { Identifier sk = sc.mc.isEmpty() ? null : skin(sc.mc); if (sk != null) { tex = sk; skinTex = true; } else tex = heads.get(sc.mc.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_]", "")); }
         else if (sc != null && !sc.img.isEmpty()) { tex = imgs.get(sc.img); asp = aspect.getOrDefault(sc.img, 1f); }
         final boolean hasPic = sc != null && (sc.face || !sc.img.isEmpty());
-        final float FH = 30f, FW = MathHelper.clamp(FH * asp, 12f, 56f), FV = 3f;
+        // sur la voûte, un degré horizontal est plus court qu'un degré vertical (× cos de la hauteur) :
+        // on élargit d'autant pour garder les proportions de l'image (sinon visages et photos étirés en hauteur)
+        final float FH = 30f, FV = 3f, wide = 1f / (float) Math.cos(Math.toRadians(ELEV + S * FV));
+        final float FW = MathHelper.clamp(FH * asp, 12f, 70f) * wide;
         final boolean fgOnly = sc != null && !hasPic && !sc.fg.isEmpty();
         // le texte de fond s'efface derrière l'image et le texte devant (il reste derrière, jamais devant)
         Shade back = (u, v) -> {

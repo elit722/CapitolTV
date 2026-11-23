@@ -517,7 +517,7 @@ export class Game extends DurableObject {
 
   load() {
     if (!this.loading) this.loading = (async () => {
-      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage", "moved", "from", "perf", "terrain", "tbot", "phist", "dvrtok", "mix", "tstats", "kbs", "zones", "scjobs"]);
+      const m = await this.ctx.storage.get(["board", "alerts", "team", "banned", "live", "cam", "camst", "srvkey", "roles", "prog", "media", "srvcams", "skeys", "pubs", "poll", "bets", "clips", "vpref", "usage", "moved", "from", "perf", "terrain", "tbot", "phist", "dvrtok", "mix", "tstats", "kbs", "zones", "scjobs", "skyq"]);
       this.board = { ...defaultBoard(), ...(m.get("board") || {}) };
       this.alerts = m.get("alerts") || {};
       this.team = m.get("team") || [];
@@ -529,6 +529,7 @@ export class Game extends DurableObject {
       this.srvKey = m.get("srvkey") || "";
       this.terrain = m.get("terrain") || {};
       this.phist = m.get("phist") || []; this.dvrTok = m.get("dvrtok") || ""; this.mix = m.get("mix") || {}; this.tstats = m.get("tstats") || {}; this.kbs = m.get("kbs") || {}; this.zones = m.get("zones") || []; this.scJobs = m.get("scjobs") || [];
+      this.skyq = Object.assign({ hom: null, shows: [], sched: { times: [], tz: "Europe/Paris", nights: 0, title: "", dur: 30 } }, m.get("skyq") || {});
       // anciens titres SoundCloud (lecteur intégré) : copiés dans les médias au prochain réveil
       for (const x of (m.get("media") || [])) if (x.sc && !x.n && !x.dl && !this.scJobs.some(j => j.id === x.id)) { x.dl = 1; this.scJobs.push({ id: x.id, i: 0, parts: 0, size: 0 }); }
       this.tbot = { on: false, channel: "", ann: { poll: true, result: true, death: true, victor: true, bets: true }, cmds: true, ...(m.get("tbot") || {}) };
@@ -644,7 +645,7 @@ export class Game extends DurableObject {
       t: "hello", now: Date.now(),
       me: { id: a.id, name: a.name, av: a.av, perm: a.perm, pub: a.pub, overlay: !!a.overlay, obsKey: hasPerm(a, "program") && !a.lock && this.env.OVERLAY_KEY ? this.env.OVERLAY_KEY : undefined, lock: !!a.lock, guest: !!a.guest, tribute: this.tributeOf(a.id), cam: a.cam || "", sup: isSup(a), crew: isCrew(a) && !a.lock, map: this.mapAllowed(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "", kb: isCrew(a) ? this.kbs[a.id] : undefined },
       roles: this.roles, prog: a.lock || !(isCrew(a) || a.overlay) ? undefined : this.progPub(), progHist: a.lock || !(isCrew(a) || a.overlay) ? undefined : this.progHistFor(),
-      dvrBase: isCrew(a) || a.overlay ? (this.env.DVR_PUBLIC || "") : undefined, mix: isCrew(a) || a.overlay ? this.mix : undefined, zones: isCrew(a) ? this.zones || [] : undefined, progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
+      dvrBase: isCrew(a) || a.overlay ? (this.env.DVR_PUBLIC || "") : undefined, mix: isCrew(a) || a.overlay ? this.mix : undefined, zones: isCrew(a) ? this.zones || [] : undefined, skyq: isCrew(a) ? this.skyqView() : undefined, progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
       terrain: this.terrain || {}, bot: isStaff(a) ? this.botPublic() : undefined, media: isCrew(a) ? this.media : undefined, srvCams: isCrew(a) ? this.srvCams : undefined,
       pubs: this.pubsFor(a), rtc: { on: this.rtcOn(), pub: false, capOff: !!this.board.capOff, perf: isCrew(a) ? this.perf : undefined, use: isCrew(a) || a.overlay ? this.useInfo() : undefined, vq: { trib: this.vqCap("t:"), cam: this.vqCap("c:") }, vpref: isCrew(a) && !a.lock ? this.vpref : undefined },
       talk: this.talkSup(a) ? this.talkState() : undefined, clips: this.clipsFor(a),
@@ -833,10 +834,43 @@ export class Game extends DurableObject {
         const scenes = (Array.isArray(m.scenes) ? m.scenes : []).slice(0, 30).map(x => ({ bg: clean(x.bg), fg: clean(x.fg), img: /^[a-f0-9]{24}$/.test(String(x.img || "")) ? "/skyimg/" + x.img : "", dur: Math.max(3, Math.min(30, Math.round(+x.dur || 7))) })).filter(x => x.bg || x.fg || x.img);
         if (!scenes.length) return reply(false, { msg: "Aucune scène à projeter." });
         const music = String(m.music || "").replace(/[^a-z0-9]/gi, "").slice(0, 40);
-        this.skyMusic = music;
-        this.sendServers({ t: "sky", kind: "show", title: clean(m.title), scenes, hymn: music ? { path: "/hymn?v=" + music, vol: Math.max(0, Math.min(100, Math.round(+m.vol || 70))) } : undefined });
-        const total = 5 + scenes.reduce((t, x) => t + x.dur, 0);
-        return reply(true, { total, servers: [...this.sockets()].filter(w => (this.att(w) || {}).server).length });
+        const show = { title: clean(m.title), scenes, music, vol: Math.max(0, Math.min(100, Math.round(+m.vol || 70))) };
+        const total = 5 + scenes.reduce((t, x) => t + x.dur, 0), servers = [...this.sockets()].filter(w => (this.att(w) || {}).server).length;
+        // projection : seulement de nuit en jeu (Maj+clic pour forcer) ; sinon gardée jusqu'à la tombée de la nuit
+        if (!m.force && this.mcKnown() && !(this.isNight() && Date.now() >= (this.skyBusy || 0))) {
+          this.skyq.shows = [...(this.skyq.shows || []), show].slice(-5); this.saveSkyq();
+          return reply(true, { total, servers, queued: true });
+        }
+        this.fireShow(show);
+        return reply(true, { total, servers });
+      }
+      case "hommage": {
+        if (!isCrew(a) || a.lock || !(a.perm === "admin" || hasPerm(a, "program"))) return deny();
+        const b = this.board;
+        if (m.hymn && typeof m.hymn === "object") b.hymn = normHymn(m.hymn);
+        const h = { ids: (Array.isArray(m.ids) ? m.ids : []).map(String).filter(id => b.tributes.some(t => t.id === id)).slice(0, 48), title: String(m.title || "").slice(0, 80), dur: Math.max(10, Math.min(120, +m.dur || 30)), auto: false };
+        if (m.force || !this.mcKnown() || this.isNight()) { this.fireHommage(h); await this.ctx.storage.put("board", b); this.broadcastBoard(); return reply(true, { now: true }); }
+        this.queueHommage(h);
+        await this.ctx.storage.put("board", b); this.broadcastBoard();
+        return reply(true, { queued: true });
+      }
+      case "skySched": {
+        if (!isCrew(a) || a.lock || !(a.perm === "admin" || hasPerm(a, "program"))) return deny();
+        const sc = m.sched || {};
+        this.skyq.sched = Object.assign(this.skyq.sched || {}, {
+          times: (Array.isArray(sc.times) ? sc.times : []).map(x => String(x).trim()).filter(x => /^([01]?\d|2[0-3]):[0-5]\d$/.test(x)).map(x => x.padStart(5, "0")).filter((x, i, arr) => arr.indexOf(x) === i).sort().slice(0, 12),
+          tz: String(sc.tz || "Europe/Paris").slice(0, 60), nights: Math.max(0, Math.min(30, parseInt(sc.nights, 10) || 0)),
+          title: String(sc.title || "").slice(0, 80), dur: Math.max(10, Math.min(120, +sc.dur || 30)) });
+        if (this.skyq.sched.nights && this.mc) this.skyq.sched.nightBase = this.mc.day;
+        this.saveSkyq();
+        return reply(true);
+      }
+      case "skyCancel": {
+        if (!isCrew(a) || a.lock || !(a.perm === "admin" || hasPerm(a, "program"))) return deny();
+        if (m.what === "hom" || m.what === "all") this.skyq.hom = null;
+        if (m.what === "shows" || m.what === "all") this.skyq.shows = [];
+        this.saveSkyq();
+        return reply(true);
       }
       case "zones": {
         if (!isCrew(a) || a.lock || !(isSup(a) || hasPerm(a, "program"))) return deny();
@@ -1112,6 +1146,86 @@ export class Game extends DurableObject {
     this.modcast({ t: "alert", id, a: al });
     if (isCrew(a)) this.dvrWantPush();
     reply(true, { id });
+  }
+
+  /* ---------- hommages et projections : attente de la nuit en jeu, hommages programmés ---------- */
+  mcKnown() { return !!(this.mc && Date.now() - this.mc.at < 60000); }
+  isNight() { return this.mcKnown() && !!this.mc.night; }
+  skyqView() {
+    const q = this.skyq || {}, mc = this.mcKnown() ? { tod: this.mc.tod, day: this.mc.day, night: !!this.mc.night } : null;
+    return { hom: q.hom ? { n: (q.hom.ids || []).length, auto: !!q.hom.auto, at: q.hom.at || 0 } : null, shows: (q.shows || []).length, sched: q.sched || {}, mc };
+  }
+  saveSkyq() { this.ctx.storage.put("skyq", this.skyq); this.crewcast({ t: "skyq", q: this.skyqView() }, x => !x.mod); }
+  queueHommage(h) {
+    const q = this.skyq, cur = q.hom;
+    // deux hommages en attente : un seul à la tombée de la nuit, avec tous les tributs
+    q.hom = cur ? { ids: [...new Set([...(cur.ids || []), ...(h.ids || [])])], title: h.title || cur.title, dur: Math.max(cur.dur || 30, h.dur || 30), auto: cur.auto || h.auto, at: cur.at } : { ...h, at: Date.now() };
+    this.saveSkyq();
+  }
+  skySendHommage(ids, title) {
+    const b = this.board;
+    const list = ids.map(id => b.tributes.find(t => t.id === id)).filter(Boolean).slice(0, 24).map(t => ({ name: t.name, d: t.district || 0, num: t.num || 0, mc: t.mc || "" }));
+    const hy = normHymn(b.hymn);
+    this.sendServers({ t: "sky", list, title: String(title || "").slice(0, 80), per: 7, hymn: hy.on && hy.id ? { path: "/hymn?v=" + hy.id, vol: hy.vol } : undefined });
+    return list.length;
+  }
+  /* lance un hommage maintenant ; un hommage automatique sans aucun mort depuis le dernier ne se fait pas */
+  fireHommage(h) {
+    const b = this.board, now = Date.now(), since = b.lastHommage || 0;
+    const ids = new Set(h.ids || []);
+    if (h.auto) for (const t of b.tributes) if (t.status === "dead" && (t.diedAt || 0) > since) ids.add(t.id);
+    const list = [...ids].map(id => b.tributes.find(t => t.id === id)).filter(Boolean).sort((x, y) => (x.diedAt || 0) - (y.diedAt || 0));
+    if (h.auto && !list.length) return false;
+    const title = h.title || (b.day ? "Ils sont tombés au jour " + b.day : "Ils sont tombés aujourd'hui");
+    b.lastHommage = now;
+    b.events.push({ id: now.toString(36) + "h", k: "tribute", ts: now, text: "Hommage du Capitole : " + (list.map(t => t.name).join(", ") || "aucun tribut tombé") });
+    if (b.events.length > 300) b.events.splice(0, b.events.length - 300);
+    b.flash = { id: rid8(), k: "tribute", ids: list.map(t => t.id), title, dur: h.dur || 30, ts: now };
+    if (b.skyHommage) { const n = this.skySendHommage(list.map(t => t.id), title); this.skyBusy = now + (8 + 7 * n + 3) * 1000; }
+    return true;
+  }
+  fireShow(sh) {
+    this.skyMusic = sh.music;
+    this.sendServers({ t: "sky", kind: "show", title: sh.title, scenes: sh.scenes, hymn: sh.music ? { path: "/hymn?v=" + sh.music, vol: sh.vol } : undefined });
+    this.skyBusy = Date.now() + (8 + sh.scenes.reduce((t, x) => t + x.dur, 0)) * 1000;
+  }
+  localClock(ts, tz) {
+    try {
+      const p = Object.fromEntries(new Intl.DateTimeFormat("fr-FR", { timeZone: tz || "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(ts)).map(x => [x.type, x.value]));
+      return { date: p.year + "-" + p.month + "-" + p.day, min: (+p.hour) * 60 + (+p.minute) };
+    } catch (e) { const d = new Date(ts); return { date: d.toISOString().slice(0, 10), min: d.getUTCHours() * 60 + d.getUTCMinutes() }; }
+  }
+  /* heure du monde reçue du mod (toutes les 5 s et à chaque lever / coucher) */
+  async onMcTime(m) {
+    const prev = this.mc, now = Date.now();
+    this.mc = { tod: +m.tod || 0, day: +m.day || 0, night: !!m.night, at: now };
+    const q = this.skyq, sc = q.sched || (q.sched = {});
+    let dirty = false, boardDirty = false;
+    // 1) heures programmées (heure de Paris) : franchies depuis le dernier passage → hommage automatique en attente
+    const last = sc.lastCheck || now; sc.lastCheck = now;
+    if ((sc.times || []).length && now - last < 6 * 3600e3) {
+      const A = this.localClock(last, sc.tz), B = this.localClock(now, sc.tz);
+      for (const t of sc.times) {
+        const [hh, mm] = t.split(":").map(Number), tm = hh * 60 + mm;
+        const hit = A.date === B.date ? A.min < tm && tm <= B.min : tm > A.min || tm <= B.min;
+        if (hit) { this.queueHommage({ ids: [], title: sc.title || "", dur: sc.dur || 30, auto: true }); dirty = true; }
+      }
+    }
+    // 2) toutes les X nuits : à la tombée de la nuit
+    if (sc.nights > 0) {
+      if (sc.nightBase == null) { sc.nightBase = this.mc.day; dirty = true; }
+      if (this.mc.night && !(prev && prev.night && prev.day === this.mc.day) && this.mc.day - sc.nightBase >= sc.nights) {
+        sc.nightBase = this.mc.day;
+        this.queueHommage({ ids: [], title: sc.title || "", dur: sc.dur || 30, auto: true }); dirty = true;
+      }
+    }
+    // 3) il fait nuit : on lance ce qui attendait (hommage d'abord, puis les projections une par une)
+    if (this.mc.night) {
+      if (q.hom) { const h = q.hom; q.hom = null; dirty = true; if (this.fireHommage(h)) boardDirty = true; }
+      if ((q.shows || []).length && now >= (this.skyBusy || 0)) { const sh = q.shows.shift(); dirty = true; this.fireShow(sh); }
+    }
+    if (dirty || !prev || prev.night !== this.mc.night) { this.ctx.storage.put("skyq", q); this.crewcast({ t: "skyq", q: this.skyqView() }, x => !x.mod); }
+    if (boardDirty) { await this.ctx.storage.put("board", this.board); this.broadcastBoard(); }
   }
 
   applyPatch(p) {
@@ -1856,7 +1970,7 @@ export class Game extends DurableObject {
       save(); return J({ ok: true });
     }
     if (req.method === "POST" && id === "new") {
-      if (!(isCrew(a) || a.overlay) || a.lock || anon && !a.overlay) return J({ msg: "Clips vidéo réservés à l'équipe." }, 403);
+      if (!(isSup(a) || a.overlay) || a.lock || anon && !a.overlay) return J({ msg: "Clips vidéo réservés au staff (place de stockage limitée) : colle plutôt un clip Twitch." }, 403);
       if (!this.env.CLIPS) return J({ msg: "Stockage des clips non configuré." }, 503);
       const b = await req.json().catch(() => ({}));
       const n = Math.max(1, Math.min(40, parseInt(b.n, 10) || 0));
@@ -2436,6 +2550,7 @@ export class Game extends DurableObject {
     const reply = (ok, extra = {}) => { if (m.rid) this.send(ws, { t: ok ? "ok" : "err", rid: m.rid, ...extra }); else if (!ok && extra.msg) this.send(ws, { t: "err", ...extra }); };
     if (a.server) {
       if (m.t === "terrain") return this.onTerrainPart(m);
+      if (m.t === "mcTime") return this.onMcTime(m);
       if (m.t === "terrainMsg") { this.crewcast({ t: "terrainMsg", msg: String(m.msg || "").slice(0, 300) }, x => !x.mod); return; }
       if (m.t === "srvCams") {
         this.srvCams = (Array.isArray(m.names) ? m.names : []).map(n => String(n).replace(/[^A-Za-z0-9_]/g, "").slice(0, 16)).filter(Boolean).slice(0, 60);

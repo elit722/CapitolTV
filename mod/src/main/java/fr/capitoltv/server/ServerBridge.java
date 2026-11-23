@@ -78,6 +78,15 @@ public final class ServerBridge {
     private static final Set<String> remoteSups = ConcurrentHashMap.newKeySet();
     /** staff qui s'est rendu audible par les joueurs */
     private static final Set<String> loud = ConcurrentHashMap.newKeySet();
+    /** avancement du relevé de la carte : barre affichée aux ops et au staff connectés */
+    static void scanProgress(MinecraftServer s, int pct, int done, int total, boolean end) {
+        JsonObject o = new JsonObject(); o.addProperty("t", "scanProg"); o.addProperty("pct", pct); o.addProperty("done", done); o.addProperty("total", total); o.addProperty("end", end);
+        String j = o.toString();
+        for (ServerPlayerEntity p : s.getPlayerManager().getPlayerList())
+            if ((isSup(p.getGameProfile().getName()) || s.getPlayerManager().isOperator(p.getGameProfile())) && ServerPlayNetworking.canSend(p, fr.capitoltv.net.CtvMsgPayload.ID))
+                ServerPlayNetworking.send(p, new fr.capitoltv.net.CtvMsgPayload(j));
+    }
+
     private static boolean isSup(String name) { for (String n : remoteSups) if (n.equalsIgnoreCase(name)) return true; return false; }
     /** chat vocal : caméras et staff ne sont entendus que par les caméras et le staff */
     static boolean voiceSilent(String name) { return isCam(name) || isSup(name); }
@@ -138,7 +147,7 @@ public final class ServerBridge {
             MinecraftServer s0 = server; if (s0 == null) return;
             String dim = m.has("dim") ? m.get("dim").getAsString() : "minecraft:overworld";
             int cx = m.has("cx") ? m.get("cx").getAsInt() : 0, cz = m.has("cz") ? m.get("cz").getAsInt() : 0, r = m.has("r") ? m.get("r").getAsInt() : 256;
-            s0.execute(() -> sayRemote(TerrainScan.start(s0, dim, cx, cz, r, ServerBridge::sayRemote)));
+            s0.execute(() -> sayRemote(TerrainScan.start(s0, dim, 0, 0, r, ServerBridge::sayRemote))); // carte toujours centrée sur 0,0
             return;
         }
         if (t.equals("hello") && m.has("terrain") && m.get("terrain").isJsonObject()) TerrainScan.siteHas(m.getAsJsonObject("terrain"));
@@ -351,7 +360,7 @@ public final class ServerBridge {
         var pos = src.getPosition();
         String dim = src.getWorld().getRegistryKey().getValue().toString();
         MinecraftServer s = src.getServer();
-        String msg = TerrainScan.start(s, dim, (int) Math.floor(pos.x), (int) Math.floor(pos.z), r, txt -> { src.sendFeedback(() -> Text.literal("§6[Capitol TV]§r " + txt), false); sayRemote(txt); });
+        String msg = TerrainScan.start(s, dim, 0, 0, r, txt -> { src.sendFeedback(() -> Text.literal("§6[Capitol TV]§r " + txt), false); sayRemote(txt); });
         src.sendFeedback(() -> Text.literal("§6[Capitol TV]§r " + msg), false);
         return 1;
     }
@@ -388,10 +397,21 @@ public final class ServerBridge {
         sock.connect(cfg.url, Map.of("X-CTV-Server-Key", cfg.key.trim(), "User-Agent", "CapitolTV-Server/1.0"));
     }
 
+    private static boolean lastNight;
     private static void onTick(MinecraftServer s) {
         TerrainScan.tick(s);
         if (sock == null || !sock.online()) { if (events.size() > 200) events.clear(); return; }
         tick++;
+        // heure du monde : le site attend la nuit pour lancer les hommages et projections (et compte les nuits)
+        if (s.getOverworld() != null) {
+            long tod = s.getOverworld().getTimeOfDay();
+            boolean night = Math.floorMod(tod, 24000L) >= 13000L && Math.floorMod(tod, 24000L) < 23000L;
+            if (tick % 100 == 0 || night != lastNight) {
+                lastNight = night;
+                JsonObject o = new JsonObject(); o.addProperty("t", "mcTime"); o.addProperty("tod", Math.floorMod(tod, 24000L)); o.addProperty("day", Math.floorDiv(tod, 24000L)); o.addProperty("night", night);
+                sock.send(o);
+            }
+        }
         if (cfg.giveStreamKeys && !wantKeys.isEmpty() && tick % 20 == 0) {
             JsonArray names = new JsonArray();
             for (String n : wantKeys) names.add(n);

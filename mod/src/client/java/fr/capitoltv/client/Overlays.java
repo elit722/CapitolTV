@@ -39,8 +39,26 @@ public final class Overlays {
             if (t.equals("recap")) { recap = m; recapAt = System.currentTimeMillis(); }
             if (t.equals("sky")) SkyShow.start(m);
             if (t.equals("voiceRoster")) VoiceMix.roster(m);
+            if (t.equals("scanProg")) { scanPct = (int) Data.l(m, "pct"); scanDone = (int) Data.l(m, "done"); scanTotal = (int) Data.l(m, "total"); scanEnd = Data.b(m, "end"); scanAt = System.currentTimeMillis(); }
             if (t.equals("voice")) { CapitolClient.voiceLoud = Data.b(m, "on"); Hud.toast(CapitolClient.voiceLoud ? "Audible par les joueurs" : "Chat vocal", Data.s(m, "msg"), CapitolClient.voiceLoud ? Hud.RED : Hud.BLUE, 4); }
         } catch (Throwable e) { CapitolTV.LOG.warn("Capitol TV : message serveur illisible ({})", e.toString()); }
+    }
+
+    /* ---------- relevé de la carte : barre d'avancement (staff, jamais dans le flux) ---------- */
+    private static int scanPct, scanDone, scanTotal; private static boolean scanEnd; private static long scanAt;
+
+    public static void renderScan(DrawContext ctx, net.minecraft.client.font.TextRenderer tr, int sw) {
+        long age = System.currentTimeMillis() - scanAt;
+        if (scanAt == 0 || age > (scanEnd ? 6000 : 20000)) return;
+        int w = 180, x = sw - w - 6, y = 34;
+        String s = scanEnd ? "CARTE RELEVÉE ✔" : "RELEVÉ DE LA CARTE · " + scanPct + " %";
+        String d = scanTotal > 0 ? scanDone + " / " + scanTotal + " chunks" : "";
+        ctx.fill(x - 4, y - 4, x + w + 4, y + 24, 0xC0101014);
+        ctx.drawText(tr, s, x, y, scanEnd ? 0xFF7FD46A : 0xFFF2D27A, false);
+        ctx.drawText(tr, d, x + w - tr.getWidth(d), y, 0xFF8A8478, false);
+        ctx.fill(x, y + 12, x + w, y + 18, 0xFF2A2620);
+        int f = scanEnd ? w : w * Math.max(0, Math.min(100, scanPct)) / 100;
+        ctx.fill(x, y + 12, x + f, y + 18, scanEnd ? 0xFF7FD46A : 0xFFD4AF37);
     }
 
     /* ---------- récap de mort ---------- */

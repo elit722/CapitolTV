@@ -164,7 +164,8 @@ public final class CamMode {
     /* ---------- rendu ---------- */
     public static void renderToolbar(DrawContext ctx, TextRenderer tr, int sw, int sh) {
         String[] l = labels();
-        int n = l.length, slotW = Math.min(54, (sw - 24) / n), h = 26, x0 = (sw - slotW * n) / 2, y = sh - h - 6;
+        int need = 0; for (String t : l) need = Math.max(need, tr.getWidth(t) + 10);
+        int n = l.length, slotW = Math.min(Math.max(50, need), (sw - 12) / n), h = 26, x0 = (sw - slotW * n) / 2, y = sh - h - 6;
         int x1 = x0 + slotW * n;
         ctx.fill(x0 - 3, y - 3, x1 + 3, y + h + 3, 0x50000000);
         fr.capitoltv.client.gui.Ui.box(ctx, x0 - 2, y - 2, x1 + 2, y + h + 2, 0xD80E0E12, 0xFF3A3630);
@@ -176,7 +177,7 @@ public final class CamMode {
             boolean rec = i == 4 && on;
             if (on) fr.capitoltv.client.gui.Ui.box(ctx, x + 1, y + 1, x + slotW - 1, y + h - 1, rec ? 0xC0451418 : 0xC0352B12, rec ? 0xFFE0514A : 0xFFD4AF37);
             if (i > 0) ctx.fill(x, y + 5, x + 1, y + h - 5, 0x30FFFFFF);
-            String key = tr.trimToWidth(i == 9 ? Keys.of(CapitolClient.noclipKey) : Keys.hotbar(i), slotW - 8);
+            String key = tr.trimToWidth(i == 9 ? Keys.slotKey(CapitolClient.noclipKey, 9) : Keys.hotbar(i), slotW - 8);
             ctx.drawText(tr, key, x + 4, y + 3, on ? (rec ? 0xFFFFB0B0 : 0xFFF2D27A) : 0xFF6A655C, false);
             String s = tr.trimToWidth(l[i], slotW - 6);
             ctx.drawText(tr, s, x + (slotW - tr.getWidth(s)) / 2, y + 14, rec ? Hud.RED : on ? Hud.GOLD : Hud.INK, false);

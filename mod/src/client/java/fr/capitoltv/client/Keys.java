@@ -21,13 +21,21 @@ public final class Keys {
                 .replace("{moves}", of(CapitolClient.movesKey)).replace("{talk}", of(CapitolClient.talkKey))
                 .replace("{drone}", of(CapitolClient.droneKey)).replace("{pathAdd}", of(CapitolClient.pathAddKey))
                 .replace("{pathPlay}", of(CapitolClient.pathPlayKey)).replace("{radar}", of(CapitolClient.radarKey))
-                .replace("{noclip}", of(CapitolClient.noclipKey)).replace("{voice}", of(CapitolClient.voiceKey))
+                .replace("{noclip}", slotKey(CapitolClient.noclipKey, 9)).replace("{voice}", of(CapitolClient.voiceKey))
                 .replace("{state}", of(CapitolClient.stateKey)).replace("{follow}", of(CapitolClient.followKey)).replace("{reply}", of(CapitolClient.replyKey));
     }
 
     /** touches de la barre rapide (1 à 9), selon les réglages du joueur */
     public static String hotbar(int i) {
         var k = net.minecraft.client.MinecraftClient.getInstance().options.hotbarKeys;
-        return i < k.length ? of(k[i]) : "?";
+        return i < k.length ? slotKey(k[i], i) : "?";
+    }
+
+    /** touche d'un emplacement : chiffre de la rangée du haut quand c'est la touche par défaut
+     *  (sur AZERTY elle s'affiche « & é " ' … », peu lisible), sinon la touche choisie par le joueur */
+    public static String slotKey(KeyBinding k, int i) {
+        if (k == null) return "?";
+        if (k.isDefault()) return String.valueOf((i + 1) % 10);
+        return of(k);
     }
 }

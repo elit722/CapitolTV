@@ -168,6 +168,37 @@ audio.em-md{display:none}
 .em-scr.maint h2{font-size:3.4cqw} .em-scr.off .bar{display:none}
 @keyframes scrBar{0%{transform:translateX(-100%)}100%{transform:translateX(340%)}}
 @keyframes gxIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+/* annonces dessinées DANS l'image du Direct (flash, parachute, canon, vainqueur, jour) */
+.bx{position:absolute;z-index:30;pointer-events:none;font-family:var(--sans);color:#fff}
+.bx.out{animation:bxOut .5s ease forwards}
+@keyframes bxOut{to{opacity:0;transform:translateY(-.6cqw)}}
+.bx-band{left:0;right:0;top:30%;display:flex;flex-direction:column;align-items:center}
+.bx-band .bar{position:relative;display:flex;align-items:stretch;width:78%;min-height:9cqw;animation:bxWipe .55s cubic-bezier(.7,0,.2,1) both;clip-path:inset(0 0 0 0)}
+@keyframes bxWipe{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.bx-band .lab{flex:none;display:flex;flex-direction:column;justify-content:center;gap:.5cqw;padding:0 2cqw;background:linear-gradient(180deg,#e2202f,#9e0f1a);font-weight:800;letter-spacing:.22em;font-size:1.25cqw;text-transform:uppercase;box-shadow:.6cqw 0 1.6cqw rgba(0,0,0,.45);z-index:1}
+.bx-band .lab svg{width:2.6cqw;height:2.6cqw;animation:bxPulse 1s ease-in-out infinite}
+@keyframes bxPulse{50%{transform:scale(1.15);filter:drop-shadow(0 0 .6cqw #fff)}}
+.bx-band .body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:1cqw 2.2cqw;background:linear-gradient(90deg,rgba(12,12,16,.94),rgba(20,18,24,.88));border-top:.25cqw solid #e2202f;position:relative;overflow:hidden}
+.bx-band .body::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.14) 45%,transparent 60%);animation:bxShine 2.6s ease .5s infinite}
+@keyframes bxShine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.bx-band .t{font-family:var(--serif);font-weight:700;font-size:3.1cqw;line-height:1.1;letter-spacing:.03em;animation:bxUp .5s ease .35s both}
+.bx-band .x{font-size:1.5cqw;color:#e9e4da;margin-top:.5cqw;line-height:1.35;animation:bxUp .5s ease .55s both}
+@keyframes bxUp{from{opacity:0;transform:translateY(.8cqw)}to{opacity:1;transform:none}}
+.bx-band .strip{width:78%;height:.45cqw;background:repeating-linear-gradient(-45deg,#e2202f 0 1cqw,#1a0a0c 1cqw 2cqw);animation:bxStrip 1s linear infinite,bxWipe .55s cubic-bezier(.7,0,.2,1) .1s both;background-size:2.83cqw 100%}
+@keyframes bxStrip{to{background-position:2.83cqw 0}}
+.bx-band.gold .lab{background:linear-gradient(180deg,#e9c46a,#a07a1e);color:#1b1407}.bx-band.gold .body{border-top-color:#e9c46a}.bx-band.gold .strip{background:repeating-linear-gradient(-45deg,#e9c46a 0 1cqw,#1b1407 1cqw 2cqw);background-size:2.83cqw 100%}
+.bx-band.victor .t{font-size:4.4cqw;background:linear-gradient(180deg,#fff3c4,#e9c46a 55%,#a07a1e);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* parachute : carte argentée qui descend en haut à gauche */
+.bx-card{left:3%;top:5%;width:34%;display:flex;gap:1.2cqw;align-items:center;padding:1.2cqw 1.6cqw;background:linear-gradient(135deg,rgba(236,241,248,.96),rgba(178,188,204,.96));color:#141820;border-radius:.6cqw;box-shadow:0 1.2cqw 3cqw rgba(0,0,0,.55),inset 0 0 0 .12cqw rgba(255,255,255,.7);overflow:hidden;animation:bxDrop 1.1s cubic-bezier(.2,.9,.25,1.15) both}
+@keyframes bxDrop{0%{opacity:0;transform:translateY(-140%) rotate(-4deg)}60%{opacity:1;transform:translateY(6%) rotate(1.5deg)}100%{transform:none}}
+.bx-card::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.75) 48%,transparent 60%);animation:bxShine 2.2s ease .9s infinite}
+.bx-card .ic{flex:none;width:5.2cqw;height:5.2cqw;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#9aa6b8);box-shadow:inset 0 -.3cqw .6cqw rgba(0,0,0,.25)}
+.bx-card .ic svg{width:3.2cqw;height:3.2cqw;stroke:#1d2433;animation:bxSway 2.4s ease-in-out infinite}
+@keyframes bxSway{50%{transform:rotate(7deg) translateY(.2cqw)}}
+.bx-card .k{font-size:1cqw;font-weight:800;letter-spacing:.24em;text-transform:uppercase;color:#4a5568}
+.bx-card .t{font-family:var(--serif);font-weight:700;font-size:2.3cqw;line-height:1.1;margin-top:.2cqw}
+.bx-card .x{font-size:1.25cqw;margin-top:.3cqw;color:#2a3140}.bx-card .x b{color:#0b0e14!important}
+.bx-card .prog{position:absolute;left:0;bottom:0;height:.25cqw;background:#5a6b85;animation:prog linear forwards}
 @keyframes gxSlide{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:none}}
 @keyframes tickLoop{to{transform:translateX(-50%)}}
 @keyframes gxTick{from{transform:translateX(0)}to{transform:translateX(-100%)}}
@@ -300,6 +331,7 @@ body:not(.can-map) .map-only{display:none!important}
 .sky-list{display:flex;flex-direction:column;gap:4px;max-height:420px;overflow:auto}.sky-tools{display:flex;gap:3px;margin-bottom:4px}.sky-tools .btn{flex:1;padding:0}
 .sky-it{display:flex;gap:6px;align-items:center;padding:6px 8px;border:1px solid var(--hair2);border-radius:8px;cursor:pointer;font-size:12px}.sky-it span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sky-it em{font-style:normal;color:var(--mute);font-size:11px}.sky-it.on{border-color:var(--gold-b);background:var(--gold-a)}
 @media (max-width:900px){.sky-ed{grid-template-columns:1fr}}
+.skyq-st{margin-top:5px;font-size:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.skyq-st:empty{display:none}.skyq-st b{color:var(--gold-hi)}.skyq-st .btn{padding:2px 8px;min-height:0;font-size:11px}
 .rg-ann{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:8px}.rg-ann .note{flex:none;margin-right:2px}.rg-ann .btn{flex:1;min-width:0;justify-content:center}
 .cm.me{align-self:flex-end;background:var(--surface2)} .cm.sup{border-color:var(--gold-b)} .cm.buzz{border-color:var(--red-b);background:var(--red-a)}
 .cm .w{font-size:11px;font-weight:700;color:#7fb6ee;margin-bottom:2px;display:flex;gap:6px} .cm.sup .w{color:var(--gold)} .cm .w span{color:var(--mute);font-weight:500;margin-left:auto}
@@ -1332,20 +1364,88 @@ function tone(f, t0, d, type = 'triangle', g = .12) {
   v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(g, t + .02); v.gain.exponentialRampToValueAtTime(.0001, t + d);
   o.connect(v).connect(c.destination); o.start(t); o.stop(t + d + .05);
 }
+/* petit studio de synthèse : réverbération, bruit filtré, accords cuivrés (habillage sonore des annonces) */
+const FX = {
+  rv: null,
+  out(c) {
+    if (this.c !== c) {
+      this.c = c; this.bus = c.createGain(); this.bus.gain.value = .9;
+      const comp = c.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4;
+      // réverbération de grande salle (réponse impulsionnelle synthétique)
+      const len = Math.floor(c.sampleRate * 2.6), ir = c.createBuffer(2, len, c.sampleRate);
+      for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
+      this.rv = c.createConvolver(); this.rv.buffer = ir; const wet = c.createGain(); wet.gain.value = .32;
+      this.bus.connect(comp); this.bus.connect(this.rv); this.rv.connect(wet).connect(comp); comp.connect(c.destination);
+    }
+    return this.bus;
+  },
+  noise(c, dur) { const len = Math.floor(c.sampleRate * dur), b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1; const n = c.createBufferSource(); n.buffer = b; return n; },
+  env(c, g, t, a, peak, d) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d); },
+  /* souffle filtré qui monte (f0 → f1) ou descend */
+  sweep(c, t, dur, f0, f1, peak, type = 'bandpass') {
+    const n = this.noise(c, dur + .1), f = c.createBiquadFilter(), g = c.createGain();
+    f.type = type; f.Q.value = 1.4; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + dur * .85); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    n.connect(f).connect(g).connect(this.out(c)); n.start(t); n.stop(t + dur + .1);
+  },
+  /* impact grave (coup + sub qui tombe) */
+  hit(c, t, peak = .9) {
+    const o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(34, t + .7);
+    this.env(c, g, t, .005, peak, 1.1); o.connect(g).connect(this.out(c)); o.start(t); o.stop(t + 1.3);
+    const n = this.noise(c, .5), f = c.createBiquadFilter(), gn = c.createGain(); f.type = 'lowpass'; f.frequency.value = 900;
+    this.env(c, gn, t, .003, peak * .7, .35); n.connect(f).connect(gn).connect(this.out(c)); n.start(t); n.stop(t + .5);
+  },
+  /* accord cuivré (dents de scie désaccordées, filtre qui s'ouvre) */
+  brass(c, t, notes, dur, peak = .07) {
+    for (const fq of notes) for (const det of [-7, 0, 6]) {
+      const o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain();
+      o.type = 'sawtooth'; o.frequency.value = fq; o.detune.value = det;
+      f.type = 'lowpass'; f.Q.value = 2; f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(3200, t + .09); f.frequency.exponentialRampToValueAtTime(900, t + dur);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + .03); g.gain.setValueAtTime(peak, t + dur * .6); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(f).connect(g).connect(this.out(c)); o.start(t); o.stop(t + dur + .05);
+    }
+  },
+  /* cloche scintillante (partiels inharmoniques) */
+  bell(c, t, fq, dur, peak = .05) {
+    for (const [r, k] of [[1, 1], [2.76, .5], [5.4, .25], [8.93, .12]]) {
+      const o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.value = fq * r;
+      this.env(c, g, t, .004, peak * k, dur / r ** .4); o.connect(g).connect(this.out(c)); o.start(t); o.stop(t + dur + .1);
+    }
+  }
+};
+/* son des annonces : sur la page Direct, suit son bouton « Activer le son » */
+const sndOn = () => S.page === 'direct' && typeof PROG !== 'undefined' && PROG.main ? !!PROG.sound : S.sound;
 const SND = {
   alert(urgent) { if (!S.sound || IS_EMBED) return; (urgent ? [[784, 0], [988, .13], [1175, .26], [784, .5], [988, .63], [1175, .76]] : [[659, 0], [880, .16]]).forEach(([f, t]) => tone(f, t, .34)); },
   canon() {
-    if (!S.sound) return; const c = ac(); if (!c) return;
+    if (!sndOn()) return; const c = ac(); if (!c) return;
     const len = Math.floor(c.sampleRate * 1.8), buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2);
     const src = c.createBufferSource(), lp = c.createBiquadFilter(), g = c.createGain();
     src.buffer = buf; lp.type = 'lowpass'; lp.frequency.value = 170; g.gain.value = 1.6;
     src.connect(lp).connect(g).connect(c.destination); src.start(); tone(48, 0, 1.4, 'sine', .55);
   },
-  fanfare() { if (!S.sound) return; [[523, 0, .25], [659, .18, .25], [784, .36, .5], [1047, .62, .7]].forEach(([f, t, d]) => { tone(f, t, d, 'sawtooth', .045); tone(f / 2, t, d, 'triangle', .06); }); },
-  gift() { if (!S.sound) return; [1568, 1976, 2349, 2637, 3136].forEach((f, i) => tone(f, i * .07, .6, 'sine', .05)); },
-  solemn() { if (!S.sound) return; [[392, 0], [466, .9], [587, 1.8], [523, 2.9], [392, 4.2]].forEach(([f, t]) => { tone(f, t, 1.6, 'sine', .09); tone(f / 2, t, 1.8, 'sine', .05); }); },
-  victor() { if (!S.sound) return; [[523, 0], [659, .15], [784, .3], [1047, .45], [784, .7], [1047, .85], [1319, 1.05]].forEach(([f, t]) => { tone(f, t, .5, 'sawtooth', .04); tone(f, t, .6, 'triangle', .07); }); },
+  /* « Édition spéciale » : montée, impact, deux coups de cuivres façon générique d'info */
+  fanfare() {
+    if (!sndOn()) return; const c = ac(); if (!c) return; const t = c.currentTime + .05;
+    FX.sweep(c, t, .7, 400, 6000, .35, 'highpass');
+    FX.hit(c, t + .7, 1);
+    FX.brass(c, t + .7, [146.8, 220, 293.7, 349.2], .32, .06);           // ré mineur, coup sec
+    FX.brass(c, t + 1.08, [174.6, 261.6, 349.2, 440], 1.5, .065);       // fa majeur, tenu
+    FX.hit(c, t + 1.08, .55);
+    [0, .12, .24, .36].forEach((d, i) => FX.bell(c, t + 1.1 + d, [880, 1046.5, 1318.5, 1760][i], .9, .03));
+  },
+  /* parachute argenté : souffle qui descend, carillon scintillant, atterrissage */
+  gift() {
+    if (!sndOn()) return; const c = ac(); if (!c) return; const t = c.currentTime + .05;
+    FX.sweep(c, t, 1.3, 5000, 500, .3);
+    [1568, 1975.5, 2349.3, 2637, 3136, 3951].forEach((f, i) => FX.bell(c, t + .15 + i * .09, f, 1.8, .05));
+    FX.brass(c, t + 1.25, [261.6, 329.6, 392, 523.3], 1.4, .045);
+    FX.hit(c, t + 1.25, .5);
+    FX.bell(c, t + 1.3, 1046.5, 2.4, .06);
+  },
+  solemn() { if (!sndOn()) return; [[392, 0], [466, .9], [587, 1.8], [523, 2.9], [392, 4.2]].forEach(([f, t]) => { tone(f, t, 1.6, 'sine', .09); tone(f / 2, t, 1.8, 'sine', .05); }); },
+  victor() { if (!sndOn()) return; [[523, 0], [659, .15], [784, .3], [1047, .45], [784, .7], [1047, .85], [1319, 1.05]].forEach(([f, t]) => { tone(f, t, .5, 'sawtooth', .04); tone(f, t, .6, 'triangle', .07); }); },
   blip() { if (!S.sound) return; tone(1400, 0, .06, 'square', .02); }
 };
 
@@ -1568,6 +1668,7 @@ const NET = {
   onMsg(m) {
     switch (m.t) {
       case 'mix': MIX.set(m.mix); break;
+      case 'skyq': SKYQ.set(m.q); break;
       case 'zones': CAM.zones = m.zones || []; if (S.page === 'carte') { CAM.draw(); CAM.renderSide(); } break;
       case 'hello': { this.tries = 0; this.everConnected = true; onHello(m); const q = this.q; this.q = []; q.forEach(o => this.send(o)); break; }
       case 'board': onBoard(m.board); break;
@@ -1684,7 +1785,7 @@ function applyRole() {
 function onHello(m) {
   S.me = m.me; S.skew = (m.now || Date.now()) - Date.now();
   S.team = m.team || []; S.banned = m.banned || {}; S.roles = m.roles || [];
-  TERRAIN.set(m.terrain); S.bot = m.bot || null; DVR.onHello(m); KB.onHello(m); if (m.zones) CAM.zones = m.zones; if (m.mix) MIX.set(m.mix); RTC.onHello(m); CAM.onHello(m); PROG.onHello(m); S.srvCams = m.srvCams || []; GAMES.onHello(m); CLIPS.onList(m.clips); TALK.onState(m.talk || null); RTC.vq = (m.rtc && m.rtc.vq) || null;
+  TERRAIN.set(m.terrain); S.bot = m.bot || null; DVR.onHello(m); KB.onHello(m); if (m.zones) CAM.zones = m.zones; if (m.skyq) SKYQ.set(m.skyq); if (m.mix) MIX.set(m.mix); RTC.onHello(m); CAM.onHello(m); PROG.onHello(m); S.srvCams = m.srvCams || []; GAMES.onHello(m); CLIPS.onList(m.clips); TALK.onState(m.talk || null); RTC.vq = (m.rtc && m.rtc.vq) || null;
   S.alertsReady = false; S.seen = new Set(); S.alerts = {};
   if (m.alerts) onAlerts(m.alerts);
   onPresence(m.presence || { n: 0, counts: {}, team: {} });
@@ -2566,6 +2667,25 @@ function showFlash(f, ms) {
   else if (f.k === 'victor') { cls = 'victor'; k = ic('crown') + 'Vainqueur des Jeux'; title = t ? t.name : 'Vainqueur'; text = t ? `${distLabel(t.district)} · ${killsOf(t)} élimination${killsOf(t) > 1 ? 's' : ''}` : ''; SND.victor(); }
   else if (f.k === 'day') { cls = ''; k = ic('sun') + 'Jour ' + (f.day || ''); title = f.title || 'Un nouveau jour se lève sur l\'arène'; text = f.text ? esc(f.text) : ''; SND.fanfare(); }
   else return;
+  // page Direct (et lien OBS) : l'annonce est dessinée DANS l'image, pas en fenêtre par-dessus la page
+  const stg = S.page === 'direct' && $('#emStage');
+  if (stg) {
+    const bx = document.createElement('div');
+    if (f.k === 'gift') {
+      bx.className = 'bx bx-card';
+      bx.innerHTML = `<div class="ic">${ic('para')}</div><div style="min-width:0"><div class="k">Parachute argenté</div><div class="t">${esc(title)}</div><div class="x">${text}</div></div><div class="prog" style="animation-duration:${ms}ms"></div>`;
+    } else {
+      const tone2 = f.k === 'victor' ? 'gold victor' : f.k === 'day' ? 'gold' : '';
+      const lab = f.k === 'flash' ? 'Édition<br>spéciale' : f.k === 'death' ? 'Coup de<br>canon' : f.k === 'victor' ? 'Vainqueur' : 'Jour ' + (f.day || '');
+      const icn = f.k === 'flash' ? 'mega' : f.k === 'death' ? 'fall' : f.k === 'victor' ? 'crown' : 'sun';
+      bx.className = 'bx bx-band ' + tone2;
+      bx.innerHTML = `<div class="bar"><div class="lab">${ic(icn)}<span>${lab}</span></div><div class="body"><div class="t">${esc(title)}</div>${text ? `<div class="x">${f.k === 'flash' ? esc(text) : text}</div>` : ''}</div></div><div class="strip"></div>`;
+    }
+    stg.querySelectorAll(':scope > .bx').forEach(o => o.remove());
+    stg.appendChild(bx);
+    setTimeout(() => { bx.classList.add('out'); setTimeout(() => bx.remove(), 520); }, ms);
+    return;
+  }
   const el = document.createElement('div');
   el.className = 'flash ' + cls;
   el.innerHTML = `<div class="k">${k}</div><div class="t">${esc(title)}</div>${text ? `<div class="x">${f.k === 'flash' ? esc(text) : text}</div>` : ''}<div class="prog" style="animation-duration:${ms}ms"></div>`;
@@ -2576,6 +2696,8 @@ function showFlash(f, ms) {
   setTimeout(kill, ms);
 }
 function showHommage(f, ms) {
+  // hommage projeté dans le ciel en jeu : on le voit déjà dans les POV, le site n'affiche rien par-dessus
+  if (S.board.skyHommage !== false) return;
   const ids = f.ids || [], list = ids.map(byId).filter(Boolean);
   const h = $('#hommage');
   let stars = '';
@@ -2624,12 +2746,12 @@ const SKYED = {
         <input class="inp" id="skTitle" maxlength="60" placeholder="Texte sous PANEM" style="flex:1;min-width:180px" value="${esc(this.d.title || '')}">
         <select class="inp" id="skMusic" style="flex:1;min-width:160px"><option value="">Sans musique</option>${au.map(x => `<option value="${esc(x.id)}" ${this.d.music === x.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>
         <label style="display:flex;align-items:center;gap:6px;flex:0 0 130px"><span class="note">Vol.</span><input type="range" id="skVol" min="0" max="100" step="5" value="${this.d.vol == null ? 70 : this.d.vol}" style="flex:1"></label>
-        <button class="btn primary" id="skGo">${ic('star')}Lancer la diffusion</button>
+        <button class="btn primary" id="skGo" title="Attend la nuit en jeu. Maj + clic : tout de suite.">${ic('star')}Lancer la diffusion</button>
       </div>`, { wide: true });
     m.querySelector('#skTitle').oninput = e => { this.d.title = e.target.value; this.save(); this.draw(); };
     m.querySelector('#skMusic').onchange = e => { this.d.music = e.target.value; this.save(); };
     m.querySelector('#skVol').oninput = e => { this.d.vol = +e.target.value; this.save(); };
-    m.querySelector('#skGo').onclick = () => this.launch();
+    m.querySelector('#skGo').onclick = e => this.launch(e.shiftKey);
     m.querySelector('#skPrev').onclick = () => this.preview();
     m.querySelector('#skList').onclick = e => {
       const b = e.target.closest('[data-sk]'), r = e.target.closest('[data-si]');
@@ -2726,7 +2848,7 @@ const SKYED = {
       this.draw(it.sc || this.cur(), !!it.intro, Math.max(0, a));
     }, 50);
   },
-  async launch() {
+  async launch(force) {
     const btn = $('#skGo'); btn.disabled = true;
     try {
       const keys = {};
@@ -2737,8 +2859,9 @@ const SKYED = {
         if (!r.ok) throw new Error(j.msg || 'image refusée');
         keys[sc.img] = j.key;
       }
-      const r = await NET.req({ t: 'skyShow', title: this.d.title, music: this.d.music, vol: this.d.vol, scenes: this.d.scenes.map(sc => ({ bg: sc.bg, fg: sc.fg, img: sc.img ? keys[sc.img] : '', dur: sc.dur })) });
-      toastInfo('Projection lancée', r.servers ? `Dans le ciel du jeu pendant ${Math.floor(r.total / 60)} min ${String(r.total % 60).padStart(2, '0')} (les musiques du jeu baissent d'abord).` : 'Aucun serveur Minecraft relié au site : rien n\'est projeté.', !r.servers);
+      const r = await NET.req({ t: 'skyShow', force: !!force, title: this.d.title, music: this.d.music, vol: this.d.vol, scenes: this.d.scenes.map(sc => ({ bg: sc.bg, fg: sc.fg, img: sc.img ? keys[sc.img] : '', dur: sc.dur })) });
+      if (r.queued) toastInfo('Projection en attente de la nuit', 'Elle partira à la tombée de la nuit en jeu (Maj + clic sur « Lancer » pour forcer).');
+      else toastInfo('Projection lancée', r.servers ? `Dans le ciel du jeu pendant ${Math.floor(r.total / 60)} min ${String(r.total % 60).padStart(2, '0')} (les musiques du jeu baissent d'abord).` : 'Aucun serveur Minecraft relié au site : rien n\'est projeté.', !r.servers);
       closeModal();
     } catch (e) { toastInfo('Projection', e.message, true); }
     btn.disabled = false;
@@ -2843,7 +2966,7 @@ const SCREEN2 = {
       $('#s2Sc').onclick = e => { const b = e.target.closest('[data-sc]'); if (!b || !PROG.ed) return; PROG.ed.preview = b.dataset.sc; PROG.dirty = Date.now(); NET.req({ t: 'progSave', prog: PROG.ed }); this.update(false); };
       $('#s2Take').onclick = () => PROG.take();
       $('#s2Mix').onclick = () => MIXUI.toggle();
-      $('#s2TwSet').onclick = () => { const c = prompt('Chaîne Twitch à afficher (pseudo ou lien)', this.twCh()); if (c == null) return; const v = c.trim().toLowerCase().replace(/^.*twitch\.tv\//, '').replace(/[^a-z0-9_]/g, '').slice(0, 25); if (!v) return; LS.set('ctv.s2tw', v); this.twMount(true); };
+      $('#s2TwSet').onclick = async () => { const c = await askText('Chaîne Twitch à afficher (pseudo ou lien)', this.twCh()); if (c == null) return; const v = c.trim().toLowerCase().replace(/^.*twitch\.tv\//, '').replace(/[^a-z0-9_]/g, '').slice(0, 25); if (!v) return; LS.set('ctv.s2tw', v); this.twMount(true); };
       this.twMount(); PMIX.mount();
       $('#s2Off').onclick = () => PROG.screen ? PROG.screen('off') : NET.req({ t: 'progScreen', kind: 'off' });
       $('#s2Set').onclick = () => openSettings();
@@ -2928,6 +3051,24 @@ const TERRAIN = {
       const [r, g, b] = rgb(k, f, dp[k]); T[k] = 255 << 24 | b << 16 | g << 8 | r;
     }
     tg.putImageData(ti, 0, 0);
+    // version stylisée (mini-carte du Direct)
+    const sty = document.createElement('canvas'); sty.width = w; sty.height = h;
+    const sg = sty.getContext('2d'), si = sg.createImageData(w, h), SY = new Uint32Array(si.data.buffer), span = Math.max(1, ymax - ymin);
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+      const k = j * w + i; let r, g, b;
+      if (!col[k]) { r = 10; g = 10; b = 13; }
+      else if (dp[k]) { const t = Math.min(1, dp[k] / 12); r = 14 - t * 6; g = 42 - t * 18; b = 66 - t * 22; if (!dp[Math.min(n - 1, k + 1)] || !dp[Math.min(n - 1, k + w)] || !dp[Math.max(0, k - 1)] || !dp[Math.max(0, k - w)]) { r = 70; g = 150; b = 190; } }
+      else {
+        const dx = at(i + 1, j) - at(i - 1, j), dz = at(i, j + 1) - at(i, j - 1), f = Math.max(.5, Math.min(1.45, 1 - (dx + dz) * .12 / m.step));
+        const t = (hy[k] - ymin) / span, o = col[k], og = (o >> 8 & 255) / 255, orr = (o >> 16 & 255) / 255;
+        r = (34 + t * 70 + orr * 22) * f; g = (36 + t * 58 + og * 26) * f; b = (40 + t * 30) * f;
+        // courbes de niveau tous les 8 blocs
+        const band = Math.floor(hy[k] / 8);
+        if (band !== Math.floor(at(i + 1, j) / 8) || band !== Math.floor(at(i, j + 1) / 8)) { r = r * .45 + 214 * .55; g = g * .45 + 178 * .55; b = b * .45 + 97 * .55; }
+      }
+      SY[k] = 255 << 24 | Math.min(255, b | 0) << 16 | Math.min(255, g | 0) << 8 | Math.min(255, r | 0);
+    }
+    sg.putImageData(si, 0, 0); c.sty = sty;
     // vue isométrique (2:1), dessinée de l'arrière vers l'avant
     const HS = this.HS / m.step, off = Math.ceil(ymax * HS) + 2, IW = w + h, IH = Math.ceil((w + h) / 2 + (ymax - ymin) * HS) + 6;
     const iso = document.createElement('canvas'); iso.width = IW; iso.height = IH;
@@ -3022,6 +3163,20 @@ function modal(html, { wide } = {}) {
   return m;
 }
 const closeModal = () => hide('#mBox');
+/* remplace prompt() (absent de l'appli de bureau : il renvoyait toujours « annulé ») */
+function askText(title, def = '', ph = '') {
+  return new Promise(res => {
+    let done = false; const end = v => { if (done) return; done = true; obs.disconnect(); closeModal(); res(v); };
+    const m = modal(`<form id="fAsk" autocomplete="off">${modalHead(esc(title))}<div class="modal-b"><input class="inp" id="askV" maxlength="90" autofocus value="${esc(def)}" placeholder="${esc(ph)}"></div>
+      <div class="modal-f"><button type="button" class="btn ghost" id="askNo">Annuler</button><button class="btn primary">OK</button></div></form>`);
+    m.querySelector('#fAsk').onsubmit = e => { e.preventDefault(); end(m.querySelector('#askV').value); };
+    m.querySelector('#askNo').onclick = () => end(null);
+    // fermeture par la croix / Échap / clic à côté → annulé
+    const obs = new MutationObserver(() => { if ($('#mBox').classList.contains('hide')) end(null); });
+    obs.observe($('#mBox'), { attributes: true, attributeFilter: ['class'] });
+    setTimeout(() => { const i = m.querySelector('#askV'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 60);
+  });
+}
 const modalHead = (title, sub) => `<div class="modal-h"><div><h2>${title}</h2>${sub ? `<p>${sub}</p>` : ''}</div><button type="button" class="btn ghost icon x" data-close><span data-ic="x"></span></button></div>`;
 const tributeOptions = (sel, filter = () => true) => sortedByNum().filter(filter).map(t => `<option value="${esc(t.login)}" ${t.login === sel ? 'selected' : ''}>${pad3(t.num)} — ${esc(t.name)}${t.district ? ' (D' + t.district + ')' : ''}${isDead(t) ? ' †' : ''}</option>`).join('');
 
@@ -3125,10 +3280,43 @@ function openFlash() {
 }
 
 /* Hommage */
+/* hommages et projections : attente de la nuit en jeu + programmation (état tenu par le serveur) */
+const SKYQ = {
+  q: null,
+  set(q) { this.q = q || null; this.paint(); },
+  mcTxt() {
+    const mc = this.q && this.q.mc; if (!mc) return 'heure du jeu inconnue (mod serveur non relié : lancement immédiat)';
+    if (mc.night) return '🌙 il fait nuit en jeu';
+    const left = Math.round((13000 - mc.tod + (mc.tod >= 23000 ? 24000 : 0)) / 20);
+    return '☀ il fait jour en jeu · nuit dans ' + (left >= 60 ? Math.floor(left / 60) + ' min ' + String(left % 60).padStart(2, '0') : left + ' s');
+  },
+  schedTxt() {
+    const sc = (this.q && this.q.sched) || {}, a = [];
+    if ((sc.times || []).length) a.push('à ' + sc.times.join(', '));
+    if (sc.nights) a.push('toutes les ' + (sc.nights > 1 ? sc.nights + ' nuits' : 'nuits'));
+    return a.length ? 'Hommage automatique ' + a.join(' et ') + ' (s\'il y a eu des morts)' : '';
+  },
+  html() {
+    const q = this.q; if (!q) return '';
+    const w = [];
+    if (q.hom) w.push(`<b>⏳ Hommage en attente de la nuit</b>${q.hom.n ? ' (' + q.hom.n + ' tribut' + (q.hom.n > 1 ? 's' : '') + (q.hom.auto ? ' + tombés depuis le dernier' : '') + ')' : q.hom.auto ? ' (tombés depuis le dernier)' : ''} <button class="btn sm ghost" data-skc="hom">Annuler</button>`);
+    if (q.shows) w.push(`<b>⏳ ${q.shows} projection${q.shows > 1 ? 's' : ''} en attente de la nuit</b> <button class="btn sm ghost" data-skc="shows">Annuler</button>`);
+    const st = this.schedTxt();
+    return [...w, `<span>${this.mcTxt()}</span>`, st ? `<span>· ${esc(st)}</span>` : ''].join(' ');
+  },
+  paint() {
+    for (const el of $$('#rgSkyq, #hoSkyq')) {
+      const h = this.html(); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+      el.onclick = e => { const b = e.target.closest('[data-skc]'); if (b) NET.req({ t: 'skyCancel', what: b.dataset.skc }).then(() => toastInfo('Annulé', '')); };
+    }
+  }
+};
+setInterval(() => SKYQ.paint(), 5000);
+
 function openHommage() {
   const dead = S.board.tributes.filter(isDead).sort((a, b) => (a.diedAt || 0) - (b.diedAt || 0));
   const since = S.board.lastHommage || 0;
-  const m = modal(`<form id="fHo">${modalHead(`${ic('moon')} Hommage aux tombés`, 'Ciel nocturne plein écran chez tous les spectateurs, comme à la fin de chaque journée des Jeux. Immédiat (sans différé).')}
+  const m = modal(`<form id="fHo">${modalHead(`${ic('moon')} Hommage aux tombés`, S.board.skyHommage !== false ? 'Visages projetés dans le ciel du jeu, au nord : le Direct le montre par les POV (rien par-dessus l\'image). Attend la nuit en jeu.' : 'Ciel nocturne plein écran chez tous les spectateurs. Attend la nuit en jeu.')}
     <div class="modal-b">
       <label class="f"><span class="lbl2">Titre</span><input class="inp" id="hoT" maxlength="60" value="${S.board.day ? 'Ils sont tombés au jour ' + S.board.day : 'Ils sont tombés aujourd\'hui'}"></label>
       <div class="f"><span class="lbl2">Tributs affichés <em>cochés : tombés depuis le dernier hommage</em></span>
@@ -3139,16 +3327,30 @@ function openHommage() {
         <label style="display:flex;align-items:center;gap:6px;flex:0 0 140px"><span class="note">Vol.</span><input type="range" id="hoHyV" min="0" max="100" step="5" value="${hy.vol == null ? 70 : hy.vol}" style="flex:1"></label></div>
         <p class="note" style="margin:4px 0 0">Importe l'hymne dans Réalisation → Médias (fichier .ogg conseillé : il est aussi joué dans Minecraft). Il est retenu pour les prochains hommages.</p></div>`; })()}
       <label class="f"><span class="lbl2">Durée</span><select class="inp" id="hoD"><option value="20">20 secondes</option><option value="30" selected>30 secondes</option><option value="45">45 secondes</option><option value="60">1 minute</option></select></label>
+      ${(() => { const sc = (SKYQ.q && SKYQ.q.sched) || {}; return `<div class="f"><span class="lbl2">Hommage automatique <em>pour tous les tributs tombés depuis le dernier hommage ; rien s'il n'y a eu aucun mort</em></span>
+        <div class="gx-row"><span class="note" style="flex:none">Chaque jour à</span><input class="inp" id="hoTimes" style="flex:1" placeholder="ex. 21:00, 23:30" value="${esc((sc.times || []).join(', '))}"></div>
+        <div class="gx-row" style="margin-top:6px"><span class="note" style="flex:none">ou toutes les</span><input class="inp" id="hoNights" type="number" min="0" max="30" style="width:80px;flex:none" value="${sc.nights || 0}"><span class="note">nuits Minecraft (0 = non)</span><span style="flex:1"></span><button type="button" class="btn sm" id="hoSched">Enregistrer la programmation</button></div></div>`; })()}
+      <div class="note skyq-st" id="hoSkyq"></div>
+      <p class="note" style="margin:4px 0 0">L'hommage attend la nuit en jeu (s'il fait jour, il part à la tombée de la nuit ; plusieurs hommages en attente n'en font qu'un). <b>Maj + clic</b> sur « Lancer » pour le projeter tout de suite.</p>
     </div>
-    <div class="modal-f"><button type="button" class="btn ghost" data-close>Annuler</button><button type="submit" class="btn primary">${ic('moon')}Lancer l'hommage</button></div></form>`);
+    <div class="modal-f"><button type="button" class="btn ghost" data-close>Annuler</button><button type="submit" class="btn primary" id="hoGo">${ic('moon')}Lancer l'hommage</button></div></form>`);
+  SKYQ.paint();
+  let force = false;
+  m.querySelector('#hoGo').addEventListener('click', e => { force = e.shiftKey; });
+  m.querySelector('#hoSched').onclick = () => {
+    const times = $('#hoTimes').value.split(/[,;\s]+/).map(x => x.trim().replace('h', ':')).filter(Boolean);
+    const bad = times.filter(x => !/^([01]?\d|2[0-3]):[0-5]\d$/.test(x));
+    if (bad.length) { toastInfo('Heure invalide', bad.join(', ') + ' : écris par exemple 21:00', true); return; }
+    NET.req({ t: 'skySched', sched: { times, nights: +$('#hoNights').value || 0, tz: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Paris', title: '', dur: +$('#hoD').value } })
+      .then(() => toastInfo('Programmation enregistrée', SKYQ.schedTxt() || 'Aucun hommage automatique.'), er => toastInfo('Programmation', er.message, true));
+  };
   m.querySelector('#fHo').addEventListener('submit', e => {
     e.preventDefault();
     const ids = $$('#fHo .tblwrap input:checked').map(i => i.value);
-    S.board.lastHommage = Date.now();
-    S.board.hymn = { on: $('#hoHy').checked, id: $('#hoHyId').value, vol: +$('#hoHyV').value };
-    addEvent({ k: 'tribute', text: `Hommage du Capitole : ${ids.map(id => (byId(id) || {}).name).filter(Boolean).join(', ') || 'aucun tribut tombé'}` });
-    pushFlash({ k: 'tribute', ids, title: $('#hoT').value.trim(), dur: +$('#hoD').value });
-    closeModal(); commit();
+    const hymn = { on: $('#hoHy').checked, id: $('#hoHyId').value, vol: +$('#hoHyV').value };
+    NET.req({ t: 'hommage', ids, title: $('#hoT').value.trim(), dur: +$('#hoD').value, hymn, force })
+      .then(r => toastInfo(r.queued ? 'Hommage en attente de la nuit' : 'Hommage lancé', r.queued ? 'Il sera projeté à la tombée de la nuit en jeu (Maj + clic pour forcer).' : ''), er => toastInfo('Hommage', er.message, true));
+    closeModal();
   });
 }
 
@@ -3836,7 +4038,7 @@ const CAM = {
       case 'reqDel': delete this.reqs[m.id]; this.renderTerrain(); break;
       case 'cams': this.cams = m.cams || []; this.renderTerrain(); if (S.page === 'carte') this.draw(); break;
       case 'srv': this.srv = !!m.on; S.cam = { srv: this.srv }; this.renderTerrain(); refreshSettings('cams'); break;
-      case 'pos': this.onPos(m.p || {}); if (m.cams) this.cams = m.cams; PROG.posHist.push({ ts: Date.now(), p: JSON.parse(JSON.stringify(this.pos)) }); while (PROG.posHist.length > 2 && PROG.posHist[0].ts < Date.now() - (S.board.delay || 0) * 1000 - 30000) PROG.posHist.shift(); break;
+      case 'pos': this.onPos(m.p || {}); if (m.cams) this.cams = m.cams; PROG.posHist.push({ ts: Date.now(), p: JSON.parse(JSON.stringify(this.pos)), c: Object.fromEntries((this.cams || []).filter(x => x.pos).map(x => [x.id, x.pos])) }); while (PROG.posHist.length > 2 && PROG.posHist[0].ts < Date.now() - (S.board.delay || 0) * 1000 - 30000) PROG.posHist.shift(); break;
       case 'map': if (S.me) { S.board.map = m.map; } break;
       case 'commsClear': this.feed = []; this.comms = []; this.reqs = {}; this.renderAllPanels(); break;
     }
@@ -4050,11 +4252,11 @@ const CAM = {
         if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
         if (drag.moved) { this.view.cx -= dx / this.view.k; this.view.cz -= dy / this.view.k; drag.x = e.clientX; drag.y = e.clientY; this.draw(); }
       });
-      window.addEventListener('mouseup', e => {
+      window.addEventListener('mouseup', async e => {
         if (this.zoneTmp) {
           const z = this.zoneTmp; this.zoneTmp = null; this.zoneDraw = false; this.renderTools();
           if (Math.abs(z.x2 - z.x1) < 3 || Math.abs(z.z2 - z.z1) < 3) { this.draw(); return; }
-          const name = prompt('Nom de la zone interdite', 'Zone interdite'); if (name == null) { this.draw(); return; }
+          const name = await askText('Nom de la zone interdite', 'Zone interdite'); if (name == null) { this.draw(); return; }
           const zones = [...(this.zones || []), { id: rid(), name: name.trim() || 'Zone interdite', d: this.dim, ...z }];
           NET.req({ t: 'zones', zones }).then(() => toastInfo('Zone ajoutée', 'Les caméras qui y entrent sont averties.'), er => toastInfo('Zone', er.message, true));
           return;
@@ -4078,13 +4280,14 @@ const CAM = {
         else if (v === 'cams') this.showCams = !this.showCams;
         else if (v === 'trails') this.showTrails = !this.showTrails;
         else if (v === 'iso') { const c = this.view && this.unproj(this.view.cx, this.view.cz); this.iso = !this.iso; LS.set('ctv.mapIso', this.iso); if (c) { const q = this.proj(c[0], c[1], c[2]); this.view.cx = q[0]; this.view.cz = q[1]; } }
-        else if (v === 'scan') { const r = +$('#mapR').value || 256, c = this.view ? this.unproj(this.view.cx, this.view.cz) : [0, 64, 0]; NET.req({ t: 'terrainScan', dim: this.dim, cx: Math.round(c[0]), cz: Math.round(c[2]), r }).then(() => toastInfo('Relevé demandé au serveur', 'Centre ' + Math.round(c[0]) + ', ' + Math.round(c[2]) + ' · rayon ' + r + ' blocs')); }
+        else if (v === 'scan') { const r = +$('#mapR').value || 256; NET.req({ t: 'terrainScan', dim: this.dim, cx: 0, cz: 0, r }).then(() => toastInfo('Relevé demandé au serveur', 'Centré sur 0, 0 · rayon ' + r + ' blocs · avancement visible en jeu (ops et staff)')); }
         else if (v === 'zone') { if (this.iso) { toastInfo('Passe en vue de dessus pour dessiner une zone', '', true); return; } this.zoneDraw = !this.zoneDraw; if (this.zoneDraw) toastInfo('Zone interdite', 'Glisse sur la carte pour dessiner le rectangle.'); }
         else if (v.startsWith('dim:')) { this.dim = v.slice(4); this.fit(); }
         this.renderTools(); this.draw();
       });
-      $('#mapList').addEventListener('click', e => { const zd = e.target.closest('[data-zdel]'); if (zd) { NET.req({ t: 'zones', zones: (this.zones || []).filter(z => z.id !== zd.dataset.zdel) }); return; } const r = e.target.closest('[data-mid]'); if (r) { this.sel = r.dataset.mid; const p = this.pos[this.sel]; if (p) { this.dim = p.d; if (this.view) { this.view.cx = p.x; this.view.cz = p.z; } } this.renderTools(); this.draw(); this.renderSide(); } });
-      $('#mapCard').addEventListener('click', e => {
+      // « mousedown » et non « click » : la liste est redessinée chaque seconde, un clic à cheval sur deux dessins se perdait
+      $('#mapList').addEventListener('mousedown', e => { if (e.button !== 0) return; const zd = e.target.closest('[data-zdel]'); if (zd) { const id = zd.dataset.zdel; NET.req({ t: 'zones', zones: (this.zones || []).filter(z => z.id !== id) }).then(() => toastInfo('Zone supprimée', ''), er => toastInfo('Zone', er.message, true)); return; } const r = e.target.closest('[data-mid]'); if (r) { this.sel = r.dataset.mid; const p = this.pos[this.sel]; if (p) { this.dim = p.d; if (this.view) { this.view.cx = p.x; this.view.cz = p.z; } } this.renderTools(); this.draw(); this.renderSide(); } });
+      $('#mapCard').addEventListener('mousedown', e => { if (e.button !== 0) return;
         const b = e.target.closest('[data-mc]'); if (!b) return;
         const t = byId(this.sel); if (!t) return;
         if (b.dataset.mc === 'watch') { setPage('antenne'); putOnStage(t.login); }
@@ -4411,7 +4614,9 @@ class DelayPlayer {
     // devient visible « différé » plus tard ; à défaut, le début de diffusion de la POV (heure du serveur)
     const pool = waiting ? this.pool() : [];
     const e0 = pool.length ? Math.min(...pool.map(x => x.t)) : 0;
-    const pa = RTC.pubs[this.src] && RTC.pubs[this.src].at, t0 = e0 || (pa ? pa - (S.skew || 0) : this.started);
+    // sans aucune image enregistrée, la première arrivera maintenant : le compte part de là (et non du début
+    // de diffusion de la POV, plus ancien → compte à 0, « chargement », puis nouveau compte à rebours)
+    const t0 = e0 || this.started || Date.now();
     const left = waiting && t0 ? Math.max(0, Math.ceil((t0 + this.delay * 1000 - Date.now()) / 1000)) : 0;
     const txt = this.appended ? '' : !c.ms.getTracks().length && !this.pool().length ? (c.state === 'erreur' ? 'Flux indisponible · nouvel essai…' : 'Connexion au flux…') : waiting ? (left > 0 ? 'Différé : image dans ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0') : 'Différé : chargement de l\'image…') : '';
     this.badge.textContent = txt; this.badge.classList.toggle('hide', !txt);
@@ -4577,7 +4782,8 @@ const CLIPS = {
   /* bouton ✂ d'un canal de l'Antenne */
   fromSlot(i) {
     const o = slotObjs[i], login = S.slots[i], t = byLogin(login);
-    if (o && o.dp) return this.fromPlayer(o.dp, t ? 't:' + t.id : '', t);
+    // clips vidéo stockés sur le site : réservés au staff (place limitée) ; les autres collent un clip Twitch
+    if (o && o.dp && isSup()) return this.fromPlayer(o.dp, t ? 't:' + t.id : '', t);
     this.openTwitch(t);
   },
   async fromPlayer(dp, src, t) {
@@ -4591,8 +4797,8 @@ const CLIPS = {
       if (!segs.length) { toastInfo('Clip impossible', 'Le flux ne s\'enregistre pas sur ce navigateur.', true); return; }
     }
     const dur = Math.round((segs[segs.length - 1].end - segs[0].t) / 1000);
-    const title = await askText('Titre du clip', t ? t.name + ' · ' : '', 'Ex. : Katniss esquive la flèche');
-    if (title == null) return;
+    let title = await askText('Titre du clip', t ? t.name + ' · ' : '', 'Ex. : Katniss esquive la flèche');
+    if (title == null) return; title = title.trim() || 'Clip';
     try {
       const r = await fetch('/api/clips/new', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, src, tid: t ? t.id : '', dur, n: segs.length, at, mime: mt }) });
       const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.msg || r.status);
@@ -4753,20 +4959,6 @@ const CLIPS = {
   }
 };
 /* petite boîte de saisie */
-function askText(title, value, ph) {
-  return new Promise(res => {
-    const m = modal(`<div class="modal-h"><h3>${esc(title)}</h3><button class="btn icon ghost" data-close>${ic('x')}</button></div>
-      <div class="modal-b"><input class="inp" id="askIn" maxlength="90" value="${esc(value || '')}" placeholder="${esc(ph || '')}"></div>
-      <div class="modal-f"><button class="btn primary" id="askOk">Valider</button></div>`);
-    let done = false;
-    const ok = () => { done = true; const v = $('#askIn').value.trim() || 'Clip'; closeModal(); res(v); };
-    m.querySelector('#askOk').onclick = ok;
-    m.querySelector('#askIn').onkeydown = e => { if (e.key === 'Enter') ok(); };
-    setTimeout(() => { const i = $('#askIn'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 50);
-    const box = $('#mBox'), obs = new MutationObserver(() => { if (box.classList.contains('hide') || m.querySelector('#askIn') == null) { obs.disconnect(); if (!done) { done = true; res(null); } } });
-    obs.observe(box, { attributes: true, attributeFilter: ['class'] }); obs.observe(m, { childList: true });
-  });
-}
 
 /* =====================================================================
    Interphone : la régie parle aux caméras (micro du navigateur),
@@ -5399,7 +5591,12 @@ class Stage {
   }
   tick() { const cw = this.pub && this.pub.wait && this.el.querySelector(':scope > .em-off .cdw'); if (cw) cw.textContent = fmtDur(Math.max(0, this.pub.wait - Date.now())); if (this.q && this.q.length && this.latest) this.prewarm(this.latest, Date.now() + this.delay() * 1000 + 8000); for (const el of this.players.values()) if (el._tw) this.twApply(el._tw); const t = this.el.querySelector(':scope > .em-tr .em-t'); if (t && t.textContent !== brandName()) t.textContent = brandName(); this.syncMedia(); this.tickScreen(); const m = this.el.querySelector(':scope > .em-gfx .gx-map'); if (m) PROG.drawMini(m, this.mainTrib()); }
   /* POV principale : la plus grande à l'écran */
-  mainTrib() { const p = this.pub, big = p && p.on ? (p.items || []).filter(i => i.k === 'trib').sort((a, b) => b.w * b.h - a.w * a.h)[0] : null; return big ? big.ref : ''; }
+  /* sujet principal de la mini-carte : la plus grande POV de tribut, à défaut la plus grande caméra (« c:id ») */
+  mainTrib() {
+    const p = this.pub, its = p && p.on ? (p.items || []) : [], big = k => its.filter(i => i.k === k).sort((a, b) => b.w * b.h - a.w * a.h)[0];
+    const t = big('trib'); if (t) return t.ref;
+    const c = big('cam'); return c ? 'c:' + c.ref : '';
+  }
   destroy() {
     clearTimeout(this.trT1); clearTimeout(this.trT2); (this.q || []).forEach(e => clearTimeout(e.t)); this.q = [];
     for (const el of this.players.values()) { const md = el.querySelector('.em-md'); if (md && md.pause) md.pause(); }
@@ -5735,12 +5932,15 @@ const PROG = {
   drawMini(cv, main) {
     if (!cv) return;
     const D = (S.board.delay || 0) * 1000, full = isCrew() && !S.presenter;
-    let pos = CAM.pos || {};
-    if (full && D) { const want = Date.now() - D; let best = null; for (const h of this.posHist) if (h.ts <= want) best = h; pos = best ? best.p : {}; }
+    let pos = CAM.pos || {}, cpos = Object.fromEntries((CAM.cams || []).filter(x => x.pos).map(x => [x.id, x.pos]));
+    // différé : la carte montre où étaient les joueurs il y a D secondes, comme l'image
+    if (full && D) { const want = Date.now() - D; let best = null; for (const h of this.posHist) if (h.ts <= want) best = h; pos = best ? best.p : {}; cpos = best ? best.c || {} : {}; }
     const pts = Object.entries(pos).map(([id, q]) => [byId(id), q, id]).filter(([t, q]) => t && q && q.d === 'minecraft:overworld' && !isDead(t));
     const st = cv._st || (cv._st = { x: 0, z: 0, span: 200, anim: null, main: '' });
     st.pts = pts; st.mainId = main;
-    const mp = main && pts.find(x => x[2] === main);
+    const camMain = main && main.startsWith('c:') ? cpos[main.slice(2)] : null;
+    const mp = camMain && camMain.d === 'minecraft:overworld' ? [null, camMain, main] : main && pts.find(x => x[2] === main);
+    st.cam = camMain && camMain.d === 'minecraft:overworld' ? camMain : null;
     let tgt;
     if (mp) tgt = { x: mp[1].x, z: mp[1].z, span: 160 };
     else if (pts.length) { const xs = pts.map(x => x[1].x), zs = pts.map(x => x[1].z); tgt = { x: (Math.min(...xs) + Math.max(...xs)) / 2, z: (Math.min(...zs) + Math.max(...zs)) / 2, span: Math.max(80, Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs)) * 1.3 }; }
@@ -5761,11 +5961,13 @@ const PROG = {
         if (k >= 1) st.anim = null; else requestAnimationFrame(paint);
       }
       c.clearRect(0, 0, W, W);
-      c.fillStyle = 'rgba(8,8,10,.86)'; c.fillRect(0, 0, W, W);
-      c.strokeStyle = 'rgba(214,178,97,.14)'; c.lineWidth = 1;
+      c.fillStyle = '#0a0b0e'; c.fillRect(0, 0, W, W);
+      c.strokeStyle = 'rgba(214,178,97,.10)'; c.lineWidth = 1;
       const k2 = (W - 30) / st.span, grid = st.span > 600 ? 200 : st.span > 250 ? 100 : 50;
       const TT = TERRAIN.get('minecraft:overworld');
-      if (TT) { c.globalAlpha = .9; c.imageSmoothingEnabled = k2 * TT.step < 3; c.drawImage(TT.top, W / 2 + (TT.x0 - st.x) * k2, W / 2 + (TT.z0 - st.z) * k2, TT.w * TT.step * k2, TT.h * TT.step * k2); c.globalAlpha = 1; c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(0, 0, W, W); }
+      if (TT) { c.imageSmoothingEnabled = k2 * TT.step < 3; c.drawImage(TT.sty || TT.top, W / 2 + (TT.x0 - st.x) * k2, W / 2 + (TT.z0 - st.z) * k2, TT.w * TT.step * k2, TT.h * TT.step * k2); }
+      // vignette douce
+      const vg = c.createRadialGradient(W / 2, W / 2, W * .3, W / 2, W / 2, W * .75); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.55)'); c.fillStyle = vg; c.fillRect(0, 0, W, W);
       for (let g = Math.floor((st.x - st.span) / grid) * grid; g < st.x + st.span; g += grid) { const x = W / 2 + (g - st.x) * k2; c.beginPath(); c.moveTo(x, 0); c.lineTo(x, W); c.stroke(); }
       for (let g = Math.floor((st.z - st.span) / grid) * grid; g < st.z + st.span; g += grid) { const y = W / 2 + (g - st.z) * k2; c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
       c.font = '600 15px Barlow Condensed, sans-serif'; c.textAlign = 'center';
@@ -5778,6 +5980,12 @@ const PROG = {
         if (isMain) { c.strokeStyle = 'rgba(246,226,166,.5)'; c.lineWidth = 2; c.beginPath(); c.arc(x, y, 14, 0, Math.PI * 2); c.stroke(); }
         c.fillStyle = '#fff'; c.fillText(t.num ? pad3(t.num) : t.name.slice(0, 6), x, y - 12);
       }
+      if (st.cam) { // caméra principale : viseur
+        const x = W / 2 + (st.cam.x - st.x) * k2, y = W / 2 + (st.cam.z - st.z) * k2;
+        c.strokeStyle = '#f6e2a6'; c.lineWidth = 2.5; c.beginPath(); c.arc(x, y, 9, 0, Math.PI * 2); c.stroke();
+        c.beginPath(); for (const [a, b2] of [[-16, -11], [11, 16]]) { c.moveTo(x + a, y); c.lineTo(x + b2, y); c.moveTo(x, y + a); c.lineTo(x, y + b2); } c.stroke();
+      }
+      c.fillStyle = 'rgba(214,178,97,.9)'; c.font = '700 13px Barlow Condensed, sans-serif'; c.textAlign = 'left'; c.fillText('N ▲', 10, 20);
       c.strokeStyle = 'rgba(214,178,97,.85)'; c.lineWidth = 3; c.strokeRect(1.5, 1.5, W - 3, W - 3);
     };
     paint();
@@ -5938,7 +6146,7 @@ const PROG = {
               <button class="btn apply hide" id="rgApply" style="width:100%;margin-top:8px">APPLIQUER LES MODIFS À L'ANTENNE <span style="opacity:.7;font-size:11px;margin-left:6px">(A)</span></button>
               <button class="btn take" id="rgTake" style="width:100%;margin-top:8px">À L'ANTENNE ▶ <span style="opacity:.7;font-size:11px;margin-left:6px">(T)</span></button>
               <button class="btn sm mixbtn" id="rgMix" title="Volumes de l'émission (général, musique, chaque source) avec fondus"><span class="mixico"><i></i><i></i><i></i></span>Mixeur de l'émission</button>
-              <div class="rg-ann admin-only"><span class="note">Annonces</span><button class="btn sm" id="rgFlash" title="Annonce à l'antenne">${ic('mega')}Flash</button><button class="btn sm" id="rgGift" title="Parachute argenté">${ic('para')}Parachute</button><button class="btn sm" id="rgHo" title="Hommage aux tombés">${ic('moon')}Hommage</button><button class="btn sm" id="rgSky" title="Messages projetés dans le ciel du jeu (scènes à préparer)">${ic('star')}Projection</button></div>
+              <div class="rg-ann admin-only"><span class="note">Annonces</span><button class="btn sm" id="rgFlash" title="Annonce à l'antenne">${ic('mega')}Flash</button><button class="btn sm" id="rgGift" title="Parachute argenté">${ic('para')}Parachute</button><button class="btn sm" id="rgHo" title="Hommage aux tombés">${ic('moon')}Hommage</button><button class="btn sm" id="rgSky" title="Messages projetés dans le ciel du jeu (scènes à préparer)">${ic('star')}Projection</button></div><div class="note admin-only skyq-st" id="rgSkyq"></div>
               <div class="note" id="rgWarn" style="margin-top:6px;min-height:16px"></div></div>
           </div>
           <div class="rg-row rg-sfx" id="rgSfx"></div>
@@ -6253,7 +6461,7 @@ const PROG = {
   ctxDo(id, a) {
     const sc = this.scene(), it = sc && sc.items.find(i => i.id === id); if (!it) return;
     if (['rand', 'next', 'near'].includes(a)) { this.swapPov(it, a); return; }
-    if (a === 'find') { const q = prompt('N° ou pseudo du tribut'); if (q) this.swapPov(it, 'find', q); return; }
+    if (a === 'find') { askText('N° ou pseudo du tribut').then(q => { if (q) this.swapPov(it, 'find', q); }); return; }
     if (a === 'full') { this.placeAt(it.k, it.ref, 'full'); return; }
     if (a === 'main') {
       const big = sc.items.filter(i => !i.hide).sort((x, y) => y.w * y.h - x.w * x.h)[0];
@@ -6590,7 +6798,7 @@ const PROG = {
       this.ed.scenes = this.ed.scenes.filter(x => x.id !== sc.id); this.ed.preview = this.ed.scenes[0].id; this.save();
     };
     $('#rgScenes').onclick = e => { const b = e.target.closest('[data-sc]'); if (b) { this.ed.preview = b.dataset.sc; this.sel = ''; this.save(); } };
-    $('#rgScenes').ondblclick = e => { const b = e.target.closest('[data-sc]'); if (!b) return; const sc = this.scene(b.dataset.sc); const n = prompt('Nom du plan', sc.name); if (n) { sc.name = n.slice(0, 40); this.save(); } };
+    $('#rgScenes').ondblclick = e => { const b = e.target.closest('[data-sc]'); if (!b) return; const sc = this.scene(b.dataset.sc); askText('Nom du plan', sc.name).then(n => { if (n) { sc.name = n.slice(0, 40); this.save(); } }); };
     $('#pageView').querySelector('.rg-main').addEventListener('click', e => { const b = e.target.closest('[data-pre]'); if (b) this.applyPreset(b.dataset.pre); });
     // sources : glisser-déposer
     $('#rgSrc').addEventListener('dragstart', e => { const r = e.target.closest('.src'); if (!r) return; e.dataTransfer.setData('text/plain', JSON.stringify({ k: r.dataset.k, ref: r.dataset.ref })); e.dataTransfer.effectAllowed = 'copy'; });
@@ -6612,6 +6820,7 @@ const PROG = {
     $('#rgGift').onclick = () => openGift(byLogin(S.slots[S.active]));
     $('#rgHo').onclick = () => openHommage();
     $('#rgSky').onclick = () => SKYED.open();
+    SKYQ.paint();
     pv.addEventListener('dragover', e => { e.preventDefault(); pv.classList.add('drop'); });
     pv.addEventListener('dragleave', () => pv.classList.remove('drop'));
     pv.addEventListener('drop', e => {

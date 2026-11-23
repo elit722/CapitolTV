@@ -768,7 +768,7 @@ public class CapitolScreen extends Screen {
         {"Mouvements de caméra",
          "{moves} ouvre la liste, puis une touche de 1 à 8 :\n1 Orbite autour du tribut suivi\n2 Orbite large en hauteur\n3 Travelling avant\n4 Grue (s'élève en le regardant)\n5 Suivi auto (change d'angle toutes les 8 s, évite les murs, se rapproche sous terre)\n6 Vue du ciel en rotation\n7 Panoramique sur place\n8 Regard verrouillé (tu bouges, la caméra le fixe)\n\n{moves} arrête le mouvement. Te déplacer l'arrête aussi, sauf le 8. Si le tribut est loin, tu es d'abord téléporté."},
         {"Drone et travelling",
-         "Drone ({drone}) : vol fluide avec inertie. Z / C penchent l'image, X la remet droite, molette = vitesse, Ctrl + molette = zoom progressif. {drone} pour quitter.\n\nTravelling : place-toi et regarde ce que tu veux filmer, {pathAdd} pose un point (Maj + {pathAdd} efface tout). Avec au moins 2 points, {pathPlay} lance la boucle (courbe douce passant par tous les points) et l'arrête.\n\nLes points numérotés et le trajet s'affichent à ton écran seulement : ils n'apparaissent jamais dans le flux."},
+         "Drone ({drone}) : vol fluide avec inertie. Z / C penchent l'image, X la remet droite, molette = vitesse, Ctrl + molette = zoom progressif. {drone} pour quitter.\n\nTravelling : place-toi et regarde ce que tu veux filmer, {pathAdd} pose un point (Maj + {pathAdd} efface tout). Avec au moins 2 points, {pathPlay} lance la boucle (courbe douce passant par tous les points, à vitesse constante, calculée à chaque image : aucun à-coup) et l'arrête.\n\nLes points numérotés et le trajet s'affichent à ton écran seulement : ils n'apparaissent jamais dans le flux."},
         {"Radar et zones",
          "Radar ({radar}) : boussole en haut de l'écran avec les tributs (or) et les actions récentes (rouge), avec la distance.\n\nZones interdites : la régie les dessine sur la carte du site. Un bandeau te prévient quand tu t'en approches et clignote si tu y entres : ressors-en, elle ne veut pas d'images de là."},
         {"Diffusion vidéo",
@@ -781,8 +781,10 @@ public class CapitolScreen extends Screen {
          "Signaler : choisis le tribut, le type d'action et des détails ; la régie et le réacteur le voient tout de suite.\n{signal} : signal rapide sur le tribut suivi ou le plus proche.\n\nComms : Staff (toute l'équipe), Caméras, Privé. Les messages passent aussi sur le site.\n\nBUZZ (régie et responsable caméra) : fait sonner un membre, avec un cadre rouge qui clignote à son écran (sans son s'il est à l'antenne)."},
         {"Carte et TP",
          "La carte montre les tributs (et les caméras). Glisser : déplacer · molette : zoom · clic : sélectionner, puis TP ou Suivre.\nEn spectateur, la téléportation est directe. Sinon le mod serveur ou la commande /tp est utilisé."},
+        {"Hommages et projections",
+         "La régie projette les hommages (visages des tombés) et ses messages dans le ciel, au nord. Ils attendent la nuit en jeu : lancés de jour, ils partent à la tombée de la nuit, et deux hommages en attente n'en font qu'un.\n\nLa régie peut aussi programmer un hommage automatique (à heure fixe ou toutes les X nuits), seulement s'il y a eu des morts depuis le dernier."},
         {"Commandes (admins)",
-         "/capitoltv camera add <joueur> · remove <nom> · list\n/capitoltv annonce <texte> : annonce spéciale à la régie\n/capitoltv status · reload"}
+         "/capitoltv camera add <joueur> · remove <nom> · list\n/capitoltv annonce <texte> : annonce spéciale à la régie\n/capitoltv carte [rayon] : relève la carte du site, centrée sur 0, 0 (barre d'avancement en haut à droite pour les ops et le staff)\n/capitoltv status · reload"}
     };
 
     private void initWiki() { }

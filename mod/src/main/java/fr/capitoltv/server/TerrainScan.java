@@ -61,7 +61,7 @@ final class TerrainScan {
         int next, done, skipped; final int total; long lastSend = System.currentTimeMillis();
         final ArrayDeque<ChunkPos> toLoad = new ArrayDeque<>();
         final Map<Long, CompletableFuture<Boolean>> asking = new HashMap<>();
-        int lastPct = -1;
+        int lastPct = -1; long lastProg;
         Job(Area a, Consumer<String> say) { this.a = a; this.say = say; this.total = a.cw() * a.ch(); }
     }
 
@@ -193,6 +193,7 @@ final class TerrainScan {
             release(s); job = null; return;
         }
         int pct = jb.done * 100 / Math.max(1, jb.total);
+        if (System.currentTimeMillis() - jb.lastProg > 1000) { jb.lastProg = System.currentTimeMillis(); ServerBridge.scanProgress(s, pct, jb.done, jb.total, false); }
         if (pct / 10 != jb.lastPct / 10 && pct < 100) { jb.lastPct = pct; if (pct > 0) jb.say.accept("Relevé du terrain : " + pct + " %"); }
         if (jb.done < jb.total) {
             // la carte part au site au fur et à mesure (toutes les minutes) et le point d'avancement est gardé sur le disque
@@ -200,6 +201,7 @@ final class TerrainScan {
             return;
         }
         job = null;
+        ServerBridge.scanProgress(s, 100, jb.total, jb.total, true);
         a.dirty = true; a.resume = -1;
         send(a, jb);
     }
