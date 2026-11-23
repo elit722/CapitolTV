@@ -12,5 +12,7 @@
   "key.capitoltv.drone": "Drone cinéma (vol fluide, roulis, zoom)",
   "key.capitoltv.pathAdd": "Travelling : poser un point (Maj : tout effacer)",
   "key.capitoltv.pathPlay": "Travelling : lancer / arrêter la boucle",
-  "key.capitoltv.radar": "Radar d'action (afficher / masquer)"
+  "key.capitoltv.radar": "Radar d'action (afficher / masquer)",
+  "key.capitoltv.noclip": "NoClip : traverser les blocs (mode caméra)",
+  "key.capitoltv.voice": "Chat vocal : se rendre audible par les joueurs (staff)"
 }

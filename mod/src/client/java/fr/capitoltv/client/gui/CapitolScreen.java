@@ -733,7 +733,7 @@ public class CapitolScreen extends Screen {
         String[] tal = {"visible", "discret", "cache"};
         String[] talL = {"visible", "discret (point)", "caché"};
         boolean camOk = fr.capitoltv.client.CamMode.allowed();
-        btn(x, y, colW, "Mode caméra (F6) : " + (!camOk ? "réservé" : c.cameraMode ? "oui" : "non"), () -> {
+        btn(x, y, colW, "Mode caméra (" + fr.capitoltv.client.Keys.of(CapitolClient.cameraKey) + ") : " + (!camOk ? "réservé" : c.cameraMode ? "oui" : "non"), () -> {
             if (!fr.capitoltv.client.CamMode.allowed()) { say("Réservé aux caméras désignées par un admin"); return; }
             c.cameraMode = !c.cameraMode; ClientConfig.save(); clearAndInit();
         }).active = camOk; y += step;
@@ -759,21 +759,26 @@ public class CapitolScreen extends Screen {
     }
 
     /* ---------------------------------------------------------------- wiki */
+    /** wiki : {menu}, {cam}… sont remplacés par les touches réglées par le joueur (Options › Commandes) */
     static final String[][] WIKI = {
         {"Démarrer",
-         "1. Sur le site Capitol TV, ouvre « Mon compte » et génère ton jeton du mod.\n2. En jeu : touche K, onglet Réglages, bouton Coller puis Connecter.\n3. L'en-tête du menu passe au vert : tu reçois les actions, les comms et la carte.\n\nLe bouton » en haut à droite du menu le range sur le côté : tu vois le jeu, tu te déplaces (ZQSD, espace, maj) et tu tournes la tête en maintenant le clic droit sur le jeu."},
+         "1. Sur le site Capitol TV, ouvre « Mon compte » et génère ton jeton du mod (sur le serveur de l'event, il arrive tout seul).\n2. En jeu : touche {menu}, onglet Réglages, bouton Coller puis Connecter.\n3. L'en-tête du menu passe au vert : tu reçois les actions, les comms et la carte.\n\nLe bouton » en haut à droite du menu le range sur le côté : tu vois le jeu, tu te déplaces et tu tournes la tête en maintenant le clic droit sur le jeu.\n\nToutes les touches du mod se changent dans Options › Commandes › Capitol TV ; ce wiki et l'écran suivent tes choix."},
         {"Mode caméra",
-         "Réservé aux caméras : un admin fait /capitoltv camera add <pseudo> en jeu, ou te donne le rôle Caméra sur le site avec ton compte Minecraft dans ta fiche.\n\nF6 : active le mode caméra. Tu passes en spectateur, le HUD du jeu disparaît et une barre caméra apparaît en bas (touches 1 à 9) : TP sur le tribut suivi, tribut précédent / suivant, signaler, REC, caméra fluide, zoom, menu, écran propre.\n\nV : mouvements de caméra (voir l'article)."},
-        {"Diffusion vidéo",
-         "Ton jeu envoie lui-même son image et son son à la régie Capitol TV, sans OBS. Touche K › Ma POV : accepter ou refuser, et le son envoyé (jeu, micro ou aucun).\n\nQualité automatique : toujours la meilleure autorisée par la régie, baissée toute seule si ton jeu ralentit, puis remontée.\n\nL'image part juste après le dessin du monde : menus, HUD et chat n'apparaissent jamais dans le flux.\n\nClé : envoyée automatiquement par le serveur de l'event (ou par le site pour l'équipe).\n\nSeule la régie voit ce flux ; le public du site voit ton Twitch."},
+         "Réservé aux caméras : un admin fait /capitoltv camera add <pseudo> en jeu, ou te donne le rôle Caméra sur le site avec ton compte Minecraft dans ta fiche.\n\n{cam} : active le mode caméra. Tu passes en spectateur, le HUD du jeu disparaît et une barre caméra apparaît en bas : TP sur le tribut suivi, tribut précédent / suivant, signaler, REC, caméra fluide, zoom, menu, écran propre, NoClip ({noclip}).\n\nLes blocs t'arrêtent comme un vrai caméraman ; NoClip te laisse les traverser.\n\n{moves} : mouvements de caméra · {drone} : drone · {pathAdd} / {pathPlay} : travelling · {radar} : radar."},
         {"Mouvements de caméra",
-         "V ouvre la liste, puis une touche de 1 à 8 :\n1 Orbite autour du tribut suivi\n2 Orbite large en hauteur\n3 Travelling avant\n4 Grue (s'élève en le regardant)\n5 Suivi de dos\n6 Vue du ciel en rotation\n7 Panoramique sur place\n8 Regard verrouillé (tu bouges, la caméra le fixe)\n\nV arrête le mouvement. Bouger (ZQSD) l'arrête aussi, sauf le 8. Si le tribut est loin, tu es d'abord téléporté."},
+         "{moves} ouvre la liste, puis une touche de 1 à 8 :\n1 Orbite autour du tribut suivi\n2 Orbite large en hauteur\n3 Travelling avant\n4 Grue (s'élève en le regardant)\n5 Suivi auto (change d'angle toutes les 8 s, évite les murs, se rapproche sous terre)\n6 Vue du ciel en rotation\n7 Panoramique sur place\n8 Regard verrouillé (tu bouges, la caméra le fixe)\n\n{moves} arrête le mouvement. Te déplacer l'arrête aussi, sauf le 8. Si le tribut est loin, tu es d'abord téléporté."},
+        {"Drone et travelling",
+         "Drone ({drone}) : vol fluide avec inertie. Z / C penchent l'image, X la remet droite, molette = vitesse, Ctrl + molette = zoom progressif. {drone} pour quitter.\n\nTravelling : place-toi et regarde ce que tu veux filmer, {pathAdd} pose un point (Maj + {pathAdd} efface tout). Avec au moins 2 points, {pathPlay} lance la boucle (courbe douce passant par tous les points) et l'arrête.\n\nLes points numérotés et le trajet s'affichent à ton écran seulement : ils n'apparaissent jamais dans le flux."},
+        {"Radar et zones",
+         "Radar ({radar}) : boussole en haut de l'écran avec les tributs (or) et les actions récentes (rouge), avec la distance.\n\nZones interdites : la régie les dessine sur la carte du site. Un bandeau te prévient quand tu t'en approches et clignote si tu y entres : ressors-en, elle ne veut pas d'images de là."},
+        {"Diffusion vidéo",
+         "Ton jeu envoie lui-même son image et son son à la régie Capitol TV, sans OBS. Touche {menu} › Ma POV : accepter ou refuser, et le son envoyé (jeu, micro ou aucun).\n\nQualité automatique : toujours la meilleure autorisée par la régie, baissée toute seule si ton jeu ralentit (pas quand il est juste en arrière-plan), puis remontée.\n\nL'image part juste après le dessin du monde : menus, HUD et chat n'apparaissent jamais dans le flux.\n\nSeule la régie voit ce flux ; le public du site voit ton Twitch."},
         {"Antenne et différé",
-         "Le site retarde tout ce qu'il montre (annonces, statuts, vidéos) du même délai. « Écran dans 1:42 » indique quand une action passera à l'antenne.\n\nQuand la régie affiche ta caméra, un voyant « EN DIRECT » s'allume en haut à droite. « PRÊT » : la régie prépare un plan avec toi.\n\nAvec OBS ou Twitch, l'écran devient propre à l'antenne (Alt gauche maintenu pour voir l'interface) et les sons du jeu sont coupés. Avec la diffusion du mod, ce n'est pas nécessaire."},
-        {"Interphone régie",
-         "La régie peut te parler depuis le site : sa voix sort dans ton casque.\n\nQuand le canal est ouvert (bandeau INTERPHONE en bas de l'écran), maintiens B pour lui répondre.\nCanal fermé : appuie sur B pour demander la parole, la régie reçoit ta demande.\n\nTa voix ne part jamais dans le flux vidéo."},
+         "Le site retarde tout ce qu'il montre (annonces, statuts, vidéos) du même délai. « Écran dans 1:42 » indique quand une action passera à l'antenne.\n\nQuand la régie affiche ta caméra, un voyant « EN DIRECT » s'allume en haut à droite. « PRÊT » : la régie prépare un plan avec toi.\n\nAvec OBS ou Twitch, l'écran devient propre à l'antenne ({peek} maintenu pour voir l'interface) et les sons du jeu sont coupés. Avec la diffusion du mod, ce n'est pas nécessaire."},
+        {"Interphone et vocal",
+         "La régie peut te parler depuis le site : sa voix sort dans ton casque, et le son du jeu baisse pendant qu'elle parle.\n\nQuand le canal est ouvert (bandeau INTERPHONE en bas de l'écran), maintiens {talk} pour lui répondre. Canal fermé : appuie sur {talk} pour demander la parole.\n\nChat vocal en jeu (Simple Voice Chat) : les joueurs n'entendent ni les caméras ni le staff ; caméras et staff s'entendent entre eux. Le staff (responsable caméra et plus) peut se rendre audible par les joueurs avec {voice} (bandeau rouge tant que c'est actif).\n\nTa voix ne part jamais dans le flux vidéo."},
         {"Signaler et comms",
-         "Signaler : choisis le tribut, le type d'action et des détails ; la régie et le réacteur le voient tout de suite.\nJ : signal rapide sur le tribut suivi ou le plus proche.\n\nComms : Staff (toute l'équipe), Caméras, Privé. Les messages passent aussi sur le site. BUZZ fait sonner un membre."},
+         "Signaler : choisis le tribut, le type d'action et des détails ; la régie et le réacteur le voient tout de suite.\n{signal} : signal rapide sur le tribut suivi ou le plus proche.\n\nComms : Staff (toute l'équipe), Caméras, Privé. Les messages passent aussi sur le site.\n\nBUZZ (régie et responsable caméra) : fait sonner un membre, avec un cadre rouge qui clignote à son écran (sans son s'il est à l'antenne)."},
         {"Carte et TP",
          "La carte montre les tributs (et les caméras). Glisser : déplacer · molette : zoom · clic : sélectionner, puis TP ou Suivre.\nEn spectateur, la téléportation est directe. Sinon le mod serveur ou la commande /tp est utilisé."},
         {"Commandes (admins)",
@@ -793,7 +798,7 @@ public class CapitolScreen extends Screen {
         int tx = x + lw + 10, tw = cw - lw - 10;
         Ui.section(ctx, WIKI[wikiSec][0], tx, y + 2, tw);
         List<OrderedText> lines = new ArrayList<>();
-        for (String para : WIKI[wikiSec][1].split("\n", -1)) {
+        for (String para : fr.capitoltv.client.Keys.fill(WIKI[wikiSec][1]).split("\n", -1)) {
             if (para.isEmpty()) { lines.add(OrderedText.EMPTY); continue; }
             lines.addAll(textRenderer.wrapLines(Text.literal(para), tw - 6));
         }

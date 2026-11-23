@@ -69,7 +69,7 @@ public final class CamMoves {
         start = p.getPos(); cur = p.getPos(); startYaw = p.getYaw();
         Vec3d c = tg != null ? tg : fixedTarget;
         angle0 = c == null ? 0 : Math.atan2(p.getZ() - c.z, p.getX() - c.x);
-        Hud.toast("Caméra : " + NAMES[i], HINTS[i] + " · V pour arrêter", Hud.GOLD, 3);
+        Hud.toast("Caméra : " + NAMES[i], HINTS[i] + " · " + Keys.of(CapitolClient.movesKey) + " pour arrêter", Hud.GOLD, 3);
     }
 
     /** position (yeux) du tribut suivi : joueur visible dans le monde, sinon dernière position connue */
@@ -192,7 +192,7 @@ public final class CamMoves {
                 ctx.drawText(tr, tr.trimToWidth(HINTS[i], w - 124), x + 118, yy, 0xFF8A8478, false);
             }
         } else if (move >= 0) {
-            String s = "◉ " + NAMES[move] + " · V pour arrêter";
+            String s = "◉ " + NAMES[move] + " · " + Keys.of(CapitolClient.movesKey) + " pour arrêter";
             int w = tr.getWidth(s) + 10;
             ctx.fill((sw - w) / 2, 4, (sw + w) / 2, 17, 0xC0101014);
             ctx.drawText(tr, s, (sw - w) / 2 + 5, 7, 0xFFF2D27A, false);

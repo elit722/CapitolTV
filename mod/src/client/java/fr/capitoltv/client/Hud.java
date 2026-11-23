@@ -33,6 +33,15 @@ public final class Hud {
         }
     }
 
+    private static long buzzAt;
+    /** BUZZ : cadre rouge clignotant 4 s + sonnerie (même sons coupés, sauf si la caméra est à l'antenne) */
+    public static void buzz() {
+        buzzAt = System.currentTimeMillis();
+        if (Data.onAir() && CamMode.active()) return; // à l'antenne : le son partirait dans le direct
+        MinecraftClient mc = MinecraftClient.getInstance();
+        for (int i = 0; i < 3; i++) mc.getSoundManager().play(PositionedSoundInstance.master(SoundEvents.BLOCK_NOTE_BLOCK_BELL, 1.0f + i * 0.25f));
+    }
+
     public static void sound(boolean strong) {
         if (!ClientConfig.get().sound) return;
         // à l'antenne, les sons du jeu partent dans le stream : on se tait
@@ -84,6 +93,16 @@ public final class Hud {
         int sw = ctx.getScaledWindowWidth(), sh = ctx.getScaledWindowHeight();
         if (mc.currentScreen == null) Overlays.renderRecap(ctx, sw, sh);
         CamDrone.render(ctx, tr, sw);
+        if (System.currentTimeMillis() - buzzAt < 4000 && (System.currentTimeMillis() / 250) % 2 == 0) {
+            int b = 4, c = 0xC0E0514A;
+            ctx.fill(0, 0, sw, b, c); ctx.fill(0, sh - b, sw, sh, c); ctx.fill(0, b, b, sh - b, c); ctx.fill(sw - b, b, sw, sh - b, c);
+        }
+        if (CapitolClient.voiceLoud) {
+            String s = "🔊 LES JOUEURS T'ENTENDENT · " + Keys.of(CapitolClient.voiceKey);
+            int w = tr.getWidth(s) + 10;
+            ctx.fill(4, sh - 40, 4 + w, sh - 26, 0xE0B0182C);
+            ctx.drawText(tr, s, 9, sh - 37, 0xFFFFFFFF, false);
+        }
         CamPath.render(ctx, tr, sw);
         if (inZone != null || nearZone) {
             String s = inZone != null ? "⛔ ZONE INTERDITE · " + inZone.name : "⚠ Zone interdite toute proche";
@@ -104,6 +123,7 @@ public final class Hud {
         if (CamMode.clean()) return;
         if (CamMode.active() && CapitolClient.online()) CamMode.renderToolbar(ctx, tr, sw, sh);
         if (!CamMoves.picker) Radar.render(ctx, tr, sw);
+        CamPath.renderPoints(ctx, tr, sw, sh);
         if (!Data.meCam.isEmpty() && mc.player != null && CapitolClient.online()) {
             boolean sp = mc.player.isSpectator();
             String s = sp ? "SPECTATEUR" : "PAS EN SPECTATEUR";
@@ -144,7 +164,7 @@ public final class Hud {
                 long pend = Data.alerts.values().stream().filter(a -> !a.handled).count();
                 if (pend > 0) { lines.add(pend + " action(s) en attente"); colors.add(DIM); }
             }
-            if (CamMode.active() && Data.onAir()) { lines.add(0, "À L'ANTENNE · flux propre (Alt gauche : voir)"); colors.add(0, RED); }
+            if (CamMode.active() && Data.onAir()) { lines.add(0, "À L'ANTENNE · flux propre (" + Keys.of(CapitolClient.peekKey) + " : voir)"); colors.add(0, RED); }
             int w = tr.getWidth(head);
             for (String l : lines) w = Math.max(w, tr.getWidth(l));
             w = Math.min(w, 260);

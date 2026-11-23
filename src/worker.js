@@ -2237,13 +2237,19 @@ export class Game extends DurableObject {
       this.camsT = null;
       this.crewcast({ t: "cams", cams: this.camsList() });
       this.crewcast({ t: "team", team: this.teamForMod() }, x => x.mod);
-      this.sendServers({ t: "cams", names: this.camNames() });
+      this.sendServers({ t: "cams", names: this.camNames(), sups: this.supNames() });
     }, 1500);
   }
   camNames() {
     const out = new Set();
     for (const m of this.team) if (m.mc && CAMROLES.includes(this.camOf(m.id))) out.add(m.mc);
     for (const [id, st] of Object.entries(this.camSt)) if (st.mc && CAMROLES.includes(this.camOf(id))) out.add(st.mc);
+    return [...out];
+  }
+  /** comptes Minecraft du staff à partir de responsable caméra (peuvent se rendre audibles en jeu) */
+  supNames() {
+    const out = new Set();
+    for (const m of this.team) { if (!m.mc) continue; const p = this.permsOf(m.id); if (p.some(x => ["admin", "mod", "chef", "program"].includes(x))) out.add(m.mc); }
     return [...out];
   }
   sendServers(obj) { const j = JSON.stringify(obj); for (const ws of this.sockets()) { const a = this.att(ws); if (a && a.server) this.send(ws, j); } }
@@ -2265,7 +2271,7 @@ export class Game extends DurableObject {
     if (who.server) {
       if (!this.srvKey || who.key !== this.srvKey) return refuse(4003, "Clé serveur invalide (régie › Carte & caméras)");
       server.serializeAttachment({ id: "server", name: "Serveur Minecraft", server: true, at: Date.now() });
-      this.send(server, { t: "hello", server: true, now: Date.now(), names: this.camNames(), terrain: Object.fromEntries(Object.entries(this.terrain || {}).map(([d, x]) => [d, x.id])) });
+      this.send(server, { t: "hello", server: true, now: Date.now(), names: this.camNames(), sups: this.supNames(), terrain: Object.fromEntries(Object.entries(this.terrain || {}).map(([d, x]) => [d, x.id])) });
       this.crewcast({ t: "srv", on: true });
       return new Response(null, { status: 101, webSocket: client });
     }

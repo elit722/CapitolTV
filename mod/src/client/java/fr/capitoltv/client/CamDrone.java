@@ -36,7 +36,7 @@ public final class CamDrone {
             pos = p.getPos(); vel = Vec3d.ZERO;
             smoothWas = mc.options.smoothCameraEnabled; mc.options.smoothCameraEnabled = true;
             p.getAbilities().setFlySpeed(SENTINEL);
-            Hud.toast("Drone cinéma", "ZQSD/espace/maj : vol · Z/C : roulis · molette : vitesse · Ctrl+molette : zoom · X : reset · H : quitter", Hud.GOLD, 6);
+            Hud.toast("Drone cinéma", "déplacements : vol · Z/C : roulis · molette : vitesse · Ctrl+molette : zoom · X : reset · " + Keys.of(CapitolClient.droneKey) + " : quitter", Hud.GOLD, 6);
         } else off(mc);
     }
 
@@ -100,7 +100,7 @@ public final class CamDrone {
 
     public static void render(DrawContext ctx, TextRenderer tr, int sw) {
         if (!on) return;
-        String s = "◉ DRONE · vitesse x" + String.format("%.1f", speed) + (fovTarget != 1f ? " · zoom x" + String.format("%.1f", 1 / fovTarget) : "") + (Math.abs(rollTarget) > 0.5 ? " · roulis " + Math.round(rollTarget) + "°" : "") + " · H pour quitter";
+        String s = "◉ DRONE · vitesse x" + String.format("%.1f", speed) + (fovTarget != 1f ? " · zoom x" + String.format("%.1f", 1 / fovTarget) : "") + (Math.abs(rollTarget) > 0.5 ? " · roulis " + Math.round(rollTarget) + "°" : "") + " · " + Keys.of(CapitolClient.droneKey) + " pour quitter";
         int w = tr.getWidth(s) + 10;
         ctx.fill((sw - w) / 2, 4, (sw + w) / 2, 17, 0xC0101014);
         ctx.drawText(tr, s, (sw - w) / 2 + 5, 7, 0xFF8AD8FF, false);

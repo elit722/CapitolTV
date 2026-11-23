@@ -12,5 +12,7 @@
   "key.capitoltv.drone": "Cinema drone (smooth flight, roll, zoom)",
   "key.capitoltv.pathAdd": "Camera path: add point (Shift: clear)",
   "key.capitoltv.pathPlay": "Camera path: play / stop loop",
-  "key.capitoltv.radar": "Action radar (show / hide)"
+  "key.capitoltv.radar": "Action radar (show / hide)",
+  "key.capitoltv.noclip": "NoClip: pass through blocks (camera mode)",
+  "key.capitoltv.voice": "Voice chat: let players hear you (staff)"
 }

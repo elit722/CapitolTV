@@ -6,7 +6,11 @@ version = project.mod_version
 group = project.maven_group
 base { archivesName = project.archives_base_name }
 
-repositories { mavenCentral() }
+repositories {
+    mavenCentral()
+    // API de Simple Voice Chat (extension facultative : rien n'est inclus dans le .jar)
+    maven { url = "https://maven.maxhenkel.de/repository/public" }
+}
 
 configurations { webrtcNatives }
 
@@ -41,6 +45,7 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     // vidéo native (WebRTC) : la bibliothèque Java est incluse dans le .jar du mod,
     // ses bibliothèques natives (Windows, Linux, macOS) sont copiées à la racine du .jar
+    compileOnly "de.maxhenkel.voicechat:voicechat-api:2.5.0"
     implementation "dev.onvoid.webrtc:webrtc-java:${project.webrtc_version}"
     include "dev.onvoid.webrtc:webrtc-java:${project.webrtc_version}"
     webrtcNatives "dev.onvoid.webrtc:webrtc-java:${project.webrtc_version}:windows-x86_64"

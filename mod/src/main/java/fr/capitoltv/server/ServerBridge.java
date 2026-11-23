@@ -74,6 +74,15 @@ public final class ServerBridge {
     /** pseudos Minecraft des caméras, envoyés par Capitol TV */
     private static final Set<String> remoteCams = ConcurrentHashMap.newKeySet();
 
+    /** staff à partir de responsable caméra (pseudos Minecraft, envoyés par le site) */
+    private static final Set<String> remoteSups = ConcurrentHashMap.newKeySet();
+    /** staff qui s'est rendu audible par les joueurs */
+    private static final Set<String> loud = ConcurrentHashMap.newKeySet();
+    private static boolean isSup(String name) { for (String n : remoteSups) if (n.equalsIgnoreCase(name)) return true; return false; }
+    /** chat vocal : caméras et staff ne sont entendus que par les caméras et le staff */
+    static boolean voiceSilent(String name) { return isCam(name) || isSup(name); }
+    static boolean voiceLoud(String name) { return loud.contains(name.toLowerCase(java.util.Locale.ROOT)); }
+
     private static boolean isCam(String name) {
         for (String n : remoteCams) if (n.equalsIgnoreCase(name)) return true;
         return cfg.camNames.stream().anyMatch(x -> x.equalsIgnoreCase(name));
@@ -126,6 +135,7 @@ public final class ServerBridge {
         if (!(t.equals("hello") || t.equals("cams")) || !m.has("names")) return;
         remoteCams.clear();
         for (var e : m.getAsJsonArray("names")) remoteCams.add(e.getAsString());
+        if (m.has("sups")) { remoteSups.clear(); for (var e : m.getAsJsonArray("sups")) remoteSups.add(e.getAsString()); }
         if (t.equals("hello")) reportLocalCams();
         MinecraftServer s = server;
         if (s == null) return;
@@ -246,6 +256,18 @@ public final class ServerBridge {
                 if (cam && cfg.autoSpectator) setSpectator(s, p, true);
             });
         });
+        ServerPlayNetworking.registerGlobalReceiver(fr.capitoltv.net.VoicePayload.ID, (payload, ctx) -> {
+            ServerPlayerEntity p = ctx.player();
+            MinecraftServer s = p.getServer(); if (s == null) return;
+            String n = p.getGameProfile().getName(), k = n.toLowerCase(java.util.Locale.ROOT);
+            boolean ok = isSup(n) || s.getPlayerManager().isOperator(p.getGameProfile());
+            if (payload.on() && ok) loud.add(k); else loud.remove(k);
+            boolean svc = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("voicechat");
+            JsonObject r = new JsonObject(); r.addProperty("t", "voice"); r.addProperty("on", loud.contains(k));
+            r.addProperty("msg", !ok ? "Réservé au staff à partir de responsable caméra." : !svc ? "Simple Voice Chat n'est pas installé sur le serveur." : loud.contains(k) ? "Les joueurs proches t'entendent." : "Seuls les caméras et le staff t'entendent.");
+            if (ServerPlayNetworking.canSend(p, fr.capitoltv.net.CtvMsgPayload.ID)) ServerPlayNetworking.send(p, new fr.capitoltv.net.CtvMsgPayload(r.toString()));
+        });
+        ServerPlayConnectionEvents.DISCONNECT.register((h, s) -> loud.remove(h.player.getGameProfile().getName().toLowerCase(java.util.Locale.ROOT)));
         ServerPlayNetworking.registerGlobalReceiver(SpecPayload.ID, (payload, ctx) -> {
             ServerPlayerEntity p = ctx.player();
             MinecraftServer s = p.getServer();

@@ -18,6 +18,7 @@ public class CapitolTV implements ModInitializer {
     public void onInitialize() {
         PayloadTypeRegistry.playC2S().register(TpPayload.ID, TpPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(SpecPayload.ID, SpecPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(fr.capitoltv.net.VoicePayload.ID, fr.capitoltv.net.VoicePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(CamAccessPayload.ID, CamAccessPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(StreamKeyPayload.ID, StreamKeyPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(fr.capitoltv.net.CtvMsgPayload.ID, fr.capitoltv.net.CtvMsgPayload.CODEC);

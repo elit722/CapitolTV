@@ -38,6 +38,7 @@ public final class Overlays {
             String t = Data.s(m, "t");
             if (t.equals("recap")) { recap = m; recapAt = System.currentTimeMillis(); }
             if (t.equals("sky")) SkyShow.start(m);
+            if (t.equals("voice")) { CapitolClient.voiceLoud = Data.b(m, "on"); Hud.toast(CapitolClient.voiceLoud ? "Audible par les joueurs" : "Chat vocal", Data.s(m, "msg"), CapitolClient.voiceLoud ? Hud.RED : Hud.BLUE, 4); }
         } catch (Throwable e) { CapitolTV.LOG.warn("Capitol TV : message serveur illisible ({})", e.toString()); }
     }
 

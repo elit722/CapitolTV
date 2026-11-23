@@ -16,7 +16,9 @@ import org.lwjgl.glfw.GLFW;
 import java.util.Map;
 
 public class CapitolClient implements ClientModInitializer {
-    public static KeyBinding menuKey, signalKey, stateKey, followKey, replyKey, cameraKey, peekKey, movesKey, talkKey, droneKey, pathAddKey, pathPlayKey, radarKey;
+    public static KeyBinding menuKey, signalKey, stateKey, followKey, replyKey, cameraKey, peekKey, movesKey, talkKey, droneKey, pathAddKey, pathPlayKey, radarKey, noclipKey, voiceKey;
+    /** staff rendu audible par les joueurs (chat vocal) */
+    public static boolean voiceLoud;
     private static CtvSocket sock;
     /** Tribut suivi par cette caméra (id Capitol TV). */
     public static String follow = "";
@@ -41,6 +43,8 @@ public class CapitolClient implements ClientModInitializer {
         pathAddKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.pathAdd", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_N, cat));
         pathPlayKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.pathPlay", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_M, cat));
         radarKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.radar", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_G, cat));
+        noclipKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.noclip", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_0, cat));
+        voiceKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.voice", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_Y, cat));
         try { CamMode.install(); } catch (Throwable t) { fr.capitoltv.CapitolTV.LOG.warn("Capitol TV : HUD vanilla non géré ({})", t.toString()); }
         ClientTickEvents.START_CLIENT_TICK.register(mc -> { if (!CamMoves.startTick(mc)) CamMode.startTick(mc); });
         ClientTickEvents.END_CLIENT_TICK.register(mc -> { CamMoves.endTick(mc); CamDrone.endTick(mc); CamPath.endTick(mc); });
@@ -55,7 +59,7 @@ public class CapitolClient implements ClientModInitializer {
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(mc -> Streamer.stop(null));
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((h, sender, client) -> { CamMode.resetSpectatorTries(); stDirty = true; });
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((h, client) -> {
-            CamMode.serverCam = false; SkyShow.stop();
+            CamMode.serverCam = false; SkyShow.stop(); voiceLoud = false;
             if (!Data.serverKey.isEmpty()) { Data.serverKey = ""; Data.serverUrl = ""; Data.serverWho = ""; Streamer.stop("déconnecté du serveur"); }
         });
         // clé de diffusion donnée par le serveur de l'event : rien à copier pour le joueur
@@ -77,7 +81,7 @@ public class CapitolClient implements ClientModInitializer {
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(fr.capitoltv.net.CamAccessPayload.ID, (payload, ctx) -> {
             boolean was = CamMode.serverCam;
             CamMode.serverCam = payload.on();
-            if (payload.on() && !was) Hud.toast("Capitol TV", "Tu es caméra sur ce serveur : F6 pour le mode caméra.", Hud.GOLD, 6);
+            if (payload.on() && !was) Hud.toast("Capitol TV", "Tu es caméra sur ce serveur : " + Keys.of(cameraKey) + " pour le mode caméra.", Hud.GOLD, 6);
         });
 
         sock = new CtvSocket(m -> MinecraftClient.getInstance().execute(() -> onMessage(m)), st -> MinecraftClient.getInstance().execute(() -> {
@@ -250,6 +254,12 @@ public class CapitolClient implements ClientModInitializer {
             if (InputUtil.isKeyPressed(mc.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT_SHIFT)) CamPath.clear(); else CamPath.add(mc);
         }
         while (pathPlayKey.wasPressed()) { if (CamMode.allowed() || (mc.player != null && mc.player.isSpectator())) CamPath.toggle(mc); }
+        while (noclipKey.wasPressed()) { if (CamMode.active()) CamMode.slot(9); }
+        while (voiceKey.wasPressed()) {
+            if (!Data.meSup && (mc.player == null || !mc.player.hasPermissionLevel(2))) { Hud.toast("Chat vocal", "Réservé au staff à partir de responsable caméra.", Hud.ORANGE, 3); continue; }
+            if (!net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.canSend(fr.capitoltv.net.VoicePayload.ID)) { Hud.toast("Chat vocal", "Le serveur n'a pas le mod Capitol TV.", Hud.ORANGE, 3); continue; }
+            net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(new fr.capitoltv.net.VoicePayload(!voiceLoud));
+        }
         while (radarKey.wasPressed()) { if (CamMode.active()) { Radar.on = !Radar.on; Hud.toast("Radar d'action", Radar.on ? "affiché" : "masqué", Hud.BLUE, 2); } }
         Hud.zoneTick(mc);
         while (replyKey.wasPressed()) {
@@ -333,7 +343,7 @@ public class CapitolClient implements ClientModInitializer {
                 Data.setOnAir(Data.arr(m, "ids"));
                 Data.setPrep(m.has("prep") ? Data.arr(m, "prep") : null);
                 if (!wasPrep && Data.onPrep() && !Data.onAir() && CamMode.active()) Hud.toast("EN PRÉPARATION", "La régie prépare un plan avec ta caméra : flux propre dès maintenant (différé).", Hud.ORANGE, 6);
-                if (!was && Data.onAir()) Hud.toast("À L'ANTENNE", "La régie affiche ta caméra" + (ClientConfig.get().cameraMode && ClientConfig.get().cleanOnAir ? " : flux propre (Alt gauche pour voir l'interface)" : ""), Hud.RED, 6);
+                if (!was && Data.onAir()) Hud.toast("À L'ANTENNE", "La régie affiche ta caméra" + (ClientConfig.get().cameraMode && ClientConfig.get().cleanOnAir ? " : flux propre (" + Keys.of(peekKey) + " pour voir l'interface)" : ""), Hud.RED, 6);
                 else if (was && !Data.onAir()) Hud.toast("Hors antenne", "Ta caméra n'est plus affichée", Hud.DIM, 4);
             }
             case "team" -> Data.setTeam(Data.arr(m, "team"));
@@ -382,7 +392,7 @@ public class CapitolClient implements ClientModInitializer {
                 if (direct) lastMsgFrom = msg.from;
                 if (msg.k.equals("buzz") && direct) {
                     Hud.toast("BUZZ · " + msg.name, msg.text, Hud.RED, 10);
-                    Hud.sound(true);
+                    Hud.buzz();
                 } else if (wants(msg.sup, direct)) {
                     String where = direct ? "Privé" : msg.ch.equals("cams") ? "Caméras" : "Staff";
                     Hud.toast(where + " · " + msg.name, msg.text, msg.sup ? Hud.GOLD : Hud.BLUE, 7);

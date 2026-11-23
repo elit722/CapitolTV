@@ -10,7 +10,8 @@
   "environment": "*",
   "entrypoints": {
     "main": ["fr.capitoltv.CapitolTV"],
-    "client": ["fr.capitoltv.client.CapitolClient"]
+    "client": ["fr.capitoltv.client.CapitolClient"],
+    "voicechat": ["fr.capitoltv.server.CtvVoice"]
   },
   "mixins": [
     "capitoltv.mixins.json",
