@@ -47,9 +47,10 @@ public class CapitolClient implements ClientModInitializer {
         voiceKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.capitoltv.voice", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_Y, cat));
         try { CamMode.install(); } catch (Throwable t) { fr.capitoltv.CapitolTV.LOG.warn("Capitol TV : HUD vanilla non géré ({})", t.toString()); }
         ClientTickEvents.START_CLIENT_TICK.register(mc -> { if (!CamMoves.startTick(mc)) CamMode.startTick(mc); });
-        ClientTickEvents.END_CLIENT_TICK.register(mc -> { CamMoves.endTick(mc); CamDrone.endTick(mc); CamPath.endTick(mc); });
+        ClientTickEvents.END_CLIENT_TICK.register(mc -> { CamMoves.endTick(mc); CamDrone.endTick(mc); CamPath.endTick(mc); SkyShow.tick(mc); });
         // hommage projeté dans le ciel : dessiné dans le monde, après les blocs (les arbres passent devant)
         net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.AFTER_TRANSLUCENT.register(SkyShow::render);
+        VoiceMix.install();
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(fr.capitoltv.net.CtvMsgPayload.ID, (payload, ctx) -> Overlays.onServerMsg(payload.json()));
         // récap de mort affiché par-dessus l'écran « Vous êtes mort »
         net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.AFTER_INIT.register((client, screen, w, h) -> {

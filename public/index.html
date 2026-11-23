@@ -296,6 +296,11 @@ body:not(.can-map) .map-only{display:none!important}
 .ev .m{display:block;color:var(--mute);font-size:11px;margin-top:3px}
 .cm-list{flex:1;overflow:auto;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
 .cm{max-width:92%;align-self:flex-start;background:var(--surface);border:1px solid var(--hair);border-radius:11px;padding:7px 10px;font-size:13px;line-height:1.4}
+.sky-ed{display:grid;grid-template-columns:170px 1fr 250px;gap:14px;align-items:start}.sky-ed canvas{width:100%;border-radius:10px;border:1px solid var(--hair2);background:#02060e;display:block}
+.sky-list{display:flex;flex-direction:column;gap:4px;max-height:420px;overflow:auto}.sky-tools{display:flex;gap:3px;margin-bottom:4px}.sky-tools .btn{flex:1;padding:0}
+.sky-it{display:flex;gap:6px;align-items:center;padding:6px 8px;border:1px solid var(--hair2);border-radius:8px;cursor:pointer;font-size:12px}.sky-it span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sky-it em{font-style:normal;color:var(--mute);font-size:11px}.sky-it.on{border-color:var(--gold-b);background:var(--gold-a)}
+@media (max-width:900px){.sky-ed{grid-template-columns:1fr}}
+.rg-ann{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:8px}.rg-ann .note{flex:none;margin-right:2px}.rg-ann .btn{flex:1;min-width:0;justify-content:center}
 .cm.me{align-self:flex-end;background:var(--surface2)} .cm.sup{border-color:var(--gold-b)} .cm.buzz{border-color:var(--red-b);background:var(--red-a)}
 .cm .w{font-size:11px;font-weight:700;color:#7fb6ee;margin-bottom:2px;display:flex;gap:6px} .cm.sup .w{color:var(--gold)} .cm .w span{color:var(--mute);font-weight:500;margin-left:auto}
 .cm-in{border-top:1px solid var(--hair);padding:8px 10px 10px;display:flex;flex-direction:column;gap:7px}
@@ -2582,12 +2587,163 @@ function showHommage(f, ms) {
       : '<div class="note" style="font-size:15px">Aucun tribut n\'est tombé aujourd\'hui.</div>'}</div>`;
   h.classList.remove('hide');
   const hy = S.board.hymn || {};
-  if (hy.on !== false && hy.id && S.sound) HYMN.play(hy.vol == null ? 70 : hy.vol, ms); else SND.solemn();
+  // hymne joué en jeu (projection dans le ciel) : il arrive déjà par le son des POV, le Direct ne le rejoue pas
+  if (hy.on !== false && hy.id && S.board.skyHommage === false && S.sound) HYMN.play(hy.vol == null ? 70 : hy.vol, ms);
+  else if (!(hy.on !== false && hy.id)) SND.solemn();
   clearTimeout(showHommage.t);
   const close = () => { h.classList.add('hide'); HYMN.stop(1200); };
   h.onclick = close;
   showHommage.t = setTimeout(close, ms);
 }
+
+/* =====================================================================
+   Projection dans le ciel du jeu : scènes préparées (texte de fond, image, texte devant),
+   gardées dans ce navigateur, puis diffusées en jeu avec une musique (écran PANEM d'abord)
+   ===================================================================== */
+const SKYED = {
+  LS: 'ctv.sky', d: null, sel: 0, playT: 0,
+  load() {
+    if (this.d) return this.d;
+    let d = null; try { d = JSON.parse(localStorage.getItem(this.LS) || 'null'); } catch (e) {}
+    this.d = d && Array.isArray(d.scenes) ? d : { title: 'Message du Capitole', music: (S.board.hymn || {}).id || '', vol: 70, scenes: [{ id: rid(), bg: 'PANEM', fg: 'Que les jeux commencent', img: '', dur: 7 }] };
+    return this.d;
+  },
+  save() { try { localStorage.setItem(this.LS, JSON.stringify(this.d)); } catch (e) { toastInfo('Projection', 'Le navigateur manque de place pour garder les images (allège-les ou retire-en).', true); } },
+  cur() { return this.d.scenes[this.sel]; },
+  open() {
+    this.load(); this.sel = Math.min(this.sel, this.d.scenes.length - 1);
+    const au = (PROG.media || []).filter(x => x.kind === 'audio' && x.n && !x.dl);
+    const m = modal(`${modalHead(`${ic('star')} Projection dans le ciel`, 'Prépare tes scènes, puis lance la diffusion : en jeu, au nord du ciel, d\'abord PANEM avec l\'emblème, puis tes scènes dans l\'ordre. Tout est gardé dans ce navigateur.')}
+      <div class="modal-b sky-ed">
+        <div class="sky-list" id="skList"></div>
+        <div class="sky-mid"><canvas id="skCv" width="640" height="360"></canvas>
+          <div class="row" style="gap:6px;margin-top:8px"><button class="btn sm" id="skPrev">${ic('play')}Aperçu de toute la diffusion</button><span class="note" id="skInfo"></span></div></div>
+        <div class="sky-side" id="skSide"></div>
+      </div>
+      <div class="modal-f" style="flex-wrap:wrap;gap:8px">
+        <input class="inp" id="skTitle" maxlength="60" placeholder="Texte sous PANEM" style="flex:1;min-width:180px" value="${esc(this.d.title || '')}">
+        <select class="inp" id="skMusic" style="flex:1;min-width:160px"><option value="">Sans musique</option>${au.map(x => `<option value="${esc(x.id)}" ${this.d.music === x.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>
+        <label style="display:flex;align-items:center;gap:6px;flex:0 0 130px"><span class="note">Vol.</span><input type="range" id="skVol" min="0" max="100" step="5" value="${this.d.vol == null ? 70 : this.d.vol}" style="flex:1"></label>
+        <button class="btn primary" id="skGo">${ic('star')}Lancer la diffusion</button>
+      </div>`, { wide: true });
+    m.querySelector('#skTitle').oninput = e => { this.d.title = e.target.value; this.save(); this.draw(); };
+    m.querySelector('#skMusic').onchange = e => { this.d.music = e.target.value; this.save(); };
+    m.querySelector('#skVol').oninput = e => { this.d.vol = +e.target.value; this.save(); };
+    m.querySelector('#skGo').onclick = () => this.launch();
+    m.querySelector('#skPrev').onclick = () => this.preview();
+    m.querySelector('#skList').onclick = e => {
+      const b = e.target.closest('[data-sk]'), r = e.target.closest('[data-si]');
+      const sc = this.d.scenes;
+      if (b) {
+        const a = b.dataset.sk, i = this.sel;
+        if (a === 'add') { sc.splice(i + 1, 0, { id: rid(), bg: '', fg: '', img: '', dur: 7 }); this.sel = i + 1; }
+        if (a === 'dup') { sc.splice(i + 1, 0, { ...sc[i], id: rid() }); this.sel = i + 1; }
+        if (a === 'up' && i > 0) { [sc[i - 1], sc[i]] = [sc[i], sc[i - 1]]; this.sel--; }
+        if (a === 'down' && i < sc.length - 1) { [sc[i + 1], sc[i]] = [sc[i], sc[i + 1]]; this.sel++; }
+        if (a === 'del' && sc.length > 1) { sc.splice(i, 1); this.sel = Math.max(0, i - 1); }
+        this.save(); this.render(); return;
+      }
+      if (r) { this.sel = +r.dataset.si; this.render(); }
+    };
+    this.render();
+  },
+  render() {
+    const sc = this.d.scenes, c = this.cur();
+    $('#skList').innerHTML = `<div class="sky-tools"><button class="btn xs" data-sk="add" title="Nouvelle scène">${ic('plus')}</button><button class="btn xs" data-sk="dup" title="Dupliquer">${ic('copy')}</button><button class="btn xs" data-sk="up" title="Monter">▲</button><button class="btn xs" data-sk="down" title="Descendre">▼</button><button class="btn xs ghost" data-sk="del" title="Supprimer">${ic('trash')}</button></div>`
+      + sc.map((x, i) => `<div class="sky-it ${i === this.sel ? 'on' : ''}" data-si="${i}"><b>${i + 1}</b><span>${esc(x.fg || x.bg || (x.img ? 'Image' : 'Scène vide'))}</span><em>${x.dur} s</em></div>`).join('');
+    $('#skSide').innerHTML = `<label class="f"><span class="lbl2">Texte de fond <em>répété en rangées, comme « DISTRICT 12 »</em></span><input class="inp" id="skBg" maxlength="40" value="${esc(c.bg)}" placeholder="Ex. JOUR 3"></label>
+      <div class="f"><span class="lbl2">Image <em>au centre, teintée comme un projecteur</em></span>
+        <div class="row" style="gap:6px">${c.img ? `<img src="${c.img}" style="width:48px;height:48px;object-fit:contain;background:#000;border-radius:6px">` : ''}<button class="btn sm" id="skImg">${c.img ? 'Changer' : 'Choisir une image'}</button>${c.img ? '<button class="btn sm ghost" id="skImgX">Retirer</button>' : ''}</div></div>
+      <label class="f"><span class="lbl2">Texte devant <em>sous l'image, ou en grand s'il n'y a pas d'image</em></span><input class="inp" id="skFg" maxlength="60" value="${esc(c.fg)}" placeholder="Ex. Le festin commence à l'aube"></label>
+      <label class="f"><span class="lbl2">Durée de la scène</span><div class="row" style="gap:8px"><input type="range" id="skDur" min="3" max="30" value="${c.dur}" style="flex:1"><span class="note" id="skDurT">${c.dur} s</span></div></label>`;
+    paintIcons($('#skList')); paintIcons($('#skSide'));
+    const up = () => { this.save(); this.draw(); this.renderListOnly(); };
+    $('#skBg').oninput = e => { c.bg = e.target.value; up(); };
+    $('#skFg').oninput = e => { c.fg = e.target.value; up(); };
+    $('#skDur').oninput = e => { c.dur = +e.target.value; $('#skDurT').textContent = c.dur + ' s'; up(); };
+    $('#skImg').onclick = () => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.onchange = () => { const f = inp.files[0]; if (f) this.toPng(f).then(u => { if (u) { c.img = u; this.save(); this.render(); } }); }; inp.click(); };
+    if ($('#skImgX')) $('#skImgX').onclick = () => { c.img = ''; this.save(); this.render(); };
+    const tot = 5 + this.d.scenes.reduce((t, x) => t + x.dur, 0);
+    $('#skInfo').textContent = `${this.d.scenes.length} scène${this.d.scenes.length > 1 ? 's' : ''} · ${Math.floor(tot / 60)} min ${String(tot % 60).padStart(2, '0')}`;
+    this.draw();
+  },
+  renderListOnly() { $('#skList').querySelectorAll('.sky-it').forEach((el, i) => { const x = this.d.scenes[i]; el.querySelector('span').textContent = x.fg || x.bg || (x.img ? 'Image' : 'Scène vide'); el.querySelector('em').textContent = x.dur + ' s'; }); },
+  /* image réduite (256 px max) en PNG : légère à garder et à envoyer au jeu */
+  toPng(f) {
+    return new Promise(res => {
+      const im = new Image(); im.onload = () => {
+        const k = Math.min(1, 256 / Math.max(im.width, im.height)), cv = document.createElement('canvas');
+        cv.width = Math.max(1, Math.round(im.width * k)); cv.height = Math.max(1, Math.round(im.height * k));
+        cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); URL.revokeObjectURL(im.src); res(cv.toDataURL('image/png'));
+      }; im.onerror = () => res(''); im.src = URL.createObjectURL(f);
+    });
+  },
+  /* aperçu (approché) de ce qui sera projeté */
+  draw(sc = this.cur(), intro = false, alpha = 1) {
+    const cv = $('#skCv'); if (!cv) return; const g = cv.getContext('2d'), W = cv.width, H = cv.height;
+    const bgG = g.createLinearGradient(0, 0, 0, H); bgG.addColorStop(0, '#02060e'); bgG.addColorStop(1, '#07142a'); g.fillStyle = bgG; g.fillRect(0, 0, W, H);
+    const halo = g.createRadialGradient(W / 2, H * .45, 10, W / 2, H * .45, W * .55); halo.addColorStop(0, 'rgba(40,110,190,.35)'); halo.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = halo; g.fillRect(0, 0, W, H);
+    g.save(); g.globalAlpha = alpha; g.globalCompositeOperation = 'lighter'; g.textAlign = 'center';
+    const F = s => `900 ${s}px "Archivo Black", "Arial Black", Impact, sans-serif`;
+    if (intro) {
+      g.fillStyle = 'rgba(120,200,255,.95)'; g.font = F(64); g.fillText('PANEM', W / 2, H * .62);
+      g.font = F(14); g.fillStyle = 'rgba(160,220,255,.9)'; g.fillText((this.d.title || '').toUpperCase(), W / 2, H * .72);
+      g.strokeStyle = 'rgba(120,200,255,.8)'; g.lineWidth = 3; g.beginPath(); g.arc(W / 2, H * .3, 34, 0, Math.PI * 2); g.stroke();
+    } else {
+      const hasPic = !!sc.img;
+      if (sc.bg) {
+        g.font = F(30); g.fillStyle = 'rgba(70,150,230,.55)'; g.textAlign = 'left';
+        const row = sc.bg.toUpperCase() + '   ', rw = Math.max(40, g.measureText(row).width);
+        for (let r = 0; r < 6; r++) { const y = 70 + r * 50, off = -40 + (r % 2) * rw * .42 - r * 12 - (y - H / 2) * .1; for (let x = off; x < W; x += rw) g.fillText(row, x, y + (x - W / 2) * .05 + Math.pow((x - W / 2) / W, 2) * 60); }
+        g.textAlign = 'center';
+        // le fond s'efface derrière l'image et le texte devant
+        g.globalCompositeOperation = 'source-over'; const mk = g.createRadialGradient(W / 2, H * .48, 20, W / 2, H * .48, hasPic ? 150 : 200); mk.addColorStop(0, 'rgba(3,10,24,.9)'); mk.addColorStop(1, 'rgba(3,10,24,0)'); g.fillStyle = mk; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'lighter';
+      }
+      if (hasPic && this._img(sc.img)) {
+        const im = this._img(sc.img), h = 170, w = Math.min(320, Math.max(70, h * im.width / im.height)), x = W / 2 - w / 2, y = H * .42 - h / 2;
+        const t = document.createElement('canvas'); t.width = w; t.height = h; const tg = t.getContext('2d');
+        tg.drawImage(im, 0, 0, w, h); tg.globalCompositeOperation = 'multiply'; tg.fillStyle = '#80d6ff'; tg.fillRect(0, 0, w, h);
+        tg.globalCompositeOperation = 'destination-in'; tg.drawImage(im, 0, 0, w, h);
+        for (let yy = 0; yy < h; yy += 4) g.drawImage(t, 0, yy, w, 3, x, y + yy, w, 3);
+      }
+      if (sc.fg) { const s = hasPic ? 22 : 40; g.font = F(s); g.fillStyle = 'rgba(190,235,255,.95)'; let txt = sc.fg.toUpperCase(); g.fillText(txt, W / 2, hasPic ? H * .42 + 120 : H * .52, W - 60); }
+    }
+    g.restore();
+    // lignes de balayage
+    g.fillStyle = 'rgba(0,0,0,.18)'; for (let y = 0; y < H; y += 3) g.fillRect(0, y, W, 1);
+  },
+  _imgs: {},
+  _img(u) { let im = this._imgs[u]; if (!im) { im = this._imgs[u] = new Image(); im.onload = () => this.draw(); im.src = u; } return im.complete && im.naturalWidth ? im : null; },
+  preview() {
+    clearInterval(this.playT);
+    const seq = [{ intro: true, dur: 5 }, ...this.d.scenes.map(sc => ({ sc, dur: sc.dur }))]; let i = 0, t0 = performance.now();
+    this.playT = setInterval(() => {
+      if (!$('#skCv')) return clearInterval(this.playT);
+      let el = (performance.now() - t0) / 1000;
+      while (i < seq.length && el > seq[i].dur) { el -= seq[i].dur; t0 += seq[i].dur * 1000; i++; }
+      if (i >= seq.length) { clearInterval(this.playT); this.draw(); return; }
+      const it = seq[i], a = Math.min(1, el / 1.2) * Math.min(1, (it.dur - el) / 1);
+      this.draw(it.sc || this.cur(), !!it.intro, Math.max(0, a));
+    }, 50);
+  },
+  async launch() {
+    const btn = $('#skGo'); btn.disabled = true;
+    try {
+      const keys = {};
+      for (const sc of this.d.scenes) if (sc.img && !keys[sc.img]) {
+        const bin = await (await fetch(sc.img)).arrayBuffer();
+        const r = await fetch('/api/media/skyimg', { method: 'POST', body: bin, headers: { 'Content-Type': 'image/png' } });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j.msg || 'image refusée');
+        keys[sc.img] = j.key;
+      }
+      const r = await NET.req({ t: 'skyShow', title: this.d.title, music: this.d.music, vol: this.d.vol, scenes: this.d.scenes.map(sc => ({ bg: sc.bg, fg: sc.fg, img: sc.img ? keys[sc.img] : '', dur: sc.dur })) });
+      toastInfo('Projection lancée', r.servers ? `Dans le ciel du jeu pendant ${Math.floor(r.total / 60)} min ${String(r.total % 60).padStart(2, '0')} (les musiques du jeu baissent d'abord).` : 'Aucun serveur Minecraft relié au site : rien n\'est projeté.', !r.servers);
+      closeModal();
+    } catch (e) { toastInfo('Projection', e.message, true); }
+    btn.disabled = false;
+  }
+};
 
 /* hymne de l'hommage : monte en douceur, redescend et s'arrête proprement à la fin */
 const HYMN = {
@@ -2958,7 +3114,7 @@ function openHommage() {
       <label class="f"><span class="lbl2">Titre</span><input class="inp" id="hoT" maxlength="60" value="${S.board.day ? 'Ils sont tombés au jour ' + S.board.day : 'Ils sont tombés aujourd\'hui'}"></label>
       <div class="f"><span class="lbl2">Tributs affichés <em>cochés : tombés depuis le dernier hommage</em></span>
         <div class="tblwrap" style="max-height:240px">${dead.length ? dead.map(t => `<label class="switch" style="margin:6px 0"><input type="checkbox" value="${esc(t.id)}" ${t.diedAt > since ? 'checked' : ''}> ${pad3(t.num)} — ${esc(t.name)} <span class="note">${distLabel(t.district)} · ${hhmm(t.diedAt)}</span></label>`).join('') : '<div class="note">Aucun tribut tombé pour l\'instant.</div>'}</div></div>
-      ${(() => { const hy = S.board.hymn || {}, au = (PROG.media || []).filter(x => x.kind === 'audio' && x.n && !x.dl); return `<div class="f"><span class="lbl2">Hymne en fond <em>sur le Direct et en jeu, fondu au début et à la fin</em></span>
+      ${(() => { const hy = S.board.hymn || {}, au = (PROG.media || []).filter(x => x.kind === 'audio' && x.n && !x.dl); return `<div class="f"><span class="lbl2">Hymne en fond <em>joué en jeu (il arrive sur le Direct par le son des POV), fondu au début et à la fin</em></span>
         <div class="gx-row"><label class="switch" style="margin:0"><input type="checkbox" id="hoHy" ${hy.on !== false ? 'checked' : ''}> Jouer</label>
         <select class="inp" id="hoHyId" style="flex:1"><option value="">— choisir un son des médias —</option>${au.map(x => `<option value="${esc(x.id)}" ${hy.id === x.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>
         <label style="display:flex;align-items:center;gap:6px;flex:0 0 140px"><span class="note">Vol.</span><input type="range" id="hoHyV" min="0" max="100" step="5" value="${hy.vol == null ? 70 : hy.vol}" style="flex:1"></label></div>
@@ -5740,7 +5896,9 @@ const PROG = {
               <div class="rg-row" style="margin-top:8px"><span class="note" style="flex:none">Modifs du plan à l'antenne :</span><div class="seg sm" id="rgMode"><button data-mode="auto" title="Chaque déplacement ou ajout part tout de suite à l'antenne">Immédiates</button><button data-mode="manual" title="Rien ne change à l'antenne avant d'appuyer sur Appliquer">Manuelles</button></div></div>
               <button class="btn apply hide" id="rgApply" style="width:100%;margin-top:8px">APPLIQUER LES MODIFS À L'ANTENNE <span style="opacity:.7;font-size:11px;margin-left:6px">(A)</span></button>
               <button class="btn take" id="rgTake" style="width:100%;margin-top:8px">À L'ANTENNE ▶ <span style="opacity:.7;font-size:11px;margin-left:6px">(T)</span></button>
-              <button class="btn sm mixbtn" id="rgMix" title="Volumes de l'émission (général, musique, chaque source) avec fondus"><span class="mixico"><i></i><i></i><i></i></span>Mixeur de l'émission</button><div class="note" id="rgWarn" style="margin-top:6px;min-height:16px"></div></div>
+              <button class="btn sm mixbtn" id="rgMix" title="Volumes de l'émission (général, musique, chaque source) avec fondus"><span class="mixico"><i></i><i></i><i></i></span>Mixeur de l'émission</button>
+              <div class="rg-ann admin-only"><span class="note">Annonces</span><button class="btn sm" id="rgFlash" title="Annonce à l'antenne">${ic('mega')}Flash</button><button class="btn sm" id="rgGift" title="Parachute argenté">${ic('para')}Parachute</button><button class="btn sm" id="rgHo" title="Hommage aux tombés">${ic('moon')}Hommage</button><button class="btn sm" id="rgSky" title="Messages projetés dans le ciel du jeu (scènes à préparer)">${ic('star')}Projection</button></div>
+              <div class="note" id="rgWarn" style="margin-top:6px;min-height:16px"></div></div>
           </div>
           <div class="rg-row rg-sfx" id="rgSfx"></div>
           <div class="rg-panels">
@@ -6439,6 +6597,10 @@ const PROG = {
     $('#rgFavs').onclick = e => { const b = e.target.closest('[data-fav]'); if (!b) return; const i = +b.dataset.fav; if (e.shiftKey || !this.favs()[i]) this.favSet(i); else this.favGo(i); };
     $('#rgFavs').oncontextmenu = e => { const b = e.target.closest('[data-fav]'); if (!b) return; e.preventDefault(); if (this.favs()[+b.dataset.fav]) this.favSet(+b.dataset.fav, true); };
     $('#rgMix').onclick = () => MIXUI.toggle();
+    $('#rgFlash').onclick = () => openFlash();
+    $('#rgGift').onclick = () => openGift(byLogin(S.slots[S.active]));
+    $('#rgHo').onclick = () => openHommage();
+    $('#rgSky').onclick = () => SKYED.open();
     pv.addEventListener('dragover', e => { e.preventDefault(); pv.classList.add('drop'); });
     pv.addEventListener('dragleave', () => pv.classList.remove('drop'));
     pv.addEventListener('drop', e => {

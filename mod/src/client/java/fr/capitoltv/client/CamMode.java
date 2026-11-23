@@ -34,6 +34,13 @@ public final class CamMode {
     public static boolean noclip;
     /** appelé par le mixin du joueur : collisions actives en mode caméra, sauf NoClip */
     public static boolean blockNoclip() { return active() && !noclip; }
+    /** déplacement des mouvements automatiques et du drone : bute sur les blocs, sauf NoClip */
+    public static void moveTo(net.minecraft.client.network.ClientPlayerEntity p, net.minecraft.util.math.Vec3d to) {
+        p.setVelocity(net.minecraft.util.math.Vec3d.ZERO);
+        if (!blockNoclip()) { p.setPosition(to.x, to.y, to.z); return; }
+        ((net.minecraft.entity.Entity) p).noClip = false;
+        p.move(net.minecraft.entity.MovementType.SELF, to.subtract(p.getPos()));
+    }
 
     /** le serveur (mod serveur) dit que ce joueur est une caméra */
     public static volatile boolean serverCam;

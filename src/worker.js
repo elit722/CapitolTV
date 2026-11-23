@@ -103,6 +103,12 @@ export default {
         }
       }
       // hymne de l'hommage : lu aussi par le mod en jeu (sans compte), seulement le son choisi
+      // images des projections dans le ciel (lues par le mod en jeu, sans compte)
+      if (p.startsWith("/skyimg/")) {
+        const k = p.slice(8).replace(/[^a-f0-9]/g, "").slice(0, 32);
+        const b = k && env.MEDIA ? await env.MEDIA.get("skyimg:" + k, "arrayBuffer") : null;
+        return b ? new Response(b, { headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=86400" } }) : new Response("Image inconnue", { status: 404 });
+      }
       if (p === "/hymn") return env.GAME.getByName("main").fetch(new Request(new URL("/hymn", "https://game"), { headers: req.headers }));
       if (p === "/mod/ws") {
         if (req.headers.get("Upgrade") !== "websocket") return new Response("WebSocket attendu", { status: 426 });
@@ -582,7 +588,11 @@ export class Game extends DurableObject {
     if (path === "/mod") return this.modConnect(req);
     if (path.startsWith("/api/media")) return this.mediaApi(req, path);
     if (path.startsWith("/terrain/")) return this.terrainGet(path);
-    if (path === "/hymn") { const h = normHymn(this.board.hymn); return h.id ? serveMedia(req, this.env, h.id) : new Response("Aucun hymne choisi", { status: 404 }); }
+    if (path === "/hymn") {
+      const h = normHymn(this.board.hymn), v = new URL(req.url).searchParams.get("v") || "";
+      const id = v && (v === h.id || v === this.skyMusic) ? v : h.id;
+      return id ? serveMedia(req, this.env, id) : new Response("Aucun hymne choisi", { status: 404 });
+    }
     if (path === "/dvr/up") return this.dvrUpload(req);
     if (path === "/twitchbot/start" || path === "/twitchbot/cb") return this.botOAuth(req, path);
     if (this.tbot && this.tbot.on && this.tbot.channel && !this.botWs && !this.botConnecting && Date.now() - (this.botTry || 0) > 20000) { this.botTry = Date.now(); this.botStart(); }
@@ -817,6 +827,17 @@ export class Game extends DurableObject {
       }
       case "alert": return this.onAlert(ws, a, m.a || {}, reply);
       case "tstats": this.statTick(); return reply(true, this.statsFor(a));
+      case "skyShow": {
+        if (!isCrew(a) || a.lock || !(a.perm === "admin" || hasPerm(a, "program"))) return deny();
+        const clean = x => String(x || "").replace(/\s+/g, " ").trim().slice(0, 60);
+        const scenes = (Array.isArray(m.scenes) ? m.scenes : []).slice(0, 30).map(x => ({ bg: clean(x.bg), fg: clean(x.fg), img: /^[a-f0-9]{24}$/.test(String(x.img || "")) ? "/skyimg/" + x.img : "", dur: Math.max(3, Math.min(30, Math.round(+x.dur || 7))) })).filter(x => x.bg || x.fg || x.img);
+        if (!scenes.length) return reply(false, { msg: "Aucune scène à projeter." });
+        const music = String(m.music || "").replace(/[^a-z0-9]/gi, "").slice(0, 40);
+        this.skyMusic = music;
+        this.sendServers({ t: "sky", kind: "show", title: clean(m.title), scenes, hymn: music ? { path: "/hymn?v=" + music, vol: Math.max(0, Math.min(100, Math.round(+m.vol || 70))) } : undefined });
+        const total = 5 + scenes.reduce((t, x) => t + x.dur, 0);
+        return reply(true, { total, servers: [...this.sockets()].filter(w => (this.att(w) || {}).server).length });
+      }
       case "zones": {
         if (!isCrew(a) || a.lock || !(isSup(a) || hasPerm(a, "program"))) return deny();
         this.zones = (Array.isArray(m.zones) ? m.zones : []).slice(0, 40).map(z => ({ id: String(z.id || rid8()).slice(0, 12), name: String(z.name || "Zone interdite").slice(0, 40), d: String(z.d || "minecraft:overworld").slice(0, 60),
@@ -1369,6 +1390,14 @@ export class Game extends DurableObject {
       try { list = await scSearch(this.env, q); } catch (e) { return J({ list: [], msg: "SoundCloud ne répond pas pour le moment : colle directement le lien d'un titre SoundCloud." }); }
       await this.env.MEDIA.put(ck, JSON.stringify({ at: Date.now(), list }), { expirationTtl: 43200 }).catch(() => {});
       return J({ list });
+    }
+    // image d'une scène projetée dans le ciel (PNG préparé par le navigateur)
+    if (req.method === "POST" && id === "skyimg") {
+      const buf = new Uint8Array(await req.arrayBuffer());
+      if (!buf.length || buf.length > 600000 || buf[0] !== 0x89 || buf[1] !== 0x50) return J({ msg: "Image PNG attendue (600 Ko max)." }, 400);
+      const k = [...new Uint8Array(await crypto.subtle.digest("SHA-256", buf))].slice(0, 12).map(x => x.toString(16).padStart(2, "0")).join("");
+      await this.env.MEDIA.put("skyimg:" + k, buf, { expirationTtl: 60 * 86400 });
+      return J({ ok: true, key: k });
     }
     // écoute avant ajout : le son passe par le site (lecteur audio normal, rien d'extérieur)
     if (req.method === "GET" && id === "scplay") {

@@ -82,6 +82,16 @@ public final class ServerBridge {
     /** chat vocal : caméras et staff ne sont entendus que par les caméras et le staff */
     static boolean voiceSilent(String name) { return isCam(name) || isSup(name); }
     static boolean voiceLoud(String name) { return loud.contains(name.toLowerCase(java.util.Locale.ROOT)); }
+    /** dit à chaque joueur quelles voix ne doivent pas partir dans sa POV (caméras et staff non audibles) */
+    static void voiceRoster(MinecraftServer s) {
+        if (s == null) return;
+        JsonObject r = new JsonObject(); r.addProperty("t", "voiceRoster");
+        JsonArray si = new JsonArray(), lo = new JsonArray();
+        for (ServerPlayerEntity p : s.getPlayerManager().getPlayerList()) { String n = p.getGameProfile().getName(); if (voiceSilent(n)) si.add(n); if (voiceLoud(n)) lo.add(n); }
+        r.add("silent", si); r.add("loud", lo);
+        String j = r.toString();
+        for (ServerPlayerEntity p : s.getPlayerManager().getPlayerList()) if (ServerPlayNetworking.canSend(p, fr.capitoltv.net.CtvMsgPayload.ID)) ServerPlayNetworking.send(p, new fr.capitoltv.net.CtvMsgPayload(j));
+    }
 
     private static boolean isCam(String name) {
         for (String n : remoteCams) if (n.equalsIgnoreCase(name)) return true;
@@ -122,6 +132,7 @@ public final class ServerBridge {
         if (t.equals("sky")) { MinecraftServer s0 = server;
             // l'hymne est servi par le site : on donne aux joueurs l'adresse complète
             if (m.has("hymn") && m.get("hymn").isJsonObject()) { JsonObject h = m.getAsJsonObject("hymn"); if (h.has("path")) h.addProperty("url", cfg.url.replaceAll("/+$", "") + h.get("path").getAsString()); }
+            if (m.has("scenes") && m.get("scenes").isJsonArray()) for (var e : m.getAsJsonArray("scenes")) { JsonObject o = e.getAsJsonObject(); if (o.has("img") && o.get("img").getAsString().startsWith("/")) o.addProperty("img", cfg.url.replaceAll("/+$", "") + o.get("img").getAsString()); }
             if (s0 != null) s0.execute(() -> { String j = m.toString(); for (ServerPlayerEntity p : s0.getPlayerManager().getPlayerList()) if (ServerPlayNetworking.canSend(p, fr.capitoltv.net.CtvMsgPayload.ID)) ServerPlayNetworking.send(p, new fr.capitoltv.net.CtvMsgPayload(j)); }); return; }
         if (t.equals("scan")) {
             MinecraftServer s0 = server; if (s0 == null) return;
@@ -136,6 +147,7 @@ public final class ServerBridge {
         remoteCams.clear();
         for (var e : m.getAsJsonArray("names")) remoteCams.add(e.getAsString());
         if (m.has("sups")) { remoteSups.clear(); for (var e : m.getAsJsonArray("sups")) remoteSups.add(e.getAsString()); }
+        { MinecraftServer s1 = server; if (s1 != null) s1.execute(() -> voiceRoster(s1)); }
         if (t.equals("hello")) reportLocalCams();
         MinecraftServer s = server;
         if (s == null) return;
@@ -247,6 +259,7 @@ public final class ServerBridge {
             events.add(e);
         });
 
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, s) -> s.execute(() -> voiceRoster(s)));
         ServerPlayConnectionEvents.JOIN.register((handler, sender, s) -> {
             ServerPlayerEntity p = handler.getPlayer();
             boolean cam = isCam(p.getGameProfile().getName());
@@ -266,6 +279,7 @@ public final class ServerBridge {
             JsonObject r = new JsonObject(); r.addProperty("t", "voice"); r.addProperty("on", loud.contains(k));
             r.addProperty("msg", !ok ? "Réservé au staff à partir de responsable caméra." : !svc ? "Simple Voice Chat n'est pas installé sur le serveur." : loud.contains(k) ? "Les joueurs proches t'entendent." : "Seuls les caméras et le staff t'entendent.");
             if (ServerPlayNetworking.canSend(p, fr.capitoltv.net.CtvMsgPayload.ID)) ServerPlayNetworking.send(p, new fr.capitoltv.net.CtvMsgPayload(r.toString()));
+            voiceRoster(s);
         });
         ServerPlayConnectionEvents.DISCONNECT.register((h, s) -> loud.remove(h.player.getGameProfile().getName().toLowerCase(java.util.Locale.ROOT)));
         ServerPlayNetworking.registerGlobalReceiver(SpecPayload.ID, (payload, ctx) -> {

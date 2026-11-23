@@ -163,8 +163,8 @@ public final class CamMoves {
         // lissage : la caméra glisse vers sa position voulue
         double k = move == 4 ? 0.12 : move == 2 || move == 3 ? 1.0 : 0.25;
         cur = cur.lerp(want, k);
-        p.setVelocity(Vec3d.ZERO);
-        p.setPosition(cur.x, cur.y, cur.z);
+        CamMode.moveTo(p, cur);
+        cur = p.getPos(); // bloqué par un mur : on repart de là où l'on est vraiment
         if (look != null) aim(p, cur.add(0, p.getStandingEyeHeight(), 0), look);
     }
 

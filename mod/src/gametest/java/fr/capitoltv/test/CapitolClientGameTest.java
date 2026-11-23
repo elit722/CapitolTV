@@ -99,7 +99,7 @@ public class CapitolClientGameTest implements FabricClientGameTest {
             context.runOnClient(c -> { c.player.setYaw(180f); c.player.setPitch(-28f); });
             context.waitTicks(20);
             context.runOnClient(c -> fr.capitoltv.client.Overlays.onServerMsg("{\"t\":\"sky\",\"per\":6,\"title\":\"Ils sont tombés\",\"list\":[{\"name\":\"Rue\",\"d\":11,\"num\":3,\"mc\":\"" + c.player.getGameProfile().getName() + "\"}]}"));
-            context.waitTicks(40 + 20 * 2);
+            context.waitTicks(20 * 6);
             context.takeScreenshot("ctv-30-hommage-intro");
             context.waitTicks(20 * 5);
             context.takeScreenshot("ctv-31-hommage-visage");
@@ -109,6 +109,10 @@ public class CapitolClientGameTest implements FabricClientGameTest {
             context.runOnClient(c -> fr.capitoltv.client.Overlays.onServerMsg("{\"t\":\"recap\",\"n\":\"x\",\"name\":\"Rue\",\"district\":11,\"place\":3,\"lines\":[\"3e place sur 24\",\"Tombée face à Cato\",\"Temps de survie : 1 h 12\"]}"));
             context.waitTicks(10);
             context.takeScreenshot("ctv-33-recap");
+            // projection personnalisée (texte de fond + texte devant)
+            context.runOnClient(c -> { c.setScreen(null); c.player.setYaw(180f); c.player.setPitch(-30f); fr.capitoltv.client.Overlays.onServerMsg("{\"t\":\"sky\",\"kind\":\"show\",\"title\":\"Message du Capitole\",\"scenes\":[{\"bg\":\"JOUR 3\",\"fg\":\"Le festin commence a l'aube\",\"dur\":8}]}"); });
+            context.waitTicks(20 * 10);
+            context.takeScreenshot("ctv-34-projection");
         }
     }
 }

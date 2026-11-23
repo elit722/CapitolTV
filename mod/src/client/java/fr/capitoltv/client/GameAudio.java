@@ -87,6 +87,7 @@ public final class GameAudio {
         thread = null; loop = 0L;
     }
 
+    private static byte[] withVoice = new byte[0];
     private static float duck = 1f;
     private static byte[] spk = new byte[0];
     private static void render(long device) {
@@ -108,7 +109,11 @@ public final class GameAudio {
                 SOFTLoopback.alcRenderSamplesSOFT(device, pcm, FRAMES);
                 for (int i = 0; i < FRAMES * 2; i++) { short v = pcm.get(i); bytes[i * 2] = (byte) v; bytes[i * 2 + 1] = (byte) (v >> 8); }
                 BiConsumer<byte[], Integer> s = sink;
-                if (s != null) s.accept(bytes, FRAMES);
+                if (s != null) {
+                    // voix du chat vocal : seulement dans la POV envoyée (le joueur les entend déjà)
+                    if (withVoice.length != bytes.length) withVoice = new byte[bytes.length];
+                    s.accept(VoiceMix.mixInto(bytes, FRAMES, withVoice) ? withVoice : bytes, FRAMES);
+                }
                 if (line != null) {
                     // interphone : le son du jeu baisse dans TES oreilles quand la régie parle (pas dans la POV diffusée)
                     float want = Talk.regieSpeaks && Talk.open ? 0.3f : 1f;

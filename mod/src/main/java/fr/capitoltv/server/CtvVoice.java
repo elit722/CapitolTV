@@ -22,7 +22,14 @@ public final class CtvVoice implements VoicechatPlugin {
     @Override public void initialize(VoicechatApi api) { CapitolTV.LOG.info("Capitol TV : chat vocal géré (caméras inaudibles pour les joueurs)"); }
 
     @Override
-    public void registerEvents(EventRegistration reg) { reg.registerEvent(MicrophonePacketEvent.class, this::onMic); }
+    public void registerEvents(EventRegistration reg) {
+        reg.registerEvent(MicrophonePacketEvent.class, this::onMic);
+        // côté client : les voix entendues partent aussi dans la POV diffusée (voir VoiceMix)
+        reg.registerEvent(de.maxhenkel.voicechat.api.events.ClientReceiveSoundEvent.EntitySound.class, e -> { var t = fr.capitoltv.VoiceTap.sink; if (t != null && e.getRawAudio() != null) t.voice(e.getId(), e.getRawAudio(), null); });
+        reg.registerEvent(de.maxhenkel.voicechat.api.events.ClientReceiveSoundEvent.LocationalSound.class, e -> { var t = fr.capitoltv.VoiceTap.sink; if (t != null && e.getRawAudio() != null) t.voice(e.getId(), e.getRawAudio(), new double[]{e.getPosition().getX(), e.getPosition().getY(), e.getPosition().getZ()}); });
+        reg.registerEvent(de.maxhenkel.voicechat.api.events.ClientReceiveSoundEvent.StaticSound.class, e -> { var t = fr.capitoltv.VoiceTap.sink; if (t != null && e.getRawAudio() != null) t.voice(e.getId(), e.getRawAudio(), new double[0]); });
+        reg.registerEvent(de.maxhenkel.voicechat.api.events.ClientSoundEvent.class, e -> { var t = fr.capitoltv.VoiceTap.sink; if (t != null && e.getRawAudio() != null) t.own(e.getRawAudio()); });
+    }
 
     private void onMic(MicrophonePacketEvent e) {
         VoicechatConnection from = e.getSenderConnection();

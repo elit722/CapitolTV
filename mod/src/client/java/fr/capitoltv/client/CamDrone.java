@@ -84,9 +84,10 @@ public final class CamDrone {
         // inertie : accélération douce et freinage progressif
         vel = vel.multiply(0.86).add(acc.multiply(0.09 * speed));
         if (pos == null) pos = p.getPos();
-        pos = pos.add(vel);
-        p.setVelocity(Vec3d.ZERO);
-        p.setPosition(pos.x, pos.y, pos.z);
+        Vec3d before = p.getPos();
+        CamMode.moveTo(p, pos.add(vel));
+        pos = p.getPos();
+        vel = pos.subtract(before); // contre un mur, la vitesse tombe dans cette direction
     }
 
     /** appelé à chaque image : rejoint le roulis et le zoom voulus */
