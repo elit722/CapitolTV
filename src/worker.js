@@ -1273,7 +1273,7 @@ export class Game extends DurableObject {
     const own = sc && sc.bgm && sc.bgm.ids.length ? { ...sc.bgm, at: this.prog.liveAt || 0, scope: "scene" } : null;
     const g = this.prog.bgm && this.prog.bgm.ids && this.prog.bgm.ids.length ? { ...this.prog.bgm, scope: "all" } : null;
     const b = own || g; if (!b) return null;
-    const tracks = b.ids.map(id => this.media.find(x => x.id === id)).filter(x => x && x.kind === "audio" && !x.dl).map(x => ({ id: x.id, name: x.name, dur: x.dur || 0, credit: x.credit || "", yt: x.yt || undefined, sc: x.sc && !x.n ? x.sc : undefined }));
+    const tracks = b.ids.map(id => this.media.find(x => x.id === id)).filter(x => x && x.kind === "audio" && !x.dl).map(x => ({ id: x.id, name: x.name, dur: x.dur || 0, credit: x.credit || "", yt: x.yt || undefined, sc: x.sc && !x.n ? x.sc : undefined, dz: x.dz || undefined }));
     return tracks.length ? { tracks, at: b.at || 0, vol: b.vol == null ? 60 : b.vol, scope: b.scope } : null;
   }
   onAirCams() {
@@ -1431,6 +1431,18 @@ export class Game extends DurableObject {
       const d = r && r.ok ? await r.json().catch(() => ({})) : null;
       if (!d || d.error) return J({ list: [], msg: "Deezer ne répond pas pour le moment." });
       return J({ list: (d.data || []).map(x => ({ id: x.id, title: String(x.title || "").slice(0, 100), creator: String((x.artist || {}).name || "").slice(0, 60), dur: +x.duration || 0, preview: String(x.preview || ""), link: String(x.link || ""), cover: String((x.album || {}).cover_small || "") })) });
+    }
+    // Deezer : titre lu en entier sur le Direct par le lecteur officiel (compte Premium connecté dans le navigateur d'OBS)
+    if (req.method === "POST" && id === "adddz") {
+      const b = await req.json().catch(() => ({})), dz = String(b.dz || "").replace(/\D/g, "").slice(0, 20);
+      if (!dz) return J({ msg: "Titre Deezer invalide." }, 400);
+      const have = this.media.find(x => x.dz === dz); if (have) return J({ ok: true, media: have });
+      const nid = crypto.randomUUID().replace(/-/g, "").slice(0, 20);
+      const meta = { id: nid, name: String(b.name || "Musique").slice(0, 100), mime: "audio/deezer", kind: "audio", dz, size: 0, dur: Math.max(0, +b.dur || 0), slot: "", by: user.name, at: Date.now(), n: 0, credit: String(b.credit || "").slice(0, 160) };
+      await this.env.MEDIA.put("meta:" + nid, JSON.stringify(meta));
+      this.media = [...this.media, meta].slice(-120);
+      pushList();
+      return J({ ok: true, media: meta });
     }
     if (req.method === "POST" && id === "addyt") {
       const b = await req.json().catch(() => ({})), v = ytId(String(b.yt || ""));
