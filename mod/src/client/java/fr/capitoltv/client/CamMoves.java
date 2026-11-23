@@ -55,6 +55,8 @@ public final class CamMoves {
         picker = false;
         ClientPlayerEntity p = mc.player;
         if (p == null) return;
+        // hors spectateur, le serveur refuse ces déplacements (« moved too quickly ») et la caméra saute
+        if (!p.isSpectator()) { Hud.toast("Mouvements de caméra", "Réservés au mode spectateur (barre caméra).", Hud.ORANGE, 3); return; }
         CamDrone.off(mc); CamPath.stop(null);
         Vec3d tg = target(mc);
         if (tg == null && i != 6) {

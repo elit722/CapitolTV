@@ -925,7 +925,7 @@ export class Game extends DurableObject {
         const src = String(m.src || ""); if (!/^[tc]:[\w-]{1,40}$/.test(src)) return reply(false, { msg: "Source inconnue." });
         for (const [k, v] of Object.entries(this.skeys)) if (v === src) delete this.skeys[k];
         const key = this.keyFor(src);
-        if (this.pubs[src]) { delete this.pubs[src]; this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); }
+        if (this.pubs[src]) { this.pubGone(src); this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); }
         reply(true, { key }); this.broadcast({ t: "skeys", keys: this.allKeys() }, x => hasPerm(x, "program") || x.perm === "admin"); break;
       }
       case "rtcUse": {
@@ -962,7 +962,7 @@ export class Game extends DurableObject {
       case "povBlock": {
         if (!(admin || hasPerm(a, "program"))) return deny();
         const src = String(m.src || "").slice(0, 44); if (!/^[tc]:/.test(src)) return reply(false);
-        if (m.on) { this.vpref[src] = "blocked"; if (this.pubs[src]) { delete this.pubs[src]; this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); } }
+        if (m.on) { this.vpref[src] = "blocked"; if (this.pubs[src]) { this.pubGone(src); this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); } }
         else if (this.vpref[src] === "blocked") delete this.vpref[src];
         this.ctx.storage.put("vpref", this.vpref);
         this.crewcast({ t: "vpref", vpref: this.vpref }, x => !x.mod && !x.lock);
@@ -1618,6 +1618,8 @@ export class Game extends DurableObject {
     return out;
   }
   rtcAllowed(a) { return !!a && this.rtcOn() && !a.lock && (isCrew(a) || a.overlay); }
+  /** POV coupée : on garde l'heure de début un moment (reconnexion = même compte à rebours du différé) */
+  pubGone(src) { const p = this.pubs[src]; if (p) { (this.pubLast = this.pubLast || {})[src] = { at: p.at, seen: Date.now() }; } delete this.pubs[src]; }
   pubsFor(a) {
     if (!this.rtcAllowed(a)) return {};
     const out = {};
@@ -1636,7 +1638,7 @@ export class Game extends DurableObject {
     if (!src) return new Response("Clé de diffusion inconnue", { status: 404, headers: H() });
     if (!this.rtcOn()) return new Response("Vidéo native non configurée sur le serveur", { status: 503, headers: H() });
     if (req.method === "DELETE") {
-      if (this.pubs[src] && (!parts[2] || this.pubs[src].sid === parts[2])) { delete this.pubs[src]; this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); }
+      if (this.pubs[src] && (!parts[2] || this.pubs[src].sid === parts[2])) { this.pubGone(src); this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); }
       return new Response(null, { status: 200, headers: H() });
     }
     if (req.method === "PATCH") return new Response(null, { status: 204, headers: H() });
@@ -1648,7 +1650,7 @@ export class Game extends DurableObject {
       if (this.vpref[src] === "blocked") return Response.json(this.vqFor(src), { headers: H() });
       if (lvl && this.vpref[src] !== lvl && !(lvl === "on" && !this.vpref[src])) {
         this.vpref[src] = lvl; this.ctx.storage.put("vpref", this.vpref);
-        if (lvl === "off" && this.pubs[src]) { delete this.pubs[src]; this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); }
+        if (lvl === "off" && this.pubs[src]) { this.pubGone(src); this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); }
         this.crewcast({ t: "vpref", vpref: this.vpref }, x => !x.mod && !x.lock);
       }
       return Response.json(this.vqFor(src), { headers: H() });
@@ -1673,7 +1675,9 @@ export class Game extends DurableObject {
       const ok = (r.tracks || []).filter(t => !t.errorCode).map(t => ({ name: t.trackName, kind: String(t.trackName).split("-")[0] }));
       if (!ok.length) throw new Error("pistes refusées");
       const ua = req.headers.get("User-Agent") || "";
-      this.pubs[src] = { sid: ses.sessionId, tracks: ok, at: Date.now(), via: /CapitolTV/i.test(ua) ? "mod" : /obs/i.test(ua) ? "obs" : "autre", sim: /\na=simulcast:/.test(sdp), lvl: this.vqFor(src).level };
+      // « at » = début de la diffusion : gardé si la POV se reconnecte (sinon le compte à rebours du différé repartait de zéro)
+      const prevPub = this.pubs[src] || (this.pubLast || {})[src];
+      this.pubs[src] = { sid: ses.sessionId, tracks: ok, at: prevPub && prevPub.at && Date.now() - (prevPub.seen || prevPub.at) < 120000 ? prevPub.at : Date.now(), seen: Date.now(), via: /CapitolTV/i.test(ua) ? "mod" : /obs/i.test(ua) ? "obs" : "autre", sim: /\na=simulcast:/.test(sdp), lvl: this.vqFor(src).level };
       this.ctx.storage.put("pubs", this.pubs);
       this.pushPubs();
       const who = this.srcName(src);
@@ -1771,7 +1775,7 @@ export class Game extends DurableObject {
         const bad = (r.tracks || []).filter(t => t.errorCode);
         if (bad.length === pub.tracks.length) {
           // l'émetteur a disparu sans prévenir
-          if (!talkSrc && this.pubs[b.src] === pub) { delete this.pubs[b.src]; this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); }
+          if (!talkSrc && this.pubs[b.src] === pub) { this.pubGone(b.src); this.ctx.storage.put("pubs", this.pubs); this.pushPubs(); }
           return J({ msg: "Flux interrompu." }, 410);
         }
         return J({ sid: ses.sessionId, offer: r.sessionDescription, renego: !!r.requiresImmediateRenegotiation, tracks: r.tracks });

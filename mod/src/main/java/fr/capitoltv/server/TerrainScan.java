@@ -47,6 +47,8 @@ final class TerrainScan {
         String dim; int x0, z0, step, w, h;
         BufferedImage col, hgt;
         boolean dirty; long changedAt, sentAt; String sentId = "";
+        /** relevé interrompu (serveur arrêté ou planté) : on repart de ce chunk au redémarrage ; -1 = terminé */
+        int resume = -1;
         int cx0() { return Math.floorDiv(x0, 16); }
         int cz0() { return Math.floorDiv(z0, 16); }
         int cw() { return Math.floorDiv(x0 + w * step - 1, 16) - cx0() + 1; }
@@ -56,7 +58,7 @@ final class TerrainScan {
     /** relevé complet en cours */
     private static final class Job {
         final Area a; final Consumer<String> say; final long started = System.currentTimeMillis();
-        int next, done, skipped; final int total;
+        int next, done, skipped; final int total; long lastSend = System.currentTimeMillis();
         final ArrayDeque<ChunkPos> toLoad = new ArrayDeque<>();
         final Map<Long, CompletableFuture<Boolean>> asking = new HashMap<>();
         int lastPct = -1;
@@ -85,6 +87,7 @@ final class TerrainScan {
         if (old != null) copy(old, a);
         areas.put(dim, a);
         job = new Job(a, say);
+        a.resume = 0;
         return "Relevé du terrain lancé : " + span + " blocs de côté autour de " + cx + ", " + cz + " (" + job.total + " chunks ; les zones jamais explorées sont générées au passage, doucement, sans faire ramer le serveur ; la carte reste ensuite à jour toute seule).";
     }
 
@@ -165,13 +168,13 @@ final class TerrainScan {
                 WorldChunk ch = w.getChunkManager().getWorldChunk(cp.x, cp.z);
                 if (ch != null || ++e.getValue()[0] > 1200) {
                     if (ch != null) { if (readChunk(w, a, ch)) a.dirty = true; } else jb.skipped++;
-                    w.setChunkForced(cp.x, cp.z, false);
+                    w.getChunkManager().setChunkForced(cp, false);
                     it.remove(); jb.done++;
                 }
                 if (System.nanoTime() > until) break;
             }
             // 2) chunks déjà en mémoire : lus tout de suite ; les autres : demandés au serveur (génération en tâche de fond)
-            int max = slow > 0 ? 2 : 12;
+            int max = slow > 0 ? 1 : 6;
             while (jb.next < jb.total && System.nanoTime() < until) {
                 int k = jb.next;
                 ChunkPos cp = new ChunkPos(cx0 + k % cw, cz0 + k / cw);
@@ -179,7 +182,9 @@ final class TerrainScan {
                 if (ch != null) { jb.next++; if (readChunk(w, a, ch)) a.dirty = true; jb.done++; continue; }
                 if (forced.size() >= max) break;
                 jb.next++;
-                w.setChunkForced(cp.x, cp.z, true);
+                // ticket seul : le chunk est chargé / généré en tâche de fond.
+                // (ServerWorld.setChunkForced le charge tout de suite sur le fil du serveur → serveur figé, c'était le plantage)
+                w.getChunkManager().setChunkForced(cp, true);
                 forced.put(cp.toLong(), new int[]{0});
             }
         } catch (Exception e) {
@@ -189,9 +194,13 @@ final class TerrainScan {
         }
         int pct = jb.done * 100 / Math.max(1, jb.total);
         if (pct / 10 != jb.lastPct / 10 && pct < 100) { jb.lastPct = pct; if (pct > 0) jb.say.accept("Relevé du terrain : " + pct + " %"); }
-        if (jb.done < jb.total) return;
+        if (jb.done < jb.total) {
+            // la carte part au site au fur et à mesure (toutes les minutes) et le point d'avancement est gardé sur le disque
+            if (System.currentTimeMillis() - jb.lastSend > 60_000) { jb.lastSend = System.currentTimeMillis(); a.resume = Math.max(0, jb.next - forced.size() - 1); send(a, null); }
+            return;
+        }
         job = null;
-        a.dirty = true;
+        a.dirty = true; a.resume = -1;
         send(a, jb);
     }
 
@@ -199,7 +208,7 @@ final class TerrainScan {
     static void release(MinecraftServer s) {
         Job jb = job;
         ServerWorld w = jb != null ? world(s, jb.a.dim) : null;
-        if (w != null) for (long k : forced.keySet()) { ChunkPos cp = new ChunkPos(k); w.setChunkForced(cp.x, cp.z, false); }
+        if (w != null) for (long k : forced.keySet()) w.getChunkManager().setChunkForced(new ChunkPos(k), false);
         forced.clear();
     }
 
@@ -272,11 +281,23 @@ final class TerrainScan {
                     a.dim = j.get("dim").getAsString(); a.x0 = j.get("x0").getAsInt(); a.z0 = j.get("z0").getAsInt();
                     a.step = j.get("step").getAsInt(); a.w = j.get("w").getAsInt(); a.h = j.get("h").getAsInt();
                     a.sentId = j.has("id") ? j.get("id").getAsString() : "";
+                    a.resume = j.has("resume") ? j.get("resume").getAsInt() : -1;
                     a.col = ImageIO.read(dir.resolve(base + "-c.png").toFile()); a.hgt = ImageIO.read(dir.resolve(base + "-h.png").toFile());
                     if (a.col == null || a.hgt == null || a.col.getWidth() != a.w) continue;
                     // les PNG relus peuvent être d'un autre type : on repasse en RGB simple
                     a.col = rgb(a.col); a.hgt = rgb(a.hgt);
                     areas.put(a.dim, a);
+                    if (a.resume >= 0 && job == null) {
+                        Job jb = new Job(a, msg -> CapitolTV.LOG.info("Capitol TV : {}", msg));
+                        jb.next = jb.done = Math.min(a.resume, jb.total); job = jb;
+                        // chunks laissés « forcés » par l'arrêt brutal : relâchés
+                        ServerWorld w = world(s, a.dim);
+                        if (w != null) for (long k : new it.unimi.dsi.fastutil.longs.LongArrayList(w.getForcedChunks())) {
+                            ChunkPos cp = new ChunkPos(k);
+                            if (cp.x >= a.cx0() && cp.z >= a.cz0() && cp.x < a.cx0() + a.cw() && cp.z < a.cz0() + a.ch()) w.getChunkManager().setChunkForced(cp, false);
+                        }
+                        CapitolTV.LOG.info("Capitol TV : reprise du relevé de la carte ({} / {} chunks)", jb.done, jb.total);
+                    }
                 }
             }
         } catch (Exception e) { CapitolTV.LOG.warn("Capitol TV : carte enregistrée illisible ({})", e.toString()); }
@@ -294,7 +315,7 @@ final class TerrainScan {
             Files.write(dir.resolve(base + "-c.png"), Base64.getDecoder().decode(c64));
             Files.write(dir.resolve(base + "-h.png"), Base64.getDecoder().decode(h64));
             JsonObject j = new JsonObject();
-            j.addProperty("dim", a.dim); j.addProperty("x0", a.x0); j.addProperty("z0", a.z0); j.addProperty("step", a.step); j.addProperty("w", a.w); j.addProperty("h", a.h); j.addProperty("id", a.sentId);
+            j.addProperty("dim", a.dim); j.addProperty("x0", a.x0); j.addProperty("z0", a.z0); j.addProperty("step", a.step); j.addProperty("w", a.w); j.addProperty("h", a.h); j.addProperty("id", a.sentId); j.addProperty("resume", a.resume);
             Files.writeString(dir.resolve(base + ".json"), j.toString(), StandardCharsets.UTF_8);
         } catch (Exception e) { CapitolTV.LOG.warn("Capitol TV : carte non enregistrée ({})", e.toString()); }
     }

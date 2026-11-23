@@ -4388,10 +4388,13 @@ class DelayPlayer {
   }
   status() {
     const c = this.conn, waiting = this.delay > 0 && !this.appended && (this.started || this.pos == null);
-    // compte à rebours commun : depuis le début de la diffusion de la POV (heure du serveur), pas depuis l'ajout en régie
-    const pa = RTC.pubs[this.src] && RTC.pubs[this.src].at, t0 = pa ? pa - (S.skew || 0) : this.started;
+    // compte à rebours propre à CETTE source : la plus ancienne image enregistrée (ici ou par l'enregistreur partagé)
+    // devient visible « différé » plus tard ; à défaut, le début de diffusion de la POV (heure du serveur)
+    const pool = waiting ? this.pool() : [];
+    const e0 = pool.length ? Math.min(...pool.map(x => x.t)) : 0;
+    const pa = RTC.pubs[this.src] && RTC.pubs[this.src].at, t0 = e0 || (pa ? pa - (S.skew || 0) : this.started);
     const left = waiting && t0 ? Math.max(0, Math.ceil((t0 + this.delay * 1000 - Date.now()) / 1000)) : 0;
-    const txt = this.appended ? '' : !c.ms.getTracks().length && !this.pool().length ? (c.state === 'erreur' ? 'Flux indisponible · nouvel essai…' : 'Connexion au flux…') : waiting ? 'Différé : image dans ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0') : '';
+    const txt = this.appended ? '' : !c.ms.getTracks().length && !this.pool().length ? (c.state === 'erreur' ? 'Flux indisponible · nouvel essai…' : 'Connexion au flux…') : waiting ? (left > 0 ? 'Différé : image dans ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0') : 'Différé : chargement de l\'image…') : '';
     this.badge.textContent = txt; this.badge.classList.toggle('hide', !txt);
   }
   setMuted(m) { this.muted = m; this.video.muted = m; }
