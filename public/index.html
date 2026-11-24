@@ -4004,7 +4004,7 @@ function onAlerts(all) {
    clic gauche glissé = tourner · clic droit (ou Maj) glissé = déplacer · molette = zoom
    ===================================================================== */
 const MAP3D = {
-  gl: null, cv: null, mesh: null, cam: null, beams: LS.get('ctv.map3dBeams', true), raf: 0, dirty: true, t0: performance.now(),
+  gl: null, cv: null, mesh: null, cam: null, beams: LS.get('ctv.map3dBeams', true), hd: LS.get('ctv.map3dHd', false), raf: 0, dirty: true, t0: performance.now(),
   M4: {
     mul(a, b) { const o = new Float32Array(16); for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) { let s = 0; for (let k = 0; k < 4; k++) s += a[k * 4 + r] * b[c * 4 + k]; o[c * 4 + r] = s; } return o; },
     persp(fov, asp, n, f) { const t = 1 / Math.tan(fov / 2), o = new Float32Array(16); o[0] = t / asp; o[5] = t; o[10] = (f + n) / (n - f); o[11] = -1; o[14] = 2 * f * n / (n - f); return o; },
@@ -4078,20 +4078,20 @@ const MAP3D = {
   },
   /* maillage : une colonne par point relevé (dessus + côtés visibles), socle sombre, eau transparente à part */
   build(T) {
-    const gl = this.gl, cap = 1024, f = Math.max(1, Math.ceil(Math.max(T.w, T.h) / cap));
+    const gl = this.gl, cap = this.hd ? 1024 : 512, f = Math.max(1, Math.ceil(Math.max(T.w, T.h) / cap));
     const W = Math.floor(T.w / f), H = Math.floor(T.h / f), st = T.step * f, base = T.ymin - 12;
     const idx = (i, j) => (Math.min(T.h - 1, j * f + (f >> 1))) * T.w + Math.min(T.w - 1, i * f + (f >> 1));
     const HY = new Float32Array(W * H), CO = new Uint32Array(W * H), DP = new Uint8Array(W * H);
     for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) { const k = idx(i, j), q = j * W + i; HY[q] = T.hy[k]; CO[q] = T.col[k]; DP[q] = T.dp[k]; }
     const top = (i, j) => i < 0 || j < 0 || i >= W || j >= H ? base : (DP[j * W + i] ? HY[j * W + i] - DP[j * W + i] + 1 : HY[j * W + i] + 1);
     // tampons extensibles : 16 octets par sommet (x y z + couleur rgba, a = type de face)
-    const mk = () => ({ b: new ArrayBuffer(1 << 22), n: 0, ix: new Uint32Array(1 << 20), ni: 0 });
+    const mk = () => { const b = new ArrayBuffer(1 << 22); return { b, F: new Float32Array(b), U: new Uint8Array(b), n: 0, ix: new Uint32Array(1 << 20), ni: 0 }; };
     const L = mk(), Wt = mk();
-    const grow = m => { if ((m.n + 4) * 16 > m.b.byteLength) { const nb = new ArrayBuffer(m.b.byteLength * 2); new Uint8Array(nb).set(new Uint8Array(m.b)); m.b = nb; } if (m.ni + 6 > m.ix.length) { const ni = new Uint32Array(m.ix.length * 2); ni.set(m.ix); m.ix = ni; } };
+    const grow = m => { if ((m.n + 4) * 16 > m.b.byteLength) { const nb = new ArrayBuffer(m.b.byteLength * 2); new Uint8Array(nb).set(m.U); m.b = nb; m.F = new Float32Array(nb); m.U = new Uint8Array(nb); } if (m.ni + 6 > m.ix.length) { const ni = new Uint32Array(m.ix.length * 2); ni.set(m.ix); m.ix = ni; } };
     const quad = (m, v, r, g2, b, fk) => {
-      grow(m); const F = new Float32Array(m.b), U = new Uint8Array(m.b), o = m.n;
+      grow(m); const F = m.F, U = m.U, o = m.n;
       for (let q = 0; q < 4; q++) { const at = (o + q) * 4; F[at] = v[q * 3]; F[at + 1] = v[q * 3 + 1]; F[at + 2] = v[q * 3 + 2]; const u = (o + q) * 16 + 12; U[u] = r; U[u + 1] = g2; U[u + 2] = b; U[u + 3] = fk; }
-      m.ix.set([o, o + 1, o + 2, o, o + 2, o + 3], m.ni); m.n += 4; m.ni += 6;
+      const I = m.ix, j = m.ni; I[j] = o; I[j + 1] = o + 1; I[j + 2] = o + 2; I[j + 3] = o; I[j + 4] = o + 2; I[j + 5] = o + 3; m.n += 4; m.ni += 6;
     };
     const grade = (c, k) => { // étalonnage « Capitole » : ombres froides, hautes lumières chaudes, un peu désaturé
       let r = (c >> 16 & 255) / 255, g2 = (c >> 8 & 255) / 255, b = (c & 255) / 255; if (!c) { r = .16; g2 = .16; b = .18; }
@@ -4125,11 +4125,11 @@ const MAP3D = {
       return { vb, ib, n: m.ni };
     };
     if (this.mesh) for (const k of ['L', 'W']) if (this.mesh[k]) { gl.deleteBuffer(this.mesh[k].vb); gl.deleteBuffer(this.mesh[k].ib); }
-    this.mesh = { id: T.id + ':' + T.w, L: up(L), W: Wt.n ? up(Wt) : null, st, T, cx: X0 + W * st / 2, cz: Z0 + H * st / 2, span: Math.max(W, H) * st, ymid: (T.ymin + T.ymax) / 2 };
+    this.mesh = { hd: this.hd, id: T.id + ':' + T.w, L: up(L), W: Wt.n ? up(Wt) : null, st, T, cx: X0 + W * st / 2, cz: Z0 + H * st / 2, span: Math.max(W, H) * st, ymid: (T.ymin + T.ymax) / 2 };
   },
   ensure(T) {
     if (!this.ok()) return false;
-    if (T && (!this.mesh || this.mesh.T !== T)) { try { this.build(T); } catch (e) { console.warn('carte 3D', e); return false; } if (!this.cam) this.home(); }
+    if (T && (!this.mesh || this.mesh.T !== T || this.mesh.hd !== this.hd)) { try { this.build(T); } catch (e) { console.warn('carte 3D', e); return false; } if (!this.cam) this.home(); }
     return true;
   },
   home() {
@@ -4141,9 +4141,10 @@ const MAP3D = {
   matrix(W, H) { const c = this.cam, e = this.eye(); return this.M4.mul(this.M4.persp(.8, W / H, Math.max(.5, c.dist / 200), c.dist * 12 + 2000), this.M4.look(e, [c.tx, c.ty, c.tz], [0, 1, 0])); },
   /* coordonnées écran d'un point du monde (null s'il est derrière la caméra) */
   toScreen(M, W, H, x, y, z) { const X = M[0] * x + M[4] * y + M[8] * z + M[12], Y = M[1] * x + M[5] * y + M[9] * z + M[13], Wc = M[3] * x + M[7] * y + M[11] * z + M[15]; if (Wc <= .1) return null; return [W / 2 + X / Wc * W / 2, H / 2 - Y / Wc * H / 2, Wc]; },
-  orbit(dx, dy) { const c = this.cam; c.yaw -= dx * .006; c.pitch = Math.max(.12, Math.min(1.53, c.pitch + dy * .005)); this.dirty = true; },
-  pan(dx, dy) { const c = this.cam, k = c.dist * .0016, sy = Math.sin(c.yaw), cy = Math.cos(c.yaw); c.tx -= (dx * cy + dy * sy) * k; c.tz -= (-dx * sy + dy * cy) * k; this.dirty = true; },
-  zoom(dir) { const c = this.cam; c.dist = Math.max(12, Math.min(8000, c.dist * (dir < 0 ? 1 / 1.15 : 1.15))); this.dirty = true; },
+  touch() { this.moving = true; clearTimeout(this.mvT); this.mvT = setTimeout(() => { this.moving = false; this.soon(); }, 250); },
+  orbit(dx, dy) { this.touch(); const c = this.cam; c.yaw -= dx * .006; c.pitch = Math.max(.12, Math.min(1.53, c.pitch + dy * .005)); this.dirty = true; },
+  pan(dx, dy) { this.touch(); const c = this.cam, k = c.dist * .0016, sy = Math.sin(c.yaw), cy = Math.cos(c.yaw); c.tx -= (dx * cy + dy * sy) * k; c.tz -= (-dx * sy + dy * cy) * k; this.dirty = true; },
+  zoom(dir) { this.touch(); const c = this.cam; c.dist = Math.max(12, Math.min(8000, c.dist * (dir < 0 ? 1 / 1.15 : 1.15))); this.dirty = true; },
   bindMesh(m) {
     const gl = this.gl; gl.bindBuffer(gl.ARRAY_BUFFER, m.vb); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ib);
     gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 16, 0);
@@ -4153,7 +4154,7 @@ const MAP3D = {
   /* marqueurs à dessiner : { x, y, z, col:[r,g,b], sel, cam } */
   render(marks) {
     const gl = this.gl, cv = this.cv; if (!gl || !this.cam) return null;
-    const dpr = Math.min(2, window.devicePixelRatio || 1), r = cv.getBoundingClientRect(), W = Math.max(1, Math.round(r.width * dpr)), H = Math.max(1, Math.round(r.height * dpr));
+    const dpr = this.moving ? 1 : Math.min(1.5, window.devicePixelRatio || 1), r = cv.getBoundingClientRect(), W = Math.max(1, Math.round(r.width * dpr)), H = Math.max(1, Math.round(r.height * dpr));
     if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
     gl.viewport(0, 0, W, H);
     const fogc = [.035, .04, .055]; gl.clearColor(fogc[0], fogc[1], fogc[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -4200,17 +4201,9 @@ const MAP3D = {
     return { M, W: W / dpr, H: H / dpr, Mcss: this.matrix(W / dpr, H / dpr) };
   },
   /* animation (eau, lasers) tant que la vue 3D est affichée */
-  loop() {
-    if (this.raf) return;
-    let last = 0;
-    const tick = t => {
-      this.raf = 0;
-      if (S.page !== 'carte' || !CAM.iso || !this.gl || document.hidden) return;
-      if (t - last > 50) { last = t; CAM.draw(); }
-      this.raf = requestAnimationFrame(tick);
-    };
-    this.raf = requestAnimationFrame(tick);
-  }
+  loop() {},
+  /* redessine à l'image suivante (plusieurs demandes dans la même image = un seul dessin) */
+  soon() { if (this.raf) return; this.raf = requestAnimationFrame(() => { this.raf = 0; if (S.page === 'carte' && CAM.iso) CAM.draw(true); }); }
 };
 /* =====================================================================
    Caméras en jeu : comms, demandes, actes annonciateurs, carte
@@ -4484,6 +4477,7 @@ const CAM = {
         else if (v === 'trails') this.showTrails = !this.showTrails;
         else if (v === 'iso') { this.iso = !this.iso; LS.set('ctv.mapIso', this.iso); }
         else if (v === 'beams') { MAP3D.beams = !MAP3D.beams; LS.set('ctv.map3dBeams', MAP3D.beams); }
+        else if (v === 'hd') { MAP3D.hd = !MAP3D.hd; LS.set('ctv.map3dHd', MAP3D.hd); }
         else if (v === 'scan') { const r = +$('#mapR').value || 256; NET.req({ t: 'terrainScan', dim: this.dim, cx: 0, cz: 0, r }).then(() => toastInfo('Relevé demandé au serveur', 'Centré sur 0, 0 · rayon ' + r + ' blocs · avancement visible en jeu (ops et staff)')); }
         else if (v === 'zone') { if (this.iso) { toastInfo('Passe en vue de dessus pour dessiner une zone', '', true); return; } this.zoneDraw = !this.zoneDraw; if (this.zoneDraw) toastInfo('Zone interdite', 'Glisse sur la carte pour dessiner le rectangle.'); }
         else if (v.startsWith('dim:')) { this.dim = v.slice(4); this.fit(); }
@@ -4510,7 +4504,7 @@ const CAM = {
       + (isCrew() ? `<button class="btn xs ${this.showCams ? 'on' : ''}" data-mt="cams">${ic('cam')}Caméras</button>` : '')
       + `<button class="btn xs ${this.showTrails ? 'on' : ''}" data-mt="trails">Traces</button>`
       + `<button class="btn xs ${this.iso ? 'on' : ''}" data-mt="iso" title="Maquette 3D : clic gauche glissé = tourner, clic droit (ou Maj) glissé = déplacer, molette = zoom, double-clic = centrer">${this.iso ? 'Vue de dessus' : 'Vue 3D'}</button>`
-      + (this.iso ? `<button class="btn xs ${MAP3D.beams ? 'on' : ''}" data-mt="beams" title="Repères : lasers vers le ciel ou points lumineux">${MAP3D.beams ? 'Lasers' : 'Points'}</button>` : '')
+      + (this.iso ? `<button class="btn xs ${MAP3D.beams ? 'on' : ''}" data-mt="beams" title="Repères : lasers vers le ciel ou points lumineux">${MAP3D.beams ? 'Lasers' : 'Points'}</button><button class="btn xs ${MAP3D.hd ? 'on' : ''}" data-mt="hd" title="Détail maximal (1 bloc = 1 point jusqu'à 1024 de côté). Plus lourd : à garder pour un PC puissant.">HD</button>` : '')
       + (isCrew() ? `<button class="btn xs ${this.zoneDraw ? 'on' : ''}" data-mt="zone" title="Dessine un rectangle sur la carte : les caméras qui y entrent sont averties (bases secrètes, lieux à ne pas spoiler)">⛔ Zone interdite</button>` : '')
       + (isCrew() ? `<span class="map-scan"><select class="mini-sel" id="mapR" title="Rayon du relevé">${[128, 256, 384, 512, 768, 1024].map(r => `<option value="${r}" ${r === 256 ? 'selected' : ''}>${r} blocs</option>`).join('')}</select><button class="btn xs" data-mt="scan" title="Le mod serveur relève le terrain autour du centre de la vue (ou /capitol carte <rayon> en jeu)">Relever le terrain ici</button></span>` : '');
   },
@@ -4595,11 +4589,10 @@ const CAM = {
     // boussole
     const c = MAP3D.cam, ang = -c.yaw; g.save(); g.translate(W - 34, H - 34); g.fillStyle = 'rgba(8,9,12,.7)'; g.beginPath(); g.arc(0, 0, 20, 0, 7); g.fill(); g.rotate(ang + Math.PI); g.fillStyle = '#d4af37'; g.beginPath(); g.moveTo(0, -15); g.lineTo(5, 0); g.lineTo(-5, 0); g.fill(); g.fillStyle = '#555'; g.beginPath(); g.moveTo(0, 15); g.lineTo(5, 0); g.lineTo(-5, 0); g.fill(); g.restore();
     g.fillStyle = '#d4af37'; g.font = '700 10px system-ui'; g.textAlign = 'center'; const nx = W - 34 + Math.sin(ang + Math.PI) * -26, ny = H - 34 + Math.cos(ang + Math.PI) * 26; g.fillText('N', nx, ny + 3); g.textAlign = 'left';
-    MAP3D.loop();
   },
-  draw() {
+  draw(force) {
     const cv = $('#mapCv'); if (!cv) return;
-    if (this.iso) return this.draw3d(cv);
+    if (this.iso) { if (force === true) return this.draw3d(cv); return MAP3D.soon(); }
     { const w = cv.closest('.map-wrap'); if (w) w.classList.remove('is3d'); }
     if (!this.view) return;
     const dpr = window.devicePixelRatio || 1, r = cv.getBoundingClientRect(), W = r.width, H = r.height;
@@ -6248,7 +6241,8 @@ const PROG = {
     let tgt;
     if (mp) tgt = { x: mp[1].x, z: mp[1].z, span: 160 };
     else if (pts.length) { const xs = pts.map(x => x[1].x), zs = pts.map(x => x[1].z); tgt = { x: (Math.min(...xs) + Math.max(...xs)) / 2, z: (Math.min(...zs) + Math.max(...zs)) / 2, span: Math.max(80, Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs)) * 1.3 }; }
-    else tgt = { x: st.x, z: st.z, span: st.span };
+    else tgt = st.base || { x: st.x, z: st.z, span: st.span };
+    st.base = tgt;
     { const v = this.mapView(); tgt = { x: tgt.x + v.dx, z: tgt.z + v.dz, span: Math.max(24, Math.min(6000, tgt.span * v.z)) }; }
     st.tgt = tgt;
     if (main !== st.main && st.main && mp) {
