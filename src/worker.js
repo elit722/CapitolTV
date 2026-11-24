@@ -645,7 +645,7 @@ export class Game extends DurableObject {
       t: "hello", now: Date.now(),
       me: { id: a.id, name: a.name, av: a.av, perm: a.perm, pub: a.pub, overlay: !!a.overlay, obsKey: hasPerm(a, "program") && !a.lock && this.env.OVERLAY_KEY ? this.env.OVERLAY_KEY : undefined, lock: !!a.lock, guest: !!a.guest, tribute: this.tributeOf(a.id), cam: a.cam || "", sup: isSup(a), crew: isCrew(a) && !a.lock, map: this.mapAllowed(a), perms: a.perms || [], rid: (this.team.find(x => x.id === a.id) || {}).rid || "", kb: isCrew(a) ? this.kbs[a.id] : undefined },
       roles: this.roles, prog: a.lock || !(isCrew(a) || a.overlay) ? undefined : this.progPub(), progHist: a.lock || !(isCrew(a) || a.overlay) ? undefined : this.progHistFor(),
-      dvrBase: isCrew(a) || a.overlay ? (this.env.DVR_PUBLIC || "") : undefined, mix: isCrew(a) || a.overlay ? this.mix : undefined, zones: isCrew(a) ? this.zones || [] : undefined, skyq: isCrew(a) ? this.skyqView() : undefined, progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
+      dvrBase: isCrew(a) || a.overlay ? (this.env.DVR_PUBLIC || "") : undefined, mix: isCrew(a) || a.overlay ? this.mix : undefined, zones: isCrew(a) ? this.zones || [] : undefined, skyq: isCrew(a) ? this.skyqView() : undefined, mapCtl: this.mapCtl || undefined, progEd: hasPerm(a, "program") && !a.lock ? this.prog : undefined,
       terrain: this.terrain || {}, bot: isStaff(a) ? this.botPublic() : undefined, media: isCrew(a) ? this.media : undefined, srvCams: isCrew(a) ? this.srvCams : undefined,
       pubs: this.pubsFor(a), rtc: { on: this.rtcOn(), pub: false, capOff: !!this.board.capOff, perf: isCrew(a) ? this.perf : undefined, use: isCrew(a) || a.overlay ? this.useInfo() : undefined, vq: { trib: this.vqCap("t:"), cam: this.vqCap("c:") }, vpref: isCrew(a) && !a.lock ? this.vpref : undefined },
       talk: this.talkSup(a) ? this.talkState() : undefined, clips: this.clipsFor(a),
@@ -863,6 +863,13 @@ export class Game extends DurableObject {
           title: String(sc.title || "").slice(0, 80), dur: Math.max(10, Math.min(120, +sc.dur || 30)) });
         if (this.skyq.sched.nights && this.mc) this.skyq.sched.nightBase = this.mc.day;
         this.saveSkyq();
+        return reply(true);
+      }
+      case "mapCtl": { // mini-carte du Direct pilotée depuis la régie (déplacement + zoom), pour tous les spectateurs
+        if (!isCrew(a) || a.lock || !(a.perm === "admin" || hasPerm(a, "program"))) return deny();
+        const v = m.v || {};
+        this.mapCtl = { dx: Math.max(-5000, Math.min(5000, +v.dx || 0)), dz: Math.max(-5000, Math.min(5000, +v.dz || 0)), z: Math.max(.1, Math.min(20, +v.z || 1)) };
+        this.broadcast({ t: "mapCtl", v: this.mapCtl });
         return reply(true);
       }
       case "skyCancel": {
