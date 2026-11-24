@@ -138,7 +138,6 @@ audio.em-md{display:none}
 .src .th.ctv{display:grid;place-items:center;background:linear-gradient(135deg,#2a0e12,#0d0c10)} .src .th.ctv span{font:700 13px var(--serif);letter-spacing:.18em;color:#ff8a8a}
 .ci .mdi.ctv{font:700 22px var(--serif);letter-spacing:.2em;color:rgba(255,138,138,.8)}
 /* ---- habillages de l'antenne ---- */
-#emStage iframe{pointer-events:none}
 .em-stage.hx-alive .gx-alive,.em-stage.hx-lower .gx-lower,.em-stage.hx-break .gx-break,.em-stage.hx-poll .gx-poll,.em-stage.hx-bets .gx-bets,.em-stage.hx-map .gx-map,.em-stage.hx-logo .em-bug,.em-stage.hx-lab .em-lab,.em-stage.hx-credit .em-credit,.em-stage.hx-ann > .bx,.em-stage.hx-all .em-gfx,.em-stage.hx-all .gx-map,.em-stage.hx-all .em-bug,.em-stage.hx-all .em-lab,.em-stage.hx-all .em-credit,.em-stage.hx-all > .bx{display:none!important}
 .em-gfx{position:absolute;inset:0;z-index:60;pointer-events:none;font-family:var(--serif)}
 .gx-alive{position:absolute;left:2.2%;top:3.5%;display:flex;align-items:baseline;gap:.35em;background:linear-gradient(90deg,rgba(10,9,8,.92),rgba(10,9,8,.7));border-left:.3em solid var(--gold);padding:.35em .9em .3em .7em;font-size:1.7cqw;color:#fff;animation:gxIn .5s ease both}
@@ -159,7 +158,9 @@ audio.em-md{display:none}
 .gx-poll .op,.gx-bets .op{position:relative;display:flex;justify-content:space-between;padding:.25em .5em;margin-top:.25em;background:rgba(255,255,255,.06);font-family:var(--sans);font-weight:600;overflow:hidden}
 .gx-poll .op i,.gx-bets .op i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,rgba(212,175,55,.55),rgba(212,175,55,.25));z-index:0;transition:width .8s} .gx-poll .op span,.gx-poll .op em,.gx-bets .op span,.gx-bets .op em{position:relative;z-index:1;font-style:normal}
 .gx-map{position:absolute;z-index:61;right:2.2%;bottom:12%;width:min(22%,300px);height:auto;aspect-ratio:1;animation:gxFade .5s ease both;border-radius:.4cqw;box-shadow:0 0 0 .2cqw rgba(var(--gold-rgb),.8),0 .5cqw 1.5cqw rgba(0,0,0,.6);transition:right .6s ease,bottom .6s ease,width .6s ease,transform .6s ease;transform-origin:50% 50%}
-.gx-map.big{right:26cqw;bottom:4cqw;width:48cqw}
+.gx-map.big{right:auto;bottom:auto;left:26%;top:7.5%;width:48%;height:85%;aspect-ratio:auto;transition:none}
+.gx-map.iso3{box-shadow:none;border-radius:0;width:min(27%,360px);right:1%;bottom:9%}
+.gx-map:not(.edit){pointer-events:none}.gx-map.edit{cursor:grab}.gx-map.edit.big{cursor:move}.gx-map.drag{cursor:grabbing;opacity:.92}
 .gx-map.iso{transform:perspective(120cqw) rotateX(55deg) rotateZ(-45deg) scale(.8);box-shadow:0 0 0 .2cqw rgba(var(--gold-rgb),.8),-1.4cqw 1.4cqw 0 rgba(0,0,0,.55)}
 @keyframes gxFade{from{opacity:0}to{opacity:1}}
 .em-head{position:absolute;right:3%;top:4%;width:9%;max-width:96px;min-width:18px;aspect-ratio:1;image-rendering:pixelated;z-index:3;border-radius:6%;box-shadow:0 0 0 .15cqw rgba(var(--gold-rgb),.85),0 .3cqw 1cqw rgba(0,0,0,.6);pointer-events:none;animation:gxIn .5s ease both}
@@ -340,7 +341,6 @@ body:not(.can-map) .map-only{display:none!important}
 .sky-it{display:flex;gap:6px;align-items:center;padding:6px 8px;border:1px solid var(--hair2);border-radius:8px;cursor:pointer;font-size:12px}.sky-it span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sky-it em{font-style:normal;color:var(--mute);font-size:11px}.sky-it.on{border-color:var(--gold-b);background:var(--gold-a)}
 @media (max-width:900px){.sky-ed{grid-template-columns:1fr}}
 .skyq-st{margin-top:5px;font-size:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.skyq-st:empty{display:none}.skyq-st b{color:var(--gold-hi)}.skyq-st .btn{padding:2px 8px;min-height:0;font-size:11px}
-.src .src-cut{opacity:0;transition:opacity .15s}.src:hover .src-cut{opacity:1}
 .rg-ann{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:8px}.rg-ann .note{flex:none;margin-right:2px}.rg-ann .btn{flex:1;min-width:0;justify-content:center}
 .cm.me{align-self:flex-end;background:var(--surface2)} .cm.sup{border-color:var(--gold-b)} .cm.buzz{border-color:var(--red-b);background:var(--red-a)}
 .cm .w{font-size:11px;font-weight:700;color:#7fb6ee;margin-bottom:2px;display:flex;gap:6px} .cm.sup .w{color:var(--gold)} .cm .w span{color:var(--mute);font-weight:500;margin-left:auto}
@@ -933,6 +933,9 @@ body.em-full #flashLayer{z-index:96;top:5vh}
 .mixp{position:fixed;right:24px;bottom:24px;z-index:120;width:min(440px,calc(100vw - 32px));max-height:min(78vh,720px);display:flex;flex-direction:column;background:rgba(16,15,18,.97);border:1px solid var(--hair2);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.55);backdrop-filter:blur(8px)}
 .mixp-h{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--hair);cursor:move;user-select:none}.mixp-h b{font-size:13px;letter-spacing:.04em}.mixp-h .note{font-size:11px}
 .mixp-b{overflow:auto;padding:6px 6px 8px}
+.autop{width:min(400px,calc(100vw - 32px))}.au-h{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:10px 8px 4px}
+.au-row{display:flex;gap:10px;align-items:flex-start;padding:8px;border-radius:9px;cursor:pointer}.au-row:hover{background:rgba(255,255,255,.04)}.au-row.dis{opacity:.5;cursor:default}
+.au-row .switch{margin:1px 0}.au-n{display:flex;flex-direction:column;min-width:0}.au-n b{font-size:13px;font-weight:600}.au-n small{font-size:11.5px;color:var(--muted)}
 .mx-row{display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(110px,1.1fr) 62px 28px;align-items:center;gap:6px;padding:7px 8px;border-radius:9px}
 .pmix .mx-row{grid-template-columns:minmax(0,1fr) 28px minmax(100px,1.2fr) 52px}
 .mx-row:hover{background:rgba(255,255,255,.03)}.mx-row.master{background:rgba(var(--gold-rgb),.06);margin-bottom:4px}
@@ -3309,7 +3312,7 @@ const SKYQ = {
     const sc = (this.q && this.q.sched) || {}, a = [];
     if ((sc.times || []).length) a.push('à ' + sc.times.join(', '));
     if (sc.nights) a.push('toutes les ' + (sc.nights > 1 ? sc.nights + ' nuits' : 'nuits'));
-    return a.length ? 'Hommage automatique ' + a.join(' et ') + ' (s\'il y a eu des morts)' : '';
+    return a.length ? 'Hommage automatique ' + a.join(' et ') + ' (s\'il y a eu des morts)' + (sc.off ? ' · COUPÉ' : '') : '';
   },
   html() {
     const q = this.q; if (!q) return '';
@@ -4032,7 +4035,7 @@ function onAlerts(all) {
    clic gauche glissé = tourner · clic droit (ou Maj) glissé = déplacer · molette = zoom
    ===================================================================== */
 const MAP3D = {
-  gl: null, cv: null, mesh: null, cam: null, beams: LS.get('ctv.map3dBeams', true), hd: LS.get('ctv.map3dHd', false), raf: 0, dirty: true, t0: performance.now(),
+  gl: null, cv: null, mesh: null, cam: null, beams: LS.get('ctv.map3dBeams', true), hd: (v => v === true ? 1 : Math.max(0, Math.min(2, +v || 0)))(LS.get('ctv.map3dHd', 0)), raf: 0, dirty: true, t0: performance.now(),
   M4: {
     mul(a, b) { const o = new Float32Array(16); for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) { let s = 0; for (let k = 0; k < 4; k++) s += a[k * 4 + r] * b[c * 4 + k]; o[c * 4 + r] = s; } return o; },
     persp(fov, asp, n, f) { const t = 1 / Math.tan(fov / 2), o = new Float32Array(16); o[0] = t / asp; o[5] = t; o[10] = (f + n) / (n - f); o[11] = -1; o[14] = 2 * f * n / (n - f); return o; },
@@ -4049,45 +4052,68 @@ const MAP3D = {
     const host = $('#mapCv') && $('#mapCv').parentElement; if (!host) return false;
     let cv = $('#map3d');
     if (!cv) { cv = document.createElement('canvas'); cv.id = 'map3d'; host.insertBefore(cv, $('#mapCv')); }
+    const R = this.setup(cv, false);
+    if (!R) { cv.remove(); return false; }
+    Object.assign(this, R); this.cv = cv;
+    cv.addEventListener('webglcontextlost', e => { e.preventDefault(); this.gl = null; this.mesh = null; });
+    return true;
+  },
+  /* contexte WebGL + programmes (servi à la grande carte et, à part, à la mini-carte isométrique) */
+  setup(cv, alpha) {
     // WebGL 2 si possible, sinon WebGL 1 (cartes graphiques ou pilotes mis à l'écart par le navigateur)
     let gl = null, v2 = true;
-    for (const o of [{ antialias: true, alpha: false }, { alpha: false }, { alpha: false, powerPreference: 'default', failIfMajorPerformanceCaveat: false }]) { gl = cv.getContext('webgl2', o); if (gl) break; }
-    if (!gl) { v2 = false; for (const o of [{ antialias: true, alpha: false }, { alpha: false, failIfMajorPerformanceCaveat: false }]) { gl = cv.getContext('webgl', o) || cv.getContext('experimental-webgl', o); if (gl) break; } }
-    if (!gl || !v2 && (!gl.getExtension('OES_element_index_uint') || !gl.getExtension('OES_standard_derivatives'))) { cv.remove(); this.fail = gl ? 'webgl1-ext' : 'nogl'; return false; }
-    this.cv = cv; this.gl = gl; this.v2 = v2;
+    const base = alpha ? { alpha: true, premultipliedAlpha: true, preserveDrawingBuffer: true } : { alpha: false };
+    for (const o of [{ ...base, antialias: true }, base, { ...base, powerPreference: 'default', failIfMajorPerformanceCaveat: false }]) { gl = cv.getContext('webgl2', o); if (gl) break; }
+    if (!gl) { v2 = false; for (const o of [{ ...base, antialias: true }, { ...base, failIfMajorPerformanceCaveat: false }]) { gl = cv.getContext('webgl', o) || cv.getContext('experimental-webgl', o); if (gl) break; } }
+    if (!gl || !v2 && (!gl.getExtension('OES_element_index_uint') || !gl.getExtension('OES_standard_derivatives'))) { this.fail = gl ? 'webgl1-ext' : 'nogl'; return null; }
     // les shaders sont écrits en GLSL 3.00 et convertis en 1.00 pour WebGL 1
     const conv = (src, frag) => v2 ? src : src.replace('#version 300 es', frag ? '#extension GL_OES_standard_derivatives : enable' : '')
       .replace(/layout\(location=\d\) in /g, 'attribute ').replace(frag ? /\bin (?=(vec|float))/g : /\bout (?=(vec|float))/g, 'varying ')
-      .replace(/out vec4 o;/, '').replace(/\bo=vec4/g, 'gl_FragColor=vec4');
+      .replace(/out vec4 o;/, '').replace(/\bo=vec4/g, 'gl_FragColor=vec4').replace(/\btexture\(/g, 'texture2D(');
     const sh = (type, src) => { const x = gl.createShader(type); gl.shaderSource(x, conv(src, type === gl.FRAGMENT_SHADER).trim()); gl.compileShader(x); if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(x)); return x; };
-    const prog = (vs, fs) => { const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs)); ['p', 'c', 'uv'].forEach((n, i) => gl.bindAttribLocation(p, i, n)); gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); const u = {}; for (let i = 0, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS); i < n; i++) { const a = gl.getActiveUniform(p, i); u[a.name] = gl.getUniformLocation(p, a.name); } return { p, u }; };
-    // terrain : couleur du bloc, face (dessus / côtés), contour des blocs, strates, brume
-    this.pT = prog(`#version 300 es
+    const prog = (vs, fs) => { const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs)); ['p', 'c', 'uv'].forEach((n, i) => gl.bindAttribLocation(p, i, n)); gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); const u = {}; for (let i = 0, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS); i < n; i++) { const a = gl.getActiveUniform(p, i); u[a.name.replace(/\[0\]$/, '')] = gl.getUniformLocation(p, a.name); } return { p, u }; };
+    // terrain : couleur du bloc lue dans une texture (1 texel = 1 point relevé), faces fusionnées, contour des blocs, strates, brume
+    // fk : 0 dessus · 1 / 5 face +x / −x · 2 / 6 face +z / −z ; les murs (wall) coupent la maquette de la mini-carte
+    const pT = prog(`#version 300 es
       layout(location=0) in vec3 p; layout(location=1) in vec4 c;
       uniform mat4 M; out vec3 wp; out vec3 vc; out float fk; out float dz;
       void main(){ wp=p; vc=c.rgb; fk=floor(c.a*255.+.5); vec4 q=M*vec4(p,1.); dz=q.w; gl_Position=q; }`,
       `#version 300 es
       precision highp float; in vec3 wp; in vec3 vc; in float fk; in float dz;
-      uniform float st, fogk, tm, water; uniform vec3 fogc; out vec4 o;
+      uniform float st, fogk, tm, water, wall, clipOn, hb, hs; uniform vec3 fogc; uniform vec2 org, tsz; uniform vec4 clip; uniform sampler2D tex; out vec4 o;
       void main(){
-        vec3 col=vc; vec2 g;
-        float f=floor(mod(fk+.5,4.));
-        if(f<.5) g=wp.xz/st; else if(f<1.5) g=vec2(wp.z/st,wp.y); else g=vec2(wp.x/st,wp.y);
-        vec2 w=fwidth(g), d=abs(fract(g)-.5), a=smoothstep(vec2(.5)-w*1.4,vec2(.5),d);
-        float fade=clamp(1.-max(w.x,w.y)*2.2,0.,1.);
-        col*=1.-max(a.x,a.y)*.28*fade;
-        if(f>.5) col*=.93+.07*step(.5,fract(wp.y/4.));
-        float al=1.;
+        if(clipOn>.5 && wall<.5 && (wp.x<clip.x||wp.z<clip.y||wp.x>clip.z||wp.z>clip.w)) discard;
+        float f=floor(mod(fk+.5,4.)), sg=fk>3.5?-1.:1.;
+        vec3 col; float al=1.;
         if(water>.5){
+          col=vc;
           float sh=sin(wp.x*.35+tm*1.6)*sin(wp.z*.31-tm*1.2)+sin((wp.x+wp.z)*.12+tm*.7)*.6;
           col=col*(.92+.10*sh)+vec3(.05,.09,.12)*smoothstep(.9,1.5,sh);
           al=.62;
+        } else {
+          vec2 cl=(wp.xz-org)/st; float off=wall>.5?.001:.5;
+          if(f>.5&&f<1.5) cl.x-=sg*off; else if(f>1.5) cl.y-=sg*off;
+          vec4 tx=texture(tex,(floor(cl)+.5)/tsz);
+          if(wall>.5){
+            float h=hb+tx.a*255.*hs; if(wp.y>h+.05) discard;
+            float k=clamp((wp.y-clip.x*0.-hb)/(h-hb+1.),0.,1.);
+            col=h-wp.y<.9?vec3(.86,.71,.38):vec3(.13,.11,.08)*(.7+.5*k);
+            col*=.93+.07*step(.5,fract(wp.y/4.));
+          } else {
+            col=tx.rgb*vc;
+            vec2 g;
+            if(f<.5) g=wp.xz/st; else if(f<1.5) g=vec2(wp.z/st,wp.y); else g=vec2(wp.x/st,wp.y);
+            vec2 w=fwidth(g), d=abs(fract(g)-.5), a=smoothstep(vec2(.5)-w*1.4,vec2(.5),d);
+            float fade=clamp(1.-max(w.x,w.y)*2.2,0.,1.);
+            col*=1.-max(a.x,a.y)*.28*fade;
+            if(f>.5) col*=.93+.07*step(.5,fract(wp.y/4.));
+          }
         }
         float fg=1.-exp(-dz*fogk); col=mix(col,fogc,clamp(fg,0.,.8));
         o=vec4(col,al);
       }`);
     // repères : lasers (quads face caméra, additifs) et points lumineux
-    this.pB = prog(`#version 300 es
+    const pB = prog(`#version 300 es
       layout(location=0) in vec3 p; layout(location=1) in vec4 c; layout(location=2) in vec2 uv;
       uniform mat4 M; out vec4 vc; out vec2 v;
       void main(){ vc=c; v=uv; gl_Position=M*vec4(p,1.); }`,
@@ -4100,19 +4126,37 @@ const MAP3D = {
         else { float x=abs(v.x*2.-1.); a=pow(1.-v.y,1.3)*(pow(1.-x,2.)*.9+(1.-smoothstep(0.,.25,x))*.8); a*=.85+.15*sin(tm*3.+v.y*18.); }
         o=vec4(vc.rgb*a*vc.a, a*vc.a);
       }`);
-    this.bBuf = gl.createBuffer();
-    cv.addEventListener('webglcontextlost', e => { e.preventDefault(); this.gl = null; this.mesh = null; });
-    return true;
+    return { gl, v2, pT, pB, bBuf: gl.createBuffer(), wBuf: gl.createBuffer(), maxTex: gl.getParameter(gl.MAX_TEXTURE_SIZE) || 4096 };
   },
-  /* maillage : une colonne par point relevé (dessus + côtés visibles), socle sombre, eau transparente à part */
-  build(T) {
-    const gl = this.gl, cap = this.hd ? 1024 : 512, f = Math.max(1, Math.ceil(Math.max(T.w, T.h) / cap));
-    const W = Math.floor(T.w / f), H = Math.floor(T.h / f), st = T.step * f, base = T.ymin - 12;
+  /* niveau de détail : 0 normal (512 points de côté), 1 HD (1024), 2 Ultra HD (1 bloc = 1 point, sans limite) */
+  capOf(hd) { return hd >= 2 ? 1e9 : hd ? 1024 : 512; },
+  /* maillage : dessus et côtés fusionnés quand ils sont à la même hauteur (les couleurs viennent de la texture), eau à part */
+  buildMesh(R, T, cap) {
+    const gl = R.gl;
+    let f = Math.max(1, Math.ceil(Math.max(T.w, T.h) / cap)); while (Math.floor(T.w / f) > R.maxTex || Math.floor(T.h / f) > R.maxTex) f++;
+    const W = Math.floor(T.w / f), H = Math.floor(T.h / f), st = T.step * f, base = T.ymin - 12, N = W * H;
     const idx = (i, j) => (Math.min(T.h - 1, j * f + (f >> 1))) * T.w + Math.min(T.w - 1, i * f + (f >> 1));
-    const HY = new Float32Array(W * H), CO = new Uint32Array(W * H), DP = new Uint8Array(W * H);
-    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) { const k = idx(i, j), q = j * W + i; HY[q] = T.hy[k]; CO[q] = T.col[k]; DP[q] = T.dp[k]; }
-    const top = (i, j) => i < 0 || j < 0 || i >= W || j >= H ? base : (DP[j * W + i] ? HY[j * W + i] - DP[j * W + i] + 1 : HY[j * W + i] + 1);
-    // tampons extensibles : 16 octets par sommet (x y z + couleur rgba, a = type de face)
+    const HY = new Float32Array(N), CO = new Uint32Array(N), DP = new Uint8Array(N), TOP = new Float32Array(N);
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) { const k = idx(i, j), q = j * W + i; HY[q] = T.hy[k]; CO[q] = T.col[k]; DP[q] = T.dp[k]; TOP[q] = DP[q] ? HY[q] - DP[q] + 1 : HY[q] + 1; }
+    const top = (i, j) => i < 0 || j < 0 || i >= W || j >= H ? base : TOP[j * W + i];
+    // texture : couleur étalonnée (+ ombre des voisins plus hauts, eau plus sombre en profondeur) et hauteur de surface (alpha)
+    let hmax = base; for (let q = 0; q < N; q++) { const s = DP[q] ? HY[q] + .88 : TOP[q]; if (s > hmax) hmax = s; }
+    const hs = Math.max(1, Math.ceil((hmax - base) / 255)), TX = new Uint8Array(N * 4);
+    const grade = (c, k) => { // étalonnage « Capitole » : ombres froides, hautes lumières chaudes, un peu désaturé
+      let r = (c >> 16 & 255) / 255, g2 = (c >> 8 & 255) / 255, b = (c & 255) / 255; if (!c) { r = .16; g2 = .16; b = .18; }
+      const l = r * .3 + g2 * .59 + b * .11; r = l + (r - l) * .82; g2 = l + (g2 - l) * .82; b = l + (b - l) * .82;
+      r = r * k + .02 * (1 - l) + .05 * l; g2 = g2 * k + .03 * (1 - l) + .035 * l; b = b * k + .07 * (1 - l);
+      return [Math.min(255, r * 255) | 0, Math.min(255, g2 * 255) | 0, Math.min(255, b * 255) | 0];
+    };
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      const q = j * W + i, y = TOP[q], wd = DP[q];
+      let hi = 0; if (top(i + 1, j) > y + .5) hi++; if (top(i - 1, j) > y + .5) hi++; if (top(i, j + 1) > y + .5) hi++; if (top(i, j - 1) > y + .5) hi++;
+      let c = CO[q];
+      if (wd) { const t = Math.min(1, wd / 10); const r = (c >> 16 & 255) * (1 - t * .6), g2 = (c >> 8 & 255) * (1 - t * .5), b = (c & 255) * (1 - t * .3); c = (r | 0) << 16 | (g2 | 0) << 8 | (b | 0); }
+      const [r, g2, b] = grade(c, 1 - hi * .07), o = q * 4;
+      TX[o] = r; TX[o + 1] = g2; TX[o + 2] = b; TX[o + 3] = Math.max(0, Math.min(255, Math.round(((wd ? HY[q] + .88 : y) - base) / hs)));
+    }
+    // tampons extensibles : 16 octets par sommet (x y z + rgba : rgb = luminosité de la face, a = type de face)
     const mk = () => { const b = new ArrayBuffer(1 << 22); return { b, F: new Float32Array(b), U: new Uint8Array(b), n: 0, ix: new Uint32Array(1 << 20), ni: 0 }; };
     const L = mk(), Wt = mk();
     const grow = m => { if ((m.n + 4) * 16 > m.b.byteLength) { const nb = new ArrayBuffer(m.b.byteLength * 2); new Uint8Array(nb).set(m.U); m.b = nb; m.F = new Float32Array(nb); m.U = new Uint8Array(nb); } if (m.ni + 6 > m.ix.length) { const ni = new Uint32Array(m.ix.length * 2); ni.set(m.ix); m.ix = ni; } };
@@ -4121,30 +4165,43 @@ const MAP3D = {
       for (let q = 0; q < 4; q++) { const at = (o + q) * 4; F[at] = v[q * 3]; F[at + 1] = v[q * 3 + 1]; F[at + 2] = v[q * 3 + 2]; const u = (o + q) * 16 + 12; U[u] = r; U[u + 1] = g2; U[u + 2] = b; U[u + 3] = fk; }
       const I = m.ix, j = m.ni; I[j] = o; I[j + 1] = o + 1; I[j + 2] = o + 2; I[j + 3] = o; I[j + 4] = o + 2; I[j + 5] = o + 3; m.n += 4; m.ni += 6;
     };
-    const grade = (c, k) => { // étalonnage « Capitole » : ombres froides, hautes lumières chaudes, un peu désaturé
-      let r = (c >> 16 & 255) / 255, g2 = (c >> 8 & 255) / 255, b = (c & 255) / 255; if (!c) { r = .16; g2 = .16; b = .18; }
-      const l = r * .3 + g2 * .59 + b * .11; r = l + (r - l) * .82; g2 = l + (g2 - l) * .82; b = l + (b - l) * .82;
-      r = r * k + .02 * (1 - l) + .05 * l; g2 = g2 * k + .03 * (1 - l) + .035 * l; b = b * k + .07 * (1 - l);
-      return [Math.min(255, r * 255) | 0, Math.min(255, g2 * 255) | 0, Math.min(255, b * 255) | 0];
+    const X0 = T.x0, Z0 = T.z0, done = new Uint8Array(N);
+    // dessus : rectangles de même hauteur (fusion gloutonne)
+    const greedy = (val, ok, emit) => {
+      done.fill(0);
+      for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+        const q = j * W + i; if (done[q] || !ok(q)) continue;
+        const y = val(q); let w = 1; while (i + w < W && !done[q + w] && ok(q + w) && val(q + w) === y) w++;
+        let h = 1; grow2: while (j + h < H) { const r0 = (j + h) * W + i; for (let k = 0; k < w; k++) if (done[r0 + k] || !ok(r0 + k) || val(r0 + k) !== y) break grow2; h++; }
+        for (let a = 0; a < h; a++) done.fill(1, (j + a) * W + i, (j + a) * W + i + w);
+        emit(i, j, w, h, y);
+      }
     };
-    const X0 = T.x0, Z0 = T.z0;
-    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
-      const q = j * W + i, y = top(i, j), x0 = X0 + i * st, z0 = Z0 + j * st, x1 = x0 + st, z1 = z0 + st, wd = DP[q];
-      // ombre douce des voisins plus hauts
-      let hi = 0; for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (top(i + a, j + b) > y + .5) hi++;
-      let c = CO[q];
-      if (wd) { const t = Math.min(1, wd / 10); const r = (c >> 16 & 255) * (1 - t * .6), g2 = (c >> 8 & 255) * (1 - t * .5), b = (c & 255) * (1 - t * .3); c = (r | 0) << 16 | (g2 | 0) << 8 | (b | 0); }
-      const [r, g2, b] = grade(c, 1 - hi * .07);
-      quad(L, [x0, y, z0, x0, y, z1, x1, y, z1, x1, y, z0], r, g2, b, 0);
-      // côtés : seulement là où le voisin est plus bas (et jusqu'au socle au bord de la carte)
-      const side = (yn, v, k, fk) => { if (yn >= y) return; const [a, b2, c2] = grade(CO[q] || 0x2a2a2e, k); quad(L, v(yn), a, b2, c2, fk); };
-      const edge = (i2, j2) => i2 < 0 || j2 < 0 || i2 >= W || j2 >= H;
-      const sk = (i2, j2, k) => edge(i2, j2) ? k * .55 : k;
-      side(top(i + 1, j), yn => [x1, y, z0, x1, y, z1, x1, yn, z1, x1, yn, z0], sk(i + 1, j, .74), 1);
-      side(top(i - 1, j), yn => [x0, y, z1, x0, y, z0, x0, yn, z0, x0, yn, z1], sk(i - 1, j, .6), 1);
-      side(top(i, j + 1), yn => [x1, y, z1, x0, y, z1, x0, yn, z1, x1, yn, z1], sk(i, j + 1, .84), 2);
-      side(top(i, j - 1), yn => [x0, y, z0, x1, y, z0, x1, yn, z0, x0, yn, z0], sk(i, j - 1, .52), 2);
-      if (wd) { const ys = HY[q] + .88, [a, b2, c2] = [40, 96, 150]; quad(Wt, [x0, ys, z0, x0, ys, z1, x1, ys, z1, x1, ys, z0], a, b2, c2, 0); }
+    greedy(q => TOP[q], () => true, (i, j, w, h, y) => { const x0 = X0 + i * st, z0 = Z0 + j * st, x1 = x0 + w * st, z1 = z0 + h * st; quad(L, [x0, y, z0, x0, y, z1, x1, y, z1, x1, y, z0], 255, 255, 255, 0); });
+    greedy(q => HY[q] + .88, q => DP[q] > 0, (i, j, w, h, y) => { const x0 = X0 + i * st, z0 = Z0 + j * st, x1 = x0 + w * st, z1 = z0 + h * st; quad(Wt, [x0, y, z0, x0, y, z1, x1, y, z1, x1, y, z0], 40, 96, 150, 0); });
+    // côtés : là où le voisin est plus bas (jusqu'au socle au bord de la carte), fusionnés le long des tranches identiques
+    const K = v => Math.round(v * 255);
+    for (let b = 0; b <= W; b++) { // limites verticales x = X0 + b·st
+      const x = X0 + b * st; let j = 0;
+      while (j < H) {
+        const a = top(b - 1, j), c2 = top(b, j); if (a === c2) { j++; continue; }
+        let e = j + 1; while (e < H && top(b - 1, e) === a && top(b, e) === c2) e++;
+        const z0 = Z0 + j * st, z1 = Z0 + e * st;
+        if (a > c2) quad(L, [x, a, z0, x, a, z1, x, c2, z1, x, c2, z0], ...Array(3).fill(K(b === W ? .74 * .55 : .74)), 1);
+        else quad(L, [x, c2, z1, x, c2, z0, x, a, z0, x, a, z1], ...Array(3).fill(K(b === 0 ? .6 * .55 : .6)), 5);
+        j = e;
+      }
+    }
+    for (let b = 0; b <= H; b++) { // limites z = Z0 + b·st
+      const z = Z0 + b * st; let i = 0;
+      while (i < W) {
+        const a = top(i, b - 1), c2 = top(i, b); if (a === c2) { i++; continue; }
+        let e = i + 1; while (e < W && top(e, b - 1) === a && top(e, b) === c2) e++;
+        const x0 = X0 + i * st, x1 = X0 + e * st;
+        if (a > c2) quad(L, [x1, a, z, x0, a, z, x0, c2, z, x1, c2, z], ...Array(3).fill(K(b === H ? .84 * .55 : .84)), 2);
+        else quad(L, [x0, c2, z, x1, c2, z, x1, a, z, x0, a, z], ...Array(3).fill(K(b === 0 ? .52 * .55 : .52)), 6);
+        i = e;
+      }
     }
     const up = m => {
       const vb = gl.createBuffer(), ib = gl.createBuffer();
@@ -4152,8 +4209,17 @@ const MAP3D = {
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, m.ix.subarray(0, m.ni), gl.STATIC_DRAW);
       return { vb, ib, n: m.ni };
     };
-    if (this.mesh) for (const k of ['L', 'W']) if (this.mesh[k]) { gl.deleteBuffer(this.mesh[k].vb); gl.deleteBuffer(this.mesh[k].ib); }
-    this.mesh = { hd: this.hd, id: T.id + ':' + T.w, L: up(L), W: Wt.n ? up(Wt) : null, st, T, cx: X0 + W * st / 2, cz: Z0 + H * st / 2, span: Math.max(W, H) * st, ymid: (T.ymin + T.ymax) / 2 };
+    const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, W, H, 0, gl.RGBA, gl.UNSIGNED_BYTE, TX);
+    for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.NEAREST], [gl.TEXTURE_MAG_FILTER, gl.NEAREST], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
+    return { id: T.id + ':' + T.w, L: up(L), Wa: Wt.n ? up(Wt) : null, tex, st, f, T, W, H, TOP, X0, Z0, base, hs, hmax, cx: X0 + W * st / 2, cz: Z0 + H * st / 2, span: Math.max(W, H) * st, ymid: (T.ymin + T.ymax) / 2, quads: (L.n + Wt.n) / 4 };
+  },
+  freeMesh(R, m) { const gl = R.gl; if (!gl || !m) return; for (const k of ['L', 'Wa']) if (m[k]) { gl.deleteBuffer(m[k].vb); gl.deleteBuffer(m[k].ib); } if (m.tex) gl.deleteTexture(m.tex); },
+  build(T) {
+    const t0 = performance.now();
+    if (this.mesh) this.freeMesh(this, this.mesh);
+    this.mesh = null; this.mesh = this.buildMesh(this, T, this.capOf(this.hd)); this.mesh.hd = this.hd;
+    if (this.hd >= 2 && performance.now() - t0 > 600) toastInfo('Carte 3D Ultra HD', this.mesh.W + ' × ' + this.mesh.H + ' blocs, ' + Math.round(this.mesh.quads / 1000) + ' k faces');
   },
   ensure(T) {
     if (!this.ok()) return false;
@@ -4165,66 +4231,90 @@ const MAP3D = {
     this.cam = { tx: m.cx, ty: m.ymid, tz: m.cz, yaw: -.75, pitch: .72, dist: m.span * .95 };
   },
   focus(x, y, z) { if (!this.cam) this.home(); Object.assign(this.cam, { tx: x, ty: y, tz: z, dist: Math.min(this.cam.dist, 140) }); this.dirty = true; },
-  eye() { const c = this.cam, cp = Math.cos(c.pitch); return [c.tx + c.dist * cp * Math.sin(c.yaw), c.ty + c.dist * Math.sin(c.pitch), c.tz + c.dist * cp * Math.cos(c.yaw)]; },
-  matrix(W, H) { const c = this.cam, e = this.eye(); return this.M4.mul(this.M4.persp(.8, W / H, Math.max(.5, c.dist / 200), c.dist * 12 + 2000), this.M4.look(e, [c.tx, c.ty, c.tz], [0, 1, 0])); },
+  eyeOf(c) { const cp = Math.cos(c.pitch); return [c.tx + c.dist * cp * Math.sin(c.yaw), c.ty + c.dist * Math.sin(c.pitch), c.tz + c.dist * cp * Math.cos(c.yaw)]; },
+  eye() { return this.eyeOf(this.cam); },
+  matrixFor(c, W, H, fov) { return this.M4.mul(this.M4.persp(fov || .8, W / H, Math.max(.5, c.dist / 200), c.dist * 12 + 2000), this.M4.look(this.eyeOf(c), [c.tx, c.ty, c.tz], [0, 1, 0])); },
+  matrix(W, H) { return this.matrixFor(this.cam, W, H); },
   /* coordonnées écran d'un point du monde (null s'il est derrière la caméra) */
   toScreen(M, W, H, x, y, z) { const X = M[0] * x + M[4] * y + M[8] * z + M[12], Y = M[1] * x + M[5] * y + M[9] * z + M[13], Wc = M[3] * x + M[7] * y + M[11] * z + M[15]; if (Wc <= .1) return null; return [W / 2 + X / Wc * W / 2, H / 2 - Y / Wc * H / 2, Wc]; },
   touch() { this.moving = true; clearTimeout(this.mvT); this.mvT = setTimeout(() => { this.moving = false; this.soon(); }, 250); },
   orbit(dx, dy) { this.touch(); const c = this.cam; c.yaw -= dx * .006; c.pitch = Math.max(.12, Math.min(1.53, c.pitch + dy * .005)); this.dirty = true; },
   pan(dx, dy) { this.touch(); const c = this.cam, k = c.dist * .0016, sy = Math.sin(c.yaw), cy = Math.cos(c.yaw); c.tx -= (dx * cy + dy * sy) * k; c.tz -= (-dx * sy + dy * cy) * k; this.dirty = true; },
   zoom(dir) { this.touch(); const c = this.cam; c.dist = Math.max(12, Math.min(8000, c.dist * (dir < 0 ? 1 / 1.15 : 1.15))); this.dirty = true; },
-  bindMesh(m) {
-    const gl = this.gl; gl.bindBuffer(gl.ARRAY_BUFFER, m.vb); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ib);
+  bindMesh(gl, m) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, m.vb); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ib);
     gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 16, 0);
     gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.UNSIGNED_BYTE, true, 16, 12);
     gl.disableVertexAttribArray(2);
   },
-  /* marqueurs à dessiner : { x, y, z, col:[r,g,b], sel, cam } */
-  render(marks) {
-    const gl = this.gl, cv = this.cv; if (!gl || !this.cam) return null;
-    const dpr = this.moving ? 1 : Math.min(1.5, window.devicePixelRatio || 1), r = cv.getBoundingClientRect(), W = Math.max(1, Math.round(r.width * dpr)), H = Math.max(1, Math.round(r.height * dpr));
-    if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  /* dessin d'une scène : o = { clear: [r,g,b,a], fog, beams, fov, clip: [x0,z0,x1,z1] (maquette découpée), wallY: [bas, haut] } */
+  draw(R, m, cam, W, H, marks, o) {
+    const gl = R.gl;
     gl.viewport(0, 0, W, H);
-    const fogc = [.035, .04, .055]; gl.clearColor(fogc[0], fogc[1], fogc[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    const M = this.matrix(W, H), tm = (performance.now() - this.t0) / 1000, m = this.mesh;
+    const fogc = o.fogc || [.035, .04, .055], cl = o.clear || [fogc[0], fogc[1], fogc[2], 1];
+    gl.clearColor(cl[0], cl[1], cl[2], cl[3]); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    const M = this.matrixFor(cam, W, H, o.fov), tm = (performance.now() - this.t0) / 1000;
     gl.enable(gl.DEPTH_TEST); gl.disable(gl.CULL_FACE);
     if (m) {
-      const P = this.pT; gl.useProgram(P.p);
+      const P = R.pT; gl.useProgram(P.p);
       gl.uniformMatrix4fv(P.u.M, false, M); gl.uniform1f(P.u.st, m.st); gl.uniform1f(P.u.tm, tm);
-      gl.uniform1f(P.u.fogk, .55 / Math.max(200, this.cam.dist * 2.2)); gl.uniform3fv(P.u.fogc, fogc);
-      gl.uniform1f(P.u.water, 0); gl.disable(gl.BLEND); gl.depthMask(true);
-      this.bindMesh(m.L); gl.drawElements(gl.TRIANGLES, m.L.n, gl.UNSIGNED_INT, 0);
-      if (m.W) { gl.uniform1f(P.u.water, 1); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); this.bindMesh(m.W); gl.drawElements(gl.TRIANGLES, m.W.n, gl.UNSIGNED_INT, 0); gl.depthMask(true); }
+      gl.uniform1f(P.u.fogk, o.fog === false ? 0 : .55 / Math.max(200, cam.dist * 2.2)); gl.uniform3fv(P.u.fogc, fogc);
+      gl.uniform2f(P.u.org, m.X0, m.Z0); gl.uniform2f(P.u.tsz, m.W, m.H); gl.uniform1f(P.u.hb, m.base); gl.uniform1f(P.u.hs, m.hs);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, m.tex); gl.uniform1i(P.u.tex, 0);
+      const C = o.clip; gl.uniform1f(P.u.clipOn, C ? 1 : 0); gl.uniform4f(P.u.clip, ...(C || [0, 0, 0, 0]));
+      gl.uniform1f(P.u.wall, 0); gl.uniform1f(P.u.water, 0); gl.disable(gl.BLEND); gl.depthMask(true);
+      this.bindMesh(gl, m.L); gl.drawElements(gl.TRIANGLES, m.L.n, gl.UNSIGNED_INT, 0);
+      if (C) { // murs de la maquette : le relief vu en coupe, liseré doré en haut
+        const [x0, z0, x1, z1] = C, y0 = o.wallY ? o.wallY[0] : m.base, y1 = (o.wallY ? o.wallY[1] : m.hmax) + 1;
+        const B = new ArrayBuffer(16 * 16), F = new Float32Array(B), U = new Uint8Array(B), ix = new Uint32Array(24);
+        [[x0, z1, x0, z0, 5], [x1, z0, x1, z1, 1], [x0, z0, x1, z0, 6], [x1, z1, x0, z1, 2]].forEach(([ax, az, bx, bz, fk], w) => {
+          [[ax, y1, az], [bx, y1, bz], [bx, y0, bz], [ax, y0, az]].forEach((v, q) => { const n = w * 4 + q; F[n * 4] = v[0]; F[n * 4 + 1] = v[1]; F[n * 4 + 2] = v[2]; U[n * 16 + 12] = U[n * 16 + 13] = U[n * 16 + 14] = 255; U[n * 16 + 15] = fk; });
+          ix.set([w * 4, w * 4 + 1, w * 4 + 2, w * 4 , w * 4 + 2, w * 4 + 3], w * 6);
+        });
+        if (!R.wIb) R.wIb = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, R.wBuf); gl.bufferData(gl.ARRAY_BUFFER, B, gl.DYNAMIC_DRAW);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, R.wIb); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, ix, gl.DYNAMIC_DRAW);
+        this.bindMesh(gl, { vb: R.wBuf, ib: R.wIb }); gl.uniform1f(P.u.wall, 1); gl.drawElements(gl.TRIANGLES, 24, gl.UNSIGNED_INT, 0); gl.uniform1f(P.u.wall, 0);
+      }
+      if (m.Wa) { gl.uniform1f(P.u.water, 1); gl.enable(gl.BLEND); gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); this.bindMesh(gl, m.Wa); gl.drawElements(gl.TRIANGLES, m.Wa.n, gl.UNSIGNED_INT, 0); gl.depthMask(true); }
     }
     // repères
     if (marks.length) {
-      const c = this.cam, rx = Math.cos(c.yaw), rz = -Math.sin(c.yaw), V = [];
+      const c = cam, rx = Math.cos(c.yaw), rz = -Math.sin(c.yaw), V = [], sc = o.markScale || 1;
       const push = (p, col, a, uv) => V.push(p[0], p[1], p[2], col[0], col[1], col[2], a, uv[0], uv[1]);
       for (const k of marks) {
-        const col = k.col.map(v => v / 255), a = k.stale ? .4 : 1, hw = (k.cam ? 1.1 : 1.7) * (k.sel ? 1.6 : 1) * Math.max(1, c.dist / 260);
+        const col = k.col.map(v => v / 255), a = k.stale ? .4 : 1, hw = (k.cam ? 1.1 : 1.7) * (k.sel ? 1.6 : 1) * Math.max(1, c.dist / 260) * sc;
         const y0 = k.y + .2;
-        if (this.beams) { // laser vers le ciel
-          const h = 260; const A = [k.x - rx * hw, y0, k.z - rz * hw], B = [k.x + rx * hw, y0, k.z + rz * hw], C = [k.x + rx * hw, y0 + h, k.z + rz * hw], D = [k.x - rx * hw, y0 + h, k.z - rz * hw];
-          push(A, col, a, [0, 0]); push(B, col, a, [1, 0]); push(C, col, a, [1, 1]); push(A, col, a, [0, 0]); push(C, col, a, [1, 1]); push(D, col, a, [0, 1]);
+        if (o.beams) { // laser vers le ciel
+          const h = 260; const A = [k.x - rx * hw, y0, k.z - rz * hw], B = [k.x + rx * hw, y0, k.z + rz * hw], C2 = [k.x + rx * hw, y0 + h, k.z + rz * hw], D = [k.x - rx * hw, y0 + h, k.z - rz * hw];
+          push(A, col, a, [0, 0]); push(B, col, a, [1, 0]); push(C2, col, a, [1, 1]); push(A, col, a, [0, 0]); push(C2, col, a, [1, 1]); push(D, col, a, [0, 1]);
         }
         // halo au sol (point) : carré horizontal
-        const g2 = (k.sel ? 7 : 4.5) * Math.max(1, c.dist / 300), yg = y0 + .05;
+        const g2 = (k.sel ? 7 : 4.5) * Math.max(1, c.dist / 300) * sc, yg = y0 + .05;
         const P = [[k.x - g2, yg, k.z - g2, 0, -2], [k.x + g2, yg, k.z - g2, 1, -2], [k.x + g2, yg, k.z + g2, 1, -1], [k.x - g2, yg, k.z + g2, 0, -1]];
         for (const t of [0, 1, 2, 0, 2, 3]) push(P[t], col, a, [P[t][3], P[t][4]]);
-        if (!this.beams) { // mode « points » : boule lumineuse au-dessus du joueur, face à la caméra
-          const s2 = (k.sel ? 4 : 2.6) * Math.max(1, c.dist / 300), yc = y0 + 2 + s2;
+        if (!o.beams) { // mode « points » : boule lumineuse au-dessus du joueur, face à la caméra
+          const s2 = (k.sel ? 4 : 2.6) * Math.max(1, c.dist / 300) * sc, yc = y0 + 2 + s2;
           const Q = [[k.x - rx * s2, yc - s2, k.z - rz * s2, 0, -4], [k.x + rx * s2, yc - s2, k.z + rz * s2, 1, -4], [k.x + rx * s2, yc + s2, k.z + rz * s2, 1, -3], [k.x - rx * s2, yc + s2, k.z - rz * s2, 0, -3]];
           for (const t of [0, 1, 2, 0, 2, 3]) push(Q[t], col, a, [Q[t][3], Q[t][4]]);
         }
       }
-      const P = this.pB; gl.useProgram(P.p); gl.uniformMatrix4fv(P.u.M, false, M); gl.uniform1f(P.u.tm, tm);
+      const P = R.pB; gl.useProgram(P.p); gl.uniformMatrix4fv(P.u.M, false, M); gl.uniform1f(P.u.tm, tm);
       gl.disable(gl.CULL_FACE); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE); gl.depthMask(false);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.bBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(V), gl.DYNAMIC_DRAW);
+      gl.bindBuffer(gl.ARRAY_BUFFER, R.bBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(V), gl.DYNAMIC_DRAW);
       gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 36, 0);
       gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 36, 12);
       gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 36, 28);
       gl.drawArrays(gl.TRIANGLES, 0, V.length / 9); gl.depthMask(true);
     }
+    return M;
+  },
+  /* marqueurs à dessiner : { x, y, z, col:[r,g,b], sel, cam } */
+  render(marks) {
+    const gl = this.gl, cv = this.cv; if (!gl || !this.cam) return null;
+    const dpr = this.moving ? 1 : Math.min(this.hd >= 2 ? 2.5 : 1.5, window.devicePixelRatio || 1), r = cv.getBoundingClientRect(), W = Math.max(1, Math.round(r.width * dpr)), H = Math.max(1, Math.round(r.height * dpr));
+    if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+    const M = this.draw(this, this.mesh, this.cam, W, H, marks, { beams: this.beams });
     this.dirty = false;
     return { M, W: W / dpr, H: H / dpr, Mcss: this.matrix(W / dpr, H / dpr) };
   },
@@ -4232,6 +4322,54 @@ const MAP3D = {
   loop() {},
   /* redessine à l'image suivante (plusieurs demandes dans la même image = un seul dessin) */
   soon() { if (this.raf) return; this.raf = requestAnimationFrame(() => { this.raf = 0; if (S.page === 'carte' && CAM.iso) CAM.draw(true); }); }
+};
+/* mini-carte isométrique : vraie maquette en relief, découpée autour du sujet (petit) ou fenêtre 3D (grand) */
+const MINI3D = {
+  R: null, cv: null, mesh: null, fail: false,
+  ok() {
+    if (this.R && !this.R.gl.isContextLost()) return true; if (this.fail) return false;
+    try { this.cv = document.createElement('canvas'); this.R = MAP3D.setup(this.cv, true); } catch (e) { console.warn('mini-carte 3D', e); this.R = null; }
+    if (!this.R) { this.fail = true; return false; }
+    this.cv.addEventListener('webglcontextlost', e => { e.preventDefault(); this.R = null; this.mesh = null; });
+    return true;
+  },
+  paint(cv, c, st, ui, TT) {
+    const R = this.R;
+    if (!this.mesh || this.mesh.T !== TT) { if (this.mesh) MAP3D.freeMesh(R, this.mesh); this.mesh = null; try { this.mesh = MAP3D.buildMesh(R, TT, 768); } catch (e) { console.warn('mini-carte 3D', e); this.fail = true; return false; } }
+    const m = this.mesh, PW = cv.width, PH = cv.height, g = this.cv;
+    if (g.width !== PW || g.height !== PH) { g.width = PW; g.height = PH; }
+    const v = PROG.mapView(), yaw = v.yaw, pitch = v.pitch, big = !!ui.big, asp = PW / PH, fov = .55, tn = Math.tan(fov / 2), half = st.span / 2;
+    // relief de la zone montrée (hauteur de la maquette et visée)
+    let lo = 1e9, hi = -1e9;
+    { const i0 = Math.max(0, Math.floor((st.x - half - m.X0) / m.st)), i1 = Math.min(m.W - 1, Math.floor((st.x + half - m.X0) / m.st)), j0 = Math.max(0, Math.floor((st.z - half - m.Z0) / m.st)), j1 = Math.min(m.H - 1, Math.floor((st.z + half - m.Z0) / m.st)), sk = Math.max(1, Math.floor((i1 - i0) / 90));
+      for (let j = j0; j <= j1; j += sk) for (let i = i0; i <= i1; i += sk) { const y = m.TOP[j * m.W + i]; if (y < lo) lo = y; if (y > hi) hi = y; } }
+    if (lo > hi) { lo = m.base + 12; hi = lo + 8; }
+    const cyw = Math.abs(Math.cos(yaw)) + Math.abs(Math.sin(yaw)), y0 = lo - 5;
+    let cam, o;
+    if (big) { // grand : fenêtre sur le monde en 3D, le cadre ne bouge pas
+      cam = { tx: st.x, ty: (lo + hi) / 2, tz: st.z, yaw, pitch, dist: half / tn * 1.05 };
+      o = { fov, beams: MAP3D.beams, markScale: .75 };
+    } else { // petit : maquette découpée, fond transparent
+      const hfit = (st.span * cyw * Math.sin(pitch) + (hi - y0) * Math.cos(pitch)) / 2, wfit = st.span * cyw / 2;
+      cam = { tx: st.x, ty: (y0 + hi) / 2, tz: st.z, yaw, pitch, dist: Math.max(wfit / asp, hfit) * 1.1 / tn };
+      o = { fov, clear: [0, 0, 0, 0], fog: false, beams: false, clip: [st.x - half, st.z - half, st.x + half, st.z + half], wallY: [y0, m.hmax], markScale: .8 };
+    }
+    const yAt = (x, z) => { const i = Math.floor((x - m.X0) / m.st), j = Math.floor((z - m.Z0) / m.st); return i < 0 || j < 0 || i >= m.W || j >= m.H ? lo : m.TOP[j * m.W + i]; };
+    const inside = (x, z) => big || (Math.abs(x - st.x) <= half && Math.abs(z - st.z) <= half);
+    const marks = [];
+    for (const [t, q, id] of st.pts) if (inside(q.x, q.z)) marks.push({ x: q.x, y: Math.max(q.y ?? 0, yAt(q.x, q.z)), z: q.z, col: id === st.mainId ? [246, 226, 166] : t.status === 'injured' ? [232, 154, 60] : [95, 191, 106], sel: id === st.mainId, t });
+    if (st.cam && inside(st.cam.x, st.cam.z)) marks.push({ x: st.cam.x, y: Math.max(st.cam.y ?? 0, yAt(st.cam.x, st.cam.z)), z: st.cam.z, col: [246, 226, 166], cam: true, sel: true });
+    const M = MAP3D.draw(R, m, cam, PW, PH, marks, o);
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, PW, PH); c.drawImage(g, 0, 0);
+    // numéros des tributs
+    const s = PH / 320; c.font = `600 ${Math.round(15 * s)}px Barlow Condensed, sans-serif`; c.textAlign = 'center'; c.lineWidth = 3 * s; c.strokeStyle = 'rgba(0,0,0,.75)';
+    for (const k of marks) { if (!k.t) continue; const p = MAP3D.toScreen(M, PW, PH, k.x, k.y + 4, k.z); if (!p) continue; const tx = k.t.num ? pad3(k.t.num) : k.t.name.slice(0, 6); c.strokeText(tx, p[0], p[1] - 4 * s); c.fillStyle = '#fff'; c.fillText(tx, p[0], p[1] - 4 * s); }
+    if (big) { // cadre et boussole
+      c.strokeStyle = 'rgba(214,178,97,.85)'; c.lineWidth = 3 * s; c.strokeRect(1.5 * s, 1.5 * s, PW - 3 * s, PH - 3 * s);
+      const r = 14 * s, cx = 26 * s, cy = 26 * s, a = -yaw + Math.PI; c.save(); c.translate(cx, cy); c.fillStyle = 'rgba(8,9,12,.7)'; c.beginPath(); c.arc(0, 0, r, 0, 7); c.fill(); c.rotate(a); c.fillStyle = '#d4af37'; c.beginPath(); c.moveTo(0, -r * .8); c.lineTo(r * .3, 0); c.lineTo(-r * .3, 0); c.fill(); c.restore();
+    }
+    return true;
+  }
 };
 /* =====================================================================
    Caméras en jeu : comms, demandes, actes annonciateurs, carte
@@ -4506,7 +4644,7 @@ const CAM = {
         else if (v === 'iso') { this.iso = !this.iso; LS.set('ctv.mapIso', this.iso); }
         else if (v === 'clear') { askConfirm('Effacer le fond de carte ?', 'Pour une nouvelle map : le relief du site et la sauvegarde du mod serveur sont supprimés. Il faudra relancer un relevé.').then(ok => { if (ok) NET.req({ t: 'terrainClear' }).then(() => { MAP3D.mesh = null; toastInfo('Fond de carte effacé', 'Relance un relevé quand la nouvelle map est prête.'); }, er => toastInfo('Carte', er.message, true)); }); }
         else if (v === 'beams') { MAP3D.beams = !MAP3D.beams; LS.set('ctv.map3dBeams', MAP3D.beams); }
-        else if (v === 'hd') { MAP3D.hd = !MAP3D.hd; LS.set('ctv.map3dHd', MAP3D.hd); }
+        else if (v === 'hd') { MAP3D.hd = (MAP3D.hd + 1) % 3; LS.set('ctv.map3dHd', MAP3D.hd); toastInfo('Carte 3D : détail ' + ['normal', 'HD', 'Ultra HD'][MAP3D.hd], ['512 points de côté au plus', '1 bloc = 1 point jusqu\'à 1024 de côté', '1 bloc = 1 point sur toute la carte, image plus fine (PC puissant)'][MAP3D.hd]); }
         else if (v === 'scan') { const r = +$('#mapR').value || 256; NET.req({ t: 'terrainScan', dim: this.dim, cx: 0, cz: 0, r }).then(() => toastInfo('Relevé demandé au serveur', 'Centré sur 0, 0 · rayon ' + r + ' blocs · avancement visible en jeu (ops et staff)')); }
         else if (v === 'zone') { if (this.iso) { toastInfo('Passe en vue de dessus pour dessiner une zone', '', true); return; } this.zoneDraw = !this.zoneDraw; if (this.zoneDraw) toastInfo('Zone interdite', 'Glisse sur la carte pour dessiner le rectangle.'); }
         else if (v.startsWith('dim:')) { this.dim = v.slice(4); this.fit(); }
@@ -4533,7 +4671,7 @@ const CAM = {
       + (isCrew() ? `<button class="btn xs ${this.showCams ? 'on' : ''}" data-mt="cams">${ic('cam')}Caméras</button>` : '')
       + `<button class="btn xs ${this.showTrails ? 'on' : ''}" data-mt="trails">Traces</button>`
       + `<button class="btn xs ${this.iso ? 'on' : ''}" data-mt="iso" title="Maquette 3D : clic gauche glissé = tourner, clic droit (ou Maj) glissé = déplacer, molette = zoom, double-clic = centrer">${this.iso ? 'Vue de dessus' : 'Vue 3D'}</button>`
-      + (this.iso ? `<button class="btn xs ${MAP3D.beams ? 'on' : ''}" data-mt="beams" title="Repères : lasers vers le ciel ou points lumineux">${MAP3D.beams ? 'Lasers' : 'Points'}</button><button class="btn xs ${MAP3D.hd ? 'on' : ''}" data-mt="hd" title="Détail maximal (1 bloc = 1 point jusqu'à 1024 de côté). Plus lourd : à garder pour un PC puissant.">HD</button>` : '')
+      + (this.iso ? `<button class="btn xs ${MAP3D.beams ? 'on' : ''}" data-mt="beams" title="Repères : lasers vers le ciel ou points lumineux">${MAP3D.beams ? 'Lasers' : 'Points'}</button><button class="btn xs ${MAP3D.hd ? 'on' : ''}" data-mt="hd" title="Détail de la maquette : normal, HD (jusqu'à 1024 blocs de côté) ou Ultra HD (chaque bloc, image plus fine)">${['Détail normal', 'HD', 'Ultra HD'][MAP3D.hd]}</button>` : '')
       + (isCrew() ? `<button class="btn xs ${this.zoneDraw ? 'on' : ''}" data-mt="zone" title="Dessine un rectangle sur la carte : les caméras qui y entrent sont averties (bases secrètes, lieux à ne pas spoiler)">⛔ Zone interdite</button>` : '')
       + (isCrew() ? `<span class="map-scan"><select class="mini-sel" id="mapR" title="Rayon du relevé">${[128, 256, 384, 512, 768, 1024].map(r => `<option value="${r}" ${r === 256 ? 'selected' : ''}>${r} blocs</option>`).join('')}</select><button class="btn xs" data-mt="scan" title="Le mod serveur relève le terrain centré sur 0, 0 (ou /capitoltv carte <rayon> en jeu ; /capitoltv carte effacer pour une nouvelle map)">Relever le terrain</button>${isAdmin() ? `<button class="btn xs ghost" data-mt="clear" title="Nouvelle map : efface le fond de carte du site et la sauvegarde du mod serveur">Effacer</button>` : ''}</span>` : '');
   },
@@ -5770,10 +5908,15 @@ class Stage {
     // mini-carte : canevas gardé d'un rendu à l'autre (pas recréé à chaque vote ou mort)
     let mc = st.querySelector(':scope > .gx-map');
     if (G.map && G.map.on) {
-      if (!mc) { mc = document.createElement('canvas'); mc.className = 'gx-map'; mc.width = mc.height = 320; st.appendChild(mc); }
+      if (!mc) { mc = document.createElement('canvas'); mc.className = 'gx-map'; mc.width = mc.height = 320; st.appendChild(mc); PROG.mapBind(mc); }
       const ui = PROG.mapUi(G.map, this);
-      mc.classList.toggle('big', ui.big); mc.classList.toggle('iso', ui.iso);
-      const W = ui.big ? 720 : 320; if (mc.width !== W) { mc.width = mc.height = W; }
+      // qui peut la manipuler : le Direct pour lui seul, l'Antenne de la régie (et le 2e écran) pour tout le monde
+      mc._scope = this === PROG.main && S.page === 'direct' ? 'local' : (this === PROG.pgmStage || this.el.id === 's2Pg') && hasPerm('program') && !isLocked() ? 'global' : '';
+      mc._ui = ui;
+      const iso3 = ui.iso && MINI3D.ok();
+      mc.classList.toggle('big', ui.big); mc.classList.toggle('iso', ui.iso && !iso3 && !ui.big); mc.classList.toggle('iso3', !!iso3 && !ui.big); mc.classList.toggle('edit', !!mc._scope);
+      if (!mc._drag) { if (ui.big) { const b = ui.box; Object.assign(mc.style, { left: b.x + '%', top: b.y + '%', width: b.w + '%', height: b.h + '%' }); } else mc.removeAttribute('style'); }
+      PROG.mapSize(mc);
       PROG.drawMini(mc, this.mainTrib());
     } else if (mc) mc.remove();
     if (this.o.extras) { this.renderReplay(); this.renderClip(); }
@@ -5840,14 +5983,14 @@ class Stage {
       if (!p) st = 'aucune image reçue';
       else if (!p.on) st = 'aucun plan à l\'antenne (musique coupée)';
       else if (p.screen) st = 'écran plein (musique coupée)';
-      else if (!p.bgm) { const lb = PROG.pub && PROG.pub.bgm; st = lb ? 'musique lancée en régie : ici dans ' + Math.max(0, Math.round(((lb.at || 0) + this.delay() * 1000 - nowS()) / 1000)) + ' s (différé)' : 'aucune musique lancée'; }
+      else if (!p.bgm) st = 'aucune musique lancée sur ce plan';
       else if (!p.bgm.tracks.length) st = 'playlist vide (titres non lisibles ?)';
       else st = null;
       this.o.onMus(st, bg && bg.tracks.length ? bg : null);
     }
     if (bg && bg.tracks.length) {
       const durs = bg.tracks.map(t => Math.max(1, t.dur || 180)), tot = durs.reduce((a, b) => a + b, 0);
-      let t = ((nowS() - (bg.at || nowS())) / 1000) % tot; if (t < 0) t = 0; let i = 0; // en différé, bg.at est déjà décalé (shiftPub)
+      let t = ((nowS() - (bg.at || nowS())) / 1000) % tot; if (t < 0) t = 0; let i = 0; // la régie est immédiate : la musique part tout de suite pour tout le monde
       while (t >= durs[i] && i < durs.length - 1) { t -= durs[i]; i++; }
       const tr = bg.tracks[i], key = tr.id + ':' + bg.at + ':' + i;
       if (tr.sc) {
@@ -5910,6 +6053,50 @@ const MIX = {
   ramping() { const now = nowS(); return Object.values(this.st).some(e => e && e.dur && now < e.at + e.dur + 200); },
   kick() { this.apply(); if (this.loopT) return; const run = () => { this.apply(); if (typeof MIXUI !== 'undefined') MIXUI.render(true); if (this.ramping() || (typeof MIXUI !== 'undefined' && MIXUI.drag)) this.loopT = setTimeout(run, 60); else this.loopT = 0; }; this.loopT = setTimeout(run, 60); },
   apply() { for (const st of this.stages) try { st.applyMix(); } catch (e) {} }
+};
+/* annonces automatiques : fenêtre flottante (comme le mixeur) pour tout activer / couper d'un clic */
+const AUTOUI = {
+  open: false, pos: LS.get('ctv.autopos', null),
+  rows() {
+    const b = S.board || {}, sc = (SKYQ.q && SKYQ.q.sched) || {}, B = S.bot, A = (B && B.ann) || {}, out = [];
+    const hasSched = (sc.times || []).length || sc.nights > 0;
+    out.push({ h: 'À l\'antenne' });
+    out.push({ k: 'canon', n: 'Coup de canon automatique', d: 'Quand le serveur détecte une mort (annonce + mort enregistrée)', on: b.autoCanon !== false });
+    out.push({ k: 'hom', n: 'Hommage automatique programmé', d: hasSched ? SKYQ.schedTxt().replace(/^Hommage automatique /, '') : 'Aucune programmation (Annonces › Hommage)', on: hasSched && !sc.off, dis: !hasSched });
+    if (B && isAdmin()) {
+      out.push({ h: 'Bot Twitch' + (B.on ? ' · #' + B.channel : ' (arrêté)') });
+      for (const [k, n] of [['poll', 'Annonce des sondages'], ['result', 'Résultats des sondages'], ['death', 'Morts (avec le différé)'], ['victor', 'Vainqueur'], ['bets', 'Paris']]) out.push({ k: 'bot:' + k, n, on: A[k] !== false });
+    }
+    return out;
+  },
+  toggle(on) {
+    this.open = on === undefined ? !this.open : on;
+    let el = $('#autoPanel');
+    if (!this.open) { if (el) el.remove(); clearInterval(this.iv); $$('#rgAuto').forEach(b => b.classList.remove('on')); return; }
+    if (!el) {
+      el = document.createElement('div'); el.id = 'autoPanel'; el.className = 'mixp autop';
+      el.innerHTML = `<div class="mixp-h" id="autoH"><b>⚡ Annonces automatiques</b><span class="note">pour toute l'émission</span><span style="flex:1"></span><button class="btn xs icon ghost" data-au="close" title="Fermer">${ic('x')}</button></div><div class="mixp-b" id="autoB"></div>`;
+      document.body.appendChild(el);
+      if (this.pos) { el.style.left = Math.min(innerWidth - 120, this.pos.x) + 'px'; el.style.top = Math.min(innerHeight - 80, this.pos.y) + 'px'; el.style.right = 'auto'; el.style.bottom = 'auto'; }
+      $('#autoH').onpointerdown = e => { if (e.target.closest('button')) return; const r = el.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top; const mv = ev => { el.style.left = Math.max(0, Math.min(innerWidth - 80, ev.clientX - dx)) + 'px'; el.style.top = Math.max(0, Math.min(innerHeight - 40, ev.clientY - dy)) + 'px'; el.style.right = 'auto'; el.style.bottom = 'auto'; }; const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); const r2 = el.getBoundingClientRect(); this.pos = { x: r2.left, y: r2.top }; LS.set('ctv.autopos', this.pos); }; addEventListener('pointermove', mv); addEventListener('pointerup', up); };
+      el.addEventListener('click', e => { if (e.target.closest('[data-au="close"]')) this.toggle(false); });
+      el.addEventListener('change', e => { const t = e.target.closest('[data-ak]'); if (t) this.set(t.dataset.ak, t.checked); });
+    }
+    $$('#rgAuto').forEach(b => b.classList.add('on'));
+    this.render(); clearInterval(this.iv); this.iv = setInterval(() => this.render(), 2000);
+  },
+  render() {
+    const B = $('#autoB'); if (!B || !this.open) return;
+    const R = this.rows(), sig = JSON.stringify(R); if (B.dataset.sig === sig) return; B.dataset.sig = sig;
+    B.innerHTML = R.map(r => r.h ? `<div class="au-h">${esc(r.h)}</div>` : `<label class="au-row ${r.dis ? 'dis' : ''}"><span class="switch"><input type="checkbox" data-ak="${r.k}" ${r.on ? 'checked' : ''} ${r.dis ? 'disabled' : ''}></span><span class="au-n"><b>${esc(r.n)}</b>${r.d ? `<small>${esc(r.d)}</small>` : ''}</span></label>`).join('')
+      + '<div class="mx-foot note">Les annonces lancées à la main (Flash, Parachute, Hommage…) restent toujours possibles.</div>';
+  },
+  set(k, on) {
+    const r = this.rows().find(x => x.k === k), done = () => { toastInfo((on ? 'Activé : ' : 'Coupé : ') + (r ? r.n : ''), 'Pour toute l\'émission'); this.render(); };
+    if (k === 'canon') { S.board.autoCanon = on; commit(false); done(); }
+    else if (k === 'hom') { const sc = (SKYQ.q && SKYQ.q.sched) || {}; NET.req({ t: 'skySched', sched: { ...sc, off: !on } }).then(() => { if (SKYQ.q) SKYQ.q.sched = { ...sc, off: !on }; done(); }, e => toastInfo('Hommage', e.message, true)); }
+    else if (k.startsWith('bot:')) NET.req({ t: 'botCfg', cfg: { ann: { [k.slice(4)]: on } } }).then(r => { S.bot = r.st; done(); }, e => toastInfo('Bot Twitch', e.message, true));
+  }
 };
 /* mixeur de la régie : fenêtre flottante, volumes en direct pendant le glissement, fondus « baisser de X % en Y s » */
 const MIXUI = {
@@ -6047,13 +6234,71 @@ const PROG = {
   /* ---------- mini-carte : déplacement / zoom (régie = pour tous, page Direct = juste pour cette page) ---------- */
   mapView() {
     const g = this.mapCtl || {}, l = S.page === 'direct' && this.mapLoc || {};
-    return { dx: (g.dx || 0) + (l.dx || 0), dz: (g.dz || 0) + (l.dz || 0), z: (g.z || 1) * (l.z || 1) };
+    return { dx: (g.dx || 0) + (l.dx || 0), dz: (g.dz || 0) + (l.dz || 0), z: (g.z || 1) * (l.z || 1), yaw: l.yaw ?? g.yaw ?? -.785, pitch: l.pitch ?? g.pitch ?? .62 };
+  },
+  /* taille réelle du canevas = taille affichée (net en grand comme en petit) */
+  mapSize(mc) {
+    let w = 320, h = 320;
+    if (mc.offsetWidth) { const d = Math.min(2, window.devicePixelRatio || 1); w = Math.round(mc.offsetWidth * d); h = Math.round(mc.offsetHeight * d); const k = Math.min(1, 1400 / Math.max(w, h)); w = Math.max(64, Math.round(w * k)); h = Math.max(64, Math.round(h * k)); }
+    if (mc.width !== w || mc.height !== h) { mc.width = w; mc.height = h; if (mc._st) mc._st.dirty = true; }
+  },
+  mapBind(mc) {
+    if (window.ResizeObserver) new ResizeObserver(() => { this.mapSize(mc); if (mc._st) this.drawMini(mc, mc._st.main); }).observe(mc);
+    mc.addEventListener('pointerdown', e => this.mapPtr(e, mc));
+    mc.addEventListener('wheel', e => { if (!mc._scope) return; e.preventDefault(); e.stopPropagation(); this.mapNudge(mc._scope === 'local', { z: e.deltaY > 0 ? 1.15 : 1 / 1.15 }); }, { passive: false });
+    mc.addEventListener('dblclick', e => { if (!mc._scope) return; e.preventDefault(); e.stopPropagation(); this.mapNudge(mc._scope === 'local', { home: true }); });
+    mc.addEventListener('contextmenu', e => { if (mc._scope) e.preventDefault(); });
+  },
+  /* change la vue (local : cette page ; sinon : tous les spectateurs) */
+  mapNudge(local, o) {
+    const cur = Object.assign({ dx: 0, dz: 0, z: 1 }, local ? this.mapLoc || {} : this.mapCtl || {});
+    if (o.home) { cur.dx = 0; cur.dz = 0; cur.z = 1; delete cur.yaw; delete cur.pitch; }
+    if (o.dx) cur.dx += o.dx; if (o.dz) cur.dz += o.dz; if (o.z) cur.z = Math.max(.1, Math.min(20, cur.z * o.z));
+    if (o.yaw) cur.yaw = (cur.yaw ?? this.mapView().yaw) + o.yaw;
+    if (o.pitch) cur.pitch = Math.max(.25, Math.min(1.45, (cur.pitch ?? this.mapView().pitch) + o.pitch));
+    if (local) { this.mapLoc = cur; LS.set('ctv.mapLoc', cur); this.redrawMaps(); }
+    else { this.mapCtl = cur; this.redrawMaps(); clearTimeout(this.mapT); this.mapT = setTimeout(() => NET.req({ t: 'mapCtl', v: this.mapCtl }).catch(er => toastInfo('Mini-carte', er.message, true)), 120); }
+  },
+  /* souris sur la mini-carte : Maj + glisser = tourner (isométrique) ou déplacer la vue (à plat) ;
+     en grand : glisser = déplacer le cadre, coin bas-droit = redimensionner ; molette = zoom ; double-clic = recentrer */
+  mapPtr(e, mc) {
+    if (!mc._scope || e.button !== 0) return;
+    e.preventDefault(); e.stopPropagation();
+    const local = mc._scope === 'local', ui = mc._ui || {}, x0 = e.clientX, y0 = e.clientY;
+    let lx = x0, ly = y0, mv, done;
+    if (e.shiftKey || !ui.big) {
+      if (!e.shiftKey) return;
+      mv = ev => {
+        const dx = ev.clientX - lx, dy = ev.clientY - ly; lx = ev.clientX; ly = ev.clientY;
+        if (ui.iso) this.mapNudge(local, { yaw: -dx * .008, pitch: dy * .006 });
+        else { const bpp = ((mc._st && mc._st.span) || 160) * 320 / 290 / (mc.offsetHeight || 300); this.mapNudge(local, { dx: -dx * bpp, dz: -dy * bpp }); }
+      };
+    } else {
+      const host = mc.parentElement.getBoundingClientRect(), b0 = { ...ui.box }, r = mc.getBoundingClientRect(), b = { ...b0 };
+      const rez = e.clientX > r.right - 26 && e.clientY > r.bottom - 26, cl = (v, a, z) => Math.max(a, Math.min(z, v));
+      mc._drag = true; mc.classList.add('drag');
+      mv = ev => {
+        const dx = (ev.clientX - x0) / host.width * 100, dy = (ev.clientY - y0) / host.height * 100;
+        if (rez) { b.w = cl(b0.w + dx, 10, 100); b.h = cl(b0.h + dy, 10, 100); }
+        else { b.x = cl(b0.x + dx, -b0.w / 2, 100 - b0.w / 2); b.y = cl(b0.y + dy, -b0.h / 2, 100 - b0.h / 2); }
+        Object.assign(mc.style, { left: b.x + '%', top: b.y + '%', width: b.w + '%', height: b.h + '%' });
+      };
+      done = () => {
+        mc._drag = false; mc.classList.remove('drag');
+        const R = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, Math.round(v * 10) / 10])), bx = R(b);
+        mc._ui = { ...ui, box: bx };
+        if (local) { this.mapLocUi = { ...(this.mapLocUi || {}), box: bx }; LS.set('ctv.mapUi', this.mapLocUi); }
+        else { const g2 = this.gfx(); g2.map = { ...(g2.map || {}), box: bx }; this.sendGfx(g2, true); }
+      };
+    }
+    const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); if (done) done(); };
+    addEventListener('pointermove', mv); addEventListener('pointerup', up);
   },
   redrawMaps() { for (const cv of $$('.gx-map')) if (cv._st) this.drawMini(cv, cv._st.main); },
   mapLocUi: LS.get('ctv.mapUi', {}),
   mapUi(M, stage) {
     const l = S.page === 'direct' && stage === this.main ? this.mapLocUi || {} : {};
-    return { big: l.big != null ? l.big : !!M.big, iso: l.iso != null ? l.iso : !!M.iso };
+    return { big: l.big != null ? l.big : !!M.big, iso: l.iso != null ? l.iso : !!M.iso, box: l.box || M.box || { x: 26, y: 7.5, w: 48, h: 85 } };
   },
   toggleMapUi(k, local) {
     const G = ((local ? this.main && this.main.pub : this.pub) || {}).gfx || {}, M = G.map || {};
@@ -6071,11 +6316,13 @@ const PROG = {
     if (!(k.startsWith('Arrow') || zin || zout || k === 'Home')) return false;
     e.preventDefault();
     const cur = local ? Object.assign({ dx: 0, dz: 0, z: 1 }, this.mapLoc || {}) : Object.assign({ dx: 0, dz: 0, z: 1 }, this.mapCtl || {});
-    const span = 160 * this.mapView().z, stp = span * (e.shiftKey ? .5 : .18);
-    if (k === 'ArrowLeft') cur.dx -= stp; if (k === 'ArrowRight') cur.dx += stp; if (k === 'ArrowUp') cur.dz -= stp; if (k === 'ArrowDown') cur.dz += stp;
+    const V = this.mapView(), span = 160 * V.z, stp = span * (e.shiftKey ? .5 : .18);
+    const yw = $$('.gx-map').some(c => c._ui && c._ui.iso) ? V.yaw : 0, fx = -Math.sin(yw), fz = -Math.cos(yw), rx = Math.cos(yw), rz = -Math.sin(yw);
+    if (k === 'ArrowLeft') { cur.dx -= rx * stp; cur.dz -= rz * stp; } if (k === 'ArrowRight') { cur.dx += rx * stp; cur.dz += rz * stp; }
+    if (k === 'ArrowUp') { cur.dx += fx * stp; cur.dz += fz * stp; } if (k === 'ArrowDown') { cur.dx -= fx * stp; cur.dz -= fz * stp; }
     if (zin) cur.z = Math.max(.1, cur.z / 1.3); if (zout) cur.z = Math.min(20, cur.z * 1.3);
-    if (k === 'Home') { cur.dx = 0; cur.dz = 0; cur.z = 1; }
-    if (local) { this.mapLoc = cur.dx || cur.dz || cur.z !== 1 ? cur : null; LS.set('ctv.mapLoc', this.mapLoc); this.redrawMaps(); if (k === 'Home') toastInfo('Mini-carte recentrée', 'Sur cette page seulement'); }
+    if (k === 'Home') { cur.dx = 0; cur.dz = 0; cur.z = 1; delete cur.yaw; delete cur.pitch; }
+    if (local) { this.mapLoc = cur.dx || cur.dz || cur.z !== 1 || cur.yaw != null || cur.pitch != null ? cur : null; LS.set('ctv.mapLoc', this.mapLoc); this.redrawMaps(); if (k === 'Home') toastInfo('Mini-carte recentrée', 'Sur cette page seulement'); }
     else { this.mapCtl = cur; this.redrawMaps(); clearTimeout(this.mapT); this.mapT = setTimeout(() => NET.req({ t: 'mapCtl', v: this.mapCtl }).catch(er => toastInfo('Mini-carte', er.message, true)), 120); if (k === 'Home') toastInfo('Mini-carte recentrée', 'Pour tous les spectateurs'); }
     return true;
   },
@@ -6086,8 +6333,9 @@ const PROG = {
   habKey(e) {
     if (!(e.shiftKey || e.ctrlKey) || e.altKey || e.metaKey) return false;
     if (e.key === '?' || (e.shiftKey && e.code === 'Slash')) { e.preventDefault(); this.habHelp(); return true; }
-    if (e.code === 'KeyG' || e.code === 'KeyV') { e.preventDefault(); this.toggleMapUi(e.code === 'KeyG' ? 'big' : 'iso', true); return true; }
-    const h = this.HABS.find(x => e.code === 'Key' + x[0].toUpperCase()); if (!h) return false;
+    const L = letterOf(e);
+    if (L === 'g' || L === 'v') { e.preventDefault(); this.toggleMapUi(L === 'g' ? 'big' : 'iso', true); return true; }
+    const h = this.HABS.find(x => L === x[0]); if (!h) return false;
     e.preventDefault();
     const on = this.hid.has(h[1]); on ? this.hid.delete(h[1]) : this.hid.add(h[1]);
     LS.set('ctv.directHide', [...this.hid]); this.applyHid();
@@ -6330,27 +6578,30 @@ const PROG = {
       requestAnimationFrame(step);
     }
     function paint() {
-      const c = cv.getContext('2d'), W = 320; c.setTransform(cv.width / 320, 0, 0, cv.width / 320, 0, 0);
-      c.fillStyle = '#0a0b0e'; c.fillRect(0, 0, W, W);
+      const c = cv.getContext('2d'), ui = cv._ui || {}, TT = TERRAIN.get('minecraft:overworld');
+      if (ui.iso && TT && MINI3D.ok() && MINI3D.paint(cv, c, st, ui, TT)) { grip(c); return; }
+      // à plat : unités logiques (320 de haut), largeur selon le cadre
+      const PW = cv.width, PH = cv.height, s = PH / 320, W = PW / s, Hh = 320;
+      c.setTransform(s, 0, 0, s, 0, 0);
+      c.fillStyle = '#0a0b0e'; c.fillRect(0, 0, W, Hh);
       c.strokeStyle = 'rgba(214,178,97,.10)'; c.lineWidth = 1;
-      const k2 = (W - 30) / st.span, grid = st.span > 600 ? 200 : st.span > 250 ? 100 : 50;
-      const TT = TERRAIN.get('minecraft:overworld');
+      const k2 = (Hh - 30) / st.span, grid = st.span > 600 ? 200 : st.span > 250 ? 100 : 50, hx = W / 2 / k2, hz = Hh / 2 / k2;
       if (TT) {
         // on ne copie que la partie visible du fond (bien plus léger qu'une image de 1024 px redimensionnée)
-        const img = TT.sty || TT.top, half = W / 2 / k2, s0 = TT.step;
-        let sx = (st.x - half - TT.x0) / s0, sy = (st.z - half - TT.z0) / s0, sw = 2 * half / s0, sh = sw;
+        const img = TT.sty || TT.top, s0 = TT.step;
+        let sx = (st.x - hx - TT.x0) / s0, sy = (st.z - hz - TT.z0) / s0, sw = 2 * hx / s0, sh = 2 * hz / s0;
         const cx0 = Math.max(0, sx), cy0 = Math.max(0, sy), cx1 = Math.min(TT.w, sx + sw), cy1 = Math.min(TT.h, sy + sh);
-        if (cx1 > cx0 && cy1 > cy0) { c.imageSmoothingEnabled = k2 * s0 < 3; c.drawImage(img, cx0, cy0, cx1 - cx0, cy1 - cy0, (cx0 - sx) / sw * W, (cy0 - sy) / sh * W, (cx1 - cx0) / sw * W, (cy1 - cy0) / sh * W); }
+        if (cx1 > cx0 && cy1 > cy0) { c.imageSmoothingEnabled = k2 * s * s0 < 3; c.drawImage(img, cx0, cy0, cx1 - cx0, cy1 - cy0, (cx0 - sx) / sw * W, (cy0 - sy) / sh * Hh, (cx1 - cx0) / sw * W, (cy1 - cy0) / sh * Hh); }
       }
       // vignette douce (préparée une fois)
-      if (!PROG.vig || PROG.vig.width !== W) { const v = PROG.vig = document.createElement('canvas'); v.width = v.height = W; const g = v.getContext('2d'), vg = g.createRadialGradient(W / 2, W / 2, W * .3, W / 2, W / 2, W * .75); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.55)'); g.fillStyle = vg; g.fillRect(0, 0, W, W); }
-      c.drawImage(PROG.vig, 0, 0);
-      for (let g = Math.floor((st.x - st.span) / grid) * grid; g < st.x + st.span; g += grid) { const x = W / 2 + (g - st.x) * k2; c.beginPath(); c.moveTo(x, 0); c.lineTo(x, W); c.stroke(); }
-      for (let g = Math.floor((st.z - st.span) / grid) * grid; g < st.z + st.span; g += grid) { const y = W / 2 + (g - st.z) * k2; c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
+      if (!PROG.vig) { const v = PROG.vig = document.createElement('canvas'); v.width = v.height = 320; const g = v.getContext('2d'), vg = g.createRadialGradient(160, 160, 96, 160, 160, 240); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.55)'); g.fillStyle = vg; g.fillRect(0, 0, 320, 320); }
+      c.drawImage(PROG.vig, 0, 0, W, Hh);
+      for (let g = Math.floor((st.x - hx) / grid) * grid; g < st.x + hx; g += grid) { const x = W / 2 + (g - st.x) * k2; c.beginPath(); c.moveTo(x, 0); c.lineTo(x, Hh); c.stroke(); }
+      for (let g = Math.floor((st.z - hz) / grid) * grid; g < st.z + hz; g += grid) { const y = Hh / 2 + (g - st.z) * k2; c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
       c.font = '600 15px Barlow Condensed, sans-serif'; c.textAlign = 'center';
       for (const [t, q, id] of st.pts) {
-        const x = W / 2 + (q.x - st.x) * k2, y = W / 2 + (q.z - st.z) * k2;
-        if (x < -10 || y < -10 || x > W + 10 || y > W + 10) continue;
+        const x = W / 2 + (q.x - st.x) * k2, y = Hh / 2 + (q.z - st.z) * k2;
+        if (x < -10 || y < -10 || x > W + 10 || y > Hh + 10) continue;
         const isMain = id === st.mainId;
         c.fillStyle = isMain ? '#f6e2a6' : t.status === 'injured' ? '#e89a3c' : '#5fbf6a';
         c.beginPath(); c.arc(x, y, isMain ? 8 : 5.5, 0, Math.PI * 2); c.fill();
@@ -6358,12 +6609,20 @@ const PROG = {
         c.fillStyle = '#fff'; c.fillText(t.num ? pad3(t.num) : t.name.slice(0, 6), x, y - 12);
       }
       if (st.cam) { // caméra principale : viseur
-        const x = W / 2 + (st.cam.x - st.x) * k2, y = W / 2 + (st.cam.z - st.z) * k2;
+        const x = W / 2 + (st.cam.x - st.x) * k2, y = Hh / 2 + (st.cam.z - st.z) * k2;
         c.strokeStyle = '#f6e2a6'; c.lineWidth = 2.5; c.beginPath(); c.arc(x, y, 9, 0, Math.PI * 2); c.stroke();
         c.beginPath(); for (const [a, b2] of [[-16, -11], [11, 16]]) { c.moveTo(x + a, y); c.lineTo(x + b2, y); c.moveTo(x, y + a); c.lineTo(x, y + b2); } c.stroke();
       }
       c.fillStyle = 'rgba(214,178,97,.9)'; c.font = '700 13px Barlow Condensed, sans-serif'; c.textAlign = 'left'; c.fillText('N ▲', 10, 20);
-      c.strokeStyle = 'rgba(214,178,97,.85)'; c.lineWidth = 3; c.strokeRect(1.5, 1.5, W - 3, W - 3);
+      c.strokeStyle = 'rgba(214,178,97,.85)'; c.lineWidth = 3; c.strokeRect(1.5, 1.5, W - 3, Hh - 3);
+      grip(c);
+    }
+    // poignée de redimensionnement (carte en grand, modifiable ici)
+    function grip(c) {
+      const ui = cv._ui || {}; if (!cv._scope || !ui.big) return;
+      const s = cv.height / 320, W = cv.width, H = cv.height; c.setTransform(1, 0, 0, 1, 0, 0);
+      c.strokeStyle = 'rgba(246,226,166,.85)'; c.lineWidth = 2 * s; c.beginPath();
+      for (const d of [8, 14, 20]) { c.moveTo(W - 4 * s, H - d * s); c.lineTo(W - d * s, H - 4 * s); } c.stroke();
     }
   },
   /* lecture synchronisée : tout le monde est au même endroit du média */
@@ -6487,9 +6746,9 @@ const PROG = {
     const row = x => {
       const src = (x.k === 'trib' ? 't:' : 'c:') + x.ref, bl = this.povBlocked(src), pf = (RTC.perf || {})[src];
       const lag = pf && pf.base && pf.fps < pf.base * 0.75 && Date.now() - pf.at < 5 * 60000;
-      return `<div class="src ${x.k === 'cam' ? 'scam' : ''} ${bl ? 'blocked' : ''}" ${bl ? '' : 'draggable="true"'} data-k="${x.k}" data-ref="${esc(x.ref)}" title="${bl ? 'Capture coupée : POV inutilisable' : 'Glisser sur l\'aperçu · double-clic : plein écran'}" style="${x.dead ? 'opacity:.5' : ''}">
+      return `<div class="src ${x.k === 'cam' ? 'scam' : ''} ${bl ? 'blocked' : ''}" ${bl ? '' : 'draggable="true"'} data-k="${x.k}" data-ref="${esc(x.ref)}" title="${bl ? 'Capture coupée : POV inutilisable (clic droit : réactiver)' : 'Glisser sur l\'aperçu · double-clic : plein écran · clic droit : couper la capture'}" style="${x.dead ? 'opacity:.5' : ''}">
       <div class="th ${x.ctv ? 'ctv' : ''}" style="${x.ctv ? '' : `background-image:url('${thumbURL(x.login)}')`}">${x.ctv ? '<span>CTV</span>' : ''}${x.live || x.ctv ? '<i></i>' : ''}</div><div style="min-width:0;flex:1"><b>${esc(x.name)}</b><small>${esc(x.sub)}${bl ? ' · <span style="color:var(--red-hi)">capture coupée</span>' : this.vqTag(x)}${lag ? ` · <span style="color:var(--warn)" title="La capture fait ramer ce joueur">⚠ ${pf.base}→${pf.fps} i/s</span>` : ''}</small></div>
-      ${bl ? `<button class="btn xs ghost" data-pov="unblock" data-src="${esc(src)}" title="Autoriser de nouveau sa capture">Réactiver</button>` : `<button class="btn xs ghost ${lag ? '' : 'src-cut'}" data-pov="block" data-src="${esc(src)}" title="Couper la capture de ce joueur (il n'envoie plus d'image)">${lag ? 'Couper' : '⏻'}</button>`}</div>`;
+      ${lag && !bl ? `<button class="btn xs ghost" data-pov="block" data-src="${esc(src)}" title="Couper la capture de ce joueur (il n'envoie plus d'image)">Couper</button>` : ''}</div>`;
     };
     const f = (list, k) => { const q2 = (this.secQ[k] || '').toLowerCase(); return list.filter(x => { const h = (x.name + ' ' + x.sub + ' ' + x.login + ' ' + (x.mc || '')).toLowerCase(); return (!q || h.includes(q)) && (!q2 || h.includes(q2)); }); };
     L.innerHTML = `${this.renderMediaSec(q)}${this.secHead('cam', ic('cam') + ' Caméras', cams.length)}${f(cams, 'cam').map(row).join('') || '<div class="note" style="padding:4px 8px">Ajoute la chaîne Twitch des caméras dans leur fiche (page Équipe).</div>'}
@@ -6521,7 +6780,7 @@ const PROG = {
               <div class="rg-row" style="margin-top:8px"><span class="note" style="flex:none">Modifs du plan à l'antenne :</span><div class="seg sm" id="rgMode"><button data-mode="auto" title="Chaque déplacement ou ajout part tout de suite à l'antenne">Immédiates</button><button data-mode="manual" title="Rien ne change à l'antenne avant d'appuyer sur Appliquer">Manuelles</button></div></div>
               <button class="btn apply hide" id="rgApply" style="width:100%;margin-top:8px">APPLIQUER LES MODIFS À L'ANTENNE <span style="opacity:.7;font-size:11px;margin-left:6px">(A)</span></button>
               <button class="btn take" id="rgTake" style="width:100%;margin-top:8px">À L'ANTENNE ▶ <span style="opacity:.7;font-size:11px;margin-left:6px">(T)</span></button>
-              <button class="btn sm mixbtn" id="rgMix" title="Volumes de l'émission (général, musique, chaque source) avec fondus"><span class="mixico"><i></i><i></i><i></i></span>Mixeur de l'émission</button>
+              <button class="btn sm mixbtn" id="rgMix" title="Volumes de l'émission (général, musique, chaque source) avec fondus"><span class="mixico"><i></i><i></i><i></i></span>Mixeur de l'émission</button><button class="btn sm" id="rgAuto" title="Activer / couper les annonces automatiques (coup de canon, hommage programmé, bot Twitch)">⚡ Annonces auto</button>
               <div class="rg-ann admin-only"><span class="note">Annonces</span><button class="btn sm" id="rgFlash" title="Annonce à l'antenne">${ic('mega')}Flash</button><button class="btn sm" id="rgGift" title="Parachute argenté">${ic('para')}Parachute</button><button class="btn sm" id="rgHo" title="Hommage aux tombés">${ic('moon')}Hommage</button><button class="btn sm" id="rgSky" title="Messages projetés dans le ciel du jeu (scènes à préparer)">${ic('star')}Projection</button></div><div class="note admin-only skyq-st" id="rgSkyq"></div>
               <div class="note" id="rgWarn" style="margin-top:6px;min-height:16px"></div></div>
           </div>
@@ -6904,7 +7163,7 @@ const PROG = {
       <ol class="qlist">${D.ids.map((id, i) => { const md = this.mediaById(id); return `<li><span>${esc(md ? md.name : '?')}</span><span class="note">${md && md.dl === 1 ? 'copie ' + (md.dlp || 0) + ' %' : md && md.dl === 2 ? '<span style="color:var(--red-hi)" title="' + esc(md.dlErr || '') + '">copie ratée</span>' : md ? this.fmtDur(md.dur) : ''}</span><button class="btn sm ghost" data-bgx="${i}">${ic('x')}</button></li>`; }).join('')}</ol>
       <div class="gx-row"><button class="btn sm primary" id="bgGo" ${D.ids.length ? '' : 'disabled'}>▶ ${scope === 'all' ? 'Lancer sur tous les plans' : 'Lancer sur ce plan'}</button><button class="btn sm ghost" id="bgStop">■ Arrêter</button></div>
       <p class="note" style="margin:6px 0 0">${playing ? `En cours (${playing.scope === 'all' ? 'tous les plans' : 'ce plan'}) : ${esc(playing.tracks.map(t => t.name).join(' → '))}` : 'Aucune musique de fond à l\'antenne.'} La musique d'un plan remplace celle de tous les plans.</p>`;
-    const send = ids => NET.req({ t: 'progBgm', scope: scope === 'all' ? 'all' : sc.id, ids, vol: D.vol }).then(() => toastInfo(ids.length ? 'Musique lancée' : 'Musique arrêtée', ids.length ? (scope === 'all' ? '' : 'Seulement quand le plan « ' + (sc ? sc.name : '') + ' » est à l\'antenne. ') + (S.board.delay ? 'Sur le Direct dans ' + S.board.delay + ' s (différé).' : '') : ''), e => toastInfo('Musique', e.message, true));
+    const send = ids => NET.req({ t: 'progBgm', scope: scope === 'all' ? 'all' : sc.id, ids, vol: D.vol }).then(() => toastInfo(ids.length ? 'Musique lancée' : 'Musique arrêtée', ids.length ? (scope === 'all' ? '' : 'Seulement quand le plan « ' + (sc ? sc.name : '') + ' » est à l\'antenne. ') : ''), e => toastInfo('Musique', e.message, true));
     box.oninput = e => { if (e.target.id === 'bgQ') { this.bgmQ = e.target.value; clearTimeout(this.bgWebT); this.bgWebT = setTimeout(() => this.bgWebSearch(), 650); this.renderBgm(); const i = $('#bgQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); } if (e.target.id === 'bgVol') D.vol = +e.target.value; };
     box.onchange = e => { if (e.target.id === 'bgScope') { this.bgmScope = e.target.value; this.bgmDraft = null; this.renderBgm(); } if (e.target.id === 'bgVol' && playing) send(D.ids); };
     box.onclick = e => {
@@ -7140,6 +7399,18 @@ const PROG = {
       const sb = e.target.closest('[data-secs]'); if (sb) { const k = sb.dataset.secs; this.secOpen[k] = !this.secOpen[k]; if (!this.secOpen[k]) this.secQ[k] = ''; this.secFocus = this.secOpen[k] ? k : ''; this.renderSources(); return; }
       const pv = e.target.closest('[data-pov]'); if (pv) { e.stopPropagation(); NET.req({ t: 'povBlock', src: pv.dataset.src, on: pv.dataset.pov === 'block' }).then(() => toastInfo(pv.dataset.pov === 'block' ? 'Capture coupée' : 'Capture réactivée'), er => toastInfo('POV', er.message, true)); }
     });
+    // clic droit sur une POV ou une caméra : couper / réactiver sa capture
+    $('#rgSrc').addEventListener('contextmenu', e => {
+      const row = e.target.closest('.src[data-k="trib"], .src[data-k="cam"]'); if (!row) return;
+      e.preventDefault(); this.ctxClose();
+      const src = (row.dataset.k === 'trib' ? 't:' : 'c:') + row.dataset.ref, bl = this.povBlocked(src), nm = (row.querySelector('b') || {}).textContent || 'Source';
+      const m = document.createElement('div'); m.className = 'ctx';
+      m.innerHTML = `<div class="ctx-t">${esc(nm)}</div>` + (bl ? `<button data-cp="unblock">⏻ Réactiver la capture</button>` : `<button data-cp="block">⏻ Couper la capture</button>`) + `<div class="ctx-h">${bl ? 'Sa POV est inutilisable tant qu\'elle est coupée' : 'Il n\'envoie plus d\'image (moins de lag pour lui)'}</div>`;
+      document.body.appendChild(m);
+      const r = m.getBoundingClientRect(); m.style.left = Math.min(e.clientX, innerWidth - r.width - 8) + 'px'; m.style.top = Math.min(e.clientY, innerHeight - r.height - 8) + 'px';
+      m.onclick = ev => { const b = ev.target.closest('[data-cp]'); if (!b) return; this.ctxClose(); const on = b.dataset.cp === 'block'; NET.req({ t: 'povBlock', src, on }).then(() => toastInfo(on ? 'Capture coupée' : 'Capture réactivée', nm), er => toastInfo('POV', er.message, true)); };
+      this.ctxEl = m; setTimeout(() => document.addEventListener('pointerdown', this.ctxOff = ev => { if (!m.contains(ev.target)) this.ctxClose(); }), 0);
+    });
     $('#rgSrc').addEventListener('input', e => { const k = e.target.dataset.secq; if (!k) return; this.secQ[k] = e.target.value; this.secFocus = k; this.renderSources(); });
     $('#rgSrc').addEventListener('click', e => {
       const pk = e.target.closest('[data-pick]'); if (!pk) return;
@@ -7206,6 +7477,7 @@ const PROG = {
     $('#rgFavs').onclick = e => { const b = e.target.closest('[data-fav]'); if (!b) return; const i = +b.dataset.fav; if (e.shiftKey || !this.favs()[i]) this.favSet(i); else this.favGo(i); };
     $('#rgFavs').oncontextmenu = e => { const b = e.target.closest('[data-fav]'); if (!b) return; e.preventDefault(); if (this.favs()[+b.dataset.fav]) this.favSet(+b.dataset.fav, true); };
     $('#rgMix').onclick = () => MIXUI.toggle();
+    $('#rgAuto').onclick = () => AUTOUI.toggle();
     $('#rgFlash').onclick = () => openFlash();
     $('#rgGift').onclick = () => openGift(byLogin(S.slots[S.active]));
     $('#rgHo').onclick = () => openHommage();
@@ -7307,7 +7579,7 @@ const PROG = {
       if (k === 'ArrowLeft') it.x -= st; if (k === 'ArrowRight') it.x += st; if (k === 'ArrowUp') it.y -= st; if (k === 'ArrowDown') it.y += st;
       it.x = Math.round(it.x * 10) / 10; it.y = Math.round(it.y * 10) / 10; this.save(); return;
     }
-    if (e.shiftKey && (e.code === 'KeyG' || e.code === 'KeyV')) { e.preventDefault(); this.toggleMapUi(e.code === 'KeyG' ? 'big' : 'iso', false); return; }
+    if (e.shiftKey && !e.ctrlKey && (letterOf(e) === 'g' || letterOf(e) === 'v')) { e.preventDefault(); this.toggleMapUi(letterOf(e) === 'g' ? 'big' : 'iso', false); return; }
     // flèches (sans source sélectionnée ni survolée), Pg↑/Pg↓, +/-, Début : mini-carte du Direct pour tous
     if (!it && !this.hover && this.mapKey(e, false)) return;
     if (KB.is(e, 'regie', 'take') || k === 'Enter') { e.preventDefault(); this.take(); return; }
@@ -7451,6 +7723,13 @@ $('#aList').addEventListener('click', e => {
   }
 });
 
+/* lettre tapée, quelle que soit la disposition du clavier (AZERTY : e.code donnerait la touche QWERTY) */
+function letterOf(e) { const k = e.key || ''; return k.length === 1 ? k.toLowerCase() : ''; }
+/* clic dans un lecteur Twitch du Direct : il garde le clavier → on le rend à la page (les clics marchent toujours) */
+window.addEventListener('blur', () => setTimeout(() => {
+  const a = document.activeElement;
+  if (S.page === 'direct' && a && a.tagName === 'IFRAME' && a.closest('#emStage')) { a.blur(); window.focus(); }
+}, 0));
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && document.body.classList.contains('side-open')) { toggleSide(false); return; }
   if (e.key === 'Escape') {

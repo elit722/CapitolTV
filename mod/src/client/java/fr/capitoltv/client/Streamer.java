@@ -165,12 +165,19 @@ public final class Streamer {
         // comparé aux images/s du joueur sans diffusion (un petit PC n'est pas « en retard » à 35 i/s)
         int fps = MinecraftClient.getInstance().getCurrentFps();
         watchImpact(fps);
-        double low = Math.max(20, baseFps * 0.8), high = baseFps * 0.93;
+        // au-delà de ~50 i/s le joueur ne rame pas, même si son jeu tournait plus vite avant la diffusion (sinon on restait bloqué en basse qualité)
+        double low = Math.max(20, Math.min(baseFps * 0.8, 50)), high = Math.max(low + 2, Math.min(baseFps * 0.93, 58));
         if (fps < low) { lowSec++; highSec = 0; } else if (fps >= high) { highSec++; lowSec = 0; } else { lowSec = 0; highSec = 0; }
-        if (lowSec >= 4 && step < STEPS.length - 1) { step++; lowSec = 0; applyStep(); status = "anti-lag : " + curH + "p " + curFps + " i/s"; }
-        else if (highSec >= 25 && step > firstStep()) { step--; highSec = 0; applyStep(); status = "en direct · " + curH + "p " + curFps + " i/s"; }
+        if (lowSec >= 4 && step < STEPS.length - 1) {
+            // remontée ratée (ça rame de nouveau juste après) : on attend plus longtemps avant de réessayer
+            raiseWait = now - raisedAt < 30_000 ? Math.min(240, raiseWait * 2) : 25;
+            step++; lowSec = 0; applyStep(); status = "anti-lag : " + curH + "p " + curFps + " i/s";
+        }
+        else if (highSec >= raiseWait && step > firstStep()) { step--; highSec = 0; raisedAt = now; applyStep(); status = "en direct · " + curH + "p " + curFps + " i/s"; }
     }
 
+    private static int raiseWait = 25;
+    private static long raisedAt;
     private static long activeSince;
     /** fenêtre pas au premier plan, réduite ou jeu en pause : les images/s ne veulent rien dire (+ 5 s pour repartir) */
     static boolean inactive() {
@@ -386,7 +393,7 @@ public final class Streamer {
     private static long reportedAt;
     private static void watchImpact(int fps) {
         boolean atFloor = step >= STEPS.length - 1;
-        if (baseFps > 25 && fps < baseFps * (atFloor ? 0.75 : 0.5)) badSec++; else badSec = Math.max(0, badSec - 2);
+        if (baseFps > 25 && fps < Math.min(45, baseFps * (atFloor ? 0.75 : 0.5))) badSec++; else badSec = Math.max(0, badSec - 2);
         if (badSec < 30 || System.currentTimeMillis() - reportedAt < 5 * 60000) return;
         badSec = 0; reportedAt = System.currentTimeMillis();
         String key = key(); if (key == null || key.isBlank()) return;

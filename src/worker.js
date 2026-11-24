@@ -865,7 +865,7 @@ export class Game extends DurableObject {
         this.skyq.sched = Object.assign(this.skyq.sched || {}, {
           times: (Array.isArray(sc.times) ? sc.times : []).map(x => String(x).trim()).filter(x => /^([01]?\d|2[0-3]):[0-5]\d$/.test(x)).map(x => x.padStart(5, "0")).filter((x, i, arr) => arr.indexOf(x) === i).sort().slice(0, 12),
           tz: String(sc.tz || "Europe/Paris").slice(0, 60), nights: Math.max(0, Math.min(30, parseInt(sc.nights, 10) || 0)),
-          title: String(sc.title || "").slice(0, 80), dur: Math.max(10, Math.min(120, +sc.dur || 30)) });
+          title: String(sc.title || "").slice(0, 80), dur: Math.max(10, Math.min(120, +sc.dur || 30)), off: !!sc.off });
         if (this.skyq.sched.nights && this.mc) this.skyq.sched.nightBase = this.mc.day;
         this.saveSkyq();
         return reply(true);
@@ -874,6 +874,8 @@ export class Game extends DurableObject {
         if (!isCrew(a) || a.lock || !(a.perm === "admin" || hasPerm(a, "program"))) return deny();
         const v = m.v || {};
         this.mapCtl = { dx: Math.max(-5000, Math.min(5000, +v.dx || 0)), dz: Math.max(-5000, Math.min(5000, +v.dz || 0)), z: Math.max(.1, Math.min(20, +v.z || 1)) };
+        if (isFinite(+v.yaw) && v.yaw !== null) this.mapCtl.yaw = Math.round(+v.yaw * 1000) / 1000;
+        if (isFinite(+v.pitch) && v.pitch !== null) this.mapCtl.pitch = Math.max(.25, Math.min(1.45, +v.pitch));
         this.broadcast({ t: "mapCtl", v: this.mapCtl });
         return reply(true);
       }
@@ -1223,7 +1225,7 @@ export class Game extends DurableObject {
     let dirty = false, boardDirty = false;
     // 1) heures programmées (heure de Paris) : franchies depuis le dernier passage → hommage automatique en attente
     const last = sc.lastCheck || now; sc.lastCheck = now;
-    if ((sc.times || []).length && now - last < 6 * 3600e3) {
+    if (!sc.off && (sc.times || []).length && now - last < 6 * 3600e3) {
       const A = this.localClock(last, sc.tz), B = this.localClock(now, sc.tz);
       for (const t of sc.times) {
         const [hh, mm] = t.split(":").map(Number), tm = hh * 60 + mm;
@@ -1232,7 +1234,7 @@ export class Game extends DurableObject {
       }
     }
     // 2) toutes les X nuits : à la tombée de la nuit
-    if (sc.nights > 0) {
+    if (sc.nights > 0 && !sc.off) {
       if (sc.nightBase == null) { sc.nightBase = this.mc.day; dirty = true; }
       if (this.mc.night && !(prev && prev.night && prev.day === this.mc.day) && this.mc.day - sc.nightBase >= sc.nights) {
         sc.nightBase = this.mc.day;
@@ -2274,7 +2276,7 @@ export class Game extends DurableObject {
       this.prog.gfx = {
         lower: { on: !!(g.lower && g.lower.on), ref: str(g.lower && g.lower.ref, 40), auto: !!(g.lower && g.lower.auto), text: str(g.lower && g.lower.text, 80) },
         breaking: { on: !!(g.breaking && g.breaking.on), text: str(g.breaking && g.breaking.text, 200) },
-        alive: { on: !!(g.alive && g.alive.on) }, map: { on: !!(g.map && g.map.on), big: !!(g.map && g.map.big), iso: !!(g.map && g.map.iso) }, poll: { on: !!(g.poll && g.poll.on) }, bets: { on: !!(g.bets && g.bets.on) },
+        alive: { on: !!(g.alive && g.alive.on) }, map: { on: !!(g.map && g.map.on), big: !!(g.map && g.map.big), iso: !!(g.map && g.map.iso), box: (b => b && [b.x, b.y, b.w, b.h].every(v => isFinite(+v)) ? { x: Math.max(-50, Math.min(100, +b.x)), y: Math.max(-50, Math.min(100, +b.y)), w: Math.max(10, Math.min(100, +b.w)), h: Math.max(10, Math.min(100, +b.h)) } : null)(g.map && g.map.box) }, poll: { on: !!(g.poll && g.poll.on) }, bets: { on: !!(g.bets && g.bets.on) },
         ann: { on: !(g.ann && g.ann.on === false), pos: ["tl","tc","tr","ml","mc","mr","bl","bc","br"].includes(g.ann && g.ann.pos) ? g.ann.pos : "mc", gpos: ["tl","tc","tr","ml","mc","mr","bl","bc","br"].includes(g.ann && g.ann.gpos) ? g.ann.gpos : "tl" }
       };
     } else if (m.t === "progScreen") {
