@@ -4016,32 +4016,39 @@ const MAP3D = {
       function norm(a) { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }
     }
   },
-  ok() { return !!(this.gl || this.init()); },
+  ok() { if (this.gl) return true; try { return this.init(); } catch (e) { console.warn('carte 3D', e); this.fail = 'shader: ' + e.message; const c = $('#map3d'); if (c) c.remove(); this.gl = null; return false; } },
   init() {
     const host = $('#mapCv') && $('#mapCv').parentElement; if (!host) return false;
     let cv = $('#map3d');
     if (!cv) { cv = document.createElement('canvas'); cv.id = 'map3d'; host.insertBefore(cv, $('#mapCv')); }
-    const gl = cv.getContext('webgl2', { antialias: true, alpha: false, preserveDrawingBuffer: false });
-    if (!gl) { cv.remove(); return false; }
-    this.cv = cv; this.gl = gl;
-    const sh = (type, src) => { const x = gl.createShader(type); gl.shaderSource(x, src); gl.compileShader(x); if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(x)); return x; };
-    const prog = (vs, fs) => { const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); const u = {}; for (let i = 0, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS); i < n; i++) { const a = gl.getActiveUniform(p, i); u[a.name] = gl.getUniformLocation(p, a.name); } return { p, u }; };
+    // WebGL 2 si possible, sinon WebGL 1 (cartes graphiques ou pilotes mis à l'écart par le navigateur)
+    let gl = null, v2 = true;
+    for (const o of [{ antialias: true, alpha: false }, { alpha: false }, { alpha: false, powerPreference: 'default', failIfMajorPerformanceCaveat: false }]) { gl = cv.getContext('webgl2', o); if (gl) break; }
+    if (!gl) { v2 = false; for (const o of [{ antialias: true, alpha: false }, { alpha: false, failIfMajorPerformanceCaveat: false }]) { gl = cv.getContext('webgl', o) || cv.getContext('experimental-webgl', o); if (gl) break; } }
+    if (!gl || !v2 && (!gl.getExtension('OES_element_index_uint') || !gl.getExtension('OES_standard_derivatives'))) { cv.remove(); this.fail = gl ? 'webgl1-ext' : 'nogl'; return false; }
+    this.cv = cv; this.gl = gl; this.v2 = v2;
+    // les shaders sont écrits en GLSL 3.00 et convertis en 1.00 pour WebGL 1
+    const conv = (src, frag) => v2 ? src : src.replace('#version 300 es', frag ? '#extension GL_OES_standard_derivatives : enable' : '')
+      .replace(/layout\(location=\d\) in /g, 'attribute ').replace(frag ? /\bin (?=(vec|float))/g : /\bout (?=(vec|float))/g, 'varying ')
+      .replace(/out vec4 o;/, '').replace(/\bo=vec4/g, 'gl_FragColor=vec4');
+    const sh = (type, src) => { const x = gl.createShader(type); gl.shaderSource(x, conv(src, type === gl.FRAGMENT_SHADER).trim()); gl.compileShader(x); if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(x)); return x; };
+    const prog = (vs, fs) => { const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs)); ['p', 'c', 'uv'].forEach((n, i) => gl.bindAttribLocation(p, i, n)); gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); const u = {}; for (let i = 0, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS); i < n; i++) { const a = gl.getActiveUniform(p, i); u[a.name] = gl.getUniformLocation(p, a.name); } return { p, u }; };
     // terrain : couleur du bloc, face (dessus / côtés), contour des blocs, strates, brume
     this.pT = prog(`#version 300 es
       layout(location=0) in vec3 p; layout(location=1) in vec4 c;
-      uniform mat4 M; out vec3 wp; out vec3 vc; flat out int fk; out float dz;
-      void main(){ wp=p; vc=c.rgb; fk=int(c.a*255.+.5); vec4 q=M*vec4(p,1.); dz=q.w; gl_Position=q; }`,
+      uniform mat4 M; out vec3 wp; out vec3 vc; out float fk; out float dz;
+      void main(){ wp=p; vc=c.rgb; fk=floor(c.a*255.+.5); vec4 q=M*vec4(p,1.); dz=q.w; gl_Position=q; }`,
       `#version 300 es
-      precision highp float; in vec3 wp; in vec3 vc; flat in int fk; in float dz;
+      precision highp float; in vec3 wp; in vec3 vc; in float fk; in float dz;
       uniform float st, fogk, tm, water; uniform vec3 fogc; out vec4 o;
       void main(){
         vec3 col=vc; vec2 g;
-        int f=fk&3;
-        if(f==0) g=wp.xz/st; else if(f==1) g=vec2(wp.z/st,wp.y); else g=vec2(wp.x/st,wp.y);
+        float f=floor(mod(fk+.5,4.));
+        if(f<.5) g=wp.xz/st; else if(f<1.5) g=vec2(wp.z/st,wp.y); else g=vec2(wp.x/st,wp.y);
         vec2 w=fwidth(g), d=abs(fract(g)-.5), a=smoothstep(vec2(.5)-w*1.4,vec2(.5),d);
         float fade=clamp(1.-max(w.x,w.y)*2.2,0.,1.);
         col*=1.-max(a.x,a.y)*.28*fade;
-        if(f!=0) col*=.93+.07*step(.5,fract(wp.y/4.));
+        if(f>.5) col*=.93+.07*step(.5,fract(wp.y/4.));
         float al=1.;
         if(water>.5){
           float sh=sin(wp.x*.35+tm*1.6)*sin(wp.z*.31-tm*1.2)+sin((wp.x+wp.z)*.12+tm*.7)*.6;
@@ -4062,16 +4069,10 @@ const MAP3D = {
         float a;
         if(v.y<-2.5){ float r=length(vec2(v.x-.5,(v.y+4.)-.5))*2.; a=(1.-smoothstep(.55,1.,r))*1.4+(1.-smoothstep(.0,.45,r))*1.2; }
         else if(v.y<-.5){ float r=length(vec2(v.x-.5,(v.y+2.)-.5))*2.; float k=1.-smoothstep(0.,1.,r); a=k*k*1.5+(1.-smoothstep(.2,.35,r))*.6; }
-        else { float x=abs(v.x*2.-1.); a=pow(1.-v.y,1.3)*(pow(1.-x,2.)*.9+smoothstep(.25,0.,x)*.8); a*=.85+.15*sin(tm*3.+v.y*18.); }
+        else { float x=abs(v.x*2.-1.); a=pow(1.-v.y,1.3)*(pow(1.-x,2.)*.9+(1.-smoothstep(0.,.25,x))*.8); a*=.85+.15*sin(tm*3.+v.y*18.); }
         o=vec4(vc.rgb*a*vc.a, a*vc.a);
       }`);
-    const g = gl;
-    this.bBuf = g.createBuffer(); this.bVao = g.createVertexArray();
-    g.bindVertexArray(this.bVao); g.bindBuffer(g.ARRAY_BUFFER, this.bBuf);
-    g.enableVertexAttribArray(0); g.vertexAttribPointer(0, 3, g.FLOAT, false, 36, 0);
-    g.enableVertexAttribArray(1); g.vertexAttribPointer(1, 4, g.FLOAT, false, 36, 12);
-    g.enableVertexAttribArray(2); g.vertexAttribPointer(2, 2, g.FLOAT, false, 36, 28);
-    g.bindVertexArray(null);
+    this.bBuf = gl.createBuffer();
     cv.addEventListener('webglcontextlost', e => { e.preventDefault(); this.gl = null; this.mesh = null; });
     return true;
   },
@@ -4118,14 +4119,12 @@ const MAP3D = {
       if (wd) { const ys = HY[q] + .88, [a, b2, c2] = [40, 96, 150]; quad(Wt, [x0, ys, z0, x0, ys, z1, x1, ys, z1, x1, ys, z0], a, b2, c2, 0); }
     }
     const up = m => {
-      const vao = gl.createVertexArray(), vb = gl.createBuffer(), ib = gl.createBuffer();
-      gl.bindVertexArray(vao); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(m.b, 0, m.n * 16), gl.STATIC_DRAW);
-      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 16, 0);
-      gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.UNSIGNED_BYTE, true, 16, 12);
+      const vb = gl.createBuffer(), ib = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(m.b, 0, m.n * 16), gl.STATIC_DRAW);
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, m.ix.subarray(0, m.ni), gl.STATIC_DRAW);
-      gl.bindVertexArray(null); return { vao, vb, ib, n: m.ni };
+      return { vb, ib, n: m.ni };
     };
-    if (this.mesh) for (const k of ['L', 'W']) if (this.mesh[k]) { gl.deleteBuffer(this.mesh[k].vb); gl.deleteBuffer(this.mesh[k].ib); gl.deleteVertexArray(this.mesh[k].vao); }
+    if (this.mesh) for (const k of ['L', 'W']) if (this.mesh[k]) { gl.deleteBuffer(this.mesh[k].vb); gl.deleteBuffer(this.mesh[k].ib); }
     this.mesh = { id: T.id + ':' + T.w, L: up(L), W: Wt.n ? up(Wt) : null, st, T, cx: X0 + W * st / 2, cz: Z0 + H * st / 2, span: Math.max(W, H) * st, ymid: (T.ymin + T.ymax) / 2 };
   },
   ensure(T) {
@@ -4145,6 +4144,12 @@ const MAP3D = {
   orbit(dx, dy) { const c = this.cam; c.yaw -= dx * .006; c.pitch = Math.max(.12, Math.min(1.53, c.pitch + dy * .005)); this.dirty = true; },
   pan(dx, dy) { const c = this.cam, k = c.dist * .0016, sy = Math.sin(c.yaw), cy = Math.cos(c.yaw); c.tx -= (dx * cy + dy * sy) * k; c.tz -= (-dx * sy + dy * cy) * k; this.dirty = true; },
   zoom(dir) { const c = this.cam; c.dist = Math.max(12, Math.min(8000, c.dist * (dir < 0 ? 1 / 1.15 : 1.15))); this.dirty = true; },
+  bindMesh(m) {
+    const gl = this.gl; gl.bindBuffer(gl.ARRAY_BUFFER, m.vb); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ib);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 16, 0);
+    gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.UNSIGNED_BYTE, true, 16, 12);
+    gl.disableVertexAttribArray(2);
+  },
   /* marqueurs à dessiner : { x, y, z, col:[r,g,b], sel, cam } */
   render(marks) {
     const gl = this.gl, cv = this.cv; if (!gl || !this.cam) return null;
@@ -4159,8 +4164,8 @@ const MAP3D = {
       gl.uniformMatrix4fv(P.u.M, false, M); gl.uniform1f(P.u.st, m.st); gl.uniform1f(P.u.tm, tm);
       gl.uniform1f(P.u.fogk, .55 / Math.max(200, this.cam.dist * 2.2)); gl.uniform3fv(P.u.fogc, fogc);
       gl.uniform1f(P.u.water, 0); gl.disable(gl.BLEND); gl.depthMask(true);
-      gl.bindVertexArray(m.L.vao); gl.drawElements(gl.TRIANGLES, m.L.n, gl.UNSIGNED_INT, 0);
-      if (m.W) { gl.uniform1f(P.u.water, 1); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); gl.bindVertexArray(m.W.vao); gl.drawElements(gl.TRIANGLES, m.W.n, gl.UNSIGNED_INT, 0); gl.depthMask(true); }
+      this.bindMesh(m.L); gl.drawElements(gl.TRIANGLES, m.L.n, gl.UNSIGNED_INT, 0);
+      if (m.W) { gl.uniform1f(P.u.water, 1); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); this.bindMesh(m.W); gl.drawElements(gl.TRIANGLES, m.W.n, gl.UNSIGNED_INT, 0); gl.depthMask(true); }
     }
     // repères
     if (marks.length) {
@@ -4185,10 +4190,12 @@ const MAP3D = {
       }
       const P = this.pB; gl.useProgram(P.p); gl.uniformMatrix4fv(P.u.M, false, M); gl.uniform1f(P.u.tm, tm);
       gl.disable(gl.CULL_FACE); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE); gl.depthMask(false);
-      gl.bindVertexArray(this.bVao); gl.bindBuffer(gl.ARRAY_BUFFER, this.bBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(V), gl.DYNAMIC_DRAW);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(V), gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 36, 0);
+      gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 36, 12);
+      gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 36, 28);
       gl.drawArrays(gl.TRIANGLES, 0, V.length / 9); gl.depthMask(true);
     }
-    gl.bindVertexArray(null);
     this.dirty = false;
     return { M, W: W / dpr, H: H / dpr, Mcss: this.matrix(W / dpr, H / dpr) };
   },
@@ -4553,7 +4560,7 @@ const CAM = {
   },
   draw3d(cv) {
     const wrap = cv.closest('.map-wrap'), T = TERRAIN.get(this.dim);
-    if (!MAP3D.ok()) { this.iso = false; LS.set('ctv.mapIso', false); toastInfo('Vue 3D indisponible', 'Ton navigateur ne gère pas WebGL 2.', true); this.renderTools(); return this.draw(); }
+    if (!MAP3D.ok()) { this.iso = false; LS.set('ctv.mapIso', false); toastInfo('Vue 3D indisponible', MAP3D.fail === 'nogl' ? 'L\'accélération graphique est désactivée ou bloquée pour cette carte graphique. Dans Chrome/Edge : Paramètres › Système › « Utiliser l\'accélération graphique » (puis relancer). Dans l\'appli : mets-la à jour.' : 'Erreur 3D : ' + MAP3D.fail, true); this.renderTools(); return this.draw(); }
     wrap.classList.add('is3d');
     if (T) MAP3D.ensure(T); if (!MAP3D.cam) MAP3D.home();
     const marks = this.marks3d(), res = MAP3D.render(marks);

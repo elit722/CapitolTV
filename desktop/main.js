@@ -23,6 +23,8 @@ const inApp = u => { try { const x = new URL(u); return x.origin === siteOrigin(
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
+// cartes graphiques ou pilotes que Chromium met à l'écart (AMD anciens…) : on garde l'accélération (carte 3D, vidéo)
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
 if (process.platform === 'win32') app.setAppUserModelId('fr.capitoltv.app');
 
 if (!app.requestSingleInstanceLock()) app.quit();
