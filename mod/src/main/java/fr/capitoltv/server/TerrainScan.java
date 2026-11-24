@@ -206,6 +206,18 @@ final class TerrainScan {
         send(a, jb);
     }
 
+    /** nouvelle map : arrête le relevé, efface la carte gardée sur le disque (et sur le site si tellSite) */
+    static String clear(MinecraftServer s, boolean tellSite) {
+        release(s); job = null; areas.clear();
+        int n = 0;
+        try {
+            Path d = dir != null ? dir : s.getSavePath(WorldSavePath.ROOT).resolve("capitoltv-terrain");
+            if (Files.isDirectory(d)) try (var st = Files.list(d)) { for (Path p : (Iterable<Path>) st::iterator) { Files.deleteIfExists(p); n++; } }
+        } catch (Exception e) { return "Effacement incomplet : " + e.getMessage(); }
+        if (tellSite) { JsonObject o = new JsonObject(); o.addProperty("t", "terrainClear"); ServerBridge.push(o); }
+        return "Carte effacée (" + n + " fichier" + (n > 1 ? "s" : "") + " supprimé" + (n > 1 ? "s" : "") + "). Relance un relevé avec /capitoltv carte <rayon>.";
+    }
+
     /** arrêt du serveur ou relevé interrompu : on relâche les chunks demandés */
     static void release(MinecraftServer s) {
         Job jb = job;

@@ -143,6 +143,11 @@ public final class ServerBridge {
             if (m.has("hymn") && m.get("hymn").isJsonObject()) { JsonObject h = m.getAsJsonObject("hymn"); if (h.has("path")) h.addProperty("url", cfg.url.replaceAll("/+$", "") + h.get("path").getAsString()); }
             if (m.has("scenes") && m.get("scenes").isJsonArray()) for (var e : m.getAsJsonArray("scenes")) { JsonObject o = e.getAsJsonObject(); if (o.has("img") && o.get("img").getAsString().startsWith("/")) o.addProperty("img", cfg.url.replaceAll("/+$", "") + o.get("img").getAsString()); }
             if (s0 != null) s0.execute(() -> { String j = m.toString(); for (ServerPlayerEntity p : s0.getPlayerManager().getPlayerList()) if (ServerPlayNetworking.canSend(p, fr.capitoltv.net.CtvMsgPayload.ID)) ServerPlayNetworking.send(p, new fr.capitoltv.net.CtvMsgPayload(j)); }); return; }
+        if (t.equals("scanClear")) { // le site efface le fond de carte (nouvelle map) : on efface aussi la sauvegarde
+            MinecraftServer s0 = server; if (s0 == null) return;
+            s0.execute(() -> sayRemote(TerrainScan.clear(s0, false)));
+            return;
+        }
         if (t.equals("scan")) {
             MinecraftServer s0 = server; if (s0 == null) return;
             String dim = m.has("dim") ? m.get("dim").getAsString() : "minecraft:overworld";
@@ -346,6 +351,11 @@ public final class ServerBridge {
                         }))
                         .then(CommandManager.literal("carte")
                                 .executes(c -> scanCmd(c.getSource(), 256))
+                                .then(CommandManager.literal("effacer").executes(c -> {
+                                    String msg = TerrainScan.clear(c.getSource().getServer(), true);
+                                    c.getSource().sendFeedback(() -> Text.literal("§6[Capitol TV]§r " + msg), true);
+                                    return 1;
+                                }))
                                 .then(CommandManager.argument("rayon", com.mojang.brigadier.arguments.IntegerArgumentType.integer(16, 2048)).executes(c -> scanCmd(c.getSource(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "rayon")))))
                         .then(CommandManager.literal("reload").executes(c -> {
                             loadConfig(); connect();

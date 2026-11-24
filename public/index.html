@@ -138,7 +138,8 @@ audio.em-md{display:none}
 .src .th.ctv{display:grid;place-items:center;background:linear-gradient(135deg,#2a0e12,#0d0c10)} .src .th.ctv span{font:700 13px var(--serif);letter-spacing:.18em;color:#ff8a8a}
 .ci .mdi.ctv{font:700 22px var(--serif);letter-spacing:.2em;color:rgba(255,138,138,.8)}
 /* ---- habillages de l'antenne ---- */
-.em-stage.hx-alive .gx-alive,.em-stage.hx-lower .gx-lower,.em-stage.hx-break .gx-break,.em-stage.hx-poll .gx-poll,.em-stage.hx-bets .gx-bets,.em-stage.hx-map .gx-map,.em-stage.hx-logo .em-bug,.em-stage.hx-lab .em-lab,.em-stage.hx-credit .em-credit,.em-stage.hx-ann > .bx,.em-stage.hx-all .em-gfx,.em-stage.hx-all .em-bug,.em-stage.hx-all .em-lab,.em-stage.hx-all .em-credit,.em-stage.hx-all > .bx{display:none!important}
+#emStage iframe{pointer-events:none}
+.em-stage.hx-alive .gx-alive,.em-stage.hx-lower .gx-lower,.em-stage.hx-break .gx-break,.em-stage.hx-poll .gx-poll,.em-stage.hx-bets .gx-bets,.em-stage.hx-map .gx-map,.em-stage.hx-logo .em-bug,.em-stage.hx-lab .em-lab,.em-stage.hx-credit .em-credit,.em-stage.hx-ann > .bx,.em-stage.hx-all .em-gfx,.em-stage.hx-all .gx-map,.em-stage.hx-all .em-bug,.em-stage.hx-all .em-lab,.em-stage.hx-all .em-credit,.em-stage.hx-all > .bx{display:none!important}
 .em-gfx{position:absolute;inset:0;z-index:60;pointer-events:none;font-family:var(--serif)}
 .gx-alive{position:absolute;left:2.2%;top:3.5%;display:flex;align-items:baseline;gap:.35em;background:linear-gradient(90deg,rgba(10,9,8,.92),rgba(10,9,8,.7));border-left:.3em solid var(--gold);padding:.35em .9em .3em .7em;font-size:1.7cqw;color:#fff;animation:gxIn .5s ease both}
 .gx-alive b{font-size:1.6em;color:var(--gold-hi);line-height:1} .gx-alive span{opacity:.75} .gx-alive i{font-style:normal;letter-spacing:.2em;font-size:.6em;color:var(--gold)}
@@ -157,7 +158,10 @@ audio.em-md{display:none}
 .gx-poll h5,.gx-bets h5{margin:0 0 .3em;font-size:.72em;letter-spacing:.2em;color:var(--gold)} .gx-poll>b{display:block;font-family:var(--sans);font-size:1.05em;margin-bottom:.4em}
 .gx-poll .op,.gx-bets .op{position:relative;display:flex;justify-content:space-between;padding:.25em .5em;margin-top:.25em;background:rgba(255,255,255,.06);font-family:var(--sans);font-weight:600;overflow:hidden}
 .gx-poll .op i,.gx-bets .op i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,rgba(212,175,55,.55),rgba(212,175,55,.25));z-index:0;transition:width .8s} .gx-poll .op span,.gx-poll .op em,.gx-bets .op span,.gx-bets .op em{position:relative;z-index:1;font-style:normal}
-.gx-map{position:absolute;right:2.2%;bottom:12%;width:min(22%,300px);height:auto;aspect-ratio:1;animation:gxIn .5s ease both;border-radius:.4cqw;box-shadow:0 0 0 .2cqw rgba(var(--gold-rgb),.8),0 .5cqw 1.5cqw rgba(0,0,0,.6)}
+.gx-map{position:absolute;z-index:61;right:2.2%;bottom:12%;width:min(22%,300px);height:auto;aspect-ratio:1;animation:gxFade .5s ease both;border-radius:.4cqw;box-shadow:0 0 0 .2cqw rgba(var(--gold-rgb),.8),0 .5cqw 1.5cqw rgba(0,0,0,.6);transition:right .6s ease,bottom .6s ease,width .6s ease,transform .6s ease;transform-origin:50% 50%}
+.gx-map.big{right:26cqw;bottom:4cqw;width:48cqw}
+.gx-map.iso{transform:perspective(120cqw) rotateX(55deg) rotateZ(-45deg) scale(.8);box-shadow:0 0 0 .2cqw rgba(var(--gold-rgb),.8),-1.4cqw 1.4cqw 0 rgba(0,0,0,.55)}
+@keyframes gxFade{from{opacity:0}to{opacity:1}}
 .em-head{position:absolute;right:3%;top:4%;width:9%;max-width:96px;min-width:18px;aspect-ratio:1;image-rendering:pixelated;z-index:3;border-radius:6%;box-shadow:0 0 0 .15cqw rgba(var(--gold-rgb),.85),0 .3cqw 1cqw rgba(0,0,0,.6);pointer-events:none;animation:gxIn .5s ease both}
 .em-scr{position:absolute;inset:0;z-index:80;display:grid;place-items:center;text-align:center;color:var(--gold-hi);background:radial-gradient(60% 60% at 50% 42%,rgba(var(--gold-rgb),.16),transparent 70%),#050506;animation:gxIn .6s ease both}
 .em-scr .in{display:flex;flex-direction:column;align-items:center;gap:1.4cqw}
@@ -170,7 +174,7 @@ audio.em-md{display:none}
 @keyframes scrBar{0%{transform:translateX(-100%)}100%{transform:translateX(340%)}}
 @keyframes gxIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 /* annonces dessinées DANS l'image du Direct (flash, parachute, canon, vainqueur, jour) */
-.bx{position:absolute;z-index:30;pointer-events:none;font-family:var(--sans);color:#fff}
+.bx{position:absolute;z-index:75;pointer-events:none;font-family:var(--sans);color:#fff}
 .bx.out{animation:bxOut .5s ease forwards}
 @keyframes bxOut{to{opacity:0;transform:translateY(-.6cqw)}}
 .bx-band{width:78%;display:flex;flex-direction:column;align-items:center}.bx-band .bar,.bx-band .strip{width:100%!important}
@@ -336,6 +340,7 @@ body:not(.can-map) .map-only{display:none!important}
 .sky-it{display:flex;gap:6px;align-items:center;padding:6px 8px;border:1px solid var(--hair2);border-radius:8px;cursor:pointer;font-size:12px}.sky-it span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sky-it em{font-style:normal;color:var(--mute);font-size:11px}.sky-it.on{border-color:var(--gold-b);background:var(--gold-a)}
 @media (max-width:900px){.sky-ed{grid-template-columns:1fr}}
 .skyq-st{margin-top:5px;font-size:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.skyq-st:empty{display:none}.skyq-st b{color:var(--gold-hi)}.skyq-st .btn{padding:2px 8px;min-height:0;font-size:11px}
+.src .src-cut{opacity:0;transition:opacity .15s}.src:hover .src-cut{opacity:1}
 .rg-ann{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:8px}.rg-ann .note{flex:none;margin-right:2px}.rg-ann .btn{flex:1;min-width:0;justify-content:center}
 .cm.me{align-self:flex-end;background:var(--surface2)} .cm.sup{border-color:var(--gold-b)} .cm.buzz{border-color:var(--red-b);background:var(--red-a)}
 .cm .w{font-size:11px;font-weight:700;color:#7fb6ee;margin-bottom:2px;display:flex;gap:6px} .cm.sup .w{color:var(--gold)} .cm .w span{color:var(--mute);font-weight:500;margin-left:auto}
@@ -3067,14 +3072,20 @@ const TERRAIN = {
     for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
       const k = j * w + i; let r, g, b;
       if (!col[k]) { r = 10; g = 10; b = 13; }
-      else if (dp[k]) { const t = Math.min(1, dp[k] / 12); r = 14 - t * 6; g = 42 - t * 18; b = 66 - t * 22; if (!dp[Math.min(n - 1, k + 1)] || !dp[Math.min(n - 1, k + w)] || !dp[Math.max(0, k - 1)] || !dp[Math.max(0, k - w)]) { r = 70; g = 150; b = 190; } }
       else {
-        const dx = at(i + 1, j) - at(i - 1, j), dz = at(i, j + 1) - at(i, j - 1), f = Math.max(.5, Math.min(1.45, 1 - (dx + dz) * .12 / m.step));
-        const t = (hy[k] - ymin) / span, o = col[k], og = (o >> 8 & 255) / 255, orr = (o >> 16 & 255) / 255;
-        r = (34 + t * 70 + orr * 22) * f; g = (36 + t * 58 + og * 26) * f; b = (40 + t * 30) * f;
-        // courbes de niveau tous les 8 blocs
-        const band = Math.floor(hy[k] / 8);
-        if (band !== Math.floor(at(i + 1, j) / 8) || band !== Math.floor(at(i, j + 1) / 8)) { r = r * .45 + 214 * .55; g = g * .45 + 178 * .55; b = b * .45 + 97 * .55; }
+        // vraies couleurs du terrain (on reconnaît les biomes), relief ombré, eau plus profonde = plus sombre
+        const o = col[k]; let R = (o >> 16 & 255), G = (o >> 8 & 255), B = (o & 255);
+        const L = R * .3 + G * .59 + B * .11; R = L + (R - L) * 1.15; G = L + (G - L) * 1.15; B = L + (B - L) * 1.15; // un peu plus vives
+        if (dp[k]) {
+          const t = Math.min(1, dp[k] / 14); r = R * (1 - t * .55); g = G * (1 - t * .45); b = B * (1 - t * .25);
+          if (!dp[Math.min(n - 1, k + 1)] || !dp[Math.min(n - 1, k + w)] || !dp[Math.max(0, k - 1)] || !dp[Math.max(0, k - w)]) { r = r * .5 + 235 * .5; g = g * .5 + 235 * .5; b = b * .5 + 220 * .5; } // rivage clair
+        } else {
+          const dx = at(i + 1, j) - at(i - 1, j), dz = at(i, j + 1) - at(i, j - 1), f = Math.max(.55, Math.min(1.4, 1 - (dx + dz) * .13 / m.step));
+          r = R * f; g = G * f; b = B * f;
+          // courbes de niveau discrètes tous les 8 blocs
+          const band = Math.floor(hy[k] / 8);
+          if (band !== Math.floor(at(i + 1, j) / 8) || band !== Math.floor(at(i, j + 1) / 8)) { r *= .78; g *= .76; b *= .7; }
+        }
       }
       SY[k] = 255 << 24 | Math.min(255, b | 0) << 16 | Math.min(255, g | 0) << 8 | Math.min(255, r | 0);
     }
@@ -3157,6 +3168,16 @@ function modal(html, { wide } = {}) {
   return m;
 }
 const closeModal = () => hide('#mBox');
+/* confirmation (oui / non) dans une fenêtre du site */
+function askConfirm(title, text) {
+  return new Promise(res => {
+    let done = false; const end = v => { if (done) return; done = true; obs.disconnect(); closeModal(); res(v); };
+    const m = modal(`${modalHead(esc(title), esc(text || ''))}<div class="modal-f"><button type="button" class="btn ghost" id="cfNo">Annuler</button><button type="button" class="btn danger" id="cfYes">Confirmer</button></div>`);
+    m.querySelector('#cfYes').onclick = () => end(true); m.querySelector('#cfNo').onclick = () => end(false);
+    const obs = new MutationObserver(() => { if ($('#mBox').classList.contains('hide')) end(false); });
+    obs.observe($('#mBox'), { attributes: true, attributeFilter: ['class'] });
+  });
+}
 /* remplace prompt() (absent de l'appli de bureau : il renvoyait toujours « annulé ») */
 function askText(title, def = '', ph = '') {
   return new Promise(res => {
@@ -4483,6 +4504,7 @@ const CAM = {
         else if (v === 'cams') this.showCams = !this.showCams;
         else if (v === 'trails') this.showTrails = !this.showTrails;
         else if (v === 'iso') { this.iso = !this.iso; LS.set('ctv.mapIso', this.iso); }
+        else if (v === 'clear') { askConfirm('Effacer le fond de carte ?', 'Pour une nouvelle map : le relief du site et la sauvegarde du mod serveur sont supprimés. Il faudra relancer un relevé.').then(ok => { if (ok) NET.req({ t: 'terrainClear' }).then(() => { MAP3D.mesh = null; toastInfo('Fond de carte effacé', 'Relance un relevé quand la nouvelle map est prête.'); }, er => toastInfo('Carte', er.message, true)); }); }
         else if (v === 'beams') { MAP3D.beams = !MAP3D.beams; LS.set('ctv.map3dBeams', MAP3D.beams); }
         else if (v === 'hd') { MAP3D.hd = !MAP3D.hd; LS.set('ctv.map3dHd', MAP3D.hd); }
         else if (v === 'scan') { const r = +$('#mapR').value || 256; NET.req({ t: 'terrainScan', dim: this.dim, cx: 0, cz: 0, r }).then(() => toastInfo('Relevé demandé au serveur', 'Centré sur 0, 0 · rayon ' + r + ' blocs · avancement visible en jeu (ops et staff)')); }
@@ -4513,7 +4535,7 @@ const CAM = {
       + `<button class="btn xs ${this.iso ? 'on' : ''}" data-mt="iso" title="Maquette 3D : clic gauche glissé = tourner, clic droit (ou Maj) glissé = déplacer, molette = zoom, double-clic = centrer">${this.iso ? 'Vue de dessus' : 'Vue 3D'}</button>`
       + (this.iso ? `<button class="btn xs ${MAP3D.beams ? 'on' : ''}" data-mt="beams" title="Repères : lasers vers le ciel ou points lumineux">${MAP3D.beams ? 'Lasers' : 'Points'}</button><button class="btn xs ${MAP3D.hd ? 'on' : ''}" data-mt="hd" title="Détail maximal (1 bloc = 1 point jusqu'à 1024 de côté). Plus lourd : à garder pour un PC puissant.">HD</button>` : '')
       + (isCrew() ? `<button class="btn xs ${this.zoneDraw ? 'on' : ''}" data-mt="zone" title="Dessine un rectangle sur la carte : les caméras qui y entrent sont averties (bases secrètes, lieux à ne pas spoiler)">⛔ Zone interdite</button>` : '')
-      + (isCrew() ? `<span class="map-scan"><select class="mini-sel" id="mapR" title="Rayon du relevé">${[128, 256, 384, 512, 768, 1024].map(r => `<option value="${r}" ${r === 256 ? 'selected' : ''}>${r} blocs</option>`).join('')}</select><button class="btn xs" data-mt="scan" title="Le mod serveur relève le terrain autour du centre de la vue (ou /capitol carte <rayon> en jeu)">Relever le terrain ici</button></span>` : '');
+      + (isCrew() ? `<span class="map-scan"><select class="mini-sel" id="mapR" title="Rayon du relevé">${[128, 256, 384, 512, 768, 1024].map(r => `<option value="${r}" ${r === 256 ? 'selected' : ''}>${r} blocs</option>`).join('')}</select><button class="btn xs" data-mt="scan" title="Le mod serveur relève le terrain centré sur 0, 0 (ou /capitoltv carte <rayon> en jeu ; /capitoltv carte effacer pour une nouvelle map)">Relever le terrain</button>${isAdmin() ? `<button class="btn xs ghost" data-mt="clear" title="Nouvelle map : efface le fond de carte du site et la sauvegarde du mod serveur">Effacer</button>` : ''}</span>` : '');
   },
   /* projection : vue de dessus (x, z) ou isométrique */
   proj(x, y, z) { return [x, z]; },
@@ -5743,10 +5765,17 @@ class Stage {
       G.breaking && G.breaking.on && G.breaking.text ? `<div class="gx-break"><b>DERNIÈRE MINUTE</b><div class="tk"><div class="tl"><i>${esc(G.breaking.text)}</i></div></div></div>` : '',
       G.poll && G.poll.on && poll ? `<div class="gx-poll"><h5>${poll.closed ? 'RÉSULTATS' : 'SONDAGE'} · ${poll.total} vote${poll.total > 1 ? 's' : ''}</h5><b>${esc(poll.q)}</b>${poll.opts.map((o, i) => { const pc = poll.total ? Math.round(poll.counts[i] / poll.total * 100) : 0; return `<div class="op"><span>${esc(o)}</span><em>${pc}%</em><i style="width:${pc}%"></i></div>`; }).join('')}</div>` : '',
       G.bets && G.bets.on && bets ? `<div class="gx-bets"><h5>FAVORIS DES SPECTATEURS</h5>${GAMES.favs(4).map(([t, pc]) => `<div class="op"><span>${esc(t.name)}</span><em>${pc}%</em><i style="width:${pc}%"></i></div>`).join('') || '<div class="note">Aucun pronostic</div>'}</div>` : '',
-      G.map && G.map.on ? `<canvas class="gx-map" width="320" height="320"></canvas>` : ''
     ].join('');
     if (g.dataset.h !== html) { g.dataset.h = html; g.innerHTML = html; const tk = g.querySelector('.gx-break .tk'); if (tk) requestAnimationFrame(() => fillTick(tk, 0.11)); }
-    if (G.map && G.map.on) PROG.drawMini(g.querySelector('.gx-map'), this.mainTrib());
+    // mini-carte : canevas gardé d'un rendu à l'autre (pas recréé à chaque vote ou mort)
+    let mc = st.querySelector(':scope > .gx-map');
+    if (G.map && G.map.on) {
+      if (!mc) { mc = document.createElement('canvas'); mc.className = 'gx-map'; mc.width = mc.height = 320; st.appendChild(mc); }
+      const ui = PROG.mapUi(G.map, this);
+      mc.classList.toggle('big', ui.big); mc.classList.toggle('iso', ui.iso);
+      const W = ui.big ? 720 : 320; if (mc.width !== W) { mc.width = mc.height = W; }
+      PROG.drawMini(mc, this.mainTrib());
+    } else if (mc) mc.remove();
     if (this.o.extras) { this.renderReplay(); this.renderClip(); }
     else this.renderTags();
   }
@@ -5811,15 +5840,14 @@ class Stage {
       if (!p) st = 'aucune image reçue';
       else if (!p.on) st = 'aucun plan à l\'antenne (musique coupée)';
       else if (p.screen) st = 'écran plein (musique coupée)';
-      else if (!p.bgm) st = PROG.pub && PROG.pub.bgm ? 'musique lancée en régie, arrive avec le différé (' + (this.delay() || 0) + ' s)' : 'aucune musique lancée';
+      else if (!p.bgm) { const lb = PROG.pub && PROG.pub.bgm; st = lb ? 'musique lancée en régie : ici dans ' + Math.max(0, Math.round(((lb.at || 0) + this.delay() * 1000 - nowS()) / 1000)) + ' s (différé)' : 'aucune musique lancée'; }
       else if (!p.bgm.tracks.length) st = 'playlist vide (titres non lisibles ?)';
       else st = null;
       this.o.onMus(st, bg && bg.tracks.length ? bg : null);
     }
     if (bg && bg.tracks.length) {
       const durs = bg.tracks.map(t => Math.max(1, t.dur || 180)), tot = durs.reduce((a, b) => a + b, 0);
-      // différé : la musique démarre au début, en même temps que l'image
-      let t = ((nowS() - this.delay() * 1000 - (bg.at || nowS())) / 1000) % tot; if (t < 0) t = 0; let i = 0;
+      let t = ((nowS() - (bg.at || nowS())) / 1000) % tot; if (t < 0) t = 0; let i = 0; // en différé, bg.at est déjà décalé (shiftPub)
       while (t >= durs[i] && i < durs.length - 1) { t -= durs[i]; i++; }
       const tr = bg.tracks[i], key = tr.id + ':' + bg.at + ':' + i;
       if (tr.sc) {
@@ -6022,6 +6050,21 @@ const PROG = {
     return { dx: (g.dx || 0) + (l.dx || 0), dz: (g.dz || 0) + (l.dz || 0), z: (g.z || 1) * (l.z || 1) };
   },
   redrawMaps() { for (const cv of $$('.gx-map')) if (cv._st) this.drawMini(cv, cv._st.main); },
+  mapLocUi: LS.get('ctv.mapUi', {}),
+  mapUi(M, stage) {
+    const l = S.page === 'direct' && stage === this.main ? this.mapLocUi || {} : {};
+    return { big: l.big != null ? l.big : !!M.big, iso: l.iso != null ? l.iso : !!M.iso };
+  },
+  toggleMapUi(k, local) {
+    const G = ((local ? this.main && this.main.pub : this.pub) || {}).gfx || {}, M = G.map || {};
+    if (local) {
+      const cur = this.mapUi(M, this.main)[k]; this.mapLocUi = { ...(this.mapLocUi || {}), [k]: !cur }; LS.set('ctv.mapUi', this.mapLocUi);
+      this.renderGfx(); toastInfo((k === 'big' ? 'Carte en grand' : 'Carte isométrique') + (cur ? ' : non' : ' : oui'), 'Sur cette page seulement');
+    } else {
+      const g2 = this.gfx(); g2.map = { ...(g2.map || {}), [k]: !(g2.map && g2.map[k]) }; this.sendGfx(g2);
+      toastInfo((k === 'big' ? 'Carte en grand' : 'Carte isométrique') + (g2.map[k] ? ' : oui' : ' : non'), 'Pour tous les spectateurs' + (g2.map.on ? '' : ' (la carte incrustée est coupée)'));
+    }
+  },
   /* touches : flèches = déplacer, Pg↑/Pg↓ ou +/- = zoom, Début = recentrer. Renvoie true si la touche a servi. */
   mapKey(e, local) {
     const k = e.key, zin = k === 'PageUp' || k === '+' || k === 'Add', zout = k === 'PageDown' || k === '-' || k === 'Subtract';
@@ -6043,6 +6086,7 @@ const PROG = {
   habKey(e) {
     if (!(e.shiftKey || e.ctrlKey) || e.altKey || e.metaKey) return false;
     if (e.key === '?' || (e.shiftKey && e.code === 'Slash')) { e.preventDefault(); this.habHelp(); return true; }
+    if (e.code === 'KeyG' || e.code === 'KeyV') { e.preventDefault(); this.toggleMapUi(e.code === 'KeyG' ? 'big' : 'iso', true); return true; }
     const h = this.HABS.find(x => e.code === 'Key' + x[0].toUpperCase()); if (!h) return false;
     e.preventDefault();
     const on = this.hid.has(h[1]); on ? this.hid.delete(h[1]) : this.hid.add(h[1]);
@@ -6056,6 +6100,8 @@ const PROG = {
         <tr><td><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd></td><td>Déplacer la mini-carte (Maj : plus vite)</td><td></td></tr>
         <tr><td><kbd>Pg↑</kbd> <kbd>Pg↓</kbd> ou <kbd>+</kbd> <kbd>−</kbd></td><td>Zoomer / dézoomer la mini-carte</td><td></td></tr>
         <tr><td><kbd>Début</kbd></td><td>Recentrer la mini-carte</td><td></td></tr>
+        <tr><td><kbd>Maj</kbd> + <kbd>G</kbd></td><td>Mini-carte en grand / en petit</td><td></td></tr>
+        <tr><td><kbd>Maj</kbd> + <kbd>V</kbd></td><td>Mini-carte isométrique / à plat</td><td></td></tr>
         <tr><td><kbd>F</kbd></td><td>Plein écran</td><td></td></tr></tbody></table>
         <p class="note">Ctrl marche aussi à la place de Maj, sauf quand le navigateur garde la touche pour lui.</p></div>
       <div class="modal-f"><button class="btn primary" data-close>Compris</button></div>`);
@@ -6284,7 +6330,7 @@ const PROG = {
       requestAnimationFrame(step);
     }
     function paint() {
-      const c = cv.getContext('2d'), W = cv.width;
+      const c = cv.getContext('2d'), W = 320; c.setTransform(cv.width / 320, 0, 0, cv.width / 320, 0, 0);
       c.fillStyle = '#0a0b0e'; c.fillRect(0, 0, W, W);
       c.strokeStyle = 'rgba(214,178,97,.10)'; c.lineWidth = 1;
       const k2 = (W - 30) / st.span, grid = st.span > 600 ? 200 : st.span > 250 ? 100 : 50;
@@ -6443,7 +6489,7 @@ const PROG = {
       const lag = pf && pf.base && pf.fps < pf.base * 0.75 && Date.now() - pf.at < 5 * 60000;
       return `<div class="src ${x.k === 'cam' ? 'scam' : ''} ${bl ? 'blocked' : ''}" ${bl ? '' : 'draggable="true"'} data-k="${x.k}" data-ref="${esc(x.ref)}" title="${bl ? 'Capture coupée : POV inutilisable' : 'Glisser sur l\'aperçu · double-clic : plein écran'}" style="${x.dead ? 'opacity:.5' : ''}">
       <div class="th ${x.ctv ? 'ctv' : ''}" style="${x.ctv ? '' : `background-image:url('${thumbURL(x.login)}')`}">${x.ctv ? '<span>CTV</span>' : ''}${x.live || x.ctv ? '<i></i>' : ''}</div><div style="min-width:0;flex:1"><b>${esc(x.name)}</b><small>${esc(x.sub)}${bl ? ' · <span style="color:var(--red-hi)">capture coupée</span>' : this.vqTag(x)}${lag ? ` · <span style="color:var(--warn)" title="La capture fait ramer ce joueur">⚠ ${pf.base}→${pf.fps} i/s</span>` : ''}</small></div>
-      ${bl ? `<button class="btn xs ghost" data-pov="unblock" data-src="${esc(src)}" title="Autoriser de nouveau sa capture">Réactiver</button>` : lag ? `<button class="btn xs ghost" data-pov="block" data-src="${esc(src)}" title="Couper la capture de ce joueur">Couper</button>` : ''}</div>`;
+      ${bl ? `<button class="btn xs ghost" data-pov="unblock" data-src="${esc(src)}" title="Autoriser de nouveau sa capture">Réactiver</button>` : `<button class="btn xs ghost ${lag ? '' : 'src-cut'}" data-pov="block" data-src="${esc(src)}" title="Couper la capture de ce joueur (il n'envoie plus d'image)">${lag ? 'Couper' : '⏻'}</button>`}</div>`;
     };
     const f = (list, k) => { const q2 = (this.secQ[k] || '').toLowerCase(); return list.filter(x => { const h = (x.name + ' ' + x.sub + ' ' + x.login + ' ' + (x.mc || '')).toLowerCase(); return (!q || h.includes(q)) && (!q2 || h.includes(q2)); }); };
     L.innerHTML = `${this.renderMediaSec(q)}${this.secHead('cam', ic('cam') + ' Caméras', cams.length)}${f(cams, 'cam').map(row).join('') || '<div class="note" style="padding:4px 8px">Ajoute la chaîne Twitch des caméras dans leur fiche (page Équipe).</div>'}
@@ -6471,7 +6517,7 @@ const PROG = {
               <div class="rg-row" style="margin-top:10px">
                 <select class="mini-sel" id="rgTr"><option value="logo">Transition logo</option><option value="fade">Fondu</option><option value="cut">Cut</option></select>
                 <input class="inp" id="rgMs" type="number" min="300" max="4000" step="100" style="width:90px;height:30px" title="Durée (ms)">
-                <span style="flex:1"></span><button class="btn sm ghost" id="rgOff" title="Écran « Hors antenne » par-dessus l'émission (avec transition)">Hors antenne</button><button class="btn sm ghost" id="rgMaint" title="Écran « Maintenance en cours, retour du direct… »">Maintenance…</button><button class="btn sm live hide" id="rgResume">▶ Reprendre le direct</button></div>
+                <span style="flex:1"></span><button class="btn sm ghost" id="rgCap" title="Couper / réactiver la capture vidéo de TOUS les joueurs et caméras">Capture : …</button><button class="btn sm ghost" id="rgOff" title="Écran « Hors antenne » par-dessus l'émission (avec transition)">Hors antenne</button><button class="btn sm ghost" id="rgMaint" title="Écran « Maintenance en cours, retour du direct… »">Maintenance…</button><button class="btn sm live hide" id="rgResume">▶ Reprendre le direct</button></div>
               <div class="rg-row" style="margin-top:8px"><span class="note" style="flex:none">Modifs du plan à l'antenne :</span><div class="seg sm" id="rgMode"><button data-mode="auto" title="Chaque déplacement ou ajout part tout de suite à l'antenne">Immédiates</button><button data-mode="manual" title="Rien ne change à l'antenne avant d'appuyer sur Appliquer">Manuelles</button></div></div>
               <button class="btn apply hide" id="rgApply" style="width:100%;margin-top:8px">APPLIQUER LES MODIFS À L'ANTENNE <span style="opacity:.7;font-size:11px;margin-left:6px">(A)</span></button>
               <button class="btn take" id="rgTake" style="width:100%;margin-top:8px">À L'ANTENNE ▶ <span style="opacity:.7;font-size:11px;margin-left:6px">(T)</span></button>
@@ -6513,7 +6559,7 @@ const PROG = {
     box.innerHTML = `
       <div class="gx-row"><button class="btn sm ${on('breaking') ? 'live' : ''}" data-gx="breaking">Dernière minute</button><input class="inp" id="gxBreak" maxlength="200" placeholder="Texte du bandeau" value="${esc((g.breaking || {}).text || '')}"></div>
       <div class="gx-row"><button class="btn sm ${on('lower') ? 'live' : ''}" data-gx="lower">Nom du tribut</button><select class="mini-sel" id="gxLow"><option value="">Auto (tribut principal du plan)</option>${tribs.map(t => `<option value="${esc(t.id)}" ${(g.lower || {}).ref === t.id && !(g.lower || {}).auto ? 'selected' : ''}>${pad3(t.num)} ${esc(t.name)}</option>`).join('')}</select></div>
-      <div class="gx-row"><button class="btn sm ${on('alive') ? 'live' : ''}" data-gx="alive">Compteur de vivants</button><button class="btn sm ${on('map') ? 'live' : ''}" data-gx="map">Carte incrustée</button><button class="btn sm ${on('poll') ? 'live' : ''}" data-gx="poll">Sondage</button><button class="btn sm ${on('bets') ? 'live' : ''}" data-gx="bets">Favoris</button></div>
+      <div class="gx-row"><button class="btn sm ${on('alive') ? 'live' : ''}" data-gx="alive">Compteur de vivants</button><button class="btn sm ${on('map') ? 'live' : ''}" data-gx="map">Carte incrustée</button><button class="btn sm ${(g.map || {}).big ? 'live' : ''}" data-gxm="big" title="Carte en grand au centre de l'image (Maj + G)">En grand</button><button class="btn sm ${(g.map || {}).iso ? 'live' : ''}" data-gxm="iso" title="Carte vue en biais, comme une maquette (Maj + V)">Isométrique</button><button class="btn sm ${on('poll') ? 'live' : ''}" data-gx="poll">Sondage</button><button class="btn sm ${on('bets') ? 'live' : ''}" data-gx="bets">Favoris</button></div>
       ${(() => { const A = g.ann || {}, P = [['tl', 'Haut gauche'], ['tc', 'Haut centre'], ['tr', 'Haut droite'], ['ml', 'Milieu gauche'], ['mc', 'Centre'], ['mr', 'Milieu droite'], ['bl', 'Bas gauche'], ['bc', 'Bas centre'], ['br', 'Bas droite']], opt = (v, d) => P.map(([k, n]) => `<option value="${k}" ${(v || d) === k ? 'selected' : ''}>${n}</option>`).join('');
         return `<div class="gx-row"><button class="btn sm ${A.on !== false ? 'live' : ''}" data-gx="ann" title="Flash, parachute, canon, vainqueur, nouveau jour : dessinés dans l'image du Direct">Annonces dans l'image</button>
           <span class="note">Flash / canon</span><select class="mini-sel" id="gxAnnPos">${opt(A.pos, 'mc')}</select><span class="note">Parachute</span><select class="mini-sel" id="gxAnnG">${opt(A.gpos, 'tl')}</select><button class="btn sm ghost" id="gxAnnTry" title="Essai sur ton moniteur Antenne et ta page Direct seulement (personne d'autre ne le voit)">Essai</button></div>`; })()}
@@ -6524,6 +6570,7 @@ const PROG = {
     $('#gxAnnTry').onclick = () => { const t = sortedByNum()[0]; showFlash({ k: 'flash', title: 'Essai d\'annonce', text: 'Position : ' + $('#gxAnnPos').selectedOptions[0].text }, 5000); setTimeout(() => showFlash({ k: 'gift', tid: t && t.id, sponsor: 'Un sponsor', item: 'Essai' }, 5000), 5600); };
     box.onclick = e => {
       const go = e.target.closest('[data-goto]'); if (go) { e.preventDefault(); setPage(go.dataset.goto); return; }
+      const gm = e.target.closest('[data-gxm]'); if (gm) { this.toggleMapUi(gm.dataset.gxm, false); return; }
       const b = e.target.closest('[data-gx]'); if (!b) return;
       const g2 = this.gfx(), k = b.dataset.gx; g2[k] = { ...(g2[k] || {}), on: k === 'ann' ? (g2.ann || {}).on === false : !(g2[k] && g2[k].on) };
       if (k === 'breaking') g2.breaking.text = $('#gxBreak').value.trim();
@@ -6835,6 +6882,7 @@ const PROG = {
     m.onclick = e => { const b = e.target.closest('[data-mt]'); if (!b) return; this.screen('maint', +b.dataset.mt, $('#mtMsg').value.trim()); closeModal(); };
   },
   renderScreenBtns() {
+    const cb = $('#rgCap'); if (cb) { cb.textContent = RTC.capOff ? 'Capture coupée · Réactiver' : 'Capture : en marche'; cb.classList.toggle('live', !!RTC.capOff); }
     const sc = this.pub && this.pub.screen, r = $('#rgResume'); if (!r) return;
     r.classList.toggle('hide', !sc); $('#rgOff').classList.toggle('live', !!sc && sc.kind === 'off'); $('#rgMaint').classList.toggle('live', !!sc && sc.kind === 'maint');
   },
@@ -6856,7 +6904,7 @@ const PROG = {
       <ol class="qlist">${D.ids.map((id, i) => { const md = this.mediaById(id); return `<li><span>${esc(md ? md.name : '?')}</span><span class="note">${md && md.dl === 1 ? 'copie ' + (md.dlp || 0) + ' %' : md && md.dl === 2 ? '<span style="color:var(--red-hi)" title="' + esc(md.dlErr || '') + '">copie ratée</span>' : md ? this.fmtDur(md.dur) : ''}</span><button class="btn sm ghost" data-bgx="${i}">${ic('x')}</button></li>`; }).join('')}</ol>
       <div class="gx-row"><button class="btn sm primary" id="bgGo" ${D.ids.length ? '' : 'disabled'}>▶ ${scope === 'all' ? 'Lancer sur tous les plans' : 'Lancer sur ce plan'}</button><button class="btn sm ghost" id="bgStop">■ Arrêter</button></div>
       <p class="note" style="margin:6px 0 0">${playing ? `En cours (${playing.scope === 'all' ? 'tous les plans' : 'ce plan'}) : ${esc(playing.tracks.map(t => t.name).join(' → '))}` : 'Aucune musique de fond à l\'antenne.'} La musique d'un plan remplace celle de tous les plans.</p>`;
-    const send = ids => NET.req({ t: 'progBgm', scope: scope === 'all' ? 'all' : sc.id, ids, vol: D.vol }).then(() => toastInfo(ids.length ? 'Musique lancée' : 'Musique arrêtée'), e => toastInfo('Musique', e.message, true));
+    const send = ids => NET.req({ t: 'progBgm', scope: scope === 'all' ? 'all' : sc.id, ids, vol: D.vol }).then(() => toastInfo(ids.length ? 'Musique lancée' : 'Musique arrêtée', ids.length ? (scope === 'all' ? '' : 'Seulement quand le plan « ' + (sc ? sc.name : '') + ' » est à l\'antenne. ') + (S.board.delay ? 'Sur le Direct dans ' + S.board.delay + ' s (différé).' : '') : ''), e => toastInfo('Musique', e.message, true));
     box.oninput = e => { if (e.target.id === 'bgQ') { this.bgmQ = e.target.value; clearTimeout(this.bgWebT); this.bgWebT = setTimeout(() => this.bgWebSearch(), 650); this.renderBgm(); const i = $('#bgQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); } if (e.target.id === 'bgVol') D.vol = +e.target.value; };
     box.onchange = e => { if (e.target.id === 'bgScope') { this.bgmScope = e.target.value; this.bgmDraft = null; this.renderBgm(); } if (e.target.id === 'bgVol' && playing) send(D.ids); };
     box.onclick = e => {
@@ -7117,6 +7165,12 @@ const PROG = {
     $('#rgMosaic').onclick = () => this.openMosaic();
     $('#rgAll').onclick = e => { const b = e.target.closest('[data-all]'); if (b) this.allPov(b.dataset.all); };
     $('#rgOff').onclick = () => this.screen('off');
+    $('#rgCap').onclick = async () => {
+      const off = !RTC.capOff;
+      if (off && !await askConfirm('Couper la capture de TOUS les joueurs et caméras ?', 'Plus aucune POV n\'envoie d\'image (le Direct n\'a plus de vidéo des joueurs). Réactivable ici même.')) return;
+      NET.req({ t: 'rtcCfg', capOff: off }).then(() => { RTC.capOff = off; this.renderScreenBtns(); toastInfo(off ? 'Capture coupée pour tous' : 'Capture réactivée', off ? '' : 'Les POV reviennent d\'ici 30 secondes.'); }, er => toastInfo('Capture', er.message, true));
+    };
+    this.renderScreenBtns();
     $('#rgMaint').onclick = () => this.openMaint();
     $('#rgResume').onclick = () => this.screen('');
     $('#rgOpenDirect').onclick = e => { e.preventDefault(); setPage('direct'); };
@@ -7253,6 +7307,7 @@ const PROG = {
       if (k === 'ArrowLeft') it.x -= st; if (k === 'ArrowRight') it.x += st; if (k === 'ArrowUp') it.y -= st; if (k === 'ArrowDown') it.y += st;
       it.x = Math.round(it.x * 10) / 10; it.y = Math.round(it.y * 10) / 10; this.save(); return;
     }
+    if (e.shiftKey && (e.code === 'KeyG' || e.code === 'KeyV')) { e.preventDefault(); this.toggleMapUi(e.code === 'KeyG' ? 'big' : 'iso', false); return; }
     // flèches (sans source sélectionnée ni survolée), Pg↑/Pg↓, +/-, Début : mini-carte du Direct pour tous
     if (!it && !this.hover && this.mapKey(e, false)) return;
     if (KB.is(e, 'regie', 'take') || k === 'Enter') { e.preventDefault(); this.take(); return; }

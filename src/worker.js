@@ -1103,6 +1103,12 @@ export class Game extends DurableObject {
         const src = String(m.src || ""); if (!/^[tc]:[\w-]{1,40}$/.test(src)) return reply(false);
         reply(true, { list: await this.dvrList(src) }); break;
       }
+      case "terrainClear": { // nouvelle map : le fond de carte du site et la sauvegarde du mod serveur sont effacés
+        if (!admin) return deny();
+        await this.clearTerrain();
+        this.sendServers({ t: "scanClear" });
+        reply(true); break;
+      }
       case "terrainScan": {
         if (!isCrew(a) || a.lock) return reply(false, { msg: "Réservé à l'équipe." });
         let on = false; for (const ws2 of this.sockets()) { const b = this.att(ws2); if (b && b.server) on = true; }
@@ -2268,7 +2274,7 @@ export class Game extends DurableObject {
       this.prog.gfx = {
         lower: { on: !!(g.lower && g.lower.on), ref: str(g.lower && g.lower.ref, 40), auto: !!(g.lower && g.lower.auto), text: str(g.lower && g.lower.text, 80) },
         breaking: { on: !!(g.breaking && g.breaking.on), text: str(g.breaking && g.breaking.text, 200) },
-        alive: { on: !!(g.alive && g.alive.on) }, map: { on: !!(g.map && g.map.on) }, poll: { on: !!(g.poll && g.poll.on) }, bets: { on: !!(g.bets && g.bets.on) },
+        alive: { on: !!(g.alive && g.alive.on) }, map: { on: !!(g.map && g.map.on), big: !!(g.map && g.map.big), iso: !!(g.map && g.map.iso) }, poll: { on: !!(g.poll && g.poll.on) }, bets: { on: !!(g.bets && g.bets.on) },
         ann: { on: !(g.ann && g.ann.on === false), pos: ["tl","tc","tr","ml","mc","mr","bl","bc","br"].includes(g.ann && g.ann.pos) ? g.ann.pos : "mc", gpos: ["tl","tc","tr","ml","mc","mr","bl","bc","br"].includes(g.ann && g.ann.gpos) ? g.ann.gpos : "tl" }
       };
     } else if (m.t === "progScreen") {
@@ -2543,6 +2549,12 @@ export class Game extends DurableObject {
     if (!buf) return new Response("Introuvable", { status: 404 });
     return new Response(buf, { headers: { "Content-Type": "image/png", "Cache-Control": "private, max-age=31536000, immutable" } });
   }
+  async clearTerrain() {
+    for (const d of Object.keys(this.terrain || {})) for (const kind of ["c", "h"]) if (this.env.MEDIA) await this.env.MEDIA.delete("terrain:" + d + ":" + kind).catch(() => {});
+    this.terrain = {}; this.tbuf = {};
+    await this.ctx.storage.put("terrain", this.terrain);
+    for (const ws of this.sockets()) { const a = this.att(ws); if (a && !a.mod && !a.server) this.send(ws, { t: "terrain", terrain: this.terrain }); }
+  }
   async onTerrainPart(m) {
     const id = String(m.id || "").slice(0, 20), parts = Math.max(1, Math.min(200, +m.parts || 1));
     this.tbuf = this.tbuf || {};
@@ -2567,6 +2579,7 @@ export class Game extends DurableObject {
     const reply = (ok, extra = {}) => { if (m.rid) this.send(ws, { t: ok ? "ok" : "err", rid: m.rid, ...extra }); else if (!ok && extra.msg) this.send(ws, { t: "err", ...extra }); };
     if (a.server) {
       if (m.t === "terrain") return this.onTerrainPart(m);
+      if (m.t === "terrainClear") return this.clearTerrain();
       if (m.t === "mcTime") return this.onMcTime(m);
       if (m.t === "terrainMsg") { this.crewcast({ t: "terrainMsg", msg: String(m.msg || "").slice(0, 300) }, x => !x.mod); return; }
       if (m.t === "srvCams") {
