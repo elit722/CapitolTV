@@ -173,7 +173,10 @@ audio.em-md{display:none}
 .bx{position:absolute;z-index:30;pointer-events:none;font-family:var(--sans);color:#fff}
 .bx.out{animation:bxOut .5s ease forwards}
 @keyframes bxOut{to{opacity:0;transform:translateY(-.6cqw)}}
-.bx-band{left:0;right:0;top:30%;display:flex;flex-direction:column;align-items:center}
+.bx-band{width:78%;display:flex;flex-direction:column;align-items:center}.bx-band .bar,.bx-band .strip{width:100%!important}
+.bx.p-tl,.bx.p-ml,.bx.p-bl{left:3%}.bx.p-tr,.bx.p-mr,.bx.p-br{right:3%}.bx.p-tc,.bx.p-mc,.bx.p-bc{left:0;right:0;margin:0 auto}
+.bx.p-tl,.bx.p-tc,.bx.p-tr{top:5%}.bx.p-ml,.bx.p-mc,.bx.p-mr{top:34%}.bx.p-bl,.bx.p-bc,.bx.p-br{bottom:14%}
+.bx-band.p-tl,.bx-band.p-ml,.bx-band.p-bl,.bx-band.p-tr,.bx-band.p-mr,.bx-band.p-br{width:58%}
 .bx-band .bar{position:relative;display:flex;align-items:stretch;width:78%;min-height:9cqw;animation:bxWipe .55s cubic-bezier(.7,0,.2,1) both;clip-path:inset(0 0 0 0)}
 @keyframes bxWipe{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
 .bx-band .lab{flex:none;display:flex;flex-direction:column;justify-content:center;gap:.5cqw;padding:0 2cqw;background:linear-gradient(180deg,#e2202f,#9e0f1a);font-weight:800;letter-spacing:.22em;font-size:1.25cqw;text-transform:uppercase;box-shadow:.6cqw 0 1.6cqw rgba(0,0,0,.45);z-index:1}
@@ -190,7 +193,7 @@ audio.em-md{display:none}
 .bx-band.gold .lab{background:linear-gradient(180deg,#e9c46a,#a07a1e);color:#1b1407}.bx-band.gold .body{border-top-color:#e9c46a}.bx-band.gold .strip{background:repeating-linear-gradient(-45deg,#e9c46a 0 1cqw,#1b1407 1cqw 2cqw);background-size:2.83cqw 100%}
 .bx-band.victor .t{font-size:4.4cqw;background:linear-gradient(180deg,#fff3c4,#e9c46a 55%,#a07a1e);-webkit-background-clip:text;background-clip:text;color:transparent}
 /* parachute : carte argentée qui descend en haut à gauche */
-.bx-card{left:3%;top:5%;width:34%;display:flex;gap:1.2cqw;align-items:center;padding:1.2cqw 1.6cqw;background:linear-gradient(135deg,rgba(236,241,248,.96),rgba(178,188,204,.96));color:#141820;border-radius:.6cqw;box-shadow:0 1.2cqw 3cqw rgba(0,0,0,.55),inset 0 0 0 .12cqw rgba(255,255,255,.7);overflow:hidden;animation:bxDrop 1.1s cubic-bezier(.2,.9,.25,1.15) both}
+.bx-card{width:34%;display:flex;gap:1.2cqw;align-items:center;padding:1.2cqw 1.6cqw;background:linear-gradient(135deg,rgba(236,241,248,.96),rgba(178,188,204,.96));color:#141820;border-radius:.6cqw;box-shadow:0 1.2cqw 3cqw rgba(0,0,0,.55),inset 0 0 0 .12cqw rgba(255,255,255,.7);overflow:hidden;animation:bxDrop 1.1s cubic-bezier(.2,.9,.25,1.15) both}
 @keyframes bxDrop{0%{opacity:0;transform:translateY(-140%) rotate(-4deg)}60%{opacity:1;transform:translateY(6%) rotate(1.5deg)}100%{transform:none}}
 .bx-card::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.75) 48%,transparent 60%);animation:bxShine 2.2s ease .9s infinite}
 .bx-card .ic{flex:none;width:5.2cqw;height:5.2cqw;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#9aa6b8);box-shadow:inset 0 -.3cqw .6cqw rgba(0,0,0,.25)}
@@ -1024,9 +1027,9 @@ body.em-full #flashLayer{z-index:96;top:5vh}
     <button class="btn sm ghost scr2-btn hide" id="scr2Btn" title="Ouvrir le 2e écran de la régie (tableau de bord : Direct, aperçu, plans, à venir, carte, sondages…)"><span data-ic="side"></span>2e écran</button>
     <button class="btn icon side-btn crew-only" id="notifBtn" title="Notifications"><span data-ic="bell"></span></button>
     <button class="btn icon side-btn" id="sideBtn" title="Panneau latéral : tributs, alertes, comms, terrain, journal…"><span data-ic="side"></span><i class="cnt hide" id="sideCnt">0</i></button>
-    <button class="btn icon" id="helpBtn" title="Tips (?)"><span data-ic="help"></span></button>
+    <button class="btn icon crew-only" id="helpBtn" title="Tips (?)"><span data-ic="help"></span></button>
     <button class="btn icon set-only" id="setBtn" title="Réglages de la régie"><span data-ic="gear"></span></button>
-    <a class="btn primary hide" id="guestLogin" href="/auth/login" title="Se connecter avec Discord pour signaler des actions">Se connecter</a>
+    <a class="btn primary hide" id="guestLogin" href="/auth/login" title="Se connecter avec Discord">Se connecter</a>
     <button class="userchip" id="meBtn" title="Mon compte"><img class="av" id="meAv" alt=""><span id="meName">…</span></button>
   </div>
 </header>
@@ -1924,7 +1927,7 @@ function openFiche(id) {
       </div></div></div>
     <div class="modal-f">
       ${isAdmin() ? `<button class="btn ghost" data-fa="edit" style="margin-right:auto">${ic('gear')}Modifier la fiche</button>` : ''}
-      ${t.login && !isLocked() ? `<button class="btn sig" data-fa="sig">${ic('alert')}Signaler</button><button class="btn" data-fa="watch">${ic('play')}Regarder</button>` : ''}
+      ${t.login && !isLocked() ? `<button class="btn" data-fa="watch">${ic('play')}Regarder</button>` : ''}
       ${sp ? `<a class="btn primary" href="${esc(sp)}" target="_blank" rel="noopener">${ic('gift')}Sponsoriser</a>` : ''}
     </div>`);
   m.style.width = 'min(820px,100%)';
@@ -2246,7 +2249,6 @@ function renderStage() {
         <button class="btn sm icon" data-sact="${isDead(t) ? 'revive' : 'kill'}" title="${isDead(t) ? 'Ramener en jeu' : 'Tombé'}">${ic(isDead(t) ? 'undo' : 'fall')}</button>
         <button class="btn sm icon" data-sact="gift" title="Parachute">${ic('para')}</button></span>` : ''}
       ${S.me && !IS_OVERLAY ? `<button class="btn sm icon" data-sact="clip" title="Clip : garder les 30 dernières secondes">✂</button>` : ''}
-      <button class="btn sm sig" data-sact="sig" title="Signaler une action">${ic('alert')}<span class="lbl-txt">Signaler</span></button>
       <button class="btn sm icon ghost" data-sact="clear" title="Vider ce canal">${ic('x')}</button>`;
   }
   renderChat();
@@ -2432,7 +2434,6 @@ function renderWall() {
       ${thumbBlock(t, true)}
       <div class="tacts">
         <button class="btn xs icon fav ${S.favs.has(t.login) ? 'on' : ''}" data-act="fav" title="Favori">${ic(S.favs.has(t.login) ? 'starf' : 'star')}</button>
-        <button class="btn xs icon sig" data-act="sig" title="Signaler">${ic('alert')}</button>
       </div>
       <div class="meta"><div><div class="n">${esc(t.name)}</div><div class="s">${distLabel(t.district)}${t.alliance ? ' · ' + esc(t.alliance) : ''} · @${esc(t.login)}</div></div>
       ${wOf(t.login) ? `<span class="watchers" title="Spectateurs Capitol TV">${ic('eye')}${wOf(t.login)}</span>` : ''}
@@ -2458,7 +2459,6 @@ function renderSidebar() {
       </div>
       <div class="acts">
         <button class="btn xs icon fav ${fav ? 'on' : ''}" data-act="fav" title="Favori">${ic(fav ? 'starf' : 'star')}</button>
-        <button class="btn xs icon sig" data-act="sig" title="Signaler une action">${ic('alert')}</button>
         ${isAdmin() ? `<button class="btn xs icon" data-act="${isDead(t) ? 'revive' : 'kill'}" title="${isDead(t) ? 'Ramener en jeu' : 'Marquer comme tombé'}">${ic(isDead(t) ? 'undo' : 'fall')}</button>` : ''}
       </div></div>`;
   }
@@ -2670,25 +2670,32 @@ function showFlash(f, ms) {
   else if (f.k === 'victor') { cls = 'victor'; k = ic('crown') + 'Vainqueur des Jeux'; title = t ? t.name : 'Vainqueur'; text = t ? `${distLabel(t.district)} · ${killsOf(t)} élimination${killsOf(t) > 1 ? 's' : ''}` : ''; SND.victor(); }
   else if (f.k === 'day') { cls = ''; k = ic('sun') + 'Jour ' + (f.day || ''); title = f.title || 'Un nouveau jour se lève sur l\'arène'; text = f.text ? esc(f.text) : ''; SND.fanfare(); }
   else return;
-  // page Direct (et lien OBS) : l'annonce est dessinée DANS l'image, pas en fenêtre par-dessus la page
-  const stg = S.page === 'direct' && $('#emStage');
-  if (stg) {
-    const bx = document.createElement('div');
-    if (f.k === 'gift') {
-      bx.className = 'bx bx-card';
-      bx.innerHTML = `<div class="ic">${ic('para')}</div><div style="min-width:0"><div class="k">Parachute argenté</div><div class="t">${esc(title)}</div><div class="x">${text}</div></div><div class="prog" style="animation-duration:${ms}ms"></div>`;
-    } else {
-      const tone2 = f.k === 'victor' ? 'gold victor' : f.k === 'day' ? 'gold' : '';
-      const lab = f.k === 'flash' ? 'Édition<br>spéciale' : f.k === 'death' ? 'Coup de<br>canon' : f.k === 'victor' ? 'Vainqueur' : 'Jour ' + (f.day || '');
-      const icn = f.k === 'flash' ? 'mega' : f.k === 'death' ? 'fall' : f.k === 'victor' ? 'crown' : 'sun';
-      bx.className = 'bx bx-band ' + tone2;
-      bx.innerHTML = `<div class="bar"><div class="lab">${ic(icn)}<span>${lab}</span></div><div class="body"><div class="t">${esc(title)}</div>${text ? `<div class="x">${f.k === 'flash' ? esc(text) : text}</div>` : ''}</div></div><div class="strip"></div>`;
+  // l'annonce est dessinée DANS l'image du Direct (et dans le moniteur Antenne de la régie), à la place réglée en régie
+  const stages = (Stage.all || []).filter(st => st.el.isConnected && (st.o.extras || st === PROG.pgmStage));
+  if (stages.length) {
+    for (const st of stages) {
+      const A = ((st.pub && st.pub.gfx) || {}).ann || {};
+      if (A.on === false) continue;
+      const bx = document.createElement('div');
+      if (f.k === 'gift') {
+        bx.className = 'bx bx-card p-' + (A.gpos || 'tl');
+        bx.innerHTML = `<div class="ic">${ic('para')}</div><div style="min-width:0"><div class="k">Parachute argenté</div><div class="t">${esc(title)}</div><div class="x">${text}</div></div><div class="prog" style="animation-duration:${ms}ms"></div>`;
+      } else {
+        const tone2 = f.k === 'victor' ? 'gold victor' : f.k === 'day' ? 'gold' : '';
+        const lab = f.k === 'flash' ? 'Édition<br>spéciale' : f.k === 'death' ? 'Coup de<br>canon' : f.k === 'victor' ? 'Vainqueur' : 'Jour ' + (f.day || '');
+        const icn = f.k === 'flash' ? 'mega' : f.k === 'death' ? 'fall' : f.k === 'victor' ? 'crown' : 'sun';
+        bx.className = 'bx bx-band ' + tone2 + ' p-' + (A.pos || 'mc');
+        bx.innerHTML = `<div class="bar"><div class="lab">${ic(icn)}<span>${lab}</span></div><div class="body"><div class="t">${esc(title)}</div>${text ? `<div class="x">${f.k === 'flash' ? esc(text) : text}</div>` : ''}</div></div><div class="strip"></div>`;
+      }
+      st.el.querySelectorAll(':scope > .bx.' + (f.k === 'gift' ? 'bx-card' : 'bx-band')).forEach(o => o.remove());
+      st.el.appendChild(bx);
+      setTimeout(() => { bx.classList.add('out'); setTimeout(() => bx.remove(), 520); }, ms);
     }
-    stg.querySelectorAll(':scope > .bx').forEach(o => o.remove());
-    stg.appendChild(bx);
-    setTimeout(() => { bx.classList.add('out'); setTimeout(() => bx.remove(), 520); }, ms);
     return;
   }
+  // ailleurs sur le site : simple notification discrète (plus de grande fenêtre)
+  toastInfo(f.k === 'gift' ? '🪂 Parachute : ' + title : f.k === 'flash' ? '📢 ' + title : f.k === 'death' ? '💥 ' + title : f.k === 'victor' ? '👑 ' + title : '☀ ' + title, (text || '').replace(/<[^>]+>/g, ''));
+  return;
   const el = document.createElement('div');
   el.className = 'flash ' + cls;
   el.innerHTML = `<div class="k">${k}</div><div class="t">${esc(title)}</div>${text ? `<div class="x">${f.k === 'flash' ? esc(text) : text}</div>` : ''}<div class="prog" style="animation-duration:${ms}ms"></div>`;
@@ -3079,7 +3086,7 @@ const TERRAIN = {
 };
 /* notifications système (fenêtre en arrière-plan) + compteur dans le titre de l'onglet */
 const NOTIF = {
-  KINDS: [['alert', 'Alertes des spectateurs'], ['msg', 'Messages (comms)'], ['talk', 'Demandes d\'interphone'], ['req', 'Demandes de couverture'], ['death', 'Morts détectées'], ['perf', 'Captures qui font ramer']],
+  KINDS: [['alert', 'Alertes'], ['msg', 'Messages (comms)'], ['talk', 'Demandes d\'interphone'], ['req', 'Demandes de couverture'], ['death', 'Morts détectées'], ['perf', 'Captures qui font ramer']],
   prefs: Object.assign({ alert: true, msg: true, talk: true, req: true, death: true, perf: true, sound: true }, LS.get('ctv.notif', {})),
   unseen: 0,
   supported() { return 'Notification' in window; },
@@ -5448,6 +5455,7 @@ class Stage {
      o.extras : replays et clips · o.record : garder les flux enregistrés (replays) */
   constructor(el, o = {}) {
     this.el = el; this.o = Object.assign({ sound: false, delay: null, layer: 'auto', extras: false, record: false, bug: true }, o);
+    (Stage.all = (Stage.all || []).filter(s => s.el.isConnected)).push(this);
     this.players = new Map(); this.dps = new Map(); this.pub = null; this.lastSeq = -1; this.sfxEl = null; this.rpKey = ''; this.clipKey = '';
     if (!el.querySelector(':scope > .em-tr')) el.insertAdjacentHTML('afterbegin', `<div class="em-tr"><div class="wipe"></div><div class="ray"></div><div class="ray" style="rotate:70deg"></div>${LOGO_OK ? `<img class="em-e" src="${esc(CONFIG.logo)}" alt="">` : ''}<div class="em-t word" style="font-size:3cqw;color:var(--gold-hi)">${esc(brandName())}</div></div>`);
     this.hold = document.createElement('div'); this.hold.className = 'hide'; el.appendChild(this.hold);
@@ -5810,7 +5818,8 @@ class Stage {
     }
     if (bg && bg.tracks.length) {
       const durs = bg.tracks.map(t => Math.max(1, t.dur || 180)), tot = durs.reduce((a, b) => a + b, 0);
-      let t = ((nowS() - (bg.at || nowS())) / 1000) % tot; if (t < 0) t = 0; let i = 0;
+      // différé : la musique démarre au début, en même temps que l'image
+      let t = ((nowS() - this.delay() * 1000 - (bg.at || nowS())) / 1000) % tot; if (t < 0) t = 0; let i = 0;
       while (t >= durs[i] && i < durs.length - 1) { t -= durs[i]; i++; }
       const tr = bg.tracks[i], key = tr.id + ':' + bg.at + ':' + i;
       if (tr.sc) {
@@ -6505,12 +6514,18 @@ const PROG = {
       <div class="gx-row"><button class="btn sm ${on('breaking') ? 'live' : ''}" data-gx="breaking">Dernière minute</button><input class="inp" id="gxBreak" maxlength="200" placeholder="Texte du bandeau" value="${esc((g.breaking || {}).text || '')}"></div>
       <div class="gx-row"><button class="btn sm ${on('lower') ? 'live' : ''}" data-gx="lower">Nom du tribut</button><select class="mini-sel" id="gxLow"><option value="">Auto (tribut principal du plan)</option>${tribs.map(t => `<option value="${esc(t.id)}" ${(g.lower || {}).ref === t.id && !(g.lower || {}).auto ? 'selected' : ''}>${pad3(t.num)} ${esc(t.name)}</option>`).join('')}</select></div>
       <div class="gx-row"><button class="btn sm ${on('alive') ? 'live' : ''}" data-gx="alive">Compteur de vivants</button><button class="btn sm ${on('map') ? 'live' : ''}" data-gx="map">Carte incrustée</button><button class="btn sm ${on('poll') ? 'live' : ''}" data-gx="poll">Sondage</button><button class="btn sm ${on('bets') ? 'live' : ''}" data-gx="bets">Favoris</button></div>
+      ${(() => { const A = g.ann || {}, P = [['tl', 'Haut gauche'], ['tc', 'Haut centre'], ['tr', 'Haut droite'], ['ml', 'Milieu gauche'], ['mc', 'Centre'], ['mr', 'Milieu droite'], ['bl', 'Bas gauche'], ['bc', 'Bas centre'], ['br', 'Bas droite']], opt = (v, d) => P.map(([k, n]) => `<option value="${k}" ${(v || d) === k ? 'selected' : ''}>${n}</option>`).join('');
+        return `<div class="gx-row"><button class="btn sm ${A.on !== false ? 'live' : ''}" data-gx="ann" title="Flash, parachute, canon, vainqueur, nouveau jour : dessinés dans l'image du Direct">Annonces dans l'image</button>
+          <span class="note">Flash / canon</span><select class="mini-sel" id="gxAnnPos">${opt(A.pos, 'mc')}</select><span class="note">Parachute</span><select class="mini-sel" id="gxAnnG">${opt(A.gpos, 'tl')}</select><button class="btn sm ghost" id="gxAnnTry" title="Essai sur ton moniteur Antenne et ta page Direct seulement (personne d'autre ne le voit)">Essai</button></div>`; })()}
       <p class="note" id="gxNote" style="margin:6px 0 0"></p>`;
     this.renderMode();
+    const annSet = () => { const g2 = this.gfx(); g2.ann = { ...(g2.ann || {}), pos: $('#gxAnnPos').value, gpos: $('#gxAnnG').value }; this.sendGfx(g2, true); };
+    $('#gxAnnPos').onchange = annSet; $('#gxAnnG').onchange = annSet;
+    $('#gxAnnTry').onclick = () => { const t = sortedByNum()[0]; showFlash({ k: 'flash', title: 'Essai d\'annonce', text: 'Position : ' + $('#gxAnnPos').selectedOptions[0].text }, 5000); setTimeout(() => showFlash({ k: 'gift', tid: t && t.id, sponsor: 'Un sponsor', item: 'Essai' }, 5000), 5600); };
     box.onclick = e => {
       const go = e.target.closest('[data-goto]'); if (go) { e.preventDefault(); setPage(go.dataset.goto); return; }
       const b = e.target.closest('[data-gx]'); if (!b) return;
-      const g2 = this.gfx(), k = b.dataset.gx; g2[k] = { ...(g2[k] || {}), on: !(g2[k] && g2[k].on) };
+      const g2 = this.gfx(), k = b.dataset.gx; g2[k] = { ...(g2[k] || {}), on: k === 'ann' ? (g2.ann || {}).on === false : !(g2[k] && g2[k].on) };
       if (k === 'breaking') g2.breaking.text = $('#gxBreak').value.trim();
       if (k === 'lower') { g2.lower.ref = $('#gxLow').value; g2.lower.auto = !g2.lower.ref; }
       if (k === 'breaking' && g2.breaking.on && !g2.breaking.text) { toastInfo('Écris d\'abord le texte du bandeau', '', true); return; }
@@ -7404,7 +7419,7 @@ document.addEventListener('keydown', e => {
     case 'ArrowLeft': e.preventDefault(); zap(-1); return;
     case 'ArrowUp': e.preventDefault(); setActive(S.active - 1); return;
     case 'ArrowDown': e.preventDefault(); setActive(S.active + 1); return;
-    case '?': openHelp(); return;
+    case '?': if (isCrew()) openHelp(); return;
     case '/': e.preventDefault(); S.tab = 'tributes'; renderTabs(); if (S.theater) setTheater(false); $('#q').focus(); return;
   }
   const k = KB.find(e, 'antenne');

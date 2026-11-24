@@ -531,7 +531,7 @@ export class Game extends DurableObject {
       this.phist = m.get("phist") || []; this.dvrTok = m.get("dvrtok") || ""; this.mix = m.get("mix") || {}; this.tstats = m.get("tstats") || {}; this.kbs = m.get("kbs") || {}; this.zones = m.get("zones") || []; this.scJobs = m.get("scjobs") || [];
       this.skyq = Object.assign({ hom: null, shows: [], sched: { times: [], tz: "Europe/Paris", nights: 0, title: "", dur: 30 } }, m.get("skyq") || {});
       // anciens titres SoundCloud (lecteur intégré) : copiés dans les médias au prochain réveil
-      for (const x of (m.get("media") || [])) if (x.sc && !x.n && !x.dl && !this.scJobs.some(j => j.id === x.id)) { x.dl = 1; this.scJobs.push({ id: x.id, i: 0, parts: 0, size: 0 }); }
+      this.scJobs = [];
       this.tbot = { on: false, channel: "", ann: { poll: true, result: true, death: true, victor: true, bets: true }, cmds: true, ...(m.get("tbot") || {}) };
       this.roles = m.get("roles") || null;
       if (!this.roles) {
@@ -541,7 +541,12 @@ export class Game extends DurableObject {
         this.ctx.storage.put("roles", this.roles); this.ctx.storage.put("team", this.team);
       }
       this.prog = m.get("prog") || { scenes: [{ id: "s1", name: "Plan 1", items: [] }], live: "", preview: "s1", trans: { type: "logo", ms: 1400 }, seq: 0, title: "" };
-      this.media = (m.get("media") || []).filter(x => !x.dz); // anciens titres Deezer : retirés
+      // titres Deezer / SoundCloud (abandonnés) : retirés de la liste et effacés du stockage
+      const dead = x => x.dz || x.mime === "audio/deezer" || x.mime === "audio/soundcloud" || (x.sc && (x.dl || !x.n));
+      const all = m.get("media") || [];
+      this.media = all.filter(x => !dead(x));
+      const gone = all.filter(dead);
+      if (gone.length) { this.ctx.storage.put("media", this.media); for (const x of gone) { this.env.MEDIA.delete("meta:" + x.id).catch(() => {}); for (let n = 0; n < (x.n || 0); n++) this.env.MEDIA.delete(`c:${x.id}:${n}`).catch(() => {}); } }
       this.srvCams = m.get("srvcams") || [];
       this.skeys = m.get("skeys") || {};
       this.pubs = m.get("pubs") || {};
@@ -1133,6 +1138,8 @@ export class Game extends DurableObject {
   async onAlert(ws, a, raw, reply, extra = {}) {
     if (a.overlay) return reply(false, { msg: "Non autorisé." });
     if (a.guest) return reply(false, { msg: "Connecte-toi avec Discord pour envoyer un signalement." });
+    // les spectateurs ne signalent plus (système retiré) : seuls l'équipe et le site (alertes de lag) en envoient
+    if (!isCrew(a) && !extra.sys && !raw.perf) return reply(false, { msg: "Les signalements des spectateurs sont désactivés." });
     if (a.lock) return reply(false, { msg: "Les flux sont fermés aux tributs en ce moment." });
     const ch = cleanLogin(raw.ch);
     if (!ch || !this.board.tributes.find(t => t.login === ch)) return reply(false, { msg: "Tribut inconnu." });
@@ -1394,7 +1401,7 @@ export class Game extends DurableObject {
     const own = sc && sc.bgm && sc.bgm.ids.length ? { ...sc.bgm, at: this.prog.liveAt || 0, scope: "scene" } : null;
     const g = this.prog.bgm && this.prog.bgm.ids && this.prog.bgm.ids.length ? { ...this.prog.bgm, scope: "all" } : null;
     const b = own || g; if (!b) return null;
-    const tracks = b.ids.map(id => this.media.find(x => x.id === id)).filter(x => x && x.kind === "audio" && !x.dl).map(x => ({ id: x.id, name: x.name, dur: x.dur || 0, credit: x.credit || "", yt: x.yt || undefined, sc: x.sc && !x.n ? x.sc : undefined }));
+    const tracks = b.ids.map(id => this.media.find(x => x.id === id)).filter(x => x && x.kind === "audio" && !x.dl && (x.n > 0 || x.yt)).map(x => ({ id: x.id, name: x.name, dur: x.dur || 0, credit: x.credit || "", yt: x.yt || undefined, sc: x.sc && !x.n ? x.sc : undefined }));
     return tracks.length ? { tracks, at: b.at || 0, vol: b.vol == null ? 60 : b.vol, scope: b.scope } : null;
   }
   onAirCams() {
@@ -2261,7 +2268,8 @@ export class Game extends DurableObject {
       this.prog.gfx = {
         lower: { on: !!(g.lower && g.lower.on), ref: str(g.lower && g.lower.ref, 40), auto: !!(g.lower && g.lower.auto), text: str(g.lower && g.lower.text, 80) },
         breaking: { on: !!(g.breaking && g.breaking.on), text: str(g.breaking && g.breaking.text, 200) },
-        alive: { on: !!(g.alive && g.alive.on) }, map: { on: !!(g.map && g.map.on) }, poll: { on: !!(g.poll && g.poll.on) }, bets: { on: !!(g.bets && g.bets.on) }
+        alive: { on: !!(g.alive && g.alive.on) }, map: { on: !!(g.map && g.map.on) }, poll: { on: !!(g.poll && g.poll.on) }, bets: { on: !!(g.bets && g.bets.on) },
+        ann: { on: !(g.ann && g.ann.on === false), pos: ["tl","tc","tr","ml","mc","mr","bl","bc","br"].includes(g.ann && g.ann.pos) ? g.ann.pos : "mc", gpos: ["tl","tc","tr","ml","mc","mr","bl","bc","br"].includes(g.ann && g.ann.gpos) ? g.ann.gpos : "tl" }
       };
     } else if (m.t === "progScreen") {
       // écran « hors antenne » ou « maintenance » par-dessus l'émission
@@ -2269,6 +2277,8 @@ export class Game extends DurableObject {
       this.prog.screen = k ? { kind: k, until: k === "maint" && +m.min > 0 ? Date.now() + Math.min(600, +m.min) * 60000 : 0, msg: String(m.msg || "").slice(0, 120), at: Date.now() } : null;
     } else if (m.t === "progBgm") {
       const b = cleanBgm({ ids: m.ids, vol: m.vol });
+      b.ids = b.ids.filter(id => { const x = this.media.find(y => y.id === id); return x && x.kind === "audio" && !x.dl && (x.n > 0 || x.yt); });
+      if (m.ids && m.ids.length && !b.ids.length) return reply(false, { msg: "Aucun titre lisible dans cette playlist (titres supprimés ou en cours d'import)." });
       if (m.scope === "all") this.prog.bgm = b.ids.length ? { ...b, at: Date.now() } : null;
       else { const sc = this.prog.scenes.find(x => x.id === m.scope); if (!sc) return reply(false, { msg: "Plan introuvable." }); sc.bgm = b; }
     } else if (m.t === "progApply") {
